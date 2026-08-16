@@ -9,5 +9,11 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  title = 'plano';
+  readonly title = 'Plano';
+  readonly navigation = ['Today', 'Plan', 'Progress', 'Profile'] as const;
+  activeNavigation: (typeof this.navigation)[number] = 'Today';
+
+  selectNavigation(item: (typeof this.navigation)[number]): void {
+    this.activeNavigation = item;
+  }
 }
