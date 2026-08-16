@@ -1,0 +1,37 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { App } from 'supertest/types';
+import { AppModule } from './../src/app.module';
+import { configureApp } from './../src/app.config';
+import type { HealthStatus } from './../src/health/health.service';
+
+describe('Health endpoint (e2e)', () => {
+  let app: INestApplication<App>;
+
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    configureApp(app);
+    await app.init();
+  });
+
+  it('/api/v1/health (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/api/v1/health')
+      .expect(200)
+      .expect((response) => {
+        const body = response.body as unknown as HealthStatus;
+
+        expect(body.status).toBe('ok');
+        expect(body.timestamp).toBeDefined();
+      });
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+});

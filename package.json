@@ -4,7 +4,11 @@
   "private": true,
   "scripts": {
     "start:front": "npm --prefix Frontend start",
-    "start:back": "npm --prefix Backend start",
+    "start:back": "npm --prefix Backend run start:dev",
+    "backend:build": "npm --prefix Backend run build",
+    "backend:lint": "npm --prefix Backend run lint",
+    "backend:test": "npm --prefix Backend test",
+    "backend:test:e2e": "npm --prefix Backend run test:e2e",
     "frontend:start": "npm --prefix Frontend start",
     "frontend:build": "npm --prefix Frontend run build",
     "frontend:watch": "npm --prefix Frontend run watch",

@@ -31,8 +31,10 @@ npm run frontend:test
 
 The development server is available at `http://localhost:4200/`.
 
-Once the NestJS project is scaffolded in `Backend`, run it with:
+Run the NestJS API in watch mode with:
 
 ```bash
 npm run start:back
 ```
+
+The health endpoint is available at `http://localhost:3000/api/v1/health`.
