@@ -1,0 +1,79 @@
+<app-auth-shell>
+  <section class="auth-card" aria-labelledby="login-title">
+    <h2 id="login-title">Connexion</h2>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="form-field">
+        <label for="login-username">Nom d’utilisateur</label>
+        <input
+          id="login-username"
+          class="form-control"
+          type="text"
+          formControlName="username"
+          autocomplete="username"
+          placeholder="Entrez votre nom d’utilisateur"
+          [attr.aria-invalid]="showError('username')"
+          [attr.aria-describedby]="showError('username') ? 'login-username-error' : null"
+        />
+        @if (showError('username')) {
+          <p id="login-username-error" class="field-error">{{ fieldError('username') }}</p>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="login-password">Mot de passe</label>
+        <input
+          id="login-password"
+          class="form-control"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          placeholder="Entrez votre mot de passe"
+          [attr.aria-invalid]="showError('password')"
+          [attr.aria-describedby]="showError('password') ? 'login-password-error' : null"
+        />
+        @if (showError('password')) {
+          <p id="login-password-error" class="field-error">{{ fieldError('password') }}</p>
+        }
+      </div>
+
+      <button
+        class="link-button forgot-password"
+        type="button"
+        aria-controls="recovery-information"
+        (click)="showRecoveryInfo()"
+      >
+        Mot de passe oublié&nbsp;?
+      </button>
+
+      @if (recoveryMessage) {
+        <p id="recovery-information" class="form-information" role="status">
+          {{ recoveryMessage }}
+        </p>
+      }
+
+      @if (submissionError) {
+        <div class="form-error" role="alert">{{ submissionError }}</div>
+      }
+
+      <button
+        class="primary-button"
+        type="submit"
+        [disabled]="submitting"
+        [attr.aria-busy]="submitting"
+      >
+        @if (submitting) {
+          <span class="button-spinner" aria-hidden="true"></span>
+          Connexion…
+        } @else {
+          Se connecter
+        }
+      </button>
+    </form>
+
+    <p class="account-prompt">
+      <span>Pas encore de compte&nbsp;?</span>
+      <a routerLink="/register">Créer un compte</a>
+    </p>
+  </section>
+</app-auth-shell>

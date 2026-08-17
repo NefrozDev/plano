@@ -1,0 +1,107 @@
+<div class="app-canvas">
+  <main class="mobile-shell">
+    <header class="topbar">
+      <a class="brand" routerLink="/" aria-label="Accueil Plano">
+        <span class="brand-mark" aria-hidden="true">P</span>
+        <span>{{ title }}</span>
+      </a>
+      <button
+        class="profile-button"
+        type="button"
+        aria-label="Se déconnecter"
+        title="Se déconnecter"
+        [disabled]="logoutPending()"
+        (click)="logout()"
+      >
+        <span aria-hidden="true">{{ initials() }}</span>
+      </button>
+    </header>
+
+    @if (logoutError()) {
+      <p class="logout-error" role="alert">{{ logoutError() }}</p>
+    }
+
+    <div class="screen-content">
+      <section class="welcome" aria-labelledby="welcome-title">
+        <p class="eyebrow">Sunday, August 16</p>
+        <h1 id="welcome-title">Good morning, {{ displayName() }}.</h1>
+        <p>Keep today light and make the important things count.</p>
+      </section>
+
+      <section class="focus-card" aria-labelledby="focus-title">
+        <div>
+          <p class="card-label">Weekly focus</p>
+          <h2 id="focus-title">You’re right on track.</h2>
+          <p>12 of 16 priorities completed</p>
+        </div>
+        <div class="progress-ring" aria-label="75 percent complete">
+          <span>75%</span>
+        </div>
+      </section>
+
+      <section class="today-section" aria-labelledby="today-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Your schedule</p>
+            <h2 id="today-title">Today</h2>
+          </div>
+          <button class="text-button" type="button">See all</button>
+        </div>
+
+        <div class="task-list">
+          <article class="task-card task-card--accent">
+            <div class="task-time">
+              <strong>09:30</strong>
+              <span>45 min</span>
+            </div>
+            <div class="task-details">
+              <span class="task-category">Focus</span>
+              <h3>Prepare interview notes</h3>
+              <p>Architecture and NestJS fundamentals</p>
+            </div>
+            <button type="button" aria-label="Open Prepare interview notes">→</button>
+          </article>
+
+          <article class="task-card">
+            <div class="task-time">
+              <strong>14:00</strong>
+              <span>30 min</span>
+            </div>
+            <div class="task-details">
+              <span class="task-category">Personal</span>
+              <h3>Afternoon walk</h3>
+              <p>Reset before the next focus block</p>
+            </div>
+            <button type="button" aria-label="Open Afternoon walk">→</button>
+          </article>
+        </div>
+      </section>
+
+      <button class="primary-action" type="button">
+        <span aria-hidden="true">+</span>
+        Add to today
+      </button>
+    </div>
+
+    <nav class="bottom-navigation" aria-label="Primary navigation">
+      @for (item of navigation; track item) {
+        <button
+          type="button"
+          [class.active]="activeNavigation === item"
+          [attr.aria-current]="activeNavigation === item ? 'page' : null"
+          (click)="selectNavigation(item)"
+        >
+          <span class="nav-icon" aria-hidden="true">
+            @switch (item) {
+              @case ('Today') { ◉ }
+              @case ('Plan') { ◫ }
+              @case ('Progress') { ↗ }
+              @case ('Profile') { ○ }
+            }
+          </span>
+          <span>{{ item }}</span>
+        </button>
+      }
+    </nav>
+  </main>
+</div>

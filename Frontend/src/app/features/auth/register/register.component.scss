@@ -1,0 +1,63 @@
+.auth-card--register {
+  padding: 1rem 1.15rem 1.15rem;
+}
+
+.auth-card h2 {
+  margin-bottom: 0.05rem;
+}
+
+.auth-card__intro {
+  margin: 0 0 0.95rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.auth-card--register .form-field {
+  gap: 0.24rem;
+  margin-bottom: 0.63rem;
+}
+
+.auth-card--register .form-control {
+  min-height: 2.45rem;
+  padding-top: 0.48rem;
+  padding-bottom: 0.48rem;
+}
+
+.terms-field {
+  display: grid;
+  grid-template-columns: 1rem 1fr;
+  gap: 0.55rem;
+  align-items: start;
+  margin: 0.15rem 0 0.4rem;
+}
+
+.terms-field input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.08rem 0 0;
+  accent-color: var(--color-primary);
+}
+
+.terms-field label {
+  color: var(--color-text);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.inline-accent {
+  color: var(--color-primary);
+}
+
+.terms-error {
+  margin: -0.15rem 0 0.6rem 1.55rem;
+}
+
+.account-prompt--compact {
+  margin-top: 0.8rem;
+}
+
+@media (max-height: 760px) {
+  .auth-card--register .form-field {
+    margin-bottom: 0.42rem;
+  }
+}

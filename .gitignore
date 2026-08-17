@@ -16,6 +16,10 @@ yarn-error.log
 **/.env.local
 !**/.env.example
 
+# Local application data
+Backend/data/*.sqlite
+Backend/data/*.sqlite-*
+
 # IDEs and editors
 .idea/
 .project
