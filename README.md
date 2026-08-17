@@ -34,6 +34,7 @@ Other root commands:
 ```bash
 npm run frontend:build
 npm run frontend:test
+npm run test:coverage
 ```
 
 The application is available at `http://localhost:4200/`. Angular proxies
@@ -51,3 +52,10 @@ clears the cookie.
 Local database files are created in `Backend/data/` and are intentionally ignored
 by Git. Backend configuration names and safe defaults are documented in
 `Backend/.env.example`.
+
+## Test coverage
+
+Run `npm run test:coverage` to generate both reports. Jest and Karma enforce a
+minimum of 80% for statements, branches, functions, and lines; the command fails
+when either application falls below any threshold. Generated reports are written
+to each package's ignored `coverage/` directory.

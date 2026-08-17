@@ -20,8 +20,14 @@ Copy `.env.example` to `.env` when you need local configuration. Never commit `.
 npm run backend:build
 npm run backend:lint
 npm run backend:test
+npm run backend:test:cov
 npm run backend:test:e2e
 ```
+
+The coverage command enforces at least 80% statements, branches, functions, and
+lines across application logic. Declarative Nest modules, ORM entities, DTO
+metadata, migrations, and the bootstrap entry point are verified by build and
+end-to-end tests rather than counted as unit-test coverage.
 
 ## Source structure
 

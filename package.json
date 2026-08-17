@@ -8,10 +8,13 @@
     "backend:build": "npm --prefix Backend run build",
     "backend:lint": "npm --prefix Backend run lint",
     "backend:test": "npm --prefix Backend test",
+    "backend:test:cov": "npm --prefix Backend run test:cov",
     "backend:test:e2e": "npm --prefix Backend run test:e2e",
     "frontend:start": "npm --prefix Frontend start",
     "frontend:build": "npm --prefix Frontend run build",
     "frontend:watch": "npm --prefix Frontend run watch",
-    "frontend:test": "npm --prefix Frontend test"
+    "frontend:test": "npm --prefix Frontend test",
+    "frontend:test:cov": "npm --prefix Frontend run test:cov",
+    "test:coverage": "npm run backend:test:cov && npm run frontend:test:cov"
   }
 }

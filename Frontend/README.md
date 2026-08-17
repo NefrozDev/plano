@@ -16,7 +16,11 @@ npm install
 npm start
 npm run build
 npm test
+npm run test:cov
 ```
+
+`test:cov` runs Chrome headlessly and enforces at least 80% statements, branches,
+functions, and lines.
 
 The development server is available at `http://localhost:4200/`.
 

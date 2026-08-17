@@ -22,6 +22,14 @@ module.exports = function configureKarma(config) {
       dir: path.join(__dirname, './coverage/plano'),
       subdir: '.',
       reporters: [{ type: 'html' }, { type: 'text-summary' }],
+      check: {
+        global: {
+          statements: 80,
+          branches: 80,
+          functions: 80,
+          lines: 80,
+        },
+      },
     },
     reporters: ['progress', 'kjhtml'],
     browsers: ['ChromeHeadlessCI'],
