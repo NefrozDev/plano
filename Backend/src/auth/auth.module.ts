@@ -20,6 +20,6 @@ import { SessionSettingsService } from './session-settings.service';
     SessionAuthGuard,
     SessionSettingsService,
   ],
-  exports: [AuthService, SessionAuthGuard],
+  exports: [AllowedOriginGuard, AuthService, SessionAuthGuard],
 })
 export class AuthModule {}

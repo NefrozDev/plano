@@ -10,6 +10,7 @@ import { configureApp } from './../src/app.config';
 import { AppModule } from './../src/app.module';
 import type { AuthUser } from './../src/auth/auth.types';
 import type { HealthStatus } from './../src/health/health.service';
+import type { GroupSummary } from './../src/groups/group.types';
 
 interface ErrorResponse {
   statusCode: number;
@@ -222,6 +223,44 @@ describe('Plano API (e2e)', () => {
       .expect(401);
 
     await request(app.getHttpServer()).post('/api/v1/auth/logout').expect(204);
+  });
+
+  it('creates and restores a group for the authenticated user', async () => {
+    const registration = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send(validRegistration)
+      .expect(201);
+    const cookie = cookiePair(readSetCookie(registration.headers)[0]);
+
+    await request(app.getHttpServer()).get('/api/v1/groups/me').expect(401);
+
+    const creation = await request(app.getHttpServer())
+      .post('/api/v1/groups')
+      .set('Cookie', cookie)
+      .send({ name: '  Les Explorateurs  ' })
+      .expect(201);
+    const group = creation.body as unknown as GroupSummary;
+
+    expect(group).toMatchObject({
+      id: expect.any(String) as string,
+      name: 'Les Explorateurs',
+      role: 'owner',
+    });
+    expect(group.inviteCode).toMatch(/^[A-Z0-9_-]{8}$/);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/groups/me')
+      .set('Cookie', cookie)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toMatchObject({ id: group.id, role: 'owner' });
+      });
+
+    await request(app.getHttpServer())
+      .post('/api/v1/groups')
+      .set('Cookie', cookie)
+      .send({ name: 'Un autre groupe' })
+      .expect(409);
   });
 
   it('keeps a valid user session after the backend restarts', async () => {

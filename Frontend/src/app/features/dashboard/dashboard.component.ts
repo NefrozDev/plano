@@ -3,6 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 
+type NavigationItem = 'Accueil' | 'Agenda' | 'Liste' | 'Objectifs';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -14,35 +16,55 @@ export class DashboardComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  readonly title = 'Plano';
-  readonly navigation = ['Today', 'Plan', 'Progress', 'Profile'] as const;
+  readonly navigation: readonly NavigationItem[] = [
+    'Accueil',
+    'Agenda',
+    'Liste',
+    'Objectifs',
+  ];
+  readonly weekDays = [
+    { label: 'lun', date: 17 },
+    { label: 'mar', date: 18 },
+    { label: 'mer', date: 19 },
+    { label: 'jeu', date: 20, selected: true },
+    { label: 'ven', date: 21, hasEvent: true },
+    { label: 'sam', date: 22 },
+    { label: 'dim', date: 23, hasEvent: true },
+  ];
+  readonly tasks = signal([
+    { label: 'Préparer la présentation', done: false },
+    { label: '30 minutes de course à pied', done: true },
+    { label: 'Réserver le restaurant', done: false },
+  ]);
+  readonly completedTasks = computed(
+    () => this.tasks().filter((task) => task.done).length,
+  );
   readonly displayName = computed(
     () => this.auth.user()?.firstName || this.auth.user()?.username || 'vous',
   );
-  readonly initials = computed(() => {
-    const user = this.auth.user();
-    if (!user) {
-      return 'P';
-    }
-
-    const first = user.firstName.at(0) ?? user.username.at(0) ?? '';
-    const last = user.lastName.at(0) ?? '';
-    return `${first}${last}`.toUpperCase();
-  });
+  readonly profileMenuOpen = signal(false);
   readonly logoutPending = signal(false);
   readonly logoutError = signal('');
+  activeNavigation: NavigationItem = 'Accueil';
 
-  activeNavigation: (typeof this.navigation)[number] = 'Today';
-
-  selectNavigation(item: (typeof this.navigation)[number]): void {
+  selectNavigation(item: NavigationItem): void {
     this.activeNavigation = item;
   }
 
-  logout(): void {
-    if (this.logoutPending()) {
-      return;
-    }
+  toggleTask(index: number): void {
+    this.tasks.update((tasks) =>
+      tasks.map((task, taskIndex) =>
+        taskIndex === index ? { ...task, done: !task.done } : task,
+      ),
+    );
+  }
 
+  toggleProfileMenu(): void {
+    this.profileMenuOpen.update((open) => !open);
+  }
+
+  logout(): void {
+    if (this.logoutPending()) return;
     this.logoutError.set('');
     this.logoutPending.set(true);
     this.auth
@@ -51,9 +73,7 @@ export class DashboardComponent {
       .subscribe({
         next: () => void this.router.navigateByUrl('/login'),
         error: () =>
-          this.logoutError.set(
-            'La déconnexion a échoué. Veuillez réessayer.',
-          ),
+          this.logoutError.set('La déconnexion a échoué. Veuillez réessayer.'),
       });
   }
 }

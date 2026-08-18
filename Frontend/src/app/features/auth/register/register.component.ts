@@ -18,8 +18,7 @@ export const matchingPasswordsValidator: ValidatorFn = (
 ): ValidationErrors | null => {
   const password = group.get('password')?.value as string | undefined;
   const confirmation = group.get('passwordConfirmation')?.value as
-    | string
-    | undefined;
+    string | undefined;
 
   return password && confirmation && password !== confirmation
     ? { passwordMismatch: true }
@@ -127,7 +126,7 @@ export class RegisterComponent {
       })
       .pipe(finalize(() => (this.submitting = false)))
       .subscribe({
-        next: () => void this.router.navigateByUrl('/'),
+        next: () => void this.router.navigateByUrl('/group/setup'),
         error: (error: unknown) => this.handleRegistrationError(error),
       });
   }
@@ -173,8 +172,7 @@ export class RegisterComponent {
         serverMessage.includes('username') ||
         serverMessage.includes('utilisateur')
       ) {
-        this.apiFieldErrors.username =
-          'Ce nom d’utilisateur est déjà utilisé.';
+        this.apiFieldErrors.username = 'Ce nom d’utilisateur est déjà utilisé.';
       } else {
         this.submissionError =
           'Un compte utilise déjà ce nom d’utilisateur ou cette adresse e-mail.';

@@ -5,6 +5,7 @@ import { mkdir } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { DatabaseWriteLockService } from './database-write-lock.service';
 import { CreateAuthTables1786940000000 } from './migrations/1786940000000-create-auth-tables';
+import { CreateGroupTables1787020000000 } from './migrations/1787020000000-create-group-tables';
 
 function resolveDatabasePath(configuredPath: string): string {
   if (isAbsolute(configuredPath)) {
@@ -32,7 +33,10 @@ function resolveDatabasePath(configuredPath: string): string {
           location,
           autoLoadEntities: true,
           autoSave: true,
-          migrations: [CreateAuthTables1786940000000],
+          migrations: [
+            CreateAuthTables1786940000000,
+            CreateGroupTables1787020000000,
+          ],
           migrationsRun: true,
           synchronize: false,
         };

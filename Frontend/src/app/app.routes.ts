@@ -21,6 +21,15 @@ export const routes: Routes = [
     title: 'Créer un compte | Plano',
   },
   {
+    path: 'group/setup',
+    canActivate: [authenticatedGuard],
+    loadComponent: () =>
+      import('./features/groups/group-setup/group-setup.component').then(
+        (component) => component.GroupSetupComponent,
+      ),
+    title: 'Configurer mon groupe | Plano',
+  },
+  {
     path: '',
     pathMatch: 'full',
     canActivate: [authenticatedGuard],

@@ -1,89 +1,146 @@
 <div class="app-canvas">
   <main class="mobile-shell">
     <header class="topbar">
-      <a class="brand" routerLink="/" aria-label="Accueil Plano">
-        <span class="brand-mark" aria-hidden="true">P</span>
-        <span>{{ title }}</span>
+      <a class="brand-mark" routerLink="/" aria-label="Accueil Plano">
+        <svg viewBox="0 0 64 80" aria-hidden="true">
+          <path
+            fill="#325BE2"
+            d="M14 29C14 13.5 24.3 4 38.2 4 51.7 4 60 13.4 60 26.1c0 14.2-9.8 23.5-24.6 23.5h-3.2L14 65.2V29Z"
+          />
+          <path fill="#6B2DEB" d="M14 29 32.2 49.6 14 65.2V29Z" />
+          <circle cx="39" cy="25" r="9.4" fill="#DCEAFF" />
+          <circle cx="50" cy="12" r="3.2" fill="#fff" />
+        </svg>
       </a>
-      <button
-        class="profile-button"
-        type="button"
-        aria-label="Se déconnecter"
-        title="Se déconnecter"
-        [disabled]="logoutPending()"
-        (click)="logout()"
-      >
-        <span aria-hidden="true">{{ initials() }}</span>
-      </button>
+      <div class="profile-area">
+        <button
+          class="profile-button"
+          type="button"
+          aria-label="Ouvrir le menu du profil"
+          [attr.aria-expanded]="profileMenuOpen()"
+          (click)="toggleProfileMenu()"
+        >
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="10" r="5" />
+            <path d="M5 28c0-7 4-10 11-10s11 3 11 10Z" />
+          </svg>
+        </button>
+        @if (profileMenuOpen()) {
+          <div class="profile-menu">
+            <a routerLink="/group/setup">Configurer mon groupe</a
+            ><button
+              type="button"
+              [disabled]="logoutPending()"
+              (click)="logout()"
+            >
+              Se déconnecter
+            </button>
+          </div>
+        }
+      </div>
     </header>
-
     @if (logoutError()) {
       <p class="logout-error" role="alert">{{ logoutError() }}</p>
     }
 
     <div class="screen-content">
       <section class="welcome" aria-labelledby="welcome-title">
-        <p class="eyebrow">Sunday, August 16</p>
-        <h1 id="welcome-title">Good morning, {{ displayName() }}.</h1>
-        <p>Keep today light and make the important things count.</p>
+        <h1 id="welcome-title">Bonjour {{ displayName() }}</h1>
+        <p>Voici votre journée</p>
       </section>
 
-      <section class="focus-card" aria-labelledby="focus-title">
-        <div>
-          <p class="card-label">Weekly focus</p>
-          <h2 id="focus-title">You’re right on track.</h2>
-          <p>12 of 16 priorities completed</p>
-        </div>
-        <div class="progress-ring" aria-label="75 percent complete">
-          <span>75%</span>
-        </div>
-      </section>
-
-      <section class="today-section" aria-labelledby="today-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Your schedule</p>
-            <h2 id="today-title">Today</h2>
+      <section class="week-card" aria-label="Semaine du 17 au 23">
+        @for (day of weekDays; track day.label) {
+          <div class="week-day" [class.selected]="day.selected">
+            <span>{{ day.label }}</span
+            ><strong>{{ day.date }}</strong>
+            @if (day.hasEvent) {
+              <i aria-label="Un événement prévu"></i>
+            }
           </div>
-          <button class="text-button" type="button">See all</button>
+        }
+      </section>
+
+      <section class="dashboard-section" aria-labelledby="today-title">
+        <div class="section-heading">
+          <h2 id="today-title">Aujourd’hui</h2>
+          <button type="button">voir l’agenda →</button>
         </div>
-
-        <div class="task-list">
-          <article class="task-card task-card--accent">
-            <div class="task-time">
-              <strong>09:30</strong>
-              <span>45 min</span>
+        <div class="agenda-card">
+          <article>
+            <span class="event-icon event-icon--blue">▣</span>
+            <div>
+              <strong>9h00</strong>
+              <p>Rendez-vous banque</p>
             </div>
-            <div class="task-details">
-              <span class="task-category">Focus</span>
-              <h3>Prepare interview notes</h3>
-              <p>Architecture and NestJS fundamentals</p>
-            </div>
-            <button type="button" aria-label="Open Prepare interview notes">→</button>
           </article>
-
-          <article class="task-card">
-            <div class="task-time">
-              <strong>14:00</strong>
-              <span>30 min</span>
+          <article>
+            <span class="event-icon event-icon--green">🛒</span>
+            <div>
+              <strong>14h30</strong>
+              <p>Courses du groupe</p>
             </div>
-            <div class="task-details">
-              <span class="task-category">Personal</span>
-              <h3>Afternoon walk</h3>
-              <p>Reset before the next focus block</p>
-            </div>
-            <button type="button" aria-label="Open Afternoon walk">→</button>
           </article>
+          <article>
+            <span class="event-icon event-icon--pink">◎</span>
+            <div>
+              <strong>16h00</strong>
+              <p>Méditation</p>
+            </div>
+          </article>
+          <button class="card-link" type="button">voir tout (3)</button>
         </div>
       </section>
 
-      <button class="primary-action" type="button">
-        <span aria-hidden="true">+</span>
-        Add to today
-      </button>
+      <section class="dashboard-section" aria-labelledby="tasks-title">
+        <div class="section-heading">
+          <h2 id="tasks-title">À faire</h2>
+          <span>{{ completedTasks() }}/{{ tasks().length }}</span>
+        </div>
+        <div class="tasks-card">
+          @for (task of tasks(); track task.label; let index = $index) {
+            <label [class.completed]="task.done"
+              ><input
+                type="checkbox"
+                [checked]="task.done"
+                (change)="toggleTask(index)"
+              />
+              <span>{{ task.label }}</span></label
+            >
+          }
+          <button class="card-link" type="button">+ Ajouter une tâche</button>
+        </div>
+      </section>
+
+      <section
+        class="dashboard-section goals-section"
+        aria-labelledby="goals-title"
+      >
+        <h2 id="goals-title">Mes objectifs</h2>
+        <div class="goals-card">
+          <article>
+            <span class="goal-icon goal-icon--pink">◎</span>
+            <div>
+              <strong>Courir 10 KM</strong
+              ><small>échéance : le 05/09/2026</small>
+              <div class="progress"><i style="width: 73%"></i></div>
+            </div>
+            <b>73%</b>
+          </article>
+          <article>
+            <span class="goal-icon goal-icon--green">◎</span>
+            <div>
+              <strong>Lire Harry Potter</strong
+              ><small>échéance : le 15/10/2026</small>
+              <div class="progress"><i style="width: 46%"></i></div>
+            </div>
+            <b>46%</b>
+          </article>
+        </div>
+      </section>
     </div>
 
-    <nav class="bottom-navigation" aria-label="Primary navigation">
+    <nav class="bottom-navigation" aria-label="Navigation principale">
       @for (item of navigation; track item) {
         <button
           type="button"
@@ -91,15 +148,22 @@
           [attr.aria-current]="activeNavigation === item ? 'page' : null"
           (click)="selectNavigation(item)"
         >
-          <span class="nav-icon" aria-hidden="true">
+          <span aria-hidden="true">
             @switch (item) {
-              @case ('Today') { ◉ }
-              @case ('Plan') { ◫ }
-              @case ('Progress') { ↗ }
-              @case ('Profile') { ○ }
-            }
-          </span>
-          <span>{{ item }}</span>
+              @case ("Accueil") {
+                ⌂
+              }
+              @case ("Agenda") {
+                ▣
+              }
+              @case ("Liste") {
+                ☷
+              }
+              @case ("Objectifs") {
+                ◎
+              }
+            }</span
+          >{{ item }}
         </button>
       }
     </nav>

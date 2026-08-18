@@ -23,10 +23,7 @@ describe('RegisterComponent', () => {
     auth = jasmine.createSpyObj<AuthService>('AuthService', ['register']);
     await TestBed.configureTestingModule({
       imports: [RegisterComponent],
-      providers: [
-        provideRouter([]),
-        { provide: AuthService, useValue: auth },
-      ],
+      providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
     }).compileComponents();
 
     component = TestBed.createComponent(RegisterComponent).componentInstance;
@@ -59,7 +56,9 @@ describe('RegisterComponent', () => {
     component.submit();
 
     expect(component.form.hasError('passwordMismatch')).toBeTrue();
-    expect(component.passwordConfirmationError()).toContain('correspondent pas');
+    expect(component.passwordConfirmationError()).toContain(
+      'correspondent pas',
+    );
     expect(auth.register).not.toHaveBeenCalled();
   });
 
@@ -88,7 +87,7 @@ describe('RegisterComponent', () => {
     expect(component.form.controls.username.hasError('pattern')).toBeTrue();
   });
 
-  it('submits only the backend contract and then navigates home', () => {
+  it('submits only the backend contract and then opens group setup', () => {
     auth.register.and.returnValue(of(user));
     const navigate = spyOn(router, 'navigateByUrl').and.resolveTo(true);
     component.form.setValue({
@@ -111,7 +110,7 @@ describe('RegisterComponent', () => {
       password: 'password123',
       acceptedTerms: true,
     });
-    expect(navigate).toHaveBeenCalledOnceWith('/');
+    expect(navigate).toHaveBeenCalledOnceWith('/group/setup');
   });
 
   it('does not submit twice while registration is pending', () => {
