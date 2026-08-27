@@ -1,0 +1,189 @@
+<div class="app-canvas">
+  <main class="mobile-shell">
+    <header class="lists-header">
+      <button
+        class="icon-button menu-button"
+        type="button"
+        [attr.aria-label]="gridView() ? 'Afficher les listes en lignes' : 'Afficher les listes en grille'"
+        [attr.aria-pressed]="gridView()"
+        (click)="toggleView()"
+      >
+        @if (gridView()) {
+          <svg class="grid-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="8" cy="5" r="1.7" /><circle cx="16" cy="5" r="1.7" />
+            <circle cx="8" cy="12" r="1.7" /><circle cx="16" cy="12" r="1.7" />
+            <circle cx="8" cy="19" r="1.7" /><circle cx="16" cy="19" r="1.7" />
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+        }
+      </button>
+      <h1>Listes</h1>
+      <div class="header-actions">
+        <button class="icon-button" type="button" aria-label="Rechercher">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
+        </button>
+        <button class="icon-button notification-button" type="button" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17h12l-1.5-2.5V10a4.5 4.5 0 0 0-9 0v4.5L6 17Z" /><path d="M10 20h4" /></svg>
+          <i aria-hidden="true"></i>
+        </button>
+        <button
+          class="icon-button more-button"
+          type="button"
+          aria-label="Plus d’options"
+          [attr.aria-expanded]="menuOpen()"
+          (click)="toggleMenu()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="12" cy="19" r="1.2" /></svg>
+        </button>
+        @if (menuOpen()) {
+          <div class="overview-menu">
+            <button type="button" (click)="openSettings()">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4A2 2 0 0 0 4 9.9l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Paramètres
+            </button>
+          </div>
+        }
+      </div>
+    </header>
+
+    <nav class="list-filters" aria-label="Filtrer les listes">
+      @for (filter of filters; track filter.value) {
+        <button
+          type="button"
+          [class.active]="activeFilter() === filter.value"
+          [attr.aria-pressed]="activeFilter() === filter.value"
+          (click)="selectFilter(filter.value)"
+        >{{ filter.label }}</button>
+      }
+    </nav>
+
+    <section
+      class="lists-content"
+      [class.grid-view]="gridView()"
+      aria-live="polite"
+    >
+      @for (list of visibleLists(); track list.name) {
+        <button
+          class="list-card"
+          type="button"
+          [routerLink]="['/lists', list.slug]"
+          [style.--list-color]="list.color"
+          [style.--list-surface]="list.surface"
+        >
+          <span class="list-icon" aria-hidden="true">
+            @switch (list.icon) {
+              @case ('cart') {
+                <svg viewBox="0 0 32 32"><path d="M4 6h4l2.5 14h13l3-10H9" /><circle cx="13" cy="25" r="1.5" /><circle cx="23" cy="25" r="1.5" /></svg>
+              }
+              @case ('home') {
+                <svg viewBox="0 0 32 32"><path d="m5 15 11-9 11 9v12H5Z" /><path d="M13 27v-8h6v8" /></svg>
+              }
+              @case ('suitcase') {
+                <svg viewBox="0 0 32 32"><rect x="5" y="10" width="22" height="17" rx="2" /><path d="M12 10V7h8v3M10 14v9M22 14v9M5 17h22" /></svg>
+              }
+              @case ('gift') {
+                <svg viewBox="0 0 32 32"><rect x="5" y="12" width="22" height="15" rx="1" /><path d="M4 12h24v-5H4ZM16 7v20M16 7c-5 0-7-1-7-3 0-3 6-2 7 3Zm0 0c5 0 7-1 7-3 0-3-6-2-7 3Z" /></svg>
+              }
+              @case ('tools') {
+                <svg viewBox="0 0 32 32"><path d="m8 26 11-11M18 8l6-3 3 3-3 6-4-1-3-3Z" /><path d="m12 22-3-3-5 5 4 4Z" /></svg>
+              }
+            }
+          </span>
+          <span class="list-copy"><strong>{{ list.name }}</strong><small>{{ list.detail }}</small></span>
+          <span class="list-progress">
+            @if (listsStore.settings().showCounts) {
+              <b>{{ list.completed }} / {{ list.total }}</b>
+            }
+            <i><em [style.width.%]="(list.completed / list.total) * 100"></em></i>
+          </span>
+        </button>
+      } @empty {
+        <p class="empty-state">Aucune liste dans cette catégorie.</p>
+      }
+
+      <button class="new-list-button" type="button"><span aria-hidden="true">＋</span> Nouvelle liste</button>
+    </section>
+
+    <nav class="bottom-navigation" aria-label="Navigation principale">
+      <button type="button" routerLink="/">
+        <span aria-hidden="true">⌂</span>Accueil
+      </button>
+      <button type="button">
+        <span aria-hidden="true">▣</span>Agenda
+      </button>
+      <button class="active" type="button" aria-current="page">
+        <span aria-hidden="true">☷</span>Liste
+      </button>
+      <button type="button">
+        <span aria-hidden="true">◎</span>Objectifs
+      </button>
+    </nav>
+
+    @if (settingsOpen()) {
+      <section class="settings-panel" aria-labelledby="settings-title">
+        <header>
+          <button type="button" aria-label="Retour aux listes" (click)="settingsOpen.set(false)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
+          </button>
+          <h2 id="settings-title">Paramètres</h2>
+        </header>
+
+        <div class="settings-content">
+          <section>
+            <h3>Général</h3>
+            <label class="setting-row select-row">
+              <span>Vue par défaut</span>
+              <select aria-label="Vue par défaut" [value]="listsStore.settings().defaultView" (change)="setDefaultView($any($event.target).value)">
+                <option value="list">Liste</option>
+                <option value="grid">Grille</option>
+              </select>
+            </label>
+          </section>
+
+          <section>
+            <h3>Comportement</h3>
+            <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().showCounts" (click)="toggleSetting('showCounts')">
+              <span>Afficher le nombre d’éléments</span><i class="switch" [class.on]="listsStore.settings().showCounts"><b></b></i>
+            </button>
+            <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().showCompleted" (click)="toggleSetting('showCompleted')">
+              <span>Afficher les éléments terminés</span><i class="switch" [class.on]="listsStore.settings().showCompleted"><b></b></i>
+            </button>
+            <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().completedLast" (click)="toggleSetting('completedLast')">
+              <span>Placer les terminés en bas</span><i class="switch" [class.on]="listsStore.settings().completedLast"><b></b></i>
+            </button>
+          </section>
+
+          <section>
+            <h3>Rappels</h3>
+            <label class="setting-row input-row">
+              <span>Rappel par défaut</span>
+              <input type="time" [value]="listsStore.settings().defaultReminder" (change)="listsStore.updateSettings({ defaultReminder: $any($event.target).value })" />
+            </label>
+            <label class="setting-row select-row">
+              <span>Me notifier</span>
+              <select [value]="listsStore.settings().notifyScope" (change)="listsStore.updateSettings({ notifyScope: $any($event.target).value })">
+                <option value="mine">Pour mes listes</option>
+                <option value="all">Pour toutes les listes</option>
+                <option value="none">Jamais</option>
+              </select>
+            </label>
+          </section>
+
+          <section>
+            <h3>Actions</h3>
+            <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().archiveCompleted" (click)="toggleSetting('archiveCompleted')">
+              <span>Archiver les listes terminées</span><i class="switch" [class.on]="listsStore.settings().archiveCompleted"><b></b></i>
+            </button>
+            <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().confirmDelete" (click)="toggleSetting('confirmDelete')">
+              <span>Confirmer avant suppression</span><i class="switch" [class.on]="listsStore.settings().confirmDelete"><b></b></i>
+            </button>
+          </section>
+        </div>
+      </section>
+    }
+  </main>
+</div>

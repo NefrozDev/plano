@@ -48,6 +48,10 @@ export class DashboardComponent {
   activeNavigation: NavigationItem = 'Accueil';
 
   selectNavigation(item: NavigationItem): void {
+    if (item === 'Liste') {
+      void this.router.navigateByUrl('/lists');
+      return;
+    }
     this.activeNavigation = item;
   }
 

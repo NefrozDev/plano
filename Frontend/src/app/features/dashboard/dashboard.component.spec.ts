@@ -61,6 +61,19 @@ describe('DashboardComponent', () => {
     expect(component.profileMenuOpen()).toBeTrue();
   });
 
+  it('opens the lists page from the bottom navigation', () => {
+    const component =
+      TestBed.createComponent(DashboardComponent).componentInstance;
+    const navigate = spyOn(
+      TestBed.inject(Router),
+      'navigateByUrl',
+    ).and.resolveTo(true);
+
+    component.selectNavigation('Liste');
+
+    expect(navigate).toHaveBeenCalledOnceWith('/lists');
+  });
+
   it('logs out and returns to login', () => {
     const component =
       TestBed.createComponent(DashboardComponent).componentInstance;

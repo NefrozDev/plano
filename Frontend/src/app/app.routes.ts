@@ -30,6 +30,24 @@ export const routes: Routes = [
     title: 'Configurer mon groupe | Plano',
   },
   {
+    path: 'lists',
+    canActivate: [authenticatedGuard],
+    loadComponent: () =>
+      import('./features/lists/lists.component').then(
+        (component) => component.ListsComponent,
+      ),
+    title: 'Listes | Plano',
+  },
+  {
+    path: 'lists/:slug',
+    canActivate: [authenticatedGuard],
+    loadComponent: () =>
+      import('./features/lists/list-detail/list-detail.component').then(
+        (component) => component.ListDetailComponent,
+      ),
+    title: 'Détail de la liste | Plano',
+  },
+  {
     path: '',
     pathMatch: 'full',
     canActivate: [authenticatedGuard],
