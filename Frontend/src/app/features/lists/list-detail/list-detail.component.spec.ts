@@ -92,6 +92,23 @@ describe('ListDetailComponent', () => {
     ]);
   });
 
+  it('does not select UI text but keeps editor text selectable', () => {
+    const fixture = TestBed.createComponent(ListDetailComponent);
+    fixture.detectChanges();
+    const sectionTitle = (fixture.nativeElement as HTMLElement).querySelector(
+      '.section-title',
+    ) as HTMLElement;
+
+    expect(getComputedStyle(sectionTitle).userSelect).toBe('none');
+
+    fixture.componentInstance.openListEditor();
+    fixture.detectChanges();
+    const editor = (fixture.nativeElement as HTMLElement).querySelector(
+      '.editor-field input',
+    ) as HTMLInputElement;
+    expect(getComputedStyle(editor).userSelect).toBe('text');
+  });
+
   it('adds an entry from a sub-list empty row and ignores blank values', () => {
     const component = TestBed.createComponent(ListDetailComponent).componentInstance;
     const initialLength = component.sections()[0].entries.length;
