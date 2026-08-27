@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
+import { PlanoDataStore } from '../../core/data/plano-data.store';
 
 type NavigationItem = 'Accueil' | 'Agenda' | 'Liste' | 'Objectifs';
 
@@ -15,6 +16,7 @@ type NavigationItem = 'Accueil' | 'Agenda' | 'Liste' | 'Objectifs';
 export class DashboardComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly appData = inject(PlanoDataStore);
 
   readonly navigation: readonly NavigationItem[] = [
     'Accueil',
@@ -22,20 +24,8 @@ export class DashboardComponent {
     'Liste',
     'Objectifs',
   ];
-  readonly weekDays = [
-    { label: 'lun', date: 17 },
-    { label: 'mar', date: 18 },
-    { label: 'mer', date: 19 },
-    { label: 'jeu', date: 20, selected: true },
-    { label: 'ven', date: 21, hasEvent: true },
-    { label: 'sam', date: 22 },
-    { label: 'dim', date: 23, hasEvent: true },
-  ];
-  readonly tasks = signal([
-    { label: 'Préparer la présentation', done: false },
-    { label: '30 minutes de course à pied', done: true },
-    { label: 'Réserver le restaurant', done: false },
-  ]);
+  readonly weekDays = this.appData.data().dashboard.weekDays;
+  readonly tasks = computed(() => this.appData.data().dashboard.tasks);
   readonly completedTasks = computed(
     () => this.tasks().filter((task) => task.done).length,
   );
@@ -56,11 +46,15 @@ export class DashboardComponent {
   }
 
   toggleTask(index: number): void {
-    this.tasks.update((tasks) =>
-      tasks.map((task, taskIndex) =>
-        taskIndex === index ? { ...task, done: !task.done } : task,
-      ),
-    );
+    this.appData.update((data) => ({
+      ...data,
+      dashboard: {
+        ...data.dashboard,
+        tasks: data.dashboard.tasks.map((task, taskIndex) =>
+          taskIndex === index ? { ...task, done: !task.done } : task,
+        ),
+      },
+    }));
   }
 
   toggleProfileMenu(): void {

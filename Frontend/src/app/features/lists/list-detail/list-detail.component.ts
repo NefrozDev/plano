@@ -1,34 +1,8 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import type { ListEntry, ListMember, ListSection, ShareRole } from '@plano/common';
 import { ListIcon, ListsStore } from '../lists.store';
-
-interface ListEntry {
-  name: string;
-  done: boolean;
-  readonly highlighted?: boolean;
-  addedBy: string;
-  addedAt: string;
-  assignedTo: string;
-  reminder: string;
-  notes: string;
-}
-
-interface ListSection {
-  readonly name: string;
-  readonly color: string;
-  readonly entries: ListEntry[];
-}
-
-type ShareRole = 'owner' | 'editor' | 'viewer';
-
-interface ListMember {
-  readonly id: string;
-  readonly name: string;
-  readonly initials: string;
-  readonly color: string;
-  role: ShareRole;
-}
 
 const LIST_NAMES: Readonly<Record<string, string>> = {
   courses: 'Courses',
@@ -44,6 +18,7 @@ function createEntry(
   extras: Partial<ListEntry> = {},
 ): ListEntry {
   return {
+    id: createId('entry'),
     name,
     done,
     addedBy: 'Camille',
@@ -53,6 +28,10 @@ function createEntry(
     notes: '',
     ...extras,
   };
+}
+
+function createId(prefix: string): string {
+  return `${prefix}-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
 }
 
 @Component({
@@ -68,6 +47,7 @@ export class ListDetailComponent {
   private readonly listsStore = inject(ListsStore);
   private readonly slug = this.route.snapshot.paramMap.get('slug') ?? '';
   private readonly currentList = this.listsStore.list(this.slug);
+  private readonly currentDetail = this.listsStore.detail(this.slug);
 
   readonly title = signal(
     this.currentList?.name ?? LIST_NAMES[this.slug] ?? 'Liste',
@@ -75,7 +55,7 @@ export class ListDetailComponent {
   readonly listMenuOpen = signal(false);
   readonly listEditorOpen = signal(false);
   readonly draftName = signal(this.title());
-  readonly description = signal('');
+  readonly description = signal(this.currentDetail?.description ?? '');
   readonly selectedIcon = signal<ListIcon>(this.currentList?.icon ?? 'cart');
   readonly listColor = signal(this.currentList?.color ?? '#23c666');
   readonly iconChoices: readonly { value: ListIcon; label: string }[] = [
@@ -124,52 +104,11 @@ export class ListDetailComponent {
   readonly inviteFormOpen = signal(false);
   readonly inviteEmail = signal('');
   readonly inviteRole = signal<Exclude<ShareRole, 'owner'>>('editor');
-  readonly sharingEnabled = signal(true);
+  readonly sharingEnabled = signal(this.currentDetail?.sharingEnabled ?? false);
   readonly linkCopied = signal(false);
   readonly invitationLink = `plano.app/l/${this.slug}-a1b2c3`;
-  readonly members = signal<ListMember[]>([
-    { id: 'camille', name: 'Camille', initials: 'C', color: '#A76142', role: 'owner' },
-    { id: 'alex', name: 'Alex', initials: 'A', color: '#D07863', role: 'editor' },
-    { id: 'emma', name: 'Emma', initials: 'E', color: '#3D6F83', role: 'viewer' },
-  ]);
-  readonly sections = signal<ListSection[]>([
-    {
-      name: 'Produits frais',
-      color: '#23c666',
-      entries: [
-        createEntry('Lait'),
-        createEntry('Œufs', true),
-        createEntry('Tomates'),
-        createEntry('Salade'),
-      ],
-    },
-    {
-      name: 'Épicerie',
-      color: '#d85a9a',
-      entries: [
-        createEntry('Pâtes', true),
-        createEntry('Riz', false, { highlighted: true }),
-        createEntry('Huile d’olive'),
-      ],
-    },
-    {
-      name: 'Boissons',
-      color: '#3899e8',
-      entries: [
-        createEntry('Eau'),
-        createEntry('Jus d’orange'),
-      ],
-    },
-    {
-      name: 'Hygiène & Entretien',
-      color: '#5364ee',
-      entries: [
-        createEntry('Lessive', true),
-        createEntry('Éponges'),
-        createEntry('Nettoyant'),
-      ],
-    },
-  ]);
+  readonly members = signal<ListMember[]>(this.currentDetail?.members ?? []);
+  readonly sections = signal<ListSection[]>(this.currentDetail?.sections ?? []);
   readonly completed = computed(() =>
     this.sections().reduce(
       (total, section) =>
@@ -177,7 +116,17 @@ export class ListDetailComponent {
       0,
     ),
   );
-  readonly total = signal(8);
+  readonly total = signal(this.currentDetail?.total ?? 0);
+
+  private persistDetail(): void {
+    this.listsStore.updateDetail(this.slug, {
+      description: this.description(),
+      sections: this.sections(),
+      members: this.members(),
+      sharingEnabled: this.sharingEnabled(),
+      total: this.total(),
+    });
+  }
 
   toggleSection(sectionName: string): void {
     this.collapsedSections.update((sections) =>
@@ -215,6 +164,7 @@ export class ListDetailComponent {
           : [...sections, updatedSection.name],
       );
     }
+    this.persistDetail();
   }
 
   sectionCompleted(section: ListSection): number {
@@ -294,6 +244,7 @@ export class ListDetailComponent {
         return { ...section, entries };
       }),
     );
+    this.persistDetail();
   }
 
   beginAdding(sectionIndex: number): void {
@@ -322,6 +273,7 @@ export class ListDetailComponent {
       ),
     );
     this.total.update((total) => total + 1);
+    this.persistDetail();
   }
 
   cancelAdding(): void {
@@ -353,8 +305,9 @@ export class ListDetailComponent {
     if (!name) return;
     this.sections.update((sections) => [
       ...sections,
-      { name, color: this.newSectionColor(), entries: [] },
+      { id: createId('section'), name, color: this.newSectionColor(), entries: [] },
     ]);
+    this.persistDetail();
     this.closeSectionCreator();
   }
 
@@ -390,6 +343,7 @@ export class ListDetailComponent {
     this.sharingEnabled.set(true);
     this.inviteEmail.set('');
     this.inviteFormOpen.set(false);
+    this.persistDetail();
   }
 
   updateMemberRole(memberId: string, role: ShareRole): void {
@@ -400,6 +354,7 @@ export class ListDetailComponent {
           : member,
       ),
     );
+    this.persistDetail();
   }
 
   roleLabel(role: ShareRole): string {
@@ -423,6 +378,12 @@ export class ListDetailComponent {
     );
     this.sharingEnabled.set(false);
     this.inviteFormOpen.set(false);
+    this.persistDetail();
+  }
+
+  enableSharing(): void {
+    this.sharingEnabled.set(true);
+    this.persistDetail();
   }
 
   openListEditor(): void {
@@ -444,6 +405,7 @@ export class ListDetailComponent {
       icon: this.selectedIcon(),
       color: this.listColor(),
     });
+    this.persistDetail();
     this.listEditorOpen.set(false);
   }
 
@@ -573,6 +535,7 @@ export class ListDetailComponent {
             },
       ),
     );
+    this.persistDetail();
   }
 
   deleteEntry(sectionIndex: number, entryIndex: number): void {
@@ -591,6 +554,7 @@ export class ListDetailComponent {
     this.total.update((total) => Math.max(0, total - 1));
     this.revealedEntry.set(null);
     this.suppressEntryClick.set(null);
+    this.persistDetail();
   }
 
   requestDeleteEntry(sectionIndex: number, entryIndex: number): void {

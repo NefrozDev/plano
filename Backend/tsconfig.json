@@ -2,6 +2,9 @@
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    "paths": {
+      "@plano/common": ["../Common/src/index.ts"]
+    },
     "resolvePackageJsonExports": true,
     "esModuleInterop": true,
     "isolatedModules": true,

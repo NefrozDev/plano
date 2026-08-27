@@ -18,6 +18,9 @@
     "importHelpers": true,
     "target": "ES2022",
     "module": "ES2022",
+    "paths": {
+      "@plano/common": ["../Common/src/index.ts"]
+    },
     "useDefineForClassFields": false,
     "lib": [
       "ES2022",

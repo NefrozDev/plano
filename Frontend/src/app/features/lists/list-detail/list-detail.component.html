@@ -404,7 +404,7 @@
               <div><span>{{ invitationLink }}</span><button type="button" (click)="copyInvitationLink()">{{ linkCopied() ? 'Copié !' : 'Copier' }}</button></div>
               <small>Vous pouvez désactiver le lien à tout moment.</small>
             } @else {
-              <button class="enable-sharing" type="button" (click)="sharingEnabled.set(true)">Activer le lien de partage</button>
+              <button class="enable-sharing" type="button" (click)="enableSharing()">Activer le lien de partage</button>
             }
           </section>
 
