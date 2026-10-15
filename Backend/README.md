@@ -35,6 +35,8 @@ end-to-end tests rather than counted as unit-test coverage.
 src/
 ├── auth/            # Registration, login, session restoration, and logout
 ├── database/        # TypeORM and persistent sql.js/SQLite configuration
+├── groups/          # Groups: create, join with an invite code, manage members
+├── lists/           # Lists, sections and entries, shareable within a group
 ├── users/           # User persistence model
 ├── health/          # Self-contained health feature module
 ├── app.config.ts    # Shared HTTP configuration used by runtime and tests
@@ -56,6 +58,32 @@ modules wire their dependencies together.
   `POST /api/v1/auth/logout` revokes that session and clears the cookie.
 - Registration writes the user and first session in one database transaction, so
   a partial account cannot be left behind.
+
+## Lists API
+
+Request and response shapes are the TypeScript interfaces of `Common/src/lists.ts`;
+the validated DTOs implement them. Every route requires a session.
+
+| Method and path | Who | Result |
+| --- | --- | --- |
+| `GET /lists` | any user | Lists you own or that are shared with you |
+| `POST /lists` | any user | Creates a list you own |
+| `GET /lists/reminders` | any user | Entries with a reminder, for the agenda |
+| `GET /lists/:listId` | members | The list with its members, sections and entries |
+| `PATCH /lists/:listId`, `DELETE /lists/:listId` | owner | Edits or deletes the list |
+| `POST /lists/:listId/sections` | owner, editors | Adds a section |
+| `POST /lists/:listId/sections/:sectionId/entries` | owner, editors | Adds an entry |
+| `PUT /lists/:listId/sections/:sectionId/order` | owner, editors | Reorders a section (every entry id, once) |
+| `PATCH`/`DELETE /lists/:listId/entries/:entryId` | owner, editors | Edits or deletes an entry |
+| `POST /lists/:listId/members`, `DELETE /lists/:listId/members` | owner | Shares with a group member; stops sharing |
+| `PATCH /lists/:listId/members/:userId` | owner | Changes a member's role (`editor` or `viewer`) |
+| `DELETE /lists/:listId/members/:userId` | owner, or that member | Removes a member, or leaves the list |
+| `GET`/`PATCH /settings/lists` | any user | Your list display preferences |
+
+- A list can only be shared with members of the owner's group, and access ends
+  as soon as either of them leaves it.
+- Lists you cannot see answer `404`, like lists that do not exist, so list ids
+  cannot be probed. Seeing a list but lacking the role for a change answers `403`.
 
 The pure-JavaScript sql.js driver and an automatically applied TypeORM migration
 keep this learning project easy to run without native database tooling. Writes

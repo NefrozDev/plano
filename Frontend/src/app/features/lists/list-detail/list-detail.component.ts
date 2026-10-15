@@ -1,17 +1,18 @@
 import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import type { ListEntry, ListSection } from '@plano/common';
-import { AuthService } from '../../../core/auth/auth.service';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import type { ListEntry, ListSection, UpdateEntryRequest } from '@plano/common';
+import { toPerson } from '../../../core/people/people';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
-import { EntryChanges, ListsStore } from '../lists.store';
+import { ToastComponent } from '../../../shared/ui/toast.component';
+import { ListsStore } from '../lists.store';
 import { ListEditorComponent, ListEdits } from './list-editor.component';
 import { ListEntryDetailsComponent } from './list-entry-details.component';
 import { ListEntryRowComponent } from './list-entry-row.component';
-import { EntryRef, LIST_COLOR_CHOICES } from './list-options';
+import { EntryRef } from './list-options';
 import { ListSectionCreatorComponent, NewSection } from './list-section-creator.component';
 import { ListSharingPanelComponent } from './list-sharing-panel.component';
 
@@ -29,9 +30,10 @@ function percent(part: number, whole: number): number {
 }
 
 /**
- * Container for one list: reads it from ListsStore, keeps only screen state
- * (open panels, collapsed sections, selection, drag) and delegates the rest
- * to the entry row, editor, section creator, entry details and sharing panel.
+ * Container for one list: loads it through ListsStore, keeps only screen
+ * state (open panels, collapsed sections, selection, drag) and delegates the
+ * rest to the entry row, editor, section creator, entry details and sharing
+ * panel. What can be changed follows the user's role on the list.
  */
 @Component({
   selector: 'app-list-detail',
@@ -46,6 +48,7 @@ function percent(part: number, whole: number): number {
     ListEntryRowComponent,
     ListSectionCreatorComponent,
     ListSharingPanelComponent,
+    ToastComponent,
   ],
   templateUrl: './list-detail.component.html',
   styleUrl: './list-detail.component.scss',
@@ -58,37 +61,38 @@ function percent(part: number, whole: number): number {
 })
 export class ListDetailComponent {
   private readonly document = inject(DOCUMENT);
-  private readonly store = inject(ListsStore);
+  private readonly router = inject(Router);
   private readonly confirm = inject(ConfirmService);
-  private readonly auth = inject(AuthService);
-  readonly slug = inject(ActivatedRoute).snapshot.paramMap.get('slug') ?? '';
+  readonly store = inject(ListsStore);
+  private readonly listId: string;
 
-  readonly list = computed(() => this.store.list(this.slug));
-  private readonly detail = computed(() => this.store.detail(this.slug));
-  readonly title = computed(() => this.list()?.name ?? 'Liste');
-  readonly color = computed(() => this.list()?.color ?? LIST_COLOR_CHOICES[0]);
-  readonly description = computed(() => this.detail()?.description ?? '');
-  readonly members = computed(() => this.detail()?.members ?? []);
-  readonly sections = computed(() => this.detail()?.sections ?? []);
-  private readonly entries = computed(() => this.sections().flatMap((section) => section.entries));
-  readonly completed = computed(() => this.entries().filter((entry) => entry.done).length);
-  readonly total = computed(() => this.entries().length);
-  readonly progress = computed(() => percent(this.completed(), this.total()));
+  /** The open list, once loaded (never a previously opened one). */
+  readonly list = computed(() => {
+    const detail = this.store.detail();
+    return detail?.id === this.listId ? detail : null;
+  });
+  readonly notFound = signal(false);
+  readonly canEdit = computed(() => !!this.list() && this.list()?.role !== 'viewer');
+  readonly isOwner = computed(() => this.list()?.role === 'owner');
+  readonly people = computed(() => (this.list()?.members ?? []).map(toPerson));
+  readonly progress = computed(() => percent(this.list()?.completed ?? 0, this.list()?.total ?? 0));
 
   /** Ids of the sections shown as a one-line summary. */
   readonly collapsedSections = signal<readonly string[]>([]);
   readonly sectionViews = computed<readonly SectionView[]>(() => {
-    const { showCompleted, completedLast } = this.store.settings();
+    const settings = this.store.settings();
+    const list = this.list();
+    if (!settings || !list) return [];
     const collapsed = this.collapsedSections();
-    return this.sections().map((section) => {
+    return list.sections.map((section) => {
       const completed = section.entries.filter((entry) => entry.done).length;
-      const visible = section.entries.filter((entry) => showCompleted || !entry.done);
+      const visible = section.entries.filter((entry) => settings.showCompleted || !entry.done);
       return {
         section,
         completed,
         progress: percent(completed, section.entries.length),
         collapsed: collapsed.includes(section.id),
-        entries: completedLast
+        entries: settings.completedLast
           ? [...visible].sort((first, second) => Number(first.done) - Number(second.done))
           : visible,
       };
@@ -104,15 +108,25 @@ export class ListDetailComponent {
   readonly newEntryValue = signal('');
   readonly selected = signal<EntryRef | null>(null);
   readonly dragged = signal<EntryRef | null>(null);
+  /** Whether the current drag reordered anything, i.e. needs saving. */
+  private dragMoved = false;
   readonly activeEntry = computed(() => {
     const ref = this.selected();
-    const section = this.sections().find(({ id }) => id === ref?.sectionId);
+    const section = this.list()?.sections.find(({ id }) => id === ref?.sectionId);
     const entry = section?.entries.find(({ id }) => id === ref?.entryId);
     return section && entry ? { section, entry } : null;
   });
-  private readonly currentUserName = computed(
-    () => this.auth.user()?.firstName || this.auth.user()?.username || 'Vous',
-  );
+
+  constructor() {
+    const route = inject(ActivatedRoute).snapshot;
+    this.listId = route.paramMap.get('listId') ?? '';
+    const openEditor = route.queryParamMap.has('edit');
+    void this.store.open(this.listId).then((found) => {
+      this.notFound.set(!found);
+      // A list created from the overview opens straight in its editor.
+      if (found && openEditor && this.isOwner()) this.listEditorOpen.set(true);
+    });
+  }
 
   toggleSection(sectionId: string): void {
     this.collapsedSections.update((sections) =>
@@ -123,10 +137,10 @@ export class ListDetailComponent {
   }
 
   /** Completing the last entry of a section folds it away. */
-  toggleEntry(sectionId: string, entryId: string): void {
-    this.store.toggleEntry(this.slug, sectionId, entryId);
-    const section = this.sections().find(({ id }) => id === sectionId);
-    if (section?.entries.every((entry) => entry.done) && !this.collapsedSections().includes(sectionId)) {
+  async toggleEntry(sectionId: string, entry: ListEntry): Promise<void> {
+    if (!(await this.store.toggleEntry(entry))) return;
+    const section = this.list()?.sections.find(({ id }) => id === sectionId);
+    if (section?.entries.every(({ done }) => done) && !this.collapsedSections().includes(sectionId)) {
       this.collapsedSections.update((sections) => [...sections, sectionId]);
     }
   }
@@ -141,7 +155,7 @@ export class ListDetailComponent {
     if (this.addingTo() !== sectionId) return;
     const name = this.newEntryValue().trim();
     this.cancelAdding();
-    if (name) this.store.addEntry(this.slug, sectionId, name, this.currentUserName());
+    if (name) void this.store.addEntry(sectionId, name);
   }
 
   cancelAdding(): void {
@@ -158,10 +172,25 @@ export class ListDetailComponent {
     this.listEditorOpen.set(true);
   }
 
-  saveList({ description, ...summary }: ListEdits): void {
-    this.store.updateList(this.slug, summary);
-    this.store.updateDescription(this.slug, description);
+  async saveList(edits: ListEdits): Promise<void> {
+    if (await this.store.updateList(edits)) this.listEditorOpen.set(false);
+  }
+
+  async deleteList(): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      heading: 'Supprimer la liste ?',
+      message: `« ${this.list()?.name} » et tous ses éléments seront supprimés pour tous ses membres.`,
+      confirmLabel: 'Supprimer',
+      tone: 'danger',
+    });
+    if (confirmed && (await this.store.deleteList())) {
+      void this.router.navigateByUrl('/lists');
+    }
+  }
+
+  openSharingFromEditor(): void {
     this.listEditorOpen.set(false);
+    this.sharingOpen.set(true);
   }
 
   openSectionCreator(): void {
@@ -169,22 +198,21 @@ export class ListDetailComponent {
     this.sectionCreatorOpen.set(true);
   }
 
-  addSection({ name, color }: NewSection): void {
-    this.store.addSection(this.slug, name, color);
-    this.sectionCreatorOpen.set(false);
+  async addSection({ name, color }: NewSection): Promise<void> {
+    if (await this.store.addSection(name, color)) this.sectionCreatorOpen.set(false);
   }
 
   openEntry(sectionId: string, entryId: string): void {
     this.selected.set({ sectionId, entryId });
   }
 
-  updateActiveEntry(changes: EntryChanges): void {
+  updateActiveEntry(changes: UpdateEntryRequest): void {
     const ref = this.selected();
-    if (ref) this.store.updateEntry(this.slug, ref.sectionId, ref.entryId, changes);
+    if (ref) void this.store.updateEntry(ref.entryId, changes);
   }
 
-  async requestDeleteEntry(sectionId: string, entry: ListEntry): Promise<void> {
-    if (this.store.settings().confirmDelete) {
+  async requestDeleteEntry(entry: ListEntry): Promise<void> {
+    if (this.store.settings()?.confirmDelete ?? true) {
       const confirmed = await this.confirm.ask({
         heading: 'Supprimer l’élément ?',
         message: `« ${entry.name} » sera supprimé définitivement.`,
@@ -193,10 +221,11 @@ export class ListDetailComponent {
       });
       if (!confirmed) return;
     }
-    this.store.removeEntry(this.slug, sectionId, entry.id);
+    await this.store.removeEntry(entry.id);
   }
 
   startDrag(sectionId: string, entryId: string): void {
+    this.dragMoved = false;
     this.dragged.set({ sectionId, entryId });
   }
 
@@ -216,10 +245,15 @@ export class ListDetailComponent {
     ) {
       return;
     }
-    this.store.moveEntry(this.slug, source.sectionId, source.entryId, targetEntryId);
+    this.store.moveEntry(source.sectionId, source.entryId, targetEntryId);
+    this.dragMoved = true;
   }
 
+  /** Saves the new order once, on drop. */
   endDrag(): void {
+    const source = this.dragged();
+    if (!source) return;
     this.dragged.set(null);
+    if (this.dragMoved) void this.store.saveOrder(source.sectionId);
   }
 }

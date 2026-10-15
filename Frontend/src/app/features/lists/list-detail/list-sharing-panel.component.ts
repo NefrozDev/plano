@@ -1,10 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
-import type { ShareRole } from '@plano/common';
-import { ClipboardService } from '../../../core/browser/clipboard.service';
-import { InvitedRole, ListsStore } from '../lists.store';
+import { Router } from '@angular/router';
+import type { ListDetail, ListMemberRole } from '@plano/common';
+import { AuthService } from '../../../core/auth/auth.service';
+import type { GroupMember } from '../../../core/groups/group.models';
+import { GroupsService } from '../../../core/groups/groups.service';
+import { toPerson } from '../../../core/people/people';
+import { ConfirmService } from '../../../shared/ui/confirm.service';
+import { ListsStore } from '../lists.store';
 import { ROLE_LABELS } from './list-options';
 
-/** Members, roles and invitation link of one list, edited straight in the store. */
+/**
+ * Who can see the list. The owner shares it with members of their group and
+ * manages roles; anyone else sees the members and can leave the list.
+ */
 @Component({
   selector: 'app-list-sharing-panel',
   standalone: true,
@@ -14,41 +22,79 @@ import { ROLE_LABELS } from './list-options';
 })
 export class ListSharingPanelComponent {
   private readonly store = inject(ListsStore);
-  private readonly clipboard = inject(ClipboardService);
+  private readonly groups = inject(GroupsService);
+  private readonly confirm = inject(ConfirmService);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
-  readonly slug = input.required<string>();
-  readonly listTitle = input.required<string>();
-  readonly color = input.required<string>();
+  readonly list = input.required<ListDetail>();
   readonly close = output<void>();
 
   readonly roleLabels = ROLE_LABELS;
-  private readonly detail = computed(() => this.store.detail(this.slug()));
-  readonly members = computed(() => this.detail()?.members ?? []);
-  readonly sharingEnabled = computed(() => this.detail()?.sharingEnabled ?? false);
-  readonly invitationLink = computed(() => `plano.app/l/${this.slug()}-a1b2c3`);
-
+  readonly isOwner = computed(() => this.list().role === 'owner');
+  readonly members = computed(() =>
+    this.list().members.map((member) => ({ ...member, avatar: toPerson(member) })),
+  );
   readonly inviteFormOpen = signal(false);
-  readonly inviteEmail = signal('');
-  readonly inviteRole = signal<InvitedRole>('editor');
-  readonly linkCopied = signal(false);
+  readonly groupMembers = signal<readonly GroupMember[] | null>(null);
+  /** Group mates who cannot see the list yet. */
+  readonly candidates = computed(() =>
+    (this.groupMembers() ?? []).filter(
+      (member) => !this.list().members.some(({ id }) => id === member.id),
+    ),
+  );
+  readonly inviteUserId = signal('');
+  readonly inviteRole = signal<ListMemberRole>('editor');
 
-  invite(): void {
-    if (!this.inviteEmail().trim()) return;
-    this.store.inviteMember(this.slug(), this.inviteEmail(), this.inviteRole());
-    this.inviteEmail.set('');
-    this.inviteFormOpen.set(false);
+  openInviteForm(): void {
+    this.inviteFormOpen.set(true);
+    this.groups.getMine().subscribe({
+      next: (group) => {
+        this.groupMembers.set(group?.members ?? []);
+        this.inviteUserId.set(this.candidates()[0]?.id ?? '');
+      },
+      error: () => this.groupMembers.set([]),
+    });
   }
 
-  updateRole(memberId: string, role: ShareRole): void {
-    this.store.updateMemberRole(this.slug(), memberId, role);
+  memberName(member: GroupMember): string {
+    return `${member.firstName} ${member.lastName}`.trim() || member.username;
   }
 
-  setSharing(enabled: boolean): void {
-    this.store.setSharing(this.slug(), enabled);
-    this.inviteFormOpen.set(false);
+  async invite(): Promise<void> {
+    if (!this.inviteUserId()) return;
+    if (await this.store.addMember(this.inviteUserId(), this.inviteRole())) {
+      this.inviteFormOpen.set(false);
+    }
   }
 
-  async copyInvitationLink(): Promise<void> {
-    this.linkCopied.set(await this.clipboard.copy(`https://${this.invitationLink()}`));
+  updateRole(userId: string, role: ListMemberRole): void {
+    void this.store.updateMemberRole(userId, role);
+  }
+
+  removeMember(userId: string): void {
+    void this.store.removeMember(userId);
+  }
+
+  async stopSharing(): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      heading: 'Arrêter le partage ?',
+      message: 'Plus personne d’autre que vous n’aura accès à la liste.',
+      confirmLabel: 'Arrêter',
+      tone: 'danger',
+    });
+    if (confirmed) await this.store.stopSharing();
+  }
+
+  async leave(): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      heading: 'Quitter la liste ?',
+      message: 'Vous n’y aurez plus accès, sauf si elle est partagée à nouveau.',
+      confirmLabel: 'Quitter',
+      tone: 'danger',
+    });
+    if (confirmed && (await this.store.removeMember(this.auth.user()?.id ?? ''))) {
+      void this.router.navigateByUrl('/lists');
+    }
   }
 }

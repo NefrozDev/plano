@@ -81,6 +81,8 @@
       "!auth/dto/register.dto.ts",
       "!groups/dto/*.dto.ts",
       "!groups/group.types.ts",
+      "!lists/dto/*.dto.ts",
+      "!**/testing/**",
       "!database/migrations/**"
     ],
     "coverageThreshold": {

@@ -5,8 +5,7 @@ import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { DatabaseWriteLockService } from './database-write-lock.service';
-import { CreateAuthTables1786940000000 } from './migrations/1786940000000-create-auth-tables';
-import { CreateGroupTables1787020000000 } from './migrations/1787020000000-create-group-tables';
+import { MIGRATIONS } from './migrations';
 
 /**
  * The Backend folder: the nearest parent with a package.json. __dirname is
@@ -44,10 +43,7 @@ function resolveDatabasePath(configuredPath: string): string {
           location,
           autoLoadEntities: true,
           autoSave: true,
-          migrations: [
-            CreateAuthTables1786940000000,
-            CreateGroupTables1787020000000,
-          ],
+          migrations: MIGRATIONS,
           migrationsRun: true,
           synchronize: false,
         };

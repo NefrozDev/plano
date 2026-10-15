@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, input, output, signal } from '@angular/core';
-import type { ListIcon, PlanoList } from '@plano/common';
+import type { ListDetail, ListIcon } from '@plano/common';
+import type { Person } from '../../../core/people/people';
+import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { LIST_COLOR_CHOICES, LIST_ICON_CHOICES } from './list-options';
 
 export interface ListEdits {
@@ -13,22 +15,22 @@ export interface ListEdits {
 @Component({
   selector: 'app-list-editor',
   standalone: true,
+  imports: [AvatarStackComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-editor.component.html',
   styles: `
     :host { display: contents; }
-    .avatar { display: grid; width: 1.85rem; height: 1.85rem; margin-left: -.25rem; place-items: center; border: 2px solid white; border-radius: 50%; color: white; font-size: .66rem; font-weight: 750; }
-    .avatar:first-child { margin-left: 0; }
-    .avatar-one { background: #915c43; }
-    .avatar-two { background: #cb7460; }
-    .avatar-three { background: #35485d; }
+    .sharing-row app-avatar-stack { --avatar-size: 1.85rem; }
   `,
 })
 export class ListEditorComponent implements OnInit {
-  readonly list = input.required<PlanoList>();
-  readonly description = input('');
+  readonly list = input.required<ListDetail>();
+  /** Avatars of the people with access. */
+  readonly people = input<readonly Person[]>([]);
 
   readonly save = output<ListEdits>();
+  readonly share = output<void>();
+  readonly delete = output<void>();
   readonly close = output<void>();
 
   readonly iconChoices = LIST_ICON_CHOICES;
@@ -44,7 +46,7 @@ export class ListEditorComponent implements OnInit {
     this.draftName.set(list.name);
     this.draftIcon.set(list.icon);
     this.draftColor.set(list.color);
-    this.draftDescription.set(this.description());
+    this.draftDescription.set(list.description);
   }
 
   submit(): void {

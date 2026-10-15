@@ -1,128 +1,206 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { createMockPlanoData } from '@plano/common';
-import {
-  MemoryPlanoDataAdapter,
-  PLANO_DATA_ADAPTER,
-} from '../../core/data/plano-data.adapter';
-import { PlanoDataStore } from '../../core/data/plano-data.store';
-import { APP_CLOCK } from '../../core/time/dates';
+import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { ListsStore } from './lists.store';
+import { MEMBER_ID, entry, listDetail, listSettings, listSummary } from './testing/lists-fixtures';
 
-describe('ListsStore persistence', () => {
-  it('hydrates from and saves through the configured adapter', () => {
-    const adapter = new MemoryPlanoDataAdapter();
-    const saved = createMockPlanoData();
-    saved.lists[0].name = 'Courses persistées';
-    adapter.save(saved);
-    TestBed.configureTestingModule({
-      providers: [{ provide: PLANO_DATA_ADAPTER, useValue: adapter }],
-    });
-    const store = TestBed.inject(ListsStore);
-
-    expect(store.list('courses')?.name).toBe('Courses persistées');
-
-    store.updateSettings({ defaultView: 'grid' });
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({
-      providers: [
-        PlanoDataStore,
-        ListsStore,
-        { provide: PLANO_DATA_ADAPTER, useValue: adapter },
-      ],
-    });
-
-    expect(TestBed.inject(ListsStore).settings().defaultView).toBe('grid');
-  });
-});
-
-describe('ListsStore detail', () => {
+describe('ListsStore', () => {
   let store: ListsStore;
-  const names = (sectionId: string) =>
-    store.detail('courses')?.sections.find(({ id }) => id === sectionId)?.entries.map(({ name }) => name);
-  const entry = (sectionId: string, entryId: string) =>
-    store.detail('courses')?.sections.find(({ id }) => id === sectionId)?.entries.find(({ id }) => id === entryId);
+  let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [{ provide: APP_CLOCK, useValue: () => new Date(2026, 9, 15, 9, 5) }],
-    });
+    TestBed.configureTestingModule({ providers: providePlanoTesting() });
     store = TestBed.inject(ListsStore);
+    http = TestBed.inject(HttpTestingController);
   });
 
-  it('derives the overview counts from the entries on every change', () => {
-    expect(store.list('courses')).toEqual(jasmine.objectContaining({ completed: 3, total: 12 }));
+  afterEach(() => http.verify());
 
-    store.toggleEntry('courses', 'fresh', 'milk');
-    store.removeEntry('courses', 'drinks', 'water');
+  /** Opens list-1 with its settings, as the detail screen does. */
+  async function openList(): Promise<void> {
+    const opening = store.open('list-1');
+    http.expectOne('/api/v1/lists/list-1').flush(listDetail());
+    http.expectOne('/api/v1/settings/lists').flush(listSettings());
+    expect(await opening).toBeTrue();
+  }
 
-    expect(store.list('courses')).toEqual(jasmine.objectContaining({ completed: 4, total: 11 }));
+  const names = (sectionIndex = 0) => store.detail()?.sections[sectionIndex].entries.map(({ name }) => name);
+
+  it('loads the lists and the settings once', async () => {
+    const loading = store.loadLists();
+    expect(store.loading()).toBeTrue();
+    http.expectOne('/api/v1/lists').flush([listSummary()]);
+    http.expectOne('/api/v1/settings/lists').flush(listSettings());
+    await loading;
+
+    expect(store.lists().map(({ name }) => name)).toEqual(['Courses']);
+    expect(store.settings()?.defaultView).toBe('list');
+    expect(store.loading()).toBeFalse();
+
+    const reloading = store.loadLists();
+    http.expectOne('/api/v1/lists').flush([]);
+    http.expectNone('/api/v1/settings/lists');
+    await reloading;
   });
 
-  it('adds an entry stamped with its author and the current time', () => {
-    store.addEntry('courses', 'fresh', 'Beurre', 'Ada');
+  it('reports a list it cannot open, with the API message', async () => {
+    const opening = store.open('list-x');
+    http
+      .expectOne('/api/v1/lists/list-x')
+      .flush({ message: 'Liste introuvable.' }, { status: 404, statusText: 'Not Found' });
+    http.expectOne('/api/v1/settings/lists').flush(listSettings());
 
-    const added = store.detail('courses')!.sections[0].entries.at(-1)!;
-    expect(added).toEqual(jasmine.objectContaining({
-      name: 'Beurre',
+    expect(await opening).toBeFalse();
+    expect(store.detail()).toBeNull();
+    expect(store.error()).toBe('Liste introuvable.');
+    store.clearError();
+    expect(store.error()).toBe('');
+  });
+
+  it('applies entry changes from the server and keeps the counts in sync', async () => {
+    await openList();
+
+    const adding = store.addEntry('fresh', 'Beurre');
+    const add = http.expectOne('/api/v1/lists/list-1/sections/fresh/entries');
+    expect(add.request.body).toEqual({ name: 'Beurre' });
+    add.flush(entry('butter', 'Beurre'));
+    await adding;
+    expect(names()).toEqual(['Lait', 'Œufs', 'Tomates', 'Salade', 'Beurre']);
+    expect(store.detail()?.total).toBe(7);
+
+    const milk = store.detail()!.sections[0].entries[0];
+    const toggling = store.toggleEntry(milk);
+    const toggle = http.expectOne('/api/v1/lists/list-1/entries/milk');
+    expect(toggle.request.method).toBe('PATCH');
+    expect(toggle.request.body).toEqual({ done: true });
+    toggle.flush({ ...milk, done: true });
+    await toggling;
+    expect(store.detail()?.completed).toBe(3);
+
+    const removing = store.removeEntry('salad');
+    http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1/entries/salad' }).flush(null);
+    await removing;
+    expect(names()).toEqual(['Lait', 'Œufs', 'Tomates', 'Beurre']);
+  });
+
+  it('keeps the list unchanged when the server refuses a change', async () => {
+    await openList();
+
+    const toggling = store.toggleEntry(store.detail()!.sections[0].entries[0]);
+    http
+      .expectOne('/api/v1/lists/list-1/entries/milk')
+      .flush({ message: 'Vous pouvez seulement consulter cette liste.' }, { status: 403, statusText: 'Forbidden' });
+
+    expect(await toggling).toBeFalse();
+    expect(store.detail()?.sections[0].entries[0].done).toBeFalse();
+    expect(store.error()).toBe('Vous pouvez seulement consulter cette liste.');
+  });
+
+  it('reorders locally while dragging and saves the order once', async () => {
+    await openList();
+
+    store.moveEntry('fresh', 'milk', 'tomatoes');
+    store.moveEntry('fresh', 'milk', 'unknown');
+    expect(names()).toEqual(['Œufs', 'Tomates', 'Lait', 'Salade']);
+
+    const saving = store.saveOrder('fresh');
+    const order = http.expectOne({ method: 'PUT', url: '/api/v1/lists/list-1/sections/fresh/order' });
+    expect(order.request.body).toEqual({ entryIds: ['eggs', 'tomatoes', 'milk', 'salad'] });
+    order.flush(null);
+    await saving;
+  });
+
+  it('reloads the server order when saving it fails', async () => {
+    await openList();
+    store.moveEntry('fresh', 'milk', 'salad');
+
+    const saving = store.saveOrder('fresh');
+    http
+      .expectOne('/api/v1/lists/list-1/sections/fresh/order')
+      .flush(null, { status: 500, statusText: 'Server Error' });
+    await settle();
+    http.expectOne('/api/v1/lists/list-1').flush(listDetail());
+    await saving;
+
+    expect(names()).toEqual(['Lait', 'Œufs', 'Tomates', 'Salade']);
+  });
+
+  it('manages members and sharing', async () => {
+    await openList();
+
+    const updating = store.updateMemberRole(MEMBER_ID, 'viewer');
+    http
+      .expectOne(`/api/v1/lists/list-1/members/${MEMBER_ID}`)
+      .flush({ id: MEMBER_ID, name: 'Bob Martin', role: 'viewer' });
+    await updating;
+    expect(store.detail()?.members[1].role).toBe('viewer');
+
+    const stopping = store.stopSharing();
+    http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1/members' }).flush(null);
+    await stopping;
+    expect(store.detail()?.members.map(({ role }) => role)).toEqual(['owner']);
+    expect(store.detail()?.memberCount).toBe(1);
+  });
+
+  it('creates and deletes lists', async () => {
+    const creating = store.createList({ name: 'Maison', icon: 'home', color: '#7868ef' });
+    http.expectOne({ method: 'POST', url: '/api/v1/lists' }).flush(listDetail({ id: 'list-2', name: 'Maison' }));
+    expect((await creating)?.id).toBe('list-2');
+    expect(store.lists().map(({ id }) => id)).toEqual(['list-2']);
+
+    const deleting = store.deleteList();
+    http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-2' }).flush(null);
+    expect(await deleting).toBeTrue();
+    expect(store.lists()).toEqual([]);
+    expect(store.detail()).toBeNull();
+  });
+
+  it('applies settings at once and rolls them back when saving fails', async () => {
+    const loading = store.loadLists();
+    http.expectOne('/api/v1/lists').flush([]);
+    http.expectOne('/api/v1/settings/lists').flush(listSettings());
+    await loading;
+
+    const saving = store.updateSettings({ defaultView: 'grid' });
+    expect(store.settings()?.defaultView).toBe('grid');
+    http.expectOne({ method: 'PATCH', url: '/api/v1/settings/lists' }).flush(null, { status: 500, statusText: 'Error' });
+    await saving;
+
+    expect(store.settings()?.defaultView).toBe('list');
+    expect(store.error()).toContain('échoué');
+  });
+
+  it('refreshes reminders after entry changes once they are in use', async () => {
+    await openList();
+    const reminder = {
+      listId: 'list-1',
+      listName: 'Courses',
+      listColor: '#2ecb70',
+      entryId: 'milk',
+      name: 'Lait',
       done: false,
-      addedBy: 'Ada',
-      addedAt: '15 octobre 2026 à 09:05',
-      assignedTo: '',
-    }));
+      reminder: '2026-10-15T18:00',
+    };
+
+    const loading = store.loadReminders();
+    http.expectOne('/api/v1/lists/reminders').flush([reminder]);
+    await loading;
+    expect(store.reminders()).toEqual([reminder]);
+
+    const updating = store.updateEntry('milk', { reminder: null });
+    http.expectOne('/api/v1/lists/list-1/entries/milk').flush(entry('milk', 'Lait'));
+    await updating;
+    http.expectOne('/api/v1/lists/reminders').flush([]);
+    await settle();
+    expect(store.reminders()).toEqual([]);
   });
 
-  it('updates, moves and removes entries by id', () => {
-    store.updateEntry('courses', 'fresh', 'milk', { notes: 'Demi-écrémé', assignedTo: 'Sam' });
-    expect(entry('fresh', 'milk')).toEqual(jasmine.objectContaining({ notes: 'Demi-écrémé', assignedTo: 'Sam' }));
+  it('turns network failures into a readable message', async () => {
+    const loading = store.loadLists();
+    http.expectOne('/api/v1/lists').error(new ProgressEvent('error'));
+    http.expectOne('/api/v1/settings/lists').flush(listSettings());
+    await loading;
 
-    store.moveEntry('courses', 'fresh', 'milk', 'salad');
-    expect(names('fresh')).toEqual(['Œufs', 'Tomates', 'Salade', 'Lait']);
-    store.moveEntry('courses', 'fresh', 'milk', 'unknown');
-    expect(names('fresh')).toEqual(['Œufs', 'Tomates', 'Salade', 'Lait']);
-
-    store.removeEntry('courses', 'fresh', 'milk');
-    expect(names('fresh')).toEqual(['Œufs', 'Tomates', 'Salade']);
-  });
-
-  it('adds sections and edits the description', () => {
-    store.addSection('courses', 'Surgelés', '#3978ed');
-    store.updateDescription('courses', 'Pour samedi');
-
-    expect(store.detail('courses')?.sections.at(-1)).toEqual(
-      jasmine.objectContaining({ name: 'Surgelés', color: '#3978ed', entries: [] }),
-    );
-    expect(store.detail('courses')?.description).toBe('Pour samedi');
-  });
-
-  it('invites members with a name guessed from the address', () => {
-    store.inviteMember('courses', '  ', 'editor');
-    expect(store.detail('courses')?.members.length).toBe(3);
-
-    store.inviteMember('courses', 'marie.dupont@example.com', 'viewer');
-    store.inviteMember('courses', '@example.com', 'editor');
-
-    const members = store.detail('courses')!.members;
-    expect(members.at(-2)).toEqual(jasmine.objectContaining({ name: 'Marie Dupont', initials: 'M', role: 'viewer' }));
-    expect(members.at(-1)?.name).toBe('@example.com');
-  });
-
-  it('changes roles except the owner’s, and stopping sharing keeps only the owner', () => {
-    store.updateMemberRole('courses', 'alex', 'viewer');
-    store.updateMemberRole('courses', 'camille', 'viewer');
-    expect(store.detail('courses')?.members.map(({ role }) => role)).toEqual(['owner', 'viewer', 'viewer']);
-
-    store.setSharing('courses', false);
-    expect(store.detail('courses')).toEqual(jasmine.objectContaining({ sharingEnabled: false }));
-    expect(store.detail('courses')?.members.map(({ id }) => id)).toEqual(['camille']);
-
-    store.setSharing('courses', true);
-    expect(store.detail('courses')?.sharingEnabled).toBeTrue();
-  });
-
-  it('ignores changes to an unknown list', () => {
-    const before = store.lists();
-    store.addSection('missing', 'Section', '#000');
-    expect(store.lists()).toEqual(before);
-    expect(store.detail('missing')).toBeUndefined();
+    expect(store.error()).toContain('Impossible de joindre Plano');
   });
 });

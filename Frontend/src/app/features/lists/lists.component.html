@@ -64,16 +64,16 @@
   [class.grid-view]="gridView()"
   aria-live="polite"
 >
-  @for (list of visibleLists(); track list.name) {
+  @for (card of cards(); track card.list.id) {
     <button
       class="list-card"
       type="button"
-      [routerLink]="['/lists', list.slug]"
-      [style.--list-color]="list.color"
-      [style.--list-surface]="list.surface"
+      [routerLink]="['/lists', card.list.id]"
+      [style.--list-color]="card.list.color"
+      [style.--list-surface]="card.surface"
     >
       <span class="list-icon" aria-hidden="true">
-        @switch (list.icon) {
+        @switch (card.list.icon) {
           @case ('cart') {
             <svg viewBox="0 0 32 32"><path d="M4 6h4l2.5 14h13l3-10H9" /><circle cx="13" cy="25" r="1.5" /><circle cx="23" cy="25" r="1.5" /></svg>
           }
@@ -91,24 +91,26 @@
           }
         }
       </span>
-      <span class="list-copy"><strong>{{ list.name }}</strong><small>{{ list.detail }}</small></span>
+      <span class="list-copy"><strong>{{ card.list.name }}</strong><small>{{ card.caption }}</small></span>
       <span class="list-progress">
-        @if (listsStore.settings().showCounts) {
-          <b>{{ list.completed }} / {{ list.total }}</b>
+        @if (listsStore.settings()?.showCounts) {
+          <b>{{ card.list.completed }} / {{ card.list.total }}</b>
         }
-        <i><em [style.width.%]="(list.completed / list.total) * 100"></em></i>
+        <i><em [style.width.%]="card.progress"></em></i>
       </span>
     </button>
   } @empty {
-    <p class="empty-state">Aucune liste dans cette catégorie.</p>
+    @if (!listsStore.loading()) {
+      <p class="empty-state">Aucune liste dans cette catégorie.</p>
+    }
   }
 
-  <button class="new-list-button" type="button"><span aria-hidden="true">＋</span> Nouvelle liste</button>
+  <button class="new-list-button" type="button" [disabled]="creating()" (click)="createList()"><span aria-hidden="true">＋</span> Nouvelle liste</button>
 </section>
 
 <app-bottom-nav active="lists" />
 
-@if (settingsOpen()) {
+@if (settingsOpen() && listsStore.settings(); as settings) {
   <section class="settings-panel" aria-labelledby="settings-title">
     <header>
       <button type="button" aria-label="Retour aux listes" (click)="settingsOpen.set(false)">
@@ -122,7 +124,7 @@
         <h3>Général</h3>
         <label class="setting-row select-row">
           <span>Vue par défaut</span>
-          <select aria-label="Vue par défaut" [value]="listsStore.settings().defaultView" (change)="setDefaultView($any($event.target).value)">
+          <select aria-label="Vue par défaut" [value]="settings.defaultView" (change)="setDefaultView($any($event.target).value)">
             <option value="list">Liste</option>
             <option value="grid">Grille</option>
           </select>
@@ -131,20 +133,20 @@
 
       <section>
         <h3>Comportement</h3>
-        <app-switch-row label="Afficher le nombre d’éléments" [checked]="listsStore.settings().showCounts" (toggled)="toggleSetting('showCounts')" />
-        <app-switch-row label="Afficher les éléments terminés" [checked]="listsStore.settings().showCompleted" (toggled)="toggleSetting('showCompleted')" />
-        <app-switch-row label="Placer les terminés en bas" [checked]="listsStore.settings().completedLast" (toggled)="toggleSetting('completedLast')" />
+        <app-switch-row label="Afficher le nombre d’éléments" [checked]="settings.showCounts" (toggled)="toggleSetting('showCounts')" />
+        <app-switch-row label="Afficher les éléments terminés" [checked]="settings.showCompleted" (toggled)="toggleSetting('showCompleted')" />
+        <app-switch-row label="Placer les terminés en bas" [checked]="settings.completedLast" (toggled)="toggleSetting('completedLast')" />
       </section>
 
       <section>
         <h3>Rappels</h3>
         <label class="setting-row input-row">
           <span>Rappel par défaut</span>
-          <input type="time" [value]="listsStore.settings().defaultReminder" (change)="listsStore.updateSettings({ defaultReminder: $any($event.target).value })" />
+          <input type="time" [value]="settings.defaultReminder" (change)="listsStore.updateSettings({ defaultReminder: $any($event.target).value })" />
         </label>
         <label class="setting-row select-row">
           <span>Me notifier</span>
-          <select [value]="listsStore.settings().notifyScope" (change)="listsStore.updateSettings({ notifyScope: $any($event.target).value })">
+          <select [value]="settings.notifyScope" (change)="listsStore.updateSettings({ notifyScope: $any($event.target).value })">
             <option value="mine">Pour mes listes</option>
             <option value="all">Pour toutes les listes</option>
             <option value="none">Jamais</option>
@@ -154,9 +156,11 @@
 
       <section>
         <h3>Actions</h3>
-        <app-switch-row label="Archiver les listes terminées" [checked]="listsStore.settings().archiveCompleted" (toggled)="toggleSetting('archiveCompleted')" />
-        <app-switch-row label="Confirmer avant suppression" [checked]="listsStore.settings().confirmDelete" (toggled)="toggleSetting('confirmDelete')" />
+        <app-switch-row label="Archiver les listes terminées" [checked]="settings.archiveCompleted" (toggled)="toggleSetting('archiveCompleted')" />
+        <app-switch-row label="Confirmer avant suppression" [checked]="settings.confirmDelete" (toggled)="toggleSetting('confirmDelete')" />
       </section>
     </div>
   </section>
 }
+
+<app-toast tone="error" [message]="listsStore.error()" (dismissed)="listsStore.clearError()" />

@@ -1,187 +1,300 @@
-import { Injectable, computed, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import type {
+  CreateListRequest,
   ListDetail,
   ListEntry,
+  ListMemberRole,
+  ListReminder,
   ListSection,
   ListSettings,
-  PlanoList,
-  ShareRole,
+  ListSummary,
+  UpdateEntryRequest,
+  UpdateListRequest,
+  UpdateListSettingsRequest,
 } from '@plano/common';
-import { PlanoDataStore } from '../../core/data/plano-data.store';
-import { NEW_PERSON_COLOR, initialsOf } from '../../core/people/people';
-import { APP_CLOCK, createId } from '../../core/time/dates';
+import { Observable, firstValueFrom } from 'rxjs';
+import { httpErrorMessage } from '../../core/http/http-error-message';
+import { ListsApiService } from './lists-api.service';
 
-export type { ListIcon, ListSettings, PlanoList } from '@plano/common';
+export type { ListIcon, ListSettings, ListSummary } from '@plano/common';
 
-export type InvitedRole = Exclude<ShareRole, 'owner'>;
-export type EntryChanges = Partial<Omit<ListEntry, 'id'>>;
+const FAILURE_MESSAGE = 'L’action a échoué. Veuillez réessayer.';
 
-const addedAtFormat = new Intl.DateTimeFormat('fr-FR', {
-  dateStyle: 'long',
-  timeStyle: 'short',
-});
+/** Recomputes the counts of a list from its entries. */
+function withCounts(detail: ListDetail): ListDetail {
+  const entries = detail.sections.flatMap((section) => section.entries);
+  return {
+    ...detail,
+    completed: entries.filter((entry) => entry.done).length,
+    total: entries.length,
+  };
+}
 
 /**
- * Lists and their details. Every change goes through `updateDetail`, which
- * also keeps the overview's completed/total counts derived from the entries.
+ * Client state of the lists feature, backed by the lists API. Changes are
+ * applied from the server's answers, except drag-and-drop ordering (local,
+ * saved once on drop) and settings (applied at once, rolled back on failure).
+ * Failures are exposed as `error` for the screens to display.
  */
 @Injectable({ providedIn: 'root' })
 export class ListsStore {
-  private readonly appData = inject(PlanoDataStore);
-  private readonly clock = inject(APP_CLOCK);
+  private readonly api = inject(ListsApiService);
 
-  readonly lists = computed(() => this.appData.data().lists);
-  readonly settings = computed(() => this.appData.data().listSettings);
+  private readonly listsState = signal<readonly ListSummary[]>([]);
+  private readonly detailState = signal<ListDetail | null>(null);
+  private readonly settingsState = signal<ListSettings | null>(null);
+  private readonly remindersState = signal<readonly ListReminder[]>([]);
+  private remindersRequested = false;
 
-  list(slug: string): PlanoList | undefined {
-    return this.lists().find((list) => list.slug === slug);
+  readonly lists = this.listsState.asReadonly();
+  /** The list currently open in the detail screen. */
+  readonly detail = this.detailState.asReadonly();
+  /** Null until loaded. */
+  readonly settings = this.settingsState.asReadonly();
+  /** Entries with a reminder across every visible list, for the agenda. */
+  readonly reminders = this.remindersState.asReadonly();
+  readonly loading = signal(false);
+  /** Message of the last failed request, until cleared. */
+  readonly error = signal('');
+
+  async loadLists(): Promise<void> {
+    this.loading.set(true);
+    await Promise.all([
+      this.run(this.api.findAll(), (lists) => this.listsState.set(lists)),
+      this.ensureSettings(),
+    ]);
+    this.loading.set(false);
   }
 
-  detail(slug: string): ListDetail | undefined {
-    return this.appData.data().listDetails[slug];
+  /** Loads a list for the detail screen; false when it is missing or hidden. */
+  async open(listId: string): Promise<boolean> {
+    this.loading.set(true);
+    if (this.detailState()?.id !== listId) this.detailState.set(null);
+    const [found] = await Promise.all([
+      this.run(this.api.findOne(listId), (detail) => this.detailState.set(detail)),
+      this.ensureSettings(),
+    ]);
+    this.loading.set(false);
+    return found;
   }
 
-  updateList(slug: string, changes: Pick<PlanoList, 'name' | 'icon' | 'color'>): void {
-    this.appData.update((data) => ({
-      ...data,
-      lists: data.lists.map((list) =>
-        list.slug === slug
-          ? { ...list, ...changes, surface: `color-mix(in srgb, ${changes.color} 9%, white)` }
-          : list,
-      ),
-    }));
+  async createList(details: CreateListRequest): Promise<ListDetail | null> {
+    let created: ListDetail | null = null;
+    await this.run(this.api.create(details), (detail) => {
+      created = detail;
+      this.detailState.set(detail);
+      this.listsState.update((lists) => [...lists, detail]);
+    });
+    return created;
   }
 
-  updateDescription(slug: string, description: string): void {
-    this.updateDetail(slug, () => ({ description }));
+  updateList(changes: UpdateListRequest): Promise<boolean> {
+    return this.runOnDetail((id) => this.api.update(id, changes), (detail) => detail);
   }
 
-  addSection(slug: string, name: string, color: string): void {
-    this.updateDetail(slug, ({ sections }) => ({
-      sections: [...sections, { id: createId('section'), name, color, entries: [] }],
-    }));
+  async deleteList(): Promise<boolean> {
+    const id = this.detailState()?.id;
+    if (!id) return false;
+    const deleted = await this.run(this.api.remove(id), () => {
+      this.detailState.set(null);
+      this.listsState.update((lists) => lists.filter((list) => list.id !== id));
+    });
+    if (deleted) this.refreshReminders();
+    return deleted;
   }
 
-  addEntry(slug: string, sectionId: string, name: string, addedBy: string): void {
-    const entry: ListEntry = {
-      id: createId('entry'),
-      name,
-      done: false,
-      addedBy,
-      addedAt: addedAtFormat.format(this.clock()),
-      assignedTo: '',
-      reminder: '',
-      notes: '',
-    };
-    this.updateSection(slug, sectionId, (section) => ({
-      ...section,
-      entries: [...section.entries, entry],
-    }));
+  addSection(name: string, color: string): Promise<boolean> {
+    return this.runOnDetail(
+      (id) => this.api.addSection(id, { name, color }),
+      (section, detail) => ({ ...detail, sections: [...detail.sections, section] }),
+    );
   }
 
-  updateEntry(slug: string, sectionId: string, entryId: string, changes: EntryChanges): void {
-    this.updateSection(slug, sectionId, (section) => ({
-      ...section,
-      entries: section.entries.map((entry) =>
-        entry.id === entryId ? { ...entry, ...changes } : entry,
-      ),
-    }));
+  addEntry(sectionId: string, name: string): Promise<boolean> {
+    return this.runOnDetail(
+      (id) => this.api.addEntry(id, sectionId, { name }),
+      (entry, detail) =>
+        this.mapSection(detail, sectionId, (section) => ({
+          ...section,
+          entries: [...section.entries, entry],
+        })),
+    );
   }
 
-  toggleEntry(slug: string, sectionId: string, entryId: string): void {
-    this.updateSection(slug, sectionId, (section) => ({
-      ...section,
-      entries: section.entries.map((entry) =>
-        entry.id === entryId ? { ...entry, done: !entry.done } : entry,
-      ),
-    }));
+  async updateEntry(entryId: string, changes: UpdateEntryRequest): Promise<boolean> {
+    const updated = await this.runOnDetail(
+      (id) => this.api.updateEntry(id, entryId, changes),
+      (entry, detail) => this.mapEntries(detail, (current) => (current.id === entryId ? entry : current)),
+    );
+    if (updated) this.refreshReminders();
+    return updated;
   }
 
-  removeEntry(slug: string, sectionId: string, entryId: string): void {
-    this.updateSection(slug, sectionId, (section) => ({
-      ...section,
-      entries: section.entries.filter((entry) => entry.id !== entryId),
-    }));
+  toggleEntry(entry: ListEntry): Promise<boolean> {
+    return this.updateEntry(entry.id, { done: !entry.done });
   }
 
-  /** Moves an entry to the position of another entry of the same section. */
-  moveEntry(slug: string, sectionId: string, entryId: string, targetEntryId: string): void {
-    this.updateSection(slug, sectionId, (section) => {
-      const from = section.entries.findIndex((entry) => entry.id === entryId);
-      const to = section.entries.findIndex((entry) => entry.id === targetEntryId);
-      if (from < 0 || to < 0 || from === to) return section;
-      const entries = [...section.entries];
-      const [moved] = entries.splice(from, 1);
-      entries.splice(to, 0, moved);
-      return { ...section, entries };
+  async removeEntry(entryId: string): Promise<boolean> {
+    const removed = await this.runOnDetail(
+      (id) => this.api.removeEntry(id, entryId),
+      (_, detail) => ({
+        ...detail,
+        sections: detail.sections.map((section) => ({
+          ...section,
+          entries: section.entries.filter((entry) => entry.id !== entryId),
+        })),
+      }),
+    );
+    if (removed) this.refreshReminders();
+    return removed;
+  }
+
+  /** Moves an entry onto another one's position, locally: call saveOrder() on drop. */
+  moveEntry(sectionId: string, entryId: string, targetEntryId: string): void {
+    const detail = this.detailState();
+    if (!detail) return;
+    this.detailState.set(
+      this.mapSection(detail, sectionId, (section) => {
+        const from = section.entries.findIndex((entry) => entry.id === entryId);
+        const to = section.entries.findIndex((entry) => entry.id === targetEntryId);
+        if (from < 0 || to < 0 || from === to) return section;
+        const entries = [...section.entries];
+        const [moved] = entries.splice(from, 1);
+        entries.splice(to, 0, moved);
+        return { ...section, entries };
+      }),
+    );
+  }
+
+  /** Saves a section's order; on failure the list is reloaded to the server's order. */
+  async saveOrder(sectionId: string): Promise<void> {
+    const detail = this.detailState();
+    const section = detail?.sections.find(({ id }) => id === sectionId);
+    if (!detail || !section) return;
+    const saved = await this.run(
+      this.api.reorderEntries(detail.id, sectionId, section.entries.map(({ id }) => id)),
+      () => undefined,
+    );
+    if (!saved) await this.open(detail.id);
+  }
+
+  addMember(userId: string, role: ListMemberRole): Promise<boolean> {
+    return this.runOnDetail(
+      (id) => this.api.addMember(id, { userId, role }),
+      (member, detail) => ({
+        ...detail,
+        members: [...detail.members, member],
+        memberCount: detail.memberCount + 1,
+      }),
+    );
+  }
+
+  updateMemberRole(userId: string, role: ListMemberRole): Promise<boolean> {
+    return this.runOnDetail(
+      (id) => this.api.updateMember(id, userId, role),
+      (member, detail) => ({
+        ...detail,
+        members: detail.members.map((current) => (current.id === userId ? member : current)),
+      }),
+    );
+  }
+
+  /** The owner removes someone, or a member removes themself to leave the list. */
+  async removeMember(userId: string): Promise<boolean> {
+    const removed = await this.runOnDetail(
+      (id) => this.api.removeMember(id, userId),
+      (_, detail) => ({
+        ...detail,
+        members: detail.members.filter((member) => member.id !== userId),
+        memberCount: detail.memberCount - 1,
+      }),
+    );
+    if (removed) this.refreshReminders();
+    return removed;
+  }
+
+  /** Everyone but the owner loses access. */
+  async stopSharing(): Promise<boolean> {
+    const stopped = await this.runOnDetail(
+      (id) => this.api.removeAllMembers(id),
+      (_, detail) => ({
+        ...detail,
+        members: detail.members.filter((member) => member.role === 'owner'),
+        memberCount: 1,
+      }),
+    );
+    if (stopped) this.refreshReminders();
+    return stopped;
+  }
+
+  async updateSettings(changes: UpdateListSettingsRequest): Promise<void> {
+    const previous = this.settingsState();
+    if (!previous) return;
+    this.settingsState.set({ ...previous, ...changes });
+    const saved = await this.run(this.api.updateSettings(changes), (settings) =>
+      this.settingsState.set(settings),
+    );
+    if (!saved) this.settingsState.set(previous);
+  }
+
+  /** Fetches reminders on first use, then keeps them fresh after entry changes. */
+  async loadReminders(): Promise<void> {
+    this.remindersRequested = true;
+    await this.run(this.api.findReminders(), (reminders) => this.remindersState.set(reminders));
+  }
+
+  clearError(): void {
+    this.error.set('');
+  }
+
+  private refreshReminders(): void {
+    if (this.remindersRequested) void this.loadReminders();
+  }
+
+  private async ensureSettings(): Promise<void> {
+    if (this.settingsState()) return;
+    await this.run(this.api.findSettings(), (settings) => this.settingsState.set(settings));
+  }
+
+  /** Runs a request on the open list and applies its answer to that list. */
+  private async runOnDetail<T>(
+    request: (listId: string) => Observable<T>,
+    apply: (value: T, detail: ListDetail) => ListDetail,
+  ): Promise<boolean> {
+    const listId = this.detailState()?.id;
+    if (!listId) return false;
+    return this.run(request(listId), (value) => {
+      const detail = this.detailState();
+      // Ignore a late answer for a list the user has already left.
+      if (detail?.id === listId) this.detailState.set(withCounts(apply(value, detail)));
     });
   }
 
-  /** Invites someone by e-mail; the display name is guessed from the address. */
-  inviteMember(slug: string, email: string, role: InvitedRole): void {
-    const address = email.trim();
-    if (!address) return;
-    const localPart = address.split('@')[0].replace(/[._-]+/g, ' ').trim();
-    const name = localPart
-      ? localPart.replace(/\b\w/g, (letter) => letter.toUpperCase())
-      : address;
-    this.updateDetail(slug, ({ members }) => ({
-      sharingEnabled: true,
-      members: [
-        ...members,
-        { id: createId('member'), name, initials: initialsOf(name), color: NEW_PERSON_COLOR, role },
-      ],
-    }));
+  private async run<T>(request: Observable<T>, apply: (value: T) => void): Promise<boolean> {
+    try {
+      apply(await firstValueFrom(request, { defaultValue: undefined as T }));
+      return true;
+    } catch (error) {
+      this.error.set(httpErrorMessage(error, { useServerMessage: true, fallback: FAILURE_MESSAGE }));
+      return false;
+    }
   }
 
-  updateMemberRole(slug: string, memberId: string, role: ShareRole): void {
-    this.updateDetail(slug, ({ members }) => ({
-      members: members.map((member) =>
-        member.id === memberId && member.role !== 'owner' ? { ...member, role } : member,
-      ),
-    }));
-  }
-
-  /** Turning sharing off also removes everyone but the owner. */
-  setSharing(slug: string, enabled: boolean): void {
-    this.updateDetail(slug, ({ members }) => ({
-      sharingEnabled: enabled,
-      members: enabled ? members : members.filter((member) => member.role === 'owner'),
-    }));
-  }
-
-  updateSettings(changes: Partial<ListSettings>): void {
-    this.appData.update((data) => ({
-      ...data,
-      listSettings: { ...data.listSettings, ...changes },
-    }));
-  }
-
-  private updateSection(
-    slug: string,
+  private mapSection(
+    detail: ListDetail,
     sectionId: string,
     update: (section: ListSection) => ListSection,
-  ): void {
-    this.updateDetail(slug, ({ sections }) => ({
-      sections: sections.map((section) => (section.id === sectionId ? update(section) : section)),
-    }));
+  ): ListDetail {
+    return {
+      ...detail,
+      sections: detail.sections.map((section) => (section.id === sectionId ? update(section) : section)),
+    };
   }
 
-  private updateDetail(slug: string, update: (detail: ListDetail) => Partial<ListDetail>): void {
-    this.appData.update((data) => {
-      const current = data.listDetails[slug];
-      if (!current) return data;
-      const next = { ...current, ...update(current) };
-      const entries = next.sections.flatMap((section) => section.entries);
-      return {
-        ...data,
-        lists: data.lists.map((list) =>
-          list.slug === slug
-            ? { ...list, completed: entries.filter((entry) => entry.done).length, total: entries.length }
-            : list,
-        ),
-        listDetails: { ...data.listDetails, [slug]: next },
-      };
-    });
+  private mapEntries(detail: ListDetail, update: (entry: ListEntry) => ListEntry): ListDetail {
+    return {
+      ...detail,
+      sections: detail.sections.map((section) => ({ ...section, entries: section.entries.map(update) })),
+    };
   }
 }

@@ -1,16 +1,16 @@
 import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { randomUUID } from 'node:crypto';
-import { rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { configureApp } from './../src/app.config';
-import { AppModule } from './../src/app.module';
 import type { AuthUser } from './../src/auth/auth.types';
 import type { HealthStatus } from './../src/health/health.service';
 import type { GroupDetails, GroupSummary } from './../src/groups/group.types';
+import {
+  type TestApp,
+  cookiePair,
+  createTestApp,
+  readSetCookie,
+  validRegistration,
+} from './e2e-helpers';
 
 interface ErrorResponse {
   statusCode: number;
@@ -18,61 +18,16 @@ interface ErrorResponse {
   error: string;
 }
 
-const validRegistration = {
-  firstName: 'Jamie',
-  lastName: 'Doe',
-  username: 'jamie.doe',
-  email: 'jamie@example.com',
-  password: 'correct horse battery staple',
-  acceptedTerms: true,
-};
-
-function readSetCookie(headers: Record<string, unknown>): string[] {
-  const value = headers['set-cookie'];
-
-  if (
-    !Array.isArray(value) ||
-    !value.every((item) => typeof item === 'string')
-  ) {
-    throw new Error('Expected a Set-Cookie response header.');
-  }
-
-  return value;
-}
-
-function cookiePair(setCookieHeader: string): string {
-  return setCookieHeader.split(';', 1)[0];
-}
-
-async function createApp(): Promise<INestApplication<App>> {
-  const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
-  const app = moduleFixture.createNestApplication();
-
-  configureApp(app);
-  await app.init();
-
-  return app;
-}
-
 describe('Plano API (e2e)', () => {
   let app: INestApplication<App>;
-  let databasePath: string;
+  let testApp: TestApp;
 
   beforeEach(async () => {
-    databasePath = join(tmpdir(), `plano-e2e-${randomUUID()}.sqlite`);
-    process.env.DATABASE_PATH = databasePath;
-    process.env.AUTH_SCRYPT_COST = '1024';
-    process.env.AUTH_SCRYPT_BLOCK_SIZE = '8';
-    process.env.AUTH_SCRYPT_PARALLELIZATION = '1';
-    app = await createApp();
+    testApp = await createTestApp();
+    app = testApp.app;
   });
 
-  afterEach(async () => {
-    await app.close();
-    await rm(databasePath, { force: true });
-  });
+  afterEach(() => testApp.close());
 
   it('reports API health', async () => {
     const response = await request(app.getHttpServer())
@@ -408,8 +363,7 @@ describe('Plano API (e2e)', () => {
       .expect(201);
     const originalCookie = cookiePair(readSetCookie(registration.headers)[0]);
 
-    await app.close();
-    app = await createApp();
+    app = await testApp.restart();
 
     await request(app.getHttpServer())
       .get('/api/v1/auth/session')

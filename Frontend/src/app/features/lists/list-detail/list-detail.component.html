@@ -2,139 +2,165 @@
   <a class="icon-button" routerLink="/lists" aria-label="Retour aux listes">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
   </a>
-  <h1 class="list-title">{{ title() }}</h1>
-  <div class="header-actions">
-    <button class="icon-button" type="button" aria-label="Partager la liste" (click)="sharingOpen.set(true)">
-      <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="10" cy="8" r="3.5" /><path d="M3.5 20v-3c0-3 2.2-5 6.5-5s6.5 2 6.5 5v3Z" /><circle cx="19" cy="9" r="2.5" /><path d="M17 13c3.7-.4 5.5 1.4 5.5 4v3h-4" /></svg>
-    </button>
-    <button
-      class="icon-button more-button"
-      type="button"
-      aria-label="Plus d’options"
-      [attr.aria-expanded]="listMenuOpen()"
-      (click)="toggleListMenu()"
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="12" cy="19" r="1.2" /></svg>
-    </button>
-    @if (listMenuOpen()) {
-      <div class="list-menu">
-        <button type="button" (click)="openListEditor()">
-          <span aria-hidden="true">✎</span> Modifier la liste
+  <h1 class="list-title">{{ list()?.name ?? 'Liste' }}</h1>
+  @if (list()) {
+    <div class="header-actions">
+      <button class="icon-button" type="button" aria-label="Partager la liste" (click)="sharingOpen.set(true)">
+        <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="10" cy="8" r="3.5" /><path d="M3.5 20v-3c0-3 2.2-5 6.5-5s6.5 2 6.5 5v3Z" /><circle cx="19" cy="9" r="2.5" /><path d="M17 13c3.7-.4 5.5 1.4 5.5 4v3h-4" /></svg>
+      </button>
+      @if (canEdit()) {
+        <button
+          class="icon-button more-button"
+          type="button"
+          aria-label="Plus d’options"
+          [attr.aria-expanded]="listMenuOpen()"
+          (click)="toggleListMenu()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="12" cy="19" r="1.2" /></svg>
         </button>
-        <button type="button" (click)="openSectionCreator()">
-          <span aria-hidden="true">＋</span> Ajouter une section
-        </button>
-      </div>
-    }
-  </div>
+      }
+      @if (listMenuOpen()) {
+        <div class="list-menu">
+          @if (isOwner()) {
+            <button type="button" (click)="openListEditor()">
+              <span aria-hidden="true">✎</span> Modifier la liste
+            </button>
+          }
+          <button type="button" (click)="openSectionCreator()">
+            <span aria-hidden="true">＋</span> Ajouter une section
+          </button>
+        </div>
+      }
+    </div>
+  }
 </header>
 
-<section class="members" aria-label="Membres de la liste">
-  <app-avatar-stack [people]="members()" [max]="3" />
-  <button type="button" aria-label="Ajouter un membre" (click)="sharingOpen.set(true)">＋</button>
-</section>
-
-<section class="overall-progress" aria-label="Progression de la liste">
-  <div><i [style.width.%]="progress()" [style.background]="color()"></i></div>
-  <strong>{{ completed() }} / {{ total() }}</strong>
-</section>
-
-<section class="detail-content">
-  @for (view of sectionViews(); track view.section.id) {
-    @if (view.collapsed) {
-      <button
-        class="section-summary"
-        type="button"
-        [style.--section-color]="view.section.color"
-        [style.--section-progress]="view.progress + '%'"
-        [attr.aria-expanded]="false"
-        (click)="toggleSection(view.section.id)"
-      >
-        <i [style.background]="view.section.color" aria-hidden="true"></i>
-        <strong>{{ view.section.name }}</strong>
-        <span>{{ view.completed }} / {{ view.section.entries.length }}</span>
-        <b aria-hidden="true">›</b>
-      </button>
-    } @else {
-      <section
-        class="entry-section"
-        [style.--section-color]="view.section.color"
-        [style.--section-progress]="view.progress + '%'"
-      >
-        <header>
-          <button
-            class="section-title"
-            type="button"
-            [attr.aria-expanded]="true"
-            (click)="toggleSection(view.section.id)"
-          >{{ view.section.name }}</button>
-          <button type="button" [attr.aria-label]="'Options pour ' + view.section.name">•••</button>
-        </header>
-        @for (entry of view.entries; track entry.id) {
-          <app-list-entry-row
-            [entry]="entry"
-            [sectionId]="view.section.id"
-            [dragging]="dragged()?.entryId === entry.id"
-            (toggle)="toggleEntry(view.section.id, entry.id)"
-            (open)="openEntry(view.section.id, entry.id)"
-            (remove)="requestDeleteEntry(view.section.id, entry)"
-            (dragStart)="startDrag(view.section.id, entry.id)"
-          />
-        }
-        @if (addingTo() === view.section.id) {
-          <input
-            appAutofocus
-            class="new-entry-input"
-            type="text"
-            placeholder="Nouvel élément..."
-            [value]="newEntryValue()"
-            (input)="newEntryValue.set($any($event.target).value)"
-            (keydown.enter)="$event.preventDefault(); finishAdding(view.section.id)"
-            (keydown.escape)="cancelAdding()"
-            (blur)="finishAdding(view.section.id)"
-          />
-        } @else {
-          <button
-            class="empty-entry"
-            type="button"
-            (click)="beginAdding(view.section.id)"
-          ><span aria-hidden="true">＋</span> Ajouter un élément</button>
-        }
-      </section>
+@if (list(); as list) {
+  <section class="members" aria-label="Membres de la liste">
+    <app-avatar-stack [people]="people()" [max]="3" />
+    @if (isOwner()) {
+      <button type="button" aria-label="Ajouter un membre" (click)="sharingOpen.set(true)">＋</button>
     }
-  }
-</section>
+  </section>
+
+  <section class="overall-progress" aria-label="Progression de la liste">
+    <div><i [style.width.%]="progress()" [style.background]="list.color"></i></div>
+    <strong>{{ list.completed }} / {{ list.total }}</strong>
+  </section>
+
+  <section class="detail-content">
+    @for (view of sectionViews(); track view.section.id) {
+      @if (view.collapsed) {
+        <button
+          class="section-summary"
+          type="button"
+          [style.--section-color]="view.section.color"
+          [style.--section-progress]="view.progress + '%'"
+          [attr.aria-expanded]="false"
+          (click)="toggleSection(view.section.id)"
+        >
+          <i [style.background]="view.section.color" aria-hidden="true"></i>
+          <strong>{{ view.section.name }}</strong>
+          <span>{{ view.completed }} / {{ view.section.entries.length }}</span>
+          <b aria-hidden="true">›</b>
+        </button>
+      } @else {
+        <section
+          class="entry-section"
+          [style.--section-color]="view.section.color"
+          [style.--section-progress]="view.progress + '%'"
+        >
+          <header>
+            <button
+              class="section-title"
+              type="button"
+              [attr.aria-expanded]="true"
+              (click)="toggleSection(view.section.id)"
+            >{{ view.section.name }}</button>
+          </header>
+          @for (entry of view.entries; track entry.id) {
+            <app-list-entry-row
+              [entry]="entry"
+              [sectionId]="view.section.id"
+              [readonly]="!canEdit()"
+              [dragging]="dragged()?.entryId === entry.id"
+              (toggle)="toggleEntry(view.section.id, entry)"
+              (open)="openEntry(view.section.id, entry.id)"
+              (remove)="requestDeleteEntry(entry)"
+              (dragStart)="startDrag(view.section.id, entry.id)"
+            />
+          }
+          @if (canEdit()) {
+            @if (addingTo() === view.section.id) {
+              <input
+                appAutofocus
+                class="new-entry-input"
+                type="text"
+                maxlength="200"
+                placeholder="Nouvel élément..."
+                [value]="newEntryValue()"
+                (input)="newEntryValue.set($any($event.target).value)"
+                (keydown.enter)="$event.preventDefault(); finishAdding(view.section.id)"
+                (keydown.escape)="cancelAdding()"
+                (blur)="finishAdding(view.section.id)"
+              />
+            } @else {
+              <button
+                class="empty-entry"
+                type="button"
+                (click)="beginAdding(view.section.id)"
+              ><span aria-hidden="true">＋</span> Ajouter un élément</button>
+            }
+          }
+        </section>
+      }
+    } @empty {
+      @if (canEdit()) {
+        <button class="empty-entry" type="button" (click)="openSectionCreator()">
+          <span aria-hidden="true">＋</span> Ajouter une première section
+        </button>
+      } @else {
+        <p class="empty-state">Cette liste est vide.</p>
+      }
+    }
+  </section>
+} @else if (notFound()) {
+  <p class="empty-state" role="alert">Cette liste n’existe pas ou n’est plus partagée avec vous.</p>
+}
 
 <app-bottom-nav active="lists" />
 
-@if (listEditorOpen() && list(); as list) {
-  <app-list-editor
-    [list]="list"
-    [description]="description()"
-    (save)="saveList($event)"
-    (close)="listEditorOpen.set(false)"
-  />
+@if (list(); as list) {
+  @if (listEditorOpen()) {
+    <app-list-editor
+      [list]="list"
+      [people]="people()"
+      (save)="saveList($event)"
+      (share)="openSharingFromEditor()"
+      (delete)="deleteList()"
+      (close)="listEditorOpen.set(false)"
+    />
+  }
+
+  @if (sectionCreatorOpen()) {
+    <app-list-section-creator (create)="addSection($event)" (close)="sectionCreatorOpen.set(false)" />
+  }
+
+  @if (activeEntry(); as active) {
+    <app-list-entry-details
+      [entry]="active.entry"
+      [listTitle]="list.name"
+      [sectionName]="active.section.name"
+      [members]="list.members"
+      [readonly]="!canEdit()"
+      (change)="updateActiveEntry($event)"
+      (close)="selected.set(null)"
+    />
+  }
+
+  @if (sharingOpen()) {
+    <app-list-sharing-panel [list]="list" (close)="sharingOpen.set(false)" />
+  }
 }
 
-@if (sectionCreatorOpen()) {
-  <app-list-section-creator (create)="addSection($event)" (close)="sectionCreatorOpen.set(false)" />
-}
-
-@if (activeEntry(); as active) {
-  <app-list-entry-details
-    [entry]="active.entry"
-    [listTitle]="title()"
-    [sectionName]="active.section.name"
-    (change)="updateActiveEntry($event)"
-    (close)="selected.set(null)"
-  />
-}
-
-@if (sharingOpen()) {
-  <app-list-sharing-panel
-    [slug]="slug"
-    [listTitle]="title()"
-    [color]="color()"
-    (close)="sharingOpen.set(false)"
-  />
-}
+<app-toast tone="error" [message]="store.error()" (dismissed)="store.clearError()" />

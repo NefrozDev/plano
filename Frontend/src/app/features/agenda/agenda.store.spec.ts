@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import type { AgendaEvent } from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../../core/data/plano-data.adapter';
-import { providePlanoTesting } from '../../testing/plano-testing';
+import { flushListReminders, providePlanoTesting, settle } from '../../testing/plano-testing';
 import { AgendaEventDraft, AgendaStore } from './agenda.store';
 
 describe('AgendaStore', () => {
@@ -13,9 +13,12 @@ describe('AgendaStore', () => {
     return { ...base, ...changes };
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({ providers: providePlanoTesting() });
     store = TestBed.inject(AgendaStore);
+    store.loadTasks();
+    flushListReminders();
+    await settle();
   });
 
   describe('items', () => {

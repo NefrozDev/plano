@@ -12,9 +12,9 @@ describe('Plano data adapters', () => {
     const data = createMockPlanoData();
     adapter.save(data);
 
-    data.lists[0].name = 'Changed outside the adapter';
+    data.dashboard.tasks[0].label = 'Changed outside the adapter';
 
-    expect(adapter.load()?.lists[0].name).toBe('Courses');
+    expect(adapter.load()?.dashboard.tasks[0].label).not.toBe('Changed outside the adapter');
   });
 
   it('round-trips versioned data through browser storage', () => {
@@ -30,16 +30,23 @@ describe('Plano data adapters', () => {
   it('backfills objectives and agenda into data saved before they existed', () => {
     const adapter = new BrowserStoragePlanoDataAdapter();
     const legacy: Partial<PlanoData> = createMockPlanoData();
-    legacy.lists![0].name = 'Courses gardées';
+    legacy.dashboard!.tasks[0].label = 'Tâche gardée';
     delete legacy.objectives;
     delete legacy.agenda;
     localStorage.setItem('plano:data:v1', JSON.stringify(legacy));
 
     const loaded = adapter.load();
 
-    expect(loaded?.lists[0].name).toBe('Courses gardées');
+    expect(loaded?.dashboard.tasks[0].label).toBe('Tâche gardée');
     expect(loaded?.objectives.items.length).toBeGreaterThan(0);
     expect(loaded?.agenda.events.length).toBeGreaterThan(0);
+  });
+
+  it('drops lists saved before they moved to the API', () => {
+    const adapter = new BrowserStoragePlanoDataAdapter();
+    localStorage.setItem('plano:data:v1', JSON.stringify({ ...createMockPlanoData(), lists: [], listDetails: {} }));
+
+    expect(Object.keys(adapter.load() ?? {})).toEqual(['version', 'dashboard', 'objectives', 'agenda']);
   });
 
   it('ignores malformed or unsupported stored data', () => {

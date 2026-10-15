@@ -42,6 +42,10 @@ export class AgendaCalendarComponent {
   private readonly router = inject(Router);
   readonly store = inject(AgendaStore);
 
+  constructor() {
+    this.store.loadTasks();
+  }
+
   private readonly params = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
