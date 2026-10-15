@@ -26,6 +26,8 @@ let nextId = 0;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <!-- Backdrop clicks are a pointer shortcut: keyboard users close the dialog with Escape. -->
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
     <dialog
       #dialog
       [attr.aria-labelledby]="headingId"

@@ -58,6 +58,8 @@ const FIRST_VISIBLE_HOUR = 7;
           }
         </div>
         @for (column of columns(); track column.date) {
+          <!-- Clicking a free slot is a pointer shortcut: the "Créer un événement" button does the same from the keyboard. -->
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
           <div class="column" [class.today]="column.isToday" (click)="onColumnClick($event, column.date)">
             @for (block of column.blocks; track block.key) {
               <a

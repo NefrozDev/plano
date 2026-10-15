@@ -1,10 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ModalDialogComponent } from './modal-dialog.component';
 
 /** Host owning the open state, the way real parents use the modal. */
 @Component({
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ModalDialogComponent],
   template: `
     <app-modal-dialog heading="Renommer" [open]="open()" (closed)="onClosed()">

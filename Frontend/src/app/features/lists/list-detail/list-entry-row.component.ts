@@ -26,6 +26,8 @@ const MAX_OFFSET = -58;
       >
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
       </button>
+      <!-- Tapping anywhere on the row is a pointer shortcut: keyboard users open the entry with its name button. -->
+      <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
       <div
         class="entry"
         [class.done]="entry().done"
@@ -47,7 +49,8 @@ const MAX_OFFSET = -58;
           [attr.aria-pressed]="entry().done"
           (click)="$event.stopPropagation(); toggle.emit()"
         ><i aria-hidden="true"></i></button>
-        <span>{{ entry().name }}</span>
+        <!-- Its click bubbles to the row, which opens the entry (or swallows it after a swipe). -->
+        <button class="entry-name" type="button">{{ entry().name }}</button>
         <button
           class="drag-handle"
           type="button"
@@ -72,8 +75,8 @@ const MAX_OFFSET = -58;
     .entry.done .entry-toggle i { border-color: #3264ed; background: #3264ed; }
     .entry.done .entry-toggle i::after { width: .55rem; height: .3rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.1rem) rotate(-45deg); }
     .entry.highlighted .entry-toggle i { border-color: #ff9d72; }
-    .entry span { font-size: .8rem; font-weight: 550; }
-    .entry.done span { color: #737b89; text-decoration: line-through; }
+    .entry-name { min-height: 2.6rem; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 550; text-align: left; }
+    .entry.done .entry-name { color: #737b89; text-decoration: line-through; }
   `,
 })
 export class ListEntryRowComponent {
