@@ -30,9 +30,7 @@
 </header>
 
 <section class="members" aria-label="Membres de la liste">
-  @for (member of members().slice(0, 3); track member.id) {
-    <span class="avatar" [style.background]="member.color">{{ member.initials }}</span>
-  }
+  <app-avatar-stack [people]="members()" [max]="3" />
   <button type="button" aria-label="Ajouter un membre" (click)="openSharing()">＋</button>
 </section>
 

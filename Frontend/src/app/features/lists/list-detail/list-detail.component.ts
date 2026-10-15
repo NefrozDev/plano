@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import type { ListEntry, ListMember, ListSection, ShareRole } from '@plano/common';
+import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { ListIcon, ListsStore } from '../lists.store';
 
@@ -38,7 +39,7 @@ function createId(prefix: string): string {
 @Component({
   selector: 'app-list-detail',
   standalone: true,
-  imports: [RouterLink, BottomNavComponent],
+  imports: [RouterLink, AvatarStackComponent, BottomNavComponent],
   templateUrl: './list-detail.component.html',
   styleUrl: './list-detail.component.scss',
   host: {

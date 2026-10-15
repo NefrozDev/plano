@@ -29,6 +29,7 @@ import {
   progressLabel,
   reminderLabel,
 } from '../../objective.utils';
+import { AvatarStackComponent } from '../../../../shared/ui/avatar-stack.component';
 import { ObjectivesStore } from '../../objectives.store';
 import { ObjectiveIconComponent } from '../../ui/objective-icon.component';
 import { ObjectiveContext } from '../objective-context';
@@ -40,12 +41,10 @@ interface StatTile {
   label: string;
 }
 
-const MAX_AVATARS = 4;
-
 @Component({
   selector: 'app-objective-summary',
   standalone: true,
-  imports: [RouterLink, ObjectiveIconComponent],
+  imports: [RouterLink, AvatarStackComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-summary.component.html',
   styleUrl: './objective-summary.component.scss',
@@ -76,8 +75,7 @@ export class ObjectiveSummaryComponent {
       tiles: [...this.trackingTiles(objective), this.deadlineTile(objective)],
       reminder: reminderLabel(objective.reminder),
       dueReminder: DUE_REMINDER_LABELS[objective.dueReminder],
-      avatars: people.slice(0, MAX_AVATARS),
-      extraPeople: Math.max(0, people.length - MAX_AVATARS),
+      people,
     };
   });
 

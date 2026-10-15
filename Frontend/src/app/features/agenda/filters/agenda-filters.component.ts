@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { AgendaFilters } from '@plano/common';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
+import { SwitchRowComponent } from '../../../shared/ui/switch-row.component';
 import { AgendaStore } from '../agenda.store';
 
 type DisplayFilter = keyof Pick<AgendaFilters, 'showEvents' | 'showTasks' | 'showPastEvents'>;
@@ -10,7 +11,7 @@ type DisplayFilter = keyof Pick<AgendaFilters, 'showEvents' | 'showTasks' | 'sho
 @Component({
   selector: 'app-agenda-filters',
   standalone: true,
-  imports: [RouterLink, PageHeaderComponent],
+  imports: [RouterLink, PageHeaderComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header heading="Filtres" backLink="/agenda" backLabel="Fermer les filtres" variant="close">
@@ -33,10 +34,7 @@ type DisplayFilter = keyof Pick<AgendaFilters, 'showEvents' | 'showTasks' | 'sho
       <section>
         <h2>Afficher</h2>
         @for (option of display; track option.key) {
-          <button class="switch-row" type="button" role="switch" [attr.aria-checked]="store.filters()[option.key]" (click)="toggle(option.key)">
-            <span>{{ option.label }}<small>{{ option.hint }}</small></span>
-            <i class="switch" [class.on]="store.filters()[option.key]"><b></b></i>
-          </button>
+          <app-switch-row [label]="option.label" [hint]="option.hint" [checked]="store.filters()[option.key]" (toggled)="toggle(option.key)" />
         }
       </section>
     </div>
@@ -57,12 +55,6 @@ type DisplayFilter = keyof Pick<AgendaFilters, 'showEvents' | 'showTasks' | 'sho
     .option input:checked + b { border-color: var(--color-primary); background: var(--color-primary); }
     .option input:checked + b::after { width: .45rem; height: .25rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.06rem) rotate(-45deg); }
     .option input:focus-visible + b { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 2px; }
-    .switch-row { display: grid; width: 100%; min-height: 3rem; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .3rem 0; border: 0; background: transparent; color: var(--color-text); cursor: pointer; font: inherit; font-size: .8rem; text-align: left; }
-    .switch-row small { display: block; margin-top: .1rem; color: #8a93a3; font-size: .68rem; }
-    .switch { position: relative; display: block; width: 2.15rem; height: 1.25rem; border-radius: 1rem; background: #dfe4ed; transition: background-color 180ms ease; }
-    .switch b { position: absolute; top: .15rem; left: .15rem; width: .95rem; height: .95rem; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgb(20 30 50 / 22%); transition: transform 180ms ease; }
-    .switch.on { background: #3264ed; }
-    .switch.on b { transform: translateX(.9rem); }
     .actions { padding: .8rem 1.25rem calc(1.2rem + env(safe-area-inset-bottom)); border-top: 1px solid #edf0f5; }
     .actions .primary-button { text-decoration: none; }
   `,

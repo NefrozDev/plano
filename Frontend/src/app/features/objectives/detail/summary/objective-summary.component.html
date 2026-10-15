@@ -125,15 +125,8 @@
       <a class="row" [routerLink]="['/objectives', objective.id, 'share']">
         <span>
           <b>Partagé avec</b>
-          @if (view.avatars.length) {
-            <span class="avatars">
-              @for (person of view.avatars; track person.id) {
-                <span class="avatar" [style.background]="person.color" [attr.title]="person.name">{{ person.initials }}</span>
-              }
-              @if (view.extraPeople) {
-                <span class="avatar more">+{{ view.extraPeople }}</span>
-              }
-            </span>
+          @if (view.people.length) {
+            <app-avatar-stack [people]="view.people" />
           } @else {
             <small>Personne pour l’instant</small>
           }

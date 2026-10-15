@@ -1,15 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  afterNextRender,
-  computed,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import type { Objective, ObjectiveCategory } from '@plano/common';
+import { SearchFieldComponent } from '../../../shared/ui/search-field.component';
 import { formatDate, objectiveTint } from '../objective.utils';
 import { DEFAULT_OBJECTIVE_FILTERS, ObjectivesStore } from '../objectives.store';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
@@ -18,7 +10,7 @@ import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 @Component({
   selector: 'app-objectives-search',
   standalone: true,
-  imports: [RouterLink, PageHeaderComponent, ObjectiveIconComponent],
+  imports: [RouterLink, PageHeaderComponent, SearchFieldComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-search.component.html',
   styleUrl: './objectives-search.component.scss',
@@ -27,7 +19,6 @@ export class ObjectivesSearchComponent {
   private readonly router = inject(Router);
   private readonly store = inject(ObjectivesStore);
 
-  private readonly searchInput = viewChild.required<ElementRef<HTMLInputElement>>('searchInput');
   readonly query = signal('');
   readonly results = computed(() => this.store.search(this.query()));
   readonly recent = this.store.recent;
@@ -37,11 +28,6 @@ export class ObjectivesSearchComponent {
     { category: 'finance', label: 'Objectifs financiers' },
     { category: 'development', label: 'Développement personnel' },
   ];
-
-  constructor() {
-    // The autofocus attribute is ignored after client-side navigation, so focus explicitly.
-    afterNextRender(() => this.searchInput().nativeElement.focus());
-  }
 
   tint(objective: Objective): string {
     return objectiveTint(objective.category, this.store.settings().categoryColors);

@@ -1,17 +1,6 @@
 <app-page-header heading="Recherche" backLink="/objectives" backLabel="Fermer la recherche" variant="close" />
 
-<div class="search-field">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
-  <input
-    #searchInput
-    type="search"
-    placeholder="Rechercher un objectif…"
-    aria-label="Rechercher un objectif"
-    maxlength="80"
-    [value]="query()"
-    (input)="query.set($any($event.target).value)"
-  />
-</div>
+<app-search-field label="Rechercher un objectif" placeholder="Rechercher un objectif…" [autofocus]="true" [(value)]="query" />
 
 <div class="content" aria-live="polite">
   @if (query().trim()) {

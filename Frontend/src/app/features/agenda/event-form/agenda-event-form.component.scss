@@ -15,9 +15,6 @@
 .toggle::after { position: absolute; top: .15rem; left: .15rem; width: .95rem; height: .95rem; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgb(20 30 50 / 22%); content: ''; transition: transform 180ms ease; }
 .toggle:checked { background: #3264ed; }
 .toggle:checked::after { transform: translateX(.9rem); }
-.avatars { display: flex; }
-.avatar { display: grid; width: 1.6rem; height: 1.6rem; margin-left: -.3rem; place-items: center; border: 2px solid white; border-radius: 50%; color: white; font-size: .58rem; font-weight: 750; }
-.avatar.more { background: #e9edf4; color: #5b6476; }
 .colors { display: flex; flex-wrap: wrap; gap: .55rem; margin: 0; padding: .8rem 0; border: 0; border-bottom: 1px solid #edf0f5; }
 .colors legend { float: left; width: 100%; margin-bottom: .5rem; }
 .swatch { position: relative; display: grid; width: 1.9rem; height: 1.9rem; place-items: center; cursor: pointer; }

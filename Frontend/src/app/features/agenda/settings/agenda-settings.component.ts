@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { AgendaSettings } from '@plano/common';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
+import { SwitchRowComponent } from '../../../shared/ui/switch-row.component';
 import { AgendaStore } from '../agenda.store';
 import { DURATION_OPTIONS, REMINDER_OPTIONS, TIME_ZONES } from '../agenda.utils';
 
@@ -10,7 +11,7 @@ type ToggleSetting = 'eventNotifications' | 'invitationNotifications' | 'showWee
 @Component({
   selector: 'app-agenda-settings',
   standalone: true,
-  imports: [PageHeaderComponent],
+  imports: [PageHeaderComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header heading="Paramètres Agenda" backLink="/agenda" backLabel="Retour à l’agenda" />
@@ -53,19 +54,13 @@ type ToggleSetting = 'eventNotifications' | 'invitationNotifications' | 'showWee
             }
           </select>
         </label>
-        <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().eventNotifications" (click)="toggle('eventNotifications')">
-          <span>Notifications d’événements</span><i class="switch" [class.on]="settings().eventNotifications"><b></b></i>
-        </button>
-        <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().invitationNotifications" (click)="toggle('invitationNotifications')">
-          <span>Notifications d’invitations</span><i class="switch" [class.on]="settings().invitationNotifications"><b></b></i>
-        </button>
+        <app-switch-row label="Notifications d’événements" [checked]="settings().eventNotifications" (toggled)="toggle('eventNotifications')" />
+        <app-switch-row label="Notifications d’invitations" [checked]="settings().invitationNotifications" (toggled)="toggle('invitationNotifications')" />
       </section>
 
       <section>
         <h2>Affichage</h2>
-        <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().showWeekNumbers" (click)="toggle('showWeekNumbers')">
-          <span>Afficher les numéros de semaine</span><i class="switch" [class.on]="settings().showWeekNumbers"><b></b></i>
-        </button>
+        <app-switch-row label="Afficher les numéros de semaine" [checked]="settings().showWeekNumbers" (toggled)="toggle('showWeekNumbers')" />
         <label class="setting-row">
           <span>Affichage des heures</span>
           <select (change)="update({ hourFormat: $any($event.target).value === '12h' ? '12h' : '24h' })">
@@ -84,10 +79,6 @@ type ToggleSetting = 'eventNotifications' | 'invitationNotifications' | 'showWee
     h2 { margin: 0 0 .5rem; color: #586174; font-size: .72rem; font-weight: 750; }
     .setting-row { display: grid; width: 100%; min-height: 2.6rem; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .25rem 0; border: 0; background: transparent; color: #20263a; cursor: pointer; font: inherit; font-size: .8rem; text-align: left; }
     .setting-row select { max-width: 10.5rem; border: 0; outline: 0; background: transparent; color: #687187; cursor: pointer; font: inherit; font-size: .78rem; text-align: right; }
-    .switch { position: relative; display: block; width: 2.15rem; height: 1.25rem; border-radius: 1rem; background: #dfe4ed; transition: background-color 180ms ease; }
-    .switch b { position: absolute; top: .15rem; left: .15rem; width: .95rem; height: .95rem; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgb(20 30 50 / 22%); transition: transform 180ms ease; }
-    .switch.on { background: #3264ed; }
-    .switch.on b { transform: translateX(.9rem); }
   `,
 })
 export class AgendaSettingsComponent {

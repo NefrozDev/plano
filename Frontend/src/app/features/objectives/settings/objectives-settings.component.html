@@ -10,9 +10,7 @@
         <option value="grid" [selected]="settings().defaultView === 'grid'">Grille</option>
       </select>
     </label>
-    <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().showArchived" (click)="toggle('showArchived')">
-      <span>Afficher les objectifs archivés dans « Tous »</span><i class="switch" [class.on]="settings().showArchived"><b></b></i>
-    </button>
+    <app-switch-row label="Afficher les objectifs archivés dans « Tous »" [checked]="settings().showArchived" (toggled)="toggle('showArchived')" />
   </section>
 
   <section>
@@ -25,9 +23,7 @@
         }
       </select>
     </label>
-    <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().notifications" (click)="toggle('notifications')">
-      <span>Notifications d’objectifs</span><i class="switch" [class.on]="settings().notifications"><b></b></i>
-    </button>
+    <app-switch-row label="Notifications d’objectifs" [checked]="settings().notifications" (toggled)="toggle('notifications')" />
     <label class="setting-row">
       <span>Rappels d’habitudes</span>
       <select (change)="update({ habitReminders: $any($event.target).value })">
@@ -39,11 +35,7 @@
 
   <section>
     <h2>Affichage</h2>
-    <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().showPercentage" (click)="toggle('showPercentage')">
-      <span>Afficher la progression en pourcentage</span><i class="switch" [class.on]="settings().showPercentage"><b></b></i>
-    </button>
-    <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().categoryColors" (click)="toggle('categoryColors')">
-      <span>Couleur par catégorie</span><i class="switch" [class.on]="settings().categoryColors"><b></b></i>
-    </button>
+    <app-switch-row label="Afficher la progression en pourcentage" [checked]="settings().showPercentage" (toggled)="toggle('showPercentage')" />
+    <app-switch-row label="Couleur par catégorie" [checked]="settings().categoryColors" (toggled)="toggle('categoryColors')" />
   </section>
 </div>

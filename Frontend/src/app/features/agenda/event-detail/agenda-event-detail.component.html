@@ -29,14 +29,7 @@
         <li>
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-4 3-6 6.5-6s6.5 2 6.5 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.5.5 4 2.5 4 6" /></svg>
           <span>Avec</span>
-          <span class="avatars" [attr.aria-label]="d.peopleNames">
-            @for (person of d.people; track person.id) {
-              <span class="avatar" [style.background]="person.color" [attr.title]="person.name" aria-hidden="true">{{ person.initials }}</span>
-            }
-            @if (d.extraPeople) {
-              <span class="avatar more" aria-hidden="true">+{{ d.extraPeople }}</span>
-            }
-          </span>
+          <app-avatar-stack [people]="d.people" />
         </li>
       }
       @if (d.event.conferenceUrl) {

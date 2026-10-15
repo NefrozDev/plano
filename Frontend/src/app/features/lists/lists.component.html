@@ -131,15 +131,9 @@
 
       <section>
         <h3>Comportement</h3>
-        <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().showCounts" (click)="toggleSetting('showCounts')">
-          <span>Afficher le nombre d’éléments</span><i class="switch" [class.on]="listsStore.settings().showCounts"><b></b></i>
-        </button>
-        <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().showCompleted" (click)="toggleSetting('showCompleted')">
-          <span>Afficher les éléments terminés</span><i class="switch" [class.on]="listsStore.settings().showCompleted"><b></b></i>
-        </button>
-        <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().completedLast" (click)="toggleSetting('completedLast')">
-          <span>Placer les terminés en bas</span><i class="switch" [class.on]="listsStore.settings().completedLast"><b></b></i>
-        </button>
+        <app-switch-row label="Afficher le nombre d’éléments" [checked]="listsStore.settings().showCounts" (toggled)="toggleSetting('showCounts')" />
+        <app-switch-row label="Afficher les éléments terminés" [checked]="listsStore.settings().showCompleted" (toggled)="toggleSetting('showCompleted')" />
+        <app-switch-row label="Placer les terminés en bas" [checked]="listsStore.settings().completedLast" (toggled)="toggleSetting('completedLast')" />
       </section>
 
       <section>
@@ -160,12 +154,8 @@
 
       <section>
         <h3>Actions</h3>
-        <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().archiveCompleted" (click)="toggleSetting('archiveCompleted')">
-          <span>Archiver les listes terminées</span><i class="switch" [class.on]="listsStore.settings().archiveCompleted"><b></b></i>
-        </button>
-        <button class="setting-row" type="button" role="switch" [attr.aria-checked]="listsStore.settings().confirmDelete" (click)="toggleSetting('confirmDelete')">
-          <span>Confirmer avant suppression</span><i class="switch" [class.on]="listsStore.settings().confirmDelete"><b></b></i>
-        </button>
+        <app-switch-row label="Archiver les listes terminées" [checked]="listsStore.settings().archiveCompleted" (toggled)="toggleSetting('archiveCompleted')" />
+        <app-switch-row label="Confirmer avant suppression" [checked]="listsStore.settings().confirmDelete" (toggled)="toggleSetting('confirmDelete')" />
       </section>
     </div>
   </section>

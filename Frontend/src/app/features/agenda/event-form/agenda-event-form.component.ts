@@ -9,6 +9,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import type { AgendaAttachment, AgendaContact, EventRecurrence, IsoDate } from '@plano/common';
 import { createId } from '../../../core/time/dates';
+import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { AgendaEventDraft, AgendaStore } from '../agenda.store';
 import {
@@ -43,7 +44,7 @@ function webUrl(control: AbstractControl<string>): ValidationErrors | null {
 @Component({
   selector: 'app-agenda-event-form',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeaderComponent, AgendaParticipantsPickerComponent],
+  imports: [ReactiveFormsModule, PageHeaderComponent, AvatarStackComponent, AgendaParticipantsPickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-event-form.component.html',
   styleUrl: './agenda-event-form.component.scss',

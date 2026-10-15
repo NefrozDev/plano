@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
+import { SwitchRowComponent } from '../../shared/ui/switch-row.component';
 import { ListsStore } from './lists.store';
 
 type ListFilter = 'all' | 'mine' | 'shared' | 'archived';
@@ -8,7 +9,7 @@ type ListFilter = 'all' | 'mine' | 'shared' | 'archived';
 @Component({
   selector: 'app-lists',
   standalone: true,
-  imports: [RouterLink, BottomNavComponent],
+  imports: [RouterLink, BottomNavComponent, SwitchRowComponent],
   templateUrl: './lists.component.html',
   styleUrl: './lists.component.scss',
 })

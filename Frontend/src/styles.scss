@@ -328,10 +328,6 @@ app-lists .setting-row { display: grid; width: 100%; min-height: 2.35rem; grid-t
 app-lists button.setting-row, app-lists .setting-row select { cursor: pointer; }
 app-lists .setting-row select, app-lists .setting-row input { max-width: 9rem; border: 0; outline: 0; background: transparent; color: #687187; font: inherit; font-size: .79rem; text-align: right; }
 app-lists .setting-row input[type='time'] { width: 5rem; }
-app-lists .switch { position: relative; display: block; width: 2.15rem; height: 1.25rem; border-radius: 1rem; background: #dfe4ed; transition: background-color 180ms ease; }
-app-lists .switch b { position: absolute; top: .15rem; left: .15rem; width: .95rem; height: .95rem; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgb(20 30 50 / 22%); transition: transform 180ms ease; }
-app-lists .switch.on { background: #3264ed; }
-app-lists .switch.on b { transform: translateX(.9rem); }
 
 app-list-detail .list-menu button + button {
   border-top: 1px solid #EEF0F4;

@@ -1,17 +1,9 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  afterNextRender,
-  computed,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { AgendaEvent } from '@plano/common';
 import { formatDay } from '../../../core/time/dates';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
+import { SearchFieldComponent } from '../../../shared/ui/search-field.component';
 import { AgendaStore } from '../agenda.store';
 import { formatTime, nextOccurrence, timePart } from '../agenda.utils';
 
@@ -26,15 +18,12 @@ interface SearchRow {
 @Component({
   selector: 'app-agenda-search',
   standalone: true,
-  imports: [RouterLink, PageHeaderComponent],
+  imports: [RouterLink, PageHeaderComponent, SearchFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header heading="Recherche" backLink="/agenda" backLabel="Fermer la recherche" variant="close" />
 
-    <label class="search">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
-      <input #searchInput type="search" maxlength="80" placeholder="Rechercher un événement, un lieu…" aria-label="Rechercher un événement" [value]="query()" (input)="query.set($any($event.target).value)" />
-    </label>
+    <app-search-field label="Rechercher un événement" placeholder="Rechercher un événement, un lieu…" [autofocus]="true" [(value)]="query" />
 
     <div class="content" aria-live="polite">
       @if (query().trim()) {
@@ -77,10 +66,7 @@ interface SearchRow {
   `,
   styles: `
     :host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
-    .search { display: flex; gap: .5rem; align-items: center; margin: 0 1.25rem .4rem; padding: 0 .8rem; border: 1px solid var(--color-border); border-radius: .7rem; }
-    .search:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 .2rem rgb(50 91 226 / 12%); }
     svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: #8a93a3; stroke-linecap: round; stroke-width: 2; }
-    .search input { width: 100%; min-height: 2.8rem; border: 0; outline: 0; background: transparent; font-size: .84rem; }
     .content { flex: 1; min-height: 0; padding: 0 1.25rem 1.5rem; overflow-y: auto; }
     h2 { margin: 1rem 0 .3rem; color: #394254; font-size: .76rem; }
     .result { display: flex; gap: .75rem; align-items: center; padding: .55rem 0; color: var(--color-text); text-decoration: none; }
@@ -94,18 +80,12 @@ interface SearchRow {
 })
 export class AgendaSearchComponent {
   private readonly store = inject(AgendaStore);
-  private readonly searchInput = viewChild.required<ElementRef<HTMLInputElement>>('searchInput');
 
   readonly today = this.store.today();
   readonly query = signal('');
   readonly results = computed(() => this.store.search(this.query()).map((event) => this.toRow(event)));
   readonly recent = computed(() => this.store.recent().map((event) => this.toRow(event)));
   readonly frequentContact = computed(() => this.store.contacts().find((contact) => contact.frequent));
-
-  constructor() {
-    // The autofocus attribute is ignored after client-side navigation, so focus explicitly.
-    afterNextRender(() => this.searchInput().nativeElement.focus());
-  }
 
   private toRow(event: AgendaEvent): SearchRow {
     const occurrence = nextOccurrence(event, this.today) ?? { start: event.start, end: event.end };

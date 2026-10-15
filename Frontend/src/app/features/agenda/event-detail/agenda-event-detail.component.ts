@@ -3,6 +3,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import type { AgendaContact } from '@plano/common';
 import { formatLongDay, parseIsoDate } from '../../../core/time/dates';
+import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { AgendaStore } from '../agenda.store';
@@ -21,7 +22,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 @Component({
   selector: 'app-agenda-event-detail',
   standalone: true,
-  imports: [RouterLink, PageHeaderComponent, ModalDialogComponent],
+  imports: [RouterLink, PageHeaderComponent, ModalDialogComponent, AvatarStackComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-event-detail.component.html',
   styleUrl: './agenda-event-detail.component.scss',
@@ -66,9 +67,7 @@ export class AgendaEventDetailComponent {
           ? `${formatLongDay(start)} ${parseIsoDate(start).getFullYear()}`
           : `Du ${formatLongDay(start)} au ${formatLongDay(end)}`,
       timeLabel: timeRangeLabel({ allDay: event.allDay, ...occurrence }, this.store.settings().hourFormat),
-      people: people.slice(0, 4),
-      extraPeople: Math.max(0, people.length - 4),
-      peopleNames: people.map((person) => person.name).join(', '),
+      people,
       reminder: reminderLabel(event.reminderMinutes),
       recurrence: RECURRENCE_LABELS[event.recurrence],
       calendarName: calendar?.name ?? 'Sans calendrier',

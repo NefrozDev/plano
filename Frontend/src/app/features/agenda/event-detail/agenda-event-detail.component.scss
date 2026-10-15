@@ -6,10 +6,6 @@ h2 i, dd i { width: .7rem; height: .7rem; flex: none; border-radius: 50%; }
 .facts li { display: flex; gap: .6rem; align-items: center; color: #3c4658; font-size: .8rem; }
 .facts svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: #7b8292; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .facts a { color: var(--color-primary); font-weight: 650; }
-.avatars { display: flex; }
-.avatar { display: grid; width: 1.6rem; height: 1.6rem; margin-left: -.3rem; place-items: center; border: 2px solid white; border-radius: 50%; color: white; font-size: .58rem; font-weight: 750; }
-.avatar:first-child { margin-left: 0; }
-.avatar.more { background: #e9edf4; color: #5b6476; }
 .text { margin: 1rem 0 0; color: #5b6476; font-size: .78rem; line-height: 1.5; white-space: pre-line; }
 .block { margin-top: 1rem; }
 .block h3 { margin: 0; color: #394254; font-size: .74rem; }

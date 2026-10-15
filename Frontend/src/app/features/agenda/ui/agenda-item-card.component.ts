@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { AgendaContact } from '@plano/common';
+import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { AgendaStore } from '../agenda.store';
 import { AgendaItem, timeRangeLabel } from '../agenda.utils';
 
@@ -10,7 +11,7 @@ const MAX_AVATARS = 2;
 @Component({
   selector: 'app-agenda-item-card',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, AvatarStackComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a
@@ -30,16 +31,7 @@ const MAX_AVATARS = 2;
         </strong>
         <small>{{ caption() }}</small>
       </span>
-      @if (people().length) {
-        <span class="avatars" [attr.aria-label]="'Avec ' + peopleNames()">
-          @for (person of people().slice(0, maxAvatars); track person.id) {
-            <span class="avatar" [style.background]="person.color" aria-hidden="true">{{ person.initials }}</span>
-          }
-          @if (people().length > maxAvatars) {
-            <span class="avatar more" aria-hidden="true">+{{ people().length - maxAvatars }}</span>
-          }
-        </span>
-      }
+      <app-avatar-stack [people]="people()" [max]="maxAvatars" [label]="'Avec ' + peopleNames()" />
     </a>
   `,
   styles: `
@@ -52,9 +44,7 @@ const MAX_AVATARS = 2;
     .check { width: .8rem; height: .8rem; flex: none; border: 1.5px solid currentColor; border-radius: .2rem; }
     .done strong { text-decoration: line-through; opacity: .65; }
     .done .check { background: currentColor; }
-    .avatars { display: flex; flex: none; }
-    .avatar { display: grid; width: 1.5rem; height: 1.5rem; margin-left: -.3rem; place-items: center; border: 2px solid white; border-radius: 50%; color: white; font-size: .55rem; font-weight: 750; }
-    .avatar.more { background: #e9edf4; color: #5b6476; }
+    app-avatar-stack { --avatar-size: 1.5rem; }
   `,
 })
 export class AgendaItemCardComponent {

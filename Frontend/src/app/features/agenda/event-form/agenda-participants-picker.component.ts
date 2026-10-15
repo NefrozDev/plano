@@ -10,12 +10,14 @@ import {
 } from '@angular/core';
 import type { AgendaContact } from '@plano/common';
 import { normalizeText } from '../../../core/time/dates';
+import { SearchFieldComponent } from '../../../shared/ui/search-field.component';
 import { AgendaStore } from '../agenda.store';
 
 /** Screen 7: full-screen panel over the event form; edits a copy until confirmed. */
 @Component({
   selector: 'app-agenda-participants-picker',
   standalone: true,
+  imports: [SearchFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section role="dialog" aria-modal="true" aria-labelledby="participants-title">
@@ -29,10 +31,7 @@ import { AgendaStore } from '../agenda.store';
         </button>
       </header>
 
-      <label class="search">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
-        <input type="search" placeholder="Rechercher un contact" aria-label="Rechercher un contact" maxlength="60" [value]="query()" (input)="query.set($any($event.target).value)" />
-      </label>
+      <app-search-field label="Rechercher un contact" placeholder="Rechercher un contact" [maxLength]="60" [(value)]="query" />
 
       <div class="lists">
         @for (group of groups(); track group.title) {
@@ -62,9 +61,6 @@ import { AgendaStore } from '../agenda.store';
     header .confirm { color: var(--color-primary); }
     svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
     h2 { margin: 0; font-size: 1.02rem; text-align: center; }
-    .search { display: flex; gap: .5rem; align-items: center; margin: 0 1.25rem .4rem; padding: 0 .8rem; border: 1px solid var(--color-border); border-radius: .7rem; }
-    .search svg { width: 1.1rem; height: 1.1rem; flex: none; stroke: #8a93a3; }
-    .search input { width: 100%; min-height: 2.6rem; border: 0; outline: 0; font-size: .82rem; }
     .lists { flex: 1; min-height: 0; padding: 0 1.25rem 2rem; overflow-y: auto; }
     h3 { margin: 1rem 0 .3rem; color: #586174; font-size: .72rem; }
     .person { position: relative; display: grid; min-height: 2.8rem; grid-template-columns: auto 1fr auto; gap: .7rem; align-items: center; cursor: pointer; }
