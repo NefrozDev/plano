@@ -1,0 +1,57 @@
+<app-objective-header heading="Recherche" backLink="/objectives" backLabel="Fermer la recherche" variant="close" />
+
+<div class="search-field">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
+  <input
+    #searchInput
+    type="search"
+    placeholder="Rechercher un objectif…"
+    aria-label="Rechercher un objectif"
+    maxlength="80"
+    [value]="query()"
+    (input)="query.set($any($event.target).value)"
+  />
+</div>
+
+<div class="content" aria-live="polite">
+  @if (query().trim()) {
+    <h2>Résultats</h2>
+    <ul class="objective-list">
+      @for (objective of results(); track objective.id) {
+        <li>
+          <a [routerLink]="['/objectives', objective.id]">
+            <app-objective-icon [category]="objective.category" [color]="tint(objective)" [completed]="objective.status === 'completed'" />
+            <span><strong>{{ objective.title }}</strong><small>{{ caption(objective) }}</small></span>
+          </a>
+        </li>
+      } @empty {
+        <li class="empty">Aucun objectif ne correspond à « {{ query().trim() }} ».</li>
+      }
+    </ul>
+  } @else {
+    @if (recent().length) {
+      <h2>Récents</h2>
+      <ul class="objective-list">
+        @for (objective of recent(); track objective.id) {
+          <li>
+            <a [routerLink]="['/objectives', objective.id]">
+              <app-objective-icon [category]="objective.category" [color]="tint(objective)" [completed]="objective.status === 'completed'" />
+              <span><strong>{{ objective.title }}</strong><small>{{ caption(objective) }}</small></span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+
+    <h2>Suggestions</h2>
+    <ul class="suggestions">
+      @for (suggestion of suggestions; track suggestion.category) {
+        <li>
+          <button type="button" (click)="applySuggestion(suggestion.category)">
+            <span>{{ suggestion.label }}</span><i aria-hidden="true">›</i>
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

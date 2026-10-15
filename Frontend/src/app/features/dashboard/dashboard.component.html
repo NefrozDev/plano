@@ -27,7 +27,7 @@
         </button>
         @if (profileMenuOpen()) {
           <div class="profile-menu">
-            <a routerLink="/group/setup">Configurer mon groupe</a
+            <a routerLink="/group/setup">Gérer mon groupe</a
             ><button
               type="button"
               [disabled]="logoutPending()"
@@ -118,24 +118,18 @@
       >
         <h2 id="goals-title">Mes objectifs</h2>
         <div class="goals-card">
-          <article>
-            <span class="goal-icon goal-icon--pink">◎</span>
-            <div>
-              <strong>Courir 10 KM</strong
-              ><small>échéance : le 05/09/2026</small>
-              <div class="progress"><i style="width: 73%"></i></div>
-            </div>
-            <b>73%</b>
-          </article>
-          <article>
-            <span class="goal-icon goal-icon--green">◎</span>
-            <div>
-              <strong>Lire Harry Potter</strong
-              ><small>échéance : le 15/10/2026</small>
-              <div class="progress"><i style="width: 46%"></i></div>
-            </div>
-            <b>46%</b>
-          </article>
+          @for (goal of goals(); track goal.id) {
+            <a class="goal" [routerLink]="['/objectives', goal.id]">
+              <app-objective-icon [category]="goal.category" [color]="goal.tint" />
+              <div>
+                <strong>{{ goal.title }}</strong><small>{{ goal.due }}</small>
+                <div class="progress"><i [style.width.%]="goal.progress"></i></div>
+              </div>
+              <b>{{ goal.progress }}%</b>
+            </a>
+          } @empty {
+            <a class="card-link" routerLink="/objectives/new">+ Créer un objectif</a>
+          }
         </div>
       </section>
     </div>

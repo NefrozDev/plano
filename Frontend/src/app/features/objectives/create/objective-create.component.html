@@ -1,0 +1,162 @@
+<app-objective-header heading="Nouvel objectif" backLink="/objectives" backLabel="Annuler la création" variant="close" />
+
+<ol class="stepper" aria-label="Étapes de création">
+  @for (index of [1, 2, 3]; track index) {
+    <li
+      [class.current]="step() === index"
+      [class.done]="step() > index"
+      [attr.aria-current]="step() === index ? 'step' : null"
+    ><span>{{ index }}</span><b class="visually-hidden">Étape {{ index }} sur 3</b></li>
+  }
+</ol>
+
+<form class="wizard" [formGroup]="form" (ngSubmit)="next()" novalidate>
+  <div class="body">
+    @switch (step()) {
+      @case (1) {
+        <label class="field">
+          <span class="question">Quel est votre objectif ?</span>
+          <input
+            class="form-control"
+            formControlName="title"
+            maxlength="80"
+            placeholder="Ex. : Courir 10 km, Lire 12 livres…"
+            [attr.aria-invalid]="showError('title')"
+          />
+          @if (showError('title')) {
+            <span class="field-error">Donnez un nom à votre objectif.</span>
+          }
+        </label>
+
+        <fieldset>
+          <legend>Catégorie</legend>
+          <div class="categories">
+            @for (category of categories; track category.value) {
+              <label class="choice" [class.selected]="form.controls.category.value === category.value">
+                <input type="radio" formControlName="category" [value]="category.value" />
+                <app-objective-icon [category]="category.value" [color]="category.color" />
+                <span>{{ category.label }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      }
+
+      @case (2) {
+        <label class="field">
+          <span>Échéance <small>(optionnel)</small></span>
+          <input class="form-control" type="date" formControlName="dueDate" [min]="today" [attr.aria-invalid]="dueDateInPast()" />
+          @if (dueDateInPast()) {
+            <span class="field-error">L’échéance ne peut pas être dans le passé.</span>
+          }
+        </label>
+        <label class="field">
+          <span>Description <small>(optionnel)</small></span>
+          <textarea class="form-control" rows="4" formControlName="description" maxlength="200" placeholder="Décrivez votre objectif…"></textarea>
+          <small class="counter">{{ form.controls.description.value.length }}/200</small>
+        </label>
+        <label class="field">
+          <span>Plan <small>(optionnel)</small></span>
+          <input class="form-control" formControlName="plan" maxlength="120" placeholder="Ex. : 3 entraînements par semaine" />
+        </label>
+      }
+
+      @case (3) {
+        <fieldset>
+          <legend class="question">Comment suivre votre progression ?</legend>
+          <div class="tracking">
+            @for (option of trackingOptions; track option.value) {
+              <label class="tracking-option" [class.selected]="form.controls.tracking.value === option.value">
+                <input type="radio" formControlName="tracking" [value]="option.value" />
+                <span><strong>{{ option.label }}</strong><small>{{ option.hint }}</small></span>
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        @switch (form.controls.tracking.value) {
+          @case ('metric') {
+            <div class="inline-fields">
+              <label class="field">
+                <span>Cible</span>
+                <input class="form-control" type="number" min="0.1" step="0.1" formControlName="target" [attr.aria-invalid]="showError('target')" />
+              </label>
+              <label class="field">
+                <span>Unité</span>
+                <input class="form-control" formControlName="unit" maxlength="12" placeholder="km, €, livres…" [attr.aria-invalid]="showError('unit')" />
+              </label>
+            </div>
+            @if (showError('target') || showError('unit')) {
+              <p class="field-error">Indiquez une cible positive et une unité.</p>
+            }
+            <label class="field">
+              <span>Calcul de la progression</span>
+              <select class="form-control" formControlName="aggregation">
+                <option value="max">Meilleure séance (ex. : distance courue)</option>
+                <option value="sum">Cumul des séances (ex. : montant épargné)</option>
+              </select>
+            </label>
+          }
+          @case ('steps') {
+            <div class="field" formArrayName="steps">
+              <span>Étapes</span>
+              @for (control of form.controls.steps.controls; track control; let index = $index) {
+                <div class="step-field">
+                  <input class="form-control" [formControlName]="index" maxlength="80" [attr.aria-label]="'Étape ' + (index + 1)" placeholder="Ex. : Apprendre 100 mots" />
+                  <button type="button" [attr.aria-label]="'Retirer l’étape ' + (index + 1)" [disabled]="form.controls.steps.length === 1" (click)="removeStepField(index)">×</button>
+                </div>
+              }
+              <button class="link-button" type="button" (click)="addStepField()">＋ Ajouter une étape</button>
+              @if (stepsMissing()) {
+                <span class="field-error">Ajoutez au moins une étape.</span>
+              }
+            </div>
+          }
+          @case ('habit') {
+            <label class="field">
+              <span>Nombre de jours à réussir</span>
+              <input class="form-control" type="number" min="1" max="366" formControlName="habitTargetDays" [attr.aria-invalid]="showError('habitTargetDays')" />
+              @if (showError('habitTargetDays')) {
+                <span class="field-error">Choisissez entre 1 et 366 jours.</span>
+              }
+            </label>
+          }
+        }
+
+        <div class="inline-fields">
+          <label class="field">
+            <span>Rappel</span>
+            <select class="form-control" formControlName="reminderFrequency">
+              <option value="none">Aucun</option>
+              <option value="daily">Chaque jour</option>
+              <option value="weekly">Chaque semaine</option>
+            </select>
+          </label>
+          @if (form.controls.reminderFrequency.value !== 'none') {
+            <label class="field">
+              <span>Heure</span>
+              <input class="form-control" type="time" formControlName="reminderTime" />
+            </label>
+          }
+        </div>
+        @if (form.controls.reminderFrequency.value === 'weekly') {
+          <label class="field">
+            <span>Jour</span>
+            <select class="form-control" formControlName="reminderWeekday">
+              @for (day of weekdays; track day; let index = $index) {
+                <option [ngValue]="index">{{ day }}</option>
+              }
+            </select>
+          </label>
+        }
+      }
+    }
+  </div>
+
+  <div class="actions" [class.single]="step() === 1">
+    @if (step() > 1) {
+      <button class="secondary" type="button" (click)="back()">Retour</button>
+    }
+    <button class="primary-button" type="submit">{{ step() === 3 ? 'Créer l’objectif' : 'Continuer' }}</button>
+  </div>
+</form>

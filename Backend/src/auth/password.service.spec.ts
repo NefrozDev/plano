@@ -42,4 +42,62 @@ describe('PasswordService', () => {
         new PasswordService(new ConfigService({ AUTH_SCRYPT_COST: '12345' })),
     ).toThrow('AUTH_SCRYPT_COST must be a power of two.');
   });
+
+  it('uses defaults for empty settings and rejects out-of-range ones', () => {
+    expect(
+      () =>
+        new PasswordService(
+          new ConfigService({
+            AUTH_SCRYPT_BLOCK_SIZE: '',
+            AUTH_SCRYPT_COST: '1024',
+          }),
+        ),
+    ).not.toThrow();
+    expect(
+      () =>
+        new PasswordService(
+          new ConfigService({ AUTH_SCRYPT_PARALLELIZATION: '99' }),
+        ),
+    ).toThrow(
+      'AUTH_SCRYPT_PARALLELIZATION must be an integer between 1 and 16.',
+    );
+  });
+
+  it('treats tampered hash parameters as invalid', async () => {
+    const [, , , , , salt, digest] = (
+      await service.hash('the correct password')
+    ).split('$');
+    const tampered = [
+      `scrypt$2$1024$8$1$${salt}$${digest}`, // unknown version
+      `scrypt$1$1024$64$1$${salt}$${digest}`, // block size too large
+      `scrypt$1$1024$8$0$${salt}$${digest}`, // no parallelization
+      `scrypt$1$1024$8$1$AAAA$${digest}`, // salt too short
+      `scrypt$1$1024$8$1$${salt}`, // digest missing
+    ];
+
+    for (const hash of tampered) {
+      await expect(service.verify('the correct password', hash)).resolves.toBe(
+        false,
+      );
+    }
+  });
+
+  it('propagates key derivation failures', async () => {
+    // ts-jest compiles to CommonJS, so the service reads crypto.scrypt at call
+    // time and this spy intercepts it.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const crypto = require('node:crypto') as typeof import('node:crypto');
+    const failure = new Error('scrypt failed');
+    const spy = jest
+      .spyOn(crypto, 'scrypt')
+      .mockImplementation((...args: unknown[]) => {
+        (args.at(-1) as (error: Error | null) => void)(failure);
+      });
+
+    try {
+      await expect(service.hash('a password')).rejects.toBe(failure);
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });

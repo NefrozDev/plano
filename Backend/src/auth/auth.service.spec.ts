@@ -1,5 +1,5 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
-import type { DataSource, Repository } from 'typeorm';
+import { QueryFailedError, type DataSource, type Repository } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
 import { User } from '../users/user.entity';
 import { AuthService } from './auth.service';
@@ -271,6 +271,49 @@ describe('AuthService', () => {
     await service.logout('a'.repeat(43));
     expect(sessions.delete).toHaveBeenCalledWith({
       tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/) as string,
+    });
+  });
+
+  describe('when the database rejects the registration', () => {
+    const details = {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      username: 'ada',
+      email: 'ada@example.com',
+      password: 'password123',
+      acceptedTerms: true,
+    };
+
+    it('turns a unique-constraint race into a conflict', async () => {
+      // Two concurrent sign-ups can both pass the duplicate checks; the
+      // database unique index is the last line of defence.
+      manager.save.mockRejectedValueOnce(
+        new QueryFailedError(
+          'INSERT',
+          [],
+          new Error('UNIQUE constraint failed: users.normalizedEmail'),
+        ),
+      );
+
+      await expect(service.register(details)).rejects.toEqual(
+        new ConflictException(
+          "Ce nom d'utilisateur ou cette adresse e-mail est déjà utilisé.",
+        ),
+      );
+    });
+
+    it('rethrows other database and runtime errors unchanged', async () => {
+      const queryError = new QueryFailedError(
+        'INSERT',
+        [],
+        new Error('disk I/O error'),
+      );
+      manager.save.mockRejectedValueOnce(queryError);
+      await expect(service.register(details)).rejects.toBe(queryError);
+
+      const runtimeError = new Error('connection lost');
+      manager.save.mockRejectedValueOnce(runtimeError);
+      await expect(service.register(details)).rejects.toBe(runtimeError);
     });
   });
 });

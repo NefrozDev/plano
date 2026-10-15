@@ -1,0 +1,49 @@
+<app-objective-header heading="Paramètres Objectifs" backLink="/objectives" backLabel="Retour aux objectifs" />
+
+<div class="content">
+  <section>
+    <h2>Général</h2>
+    <label class="setting-row">
+      <span>Vue par défaut</span>
+      <select (change)="update({ defaultView: $any($event.target).value })">
+        <option value="list" [selected]="settings().defaultView === 'list'">Liste</option>
+        <option value="grid" [selected]="settings().defaultView === 'grid'">Grille</option>
+      </select>
+    </label>
+    <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().showArchived" (click)="toggle('showArchived')">
+      <span>Afficher les objectifs archivés dans « Tous »</span><i class="switch" [class.on]="settings().showArchived"><b></b></i>
+    </button>
+  </section>
+
+  <section>
+    <h2>Rappels</h2>
+    <label class="setting-row">
+      <span>Rappel d’échéance par défaut</span>
+      <select (change)="update({ defaultDueReminder: $any($event.target).value })">
+        @for (option of dueReminders; track option[0]) {
+          <option [value]="option[0]" [selected]="settings().defaultDueReminder === option[0]">{{ option[1] }}</option>
+        }
+      </select>
+    </label>
+    <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().notifications" (click)="toggle('notifications')">
+      <span>Notifications d’objectifs</span><i class="switch" [class.on]="settings().notifications"><b></b></i>
+    </button>
+    <label class="setting-row">
+      <span>Rappels d’habitudes</span>
+      <select (change)="update({ habitReminders: $any($event.target).value })">
+        <option value="scheduled" [selected]="settings().habitReminders === 'scheduled'">À l’heure définie</option>
+        <option value="none" [selected]="settings().habitReminders === 'none'">Désactivés</option>
+      </select>
+    </label>
+  </section>
+
+  <section>
+    <h2>Affichage</h2>
+    <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().showPercentage" (click)="toggle('showPercentage')">
+      <span>Afficher la progression en pourcentage</span><i class="switch" [class.on]="settings().showPercentage"><b></b></i>
+    </button>
+    <button class="setting-row" type="button" role="switch" [attr.aria-checked]="settings().categoryColors" (click)="toggle('categoryColors')">
+      <span>Couleur par catégorie</span><i class="switch" [class.on]="settings().categoryColors"><b></b></i>
+    </button>
+  </section>
+</div>

@@ -10,7 +10,7 @@ import { configureApp } from './../src/app.config';
 import { AppModule } from './../src/app.module';
 import type { AuthUser } from './../src/auth/auth.types';
 import type { HealthStatus } from './../src/health/health.service';
-import type { GroupSummary } from './../src/groups/group.types';
+import type { GroupDetails, GroupSummary } from './../src/groups/group.types';
 
 interface ErrorResponse {
   statusCode: number;
@@ -261,6 +261,140 @@ describe('Plano API (e2e)', () => {
       .set('Cookie', cookie)
       .send({ name: 'Un autre groupe' })
       .expect(409);
+  });
+
+  it('handles joining, group administration, ownership transfer, and departure', async () => {
+    const ownerRegistration = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send(validRegistration)
+      .expect(201);
+    const ownerCookie = cookiePair(readSetCookie(ownerRegistration.headers)[0]);
+
+    const memberRegistration = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        ...validRegistration,
+        firstName: 'Morgan',
+        username: 'morgan.doe',
+        email: 'morgan@example.com',
+      })
+      .expect(201);
+    const member = memberRegistration.body as unknown as AuthUser;
+    const memberCookie = cookiePair(
+      readSetCookie(memberRegistration.headers)[0],
+    );
+
+    const visitorRegistration = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        ...validRegistration,
+        firstName: 'Robin',
+        username: 'robin.doe',
+        email: 'robin@example.com',
+      })
+      .expect(201);
+    const visitor = visitorRegistration.body as unknown as AuthUser;
+    const visitorCookie = cookiePair(
+      readSetCookie(visitorRegistration.headers)[0],
+    );
+
+    const creation = await request(app.getHttpServer())
+      .post('/api/v1/groups')
+      .set('Cookie', ownerCookie)
+      .send({ name: 'Les Explorateurs' })
+      .expect(201);
+    const createdGroup = creation.body as unknown as GroupDetails;
+
+    await request(app.getHttpServer())
+      .post('/api/v1/groups/join')
+      .set('Cookie', memberCookie)
+      .send({ inviteCode: 'ZZZZZZZZ' })
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/groups/join')
+      .set('Cookie', memberCookie)
+      .send({ inviteCode: createdGroup.inviteCode.toLowerCase() })
+      .expect(201)
+      .expect((response) => {
+        const group = response.body as unknown as GroupDetails;
+        expect(group.role).toBe('member');
+        expect(group.members).toHaveLength(2);
+      });
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/groups/me')
+      .set('Cookie', memberCookie)
+      .send({ name: 'Nom interdit' })
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/groups/me')
+      .set('Cookie', ownerCookie)
+      .send({ name: '  Nouveau nom  ' })
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toMatchObject({ name: 'Nouveau nom' });
+      });
+
+    const rotation = await request(app.getHttpServer())
+      .post('/api/v1/groups/me/invite-code')
+      .set('Cookie', ownerCookie)
+      .expect(200);
+    const rotatedGroup = rotation.body as unknown as GroupDetails;
+    expect(rotatedGroup.inviteCode).not.toBe(createdGroup.inviteCode);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/groups/join')
+      .set('Cookie', visitorCookie)
+      .send({ inviteCode: createdGroup.inviteCode })
+      .expect(404);
+    await request(app.getHttpServer())
+      .post('/api/v1/groups/join')
+      .set('Cookie', visitorCookie)
+      .send({ inviteCode: rotatedGroup.inviteCode })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/groups/me/owner')
+      .set('Cookie', ownerCookie)
+      .send({ userId: member.id })
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toMatchObject({ role: 'member' });
+      });
+
+    await request(app.getHttpServer())
+      .delete('/api/v1/groups/me')
+      .set('Cookie', ownerCookie)
+      .expect(403);
+    await request(app.getHttpServer())
+      .post('/api/v1/groups/me/leave')
+      .set('Cookie', ownerCookie)
+      .expect(204);
+
+    await request(app.getHttpServer())
+      .delete(`/api/v1/groups/me/members/${visitor.id}`)
+      .set('Cookie', memberCookie)
+      .expect(204);
+    await request(app.getHttpServer())
+      .get('/api/v1/groups/me')
+      .set('Cookie', memberCookie)
+      .expect(200)
+      .expect((response) => {
+        const group = response.body as unknown as GroupDetails;
+        expect(group.role).toBe('owner');
+        expect(group.members).toHaveLength(1);
+      });
+
+    await request(app.getHttpServer())
+      .delete('/api/v1/groups/me')
+      .set('Cookie', memberCookie)
+      .expect(204);
+    await request(app.getHttpServer())
+      .get('/api/v1/groups/me')
+      .set('Cookie', memberCookie)
+      .expect(200);
   });
 
   it('keeps a valid user session after the backend restarts', async () => {

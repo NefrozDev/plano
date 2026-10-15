@@ -1,0 +1,59 @@
+@if (objective(); as objective) {
+  <app-objective-header
+    [heading]="objective.title"
+    backLink="/objectives"
+    backLabel="Retour aux objectifs"
+    [showHeading]="showTitle()"
+  >
+    <div class="menu-anchor">
+      <button
+        class="more-button"
+        type="button"
+        aria-label="Actions de l’objectif"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="19" cy="12" r="1.4" /></svg>
+      </button>
+      @if (menuOpen()) {
+        <div class="menu">
+          <a [routerLink]="['/objectives', objective.id, 'share']">Partager</a>
+          @if (objective.status !== 'completed') {
+            <button type="button" (click)="togglePause()">
+              {{ objective.status === 'paused' ? 'Reprendre' : 'Mettre en pause' }}
+            </button>
+          }
+          <button type="button" (click)="toggleArchive()">
+            {{ objective.archived ? 'Désarchiver' : 'Archiver' }}
+          </button>
+          @if (isOwner()) {
+            <button class="danger" type="button" (click)="remove()">Supprimer</button>
+          }
+        </div>
+      }
+    </div>
+  </app-objective-header>
+
+  @if (tabs().length) {
+    <nav class="tabs" aria-label="Vues de l’objectif">
+      @for (tab of tabs(); track tab.path) {
+        <a
+          [routerLink]="tab.link"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >{{ tab.label }}</a>
+      }
+    </nav>
+  }
+
+  <div class="tab-content">
+    <router-outlet (activate)="onActivate($event)" />
+  </div>
+} @else {
+  <app-objective-header heading="Objectif" backLink="/objectives" backLabel="Retour aux objectifs" />
+  <p class="not-found">
+    Cet objectif n’existe pas ou a été supprimé.
+    <a routerLink="/objectives">Retour aux objectifs</a>
+  </p>
+}

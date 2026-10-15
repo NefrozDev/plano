@@ -42,6 +42,48 @@ describe('GroupsService', () => {
       inviteCode: 'ABC12345',
       role: 'owner',
       createdAt: '2030-01-01T00:00:00.000Z',
+      members: [],
     });
+  });
+
+  it('calls every group lifecycle endpoint with credentials', () => {
+    service.join({ inviteCode: 'ABC12345' }).subscribe();
+    let request = http.expectOne('/api/v1/groups/join');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ inviteCode: 'ABC12345' });
+    expect(request.request.withCredentials).toBeTrue();
+    request.flush({ members: [] });
+
+    service.update('Nouveau nom').subscribe();
+    request = http.expectOne('/api/v1/groups/me');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ name: 'Nouveau nom' });
+    request.flush({ members: [] });
+
+    service.rotateInviteCode().subscribe();
+    request = http.expectOne('/api/v1/groups/me/invite-code');
+    expect(request.request.method).toBe('POST');
+    request.flush({ members: [] });
+
+    service.transferOwnership('user-2').subscribe();
+    request = http.expectOne('/api/v1/groups/me/owner');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ userId: 'user-2' });
+    request.flush({ members: [] });
+
+    service.removeMember('user-2').subscribe();
+    request = http.expectOne('/api/v1/groups/me/members/user-2');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+
+    service.leave().subscribe();
+    request = http.expectOne('/api/v1/groups/me/leave');
+    expect(request.request.method).toBe('POST');
+    request.flush(null);
+
+    service.delete().subscribe();
+    request = http.expectOne('/api/v1/groups/me');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
   });
 });

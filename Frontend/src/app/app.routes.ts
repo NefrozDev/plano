@@ -27,7 +27,7 @@ export const routes: Routes = [
       import('./features/groups/group-setup/group-setup.component').then(
         (component) => component.GroupSetupComponent,
       ),
-    title: 'Configurer mon groupe | Plano',
+    title: 'Mon groupe | Plano',
   },
   {
     path: 'lists',
@@ -46,6 +46,14 @@ export const routes: Routes = [
         (component) => component.ListDetailComponent,
       ),
     title: 'Détail de la liste | Plano',
+  },
+  {
+    path: 'objectives',
+    canActivate: [authenticatedGuard],
+    loadChildren: () =>
+      import('./features/objectives/objectives.routes').then(
+        (routes) => routes.OBJECTIVES_ROUTES,
+      ),
   },
   {
     path: '',

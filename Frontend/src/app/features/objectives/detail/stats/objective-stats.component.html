@@ -1,0 +1,75 @@
+@if (objective()?.metric) {
+  <h2>Vue d’ensemble</h2>
+  <section class="tiles" aria-label="Chiffres clés">
+    @for (tile of tiles(); track tile.label) {
+      <div class="tile"><strong>{{ tile.value }}</strong><span>{{ tile.label }}</span></div>
+    }
+  </section>
+
+  <section class="chart-card" [style.--tint]="tint()">
+    @if (chart(); as chart) {
+      <header>
+        <h2 id="chart-title">Progression ({{ unit() }})</h2>
+        <p><strong>{{ chart.lastLabel }}</strong><span>Actuel</span></p>
+      </header>
+      <div
+        class="chart"
+        tabindex="0"
+        role="group"
+        aria-labelledby="chart-title"
+        aria-describedby="chart-summary"
+        (focus)="focusChart()"
+        (blur)="activeIndex.set(null)"
+        (keydown)="navigate($event)"
+      >
+        <svg
+          #svg
+          [attr.viewBox]="'0 0 ' + width + ' ' + height"
+          aria-hidden="true"
+          (pointermove)="trackPointer($event, svg)"
+          (pointerleave)="activeIndex.set(null)"
+        >
+          @for (tick of chart.ticks; track tick.label) {
+            <line class="grid" [attr.x1]="padding.left" [attr.x2]="width - padding.right" [attr.y1]="tick.y" [attr.y2]="tick.y" />
+            <text class="axis" [attr.x]="padding.left - 6" [attr.y]="tick.y + 3" text-anchor="end">{{ tick.label }}</text>
+          }
+          @for (label of chart.xLabels; track label.label) {
+            <text class="axis" [attr.x]="label.x" [attr.y]="height - 8" [attr.text-anchor]="label.anchor">{{ label.label }}</text>
+          }
+          <line class="target" [attr.x1]="padding.left" [attr.x2]="width - padding.right" [attr.y1]="chart.targetY" [attr.y2]="chart.targetY" />
+          <text class="target-label" [attr.x]="width - padding.right" [attr.y]="chart.targetY - 5" text-anchor="end">{{ chart.targetLabel }}</text>
+          <path class="area" [attr.d]="chart.area" />
+          <path class="line" [attr.d]="chart.line" />
+          @if (tooltip(); as tooltip) {
+            <line class="crosshair" [attr.x1]="tooltip.point.x" [attr.x2]="tooltip.point.x" [attr.y1]="padding.top" [attr.y2]="chart.baseline" />
+            <circle class="dot" [attr.cx]="tooltip.point.x" [attr.cy]="tooltip.point.y" r="4" />
+          } @else {
+            <circle class="dot" [attr.cx]="chart.last.x" [attr.cy]="chart.last.y" r="4" />
+          }
+        </svg>
+        @if (tooltip(); as tooltip) {
+          <div class="tooltip" aria-live="polite" [style.left.%]="tooltip.left" [style.top.%]="tooltip.top">
+            <strong>{{ tooltip.value }}</strong><span>{{ tooltip.date }}</span>
+          </div>
+        }
+      </div>
+      <p id="chart-summary" class="visually-hidden">{{ chart.summary }}</p>
+
+      <details>
+        <summary>Voir les données</summary>
+        <table>
+          <thead><tr><th scope="col">Date</th><th scope="col">Progression</th></tr></thead>
+          <tbody>
+            @for (point of chart.points; track $index) {
+              <tr><td>{{ formatDate(point.date) }}</td><td>{{ formatNumber(point.value) }} {{ unit() }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </details>
+    } @else {
+      <p class="empty">Ajoutez une séance réalisée dans le calendrier pour voir votre progression.</p>
+    }
+  </section>
+} @else {
+  <p class="empty">Les statistiques sont disponibles pour les objectifs chiffrés.</p>
+}

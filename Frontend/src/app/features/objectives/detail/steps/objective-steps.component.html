@@ -1,0 +1,43 @@
+@if (objective(); as objective) {
+  @if (objective.tracking === 'steps') {
+    <div class="heading">
+      <h2>Étapes</h2>
+      <span>{{ completedCount() }} / {{ objective.steps.length }} complétées</span>
+    </div>
+
+    <ul class="steps">
+      @for (step of objective.steps; track step.id) {
+        <li [class.done]="step.done">
+          <button
+            class="toggle"
+            type="button"
+            [attr.aria-pressed]="step.done"
+            [attr.aria-label]="(step.done ? 'Rouvrir ' : 'Terminer ') + step.label"
+            (click)="toggle(step.id)"
+          ><i aria-hidden="true"></i></button>
+          <span><strong>{{ step.label }}</strong><small>{{ caption(step) }}</small></span>
+          <button class="remove" type="button" [attr.aria-label]="'Supprimer ' + step.label" (click)="remove(step.id)">×</button>
+        </li>
+      } @empty {
+        <li class="empty">Aucune étape pour l’instant.</li>
+      }
+    </ul>
+
+    @if (adding()) {
+      <input
+        #newStep
+        class="new-step"
+        maxlength="80"
+        placeholder="Nouvelle étape…"
+        aria-label="Nouvelle étape"
+        (keydown.enter)="add(newStep.value)"
+        (keydown.escape)="adding.set(false)"
+        (blur)="add(newStep.value)"
+      />
+    } @else {
+      <button class="add-step" type="button" (click)="adding.set(true)">＋ Ajouter une étape</button>
+    }
+  } @else {
+    <p class="empty">Cet objectif n’est pas suivi par étapes.</p>
+  }
+}

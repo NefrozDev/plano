@@ -8,6 +8,24 @@ export interface GroupSummary {
   createdAt: string;
 }
 
+export interface GroupMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  role: GroupRole;
+  joinedAt: string;
+}
+
+export interface GroupDetails extends GroupSummary {
+  members: GroupMember[];
+}
+
 export interface CreateGroupRequest {
   name: string;
+}
+
+export interface JoinGroupRequest {
+  inviteCode: string;
 }

@@ -1,0 +1,62 @@
+@if (objective(); as objective) {
+  @if (objective.habit) {
+    <div class="heading">
+      <h2>Suivi de l’habitude</h2>
+      <div class="month-nav">
+        <button type="button" aria-label="Mois précédent" (click)="shiftMonth(-1)">‹</button>
+        <span aria-live="polite">{{ monthLabel() }}</span>
+        <button type="button" aria-label="Mois suivant" (click)="shiftMonth(1)">›</button>
+      </div>
+    </div>
+
+    <div class="calendar" role="group" [attr.aria-label]="'Jours réussis en ' + monthLabel()">
+      @for (weekday of weekdays; track $index) {
+        <span class="weekday" aria-hidden="true">{{ weekday }}</span>
+      }
+      @for (week of weeks(); track week[0].date) {
+        @for (day of week; track day.date) {
+          <button
+            type="button"
+            class="day"
+            [class.outside]="!day.inMonth"
+            [class.checked]="day.inMonth && isChecked(day.date)"
+            [class.today]="day.date === today"
+            [disabled]="!day.inMonth || day.date > today || objective.status === 'paused'"
+            [attr.aria-pressed]="isChecked(day.date)"
+            [attr.aria-label]="dayLabel(day.date)"
+            (click)="toggle(day.date)"
+          >{{ day.day }}</button>
+        }
+      }
+    </div>
+    <p class="hint">
+      {{ objective.status === 'paused' ? 'Reprenez l’objectif pour cocher des jours.' : 'Touchez un jour pour le marquer comme réussi.' }}
+    </p>
+
+    <section class="stats" aria-label="Statistiques du mois">
+      <div><strong>{{ stats().successes }}</strong><span>Jours réussis</span></div>
+      <div><strong>{{ stats().rate }} %</strong><span>Taux de réussite</span></div>
+      <div><strong>{{ stats().bestStreak }}</strong><span>Meilleure série</span></div>
+    </section>
+
+    <section class="reminder">
+      <h3>Rappel</h3>
+      <label>
+        <span>Fréquence</span>
+        <select (change)="updateReminder({ frequency: $any($event.target).value })">
+          <option value="none" [selected]="objective.reminder.frequency === 'none'">Aucun rappel</option>
+          <option value="daily" [selected]="objective.reminder.frequency === 'daily'">Chaque jour</option>
+          <option value="weekly" [selected]="objective.reminder.frequency === 'weekly'">Chaque semaine</option>
+        </select>
+      </label>
+      @if (objective.reminder.frequency !== 'none') {
+        <label>
+          <span>Heure</span>
+          <input type="time" [value]="objective.reminder.time" (change)="updateReminder({ time: $any($event.target).value })" />
+        </label>
+      }
+    </section>
+  } @else {
+    <p class="empty">Cet objectif n’est pas suivi comme une habitude.</p>
+  }
+}

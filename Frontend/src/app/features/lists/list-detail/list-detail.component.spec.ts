@@ -269,4 +269,224 @@ describe('ListDetailComponent', () => {
     expect(component.sharingEnabled()).toBeFalse();
     expect(component.members().map((member) => member.role)).toEqual(['owner']);
   });
+
+  describe('gestures', () => {
+    let component: ListDetailComponent;
+
+    /** Minimal PointerEvent: only what the handlers read. */
+    function pointer(clientX = 0, target: HTMLElement = document.createElement('div')): PointerEvent {
+      return {
+        clientX,
+        clientY: 0,
+        pointerId: 1,
+        target,
+        currentTarget: { setPointerCapture: jasmine.createSpy('setPointerCapture') },
+        preventDefault: jasmine.createSpy('preventDefault'),
+        stopPropagation: jasmine.createSpy('stopPropagation'),
+      } as unknown as PointerEvent;
+    }
+
+    /** A detached `.entry` row, as `elementFromPoint` would return under the pointer. */
+    function entryRow(sectionIndex: number, entryIndex: number): HTMLElement {
+      const row = document.createElement('div');
+      row.className = 'entry';
+      row.dataset['sectionIndex'] = `${sectionIndex}`;
+      row.dataset['entryIndex'] = `${entryIndex}`;
+      return row;
+    }
+
+    beforeEach(() => {
+      component = TestBed.createComponent(ListDetailComponent).componentInstance;
+    });
+
+    it('drags an entry over another row of the same section', () => {
+      const pointFinder = spyOn(document, 'elementFromPoint').and.returnValue(entryRow(0, 2));
+
+      component.movePointerDrag(pointer());
+      expect(pointFinder).not.toHaveBeenCalled();
+
+      component.startPointerDrag(0, 0, pointer());
+      component.movePointerDrag(pointer());
+      expect(component.sections()[0].entries[2].name).toBe('Lait');
+      expect(component.draggedEntry()).toEqual({ sectionIndex: 0, entryIndex: 2 });
+
+      // Rows of other sections, the same row, or empty space are ignored.
+      pointFinder.and.returnValue(entryRow(1, 0));
+      component.movePointerDrag(pointer());
+      pointFinder.and.returnValue(entryRow(0, 2));
+      component.movePointerDrag(pointer());
+      pointFinder.and.returnValue(null);
+      component.movePointerDrag(pointer());
+      expect(component.sections()[0].entries[2].name).toBe('Lait');
+
+      component.finishPointerDrag(pointer());
+      expect(component.draggedEntry()).toBeNull();
+    });
+
+    it('reveals the swipe offset while dragging left and clamps it', () => {
+      component.startSwipe(0, 1, pointer(200));
+      component.moveSwipe(pointer(190));
+      expect(component.swipeOffset(0, 1)).toBe(-10);
+      component.moveSwipe(pointer(50));
+      expect(component.swipeOffset(0, 1)).toBe(-58);
+      expect(component.swipeOffset(0, 0)).toBe(0);
+
+      // A short swipe is cancelled but swallows the click that follows.
+      component.moveSwipe(pointer(180));
+      component.finishSwipe();
+      expect(component.swipeGesture()).toBeNull();
+      const click = new MouseEvent('click', { cancelable: true });
+      component.handleEntryClick(click, 0, 1);
+      expect(click.defaultPrevented).toBeTrue();
+      expect(component.selectedEntry()).toBeNull();
+    });
+
+    it('ignores swipes starting on the handle or the toggle', () => {
+      const handle = document.createElement('button');
+      handle.className = 'drag-handle';
+      component.startSwipe(0, 0, pointer(100, handle));
+      component.moveSwipe(pointer(10));
+      component.finishSwipe();
+
+      expect(component.swipeGesture()).toBeNull();
+      expect(component.sections()[0].entries.length).toBe(4);
+    });
+
+    it('keeps a revealed row open offset and swallows its next click', () => {
+      component.revealedEntry.set({ sectionIndex: 0, entryIndex: 0 });
+      expect(component.swipeOffset(0, 0)).toBe(-58);
+
+      component.startSwipe(0, 0, pointer(100));
+      expect(component.suppressEntryClick()).toEqual({ sectionIndex: 0, entryIndex: 0 });
+      component.finishSwipe();
+      expect(component.revealedEntry()).toBeNull();
+    });
+
+    it('asks before deleting when confirmation is enabled', () => {
+      const confirm = spyOn(window, 'confirm').and.returnValue(false);
+      component.requestDeleteEntry(0, 0);
+      expect(confirm).toHaveBeenCalledWith(jasmine.stringContaining('Lait'));
+      expect(component.sections()[0].entries.length).toBe(4);
+
+      confirm.and.returnValue(true);
+      component.requestDeleteEntry(0, 0);
+      expect(component.sections()[0].entries.length).toBe(3);
+
+      component.requestDeleteEntry(0, 99);
+      expect(confirm).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('panels and editors', () => {
+    let component: ListDetailComponent;
+
+    beforeEach(() => {
+      component = TestBed.createComponent(ListDetailComponent).componentInstance;
+    });
+
+    it('opens and closes the section creator, refusing blank names', () => {
+      component.toggleListMenu();
+      component.openSectionCreator();
+      expect(component.listMenuOpen()).toBeFalse();
+      expect(component.sectionCreatorOpen()).toBeTrue();
+
+      component.newSectionName.set('   ');
+      component.saveSection();
+      expect(component.sections().length).toBe(4);
+
+      component.closeSectionCreator();
+      expect(component.sectionCreatorOpen()).toBeFalse();
+    });
+
+    it('discards list editor changes on cancel', () => {
+      component.openListEditor();
+      component.draftName.set('Brouillon');
+      component.closeListEditor();
+
+      expect(component.draftName()).toBe('Courses');
+      expect(component.listEditorOpen()).toBeFalse();
+    });
+
+    it('keeps the previous name when saving a blank one', () => {
+      component.openListEditor();
+      component.draftName.set('   ');
+      component.saveListEditor();
+
+      expect(component.title()).toBe('Courses');
+    });
+
+    it('manages invitations, roles and the share link', async () => {
+      component.openSharing();
+      component.inviteEmail.set('  ');
+      component.inviteMember();
+      expect(component.members().length).toBe(3);
+
+      component.inviteEmail.set('@example.com');
+      component.inviteMember();
+      expect(component.members().at(-1)?.name).toBe('@example.com');
+
+      component.updateMemberRole('camille', 'viewer');
+      expect(component.members()[0].role).toBe('owner');
+      expect(component.roleLabel('owner')).toBe('Propriétaire');
+      expect(component.roleLabel('editor')).toBe('Peut modifier');
+      expect(component.roleLabel('viewer')).toBe('Peut consulter');
+
+      const writeText = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
+      await component.copyInvitationLink();
+      expect(writeText).toHaveBeenCalledWith('https://plano.app/l/courses-a1b2c3');
+      expect(component.linkCopied()).toBeTrue();
+
+      component.stopSharing();
+      component.enableSharing();
+      expect(component.sharingEnabled()).toBeTrue();
+      component.closeSharing();
+      expect(component.sharingOpen()).toBeFalse();
+    });
+
+    it('edits the selected entry and closes its details', () => {
+      component.updateSelectedEntry({ notes: 'ignoré' });
+      expect(component.activeEntry()).toBeNull();
+      expect(component.activeEntrySection()).toBeNull();
+
+      component.selectedEntry.set({ sectionIndex: 1, entryIndex: 2 });
+      expect(component.activeEntry()?.name).toBe('Huile d’olive');
+      expect(component.activeEntrySection()?.name).toBe('Épicerie');
+
+      component.closeEntryDetails();
+      expect(component.selectedEntry()).toBeNull();
+    });
+
+    it('cancels adding and ignores stale blur events from other sections', () => {
+      component.beginAdding(1);
+      component.newEntryValue.set('Farine');
+      component.finishAdding(0);
+      expect(component.editingSection()).toBe(1);
+
+      component.cancelAdding();
+      expect(component.editingSection()).toBeNull();
+      expect(component.newEntryValue()).toBe('');
+    });
+
+    it('reopens a collapsed section', () => {
+      component.toggleSection('Boissons');
+      component.toggleSection('Boissons');
+      expect(component.isSectionCollapsed('Boissons')).toBeFalse();
+    });
+  });
+
+  it('applies the hide-completed and keep-order display settings', () => {
+    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
+    const listsStore = TestBed.inject(ListsStore);
+    const section = component.sections()[0];
+
+    // Default: completed entries are shown, sorted last.
+    expect(component.displayedEntries(section).at(-1)?.entry.name).toBe('Œufs');
+
+    listsStore.updateSettings({ completedLast: false });
+    expect(component.displayedEntries(section)[1].entry.name).toBe('Œufs');
+
+    listsStore.updateSettings({ showCompleted: false });
+    expect(component.displayedEntries(section).map(({ entry }) => entry.name)).not.toContain('Œufs');
+    expect(component.sectionProgress({ ...section, entries: [] })).toBe(0);
+  });
 });

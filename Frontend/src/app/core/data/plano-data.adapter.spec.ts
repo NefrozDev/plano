@@ -1,4 +1,4 @@
-import { createMockPlanoData } from '@plano/common';
+import { createMockPlanoData, type PlanoData } from '@plano/common';
 import {
   BrowserStoragePlanoDataAdapter,
   MemoryPlanoDataAdapter,
@@ -25,6 +25,19 @@ describe('Plano data adapters', () => {
     adapter.save(data);
 
     expect(adapter.load()?.dashboard.tasks[0].done).toBeTrue();
+  });
+
+  it('backfills objectives into data saved before they existed', () => {
+    const adapter = new BrowserStoragePlanoDataAdapter();
+    const legacy: Partial<PlanoData> = createMockPlanoData();
+    legacy.lists![0].name = 'Courses gardées';
+    delete legacy.objectives;
+    localStorage.setItem('plano:data:v1', JSON.stringify(legacy));
+
+    const loaded = adapter.load();
+
+    expect(loaded?.lists[0].name).toBe('Courses gardées');
+    expect(loaded?.objectives.items.length).toBeGreaterThan(0);
   });
 
   it('ignores malformed or unsupported stored data', () => {

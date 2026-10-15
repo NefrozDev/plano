@@ -1,0 +1,16 @@
+:host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+.search-field { display: flex; gap: .5rem; align-items: center; margin: 0 1.25rem .4rem; padding: 0 .8rem; border: 1px solid var(--color-border); border-radius: .7rem; }
+.search-field:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 .2rem rgb(50 91 226 / 12%); }
+.search-field svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: #8a93a3; stroke-linecap: round; stroke-width: 2; }
+.search-field input { width: 100%; min-height: 2.8rem; border: 0; outline: 0; background: transparent; font-size: .84rem; }
+.content { flex: 1; min-height: 0; padding: 0 1.25rem 1.5rem; overflow-y: auto; }
+h2 { margin: 1rem 0 .4rem; color: #394254; font-size: .76rem; }
+ul { margin: 0; padding: 0; list-style: none; }
+.objective-list a { display: flex; gap: .75rem; align-items: center; padding: .55rem 0; color: var(--color-text); text-decoration: none; }
+.objective-list app-objective-icon { width: 2.2rem; height: 2.2rem; }
+.objective-list span { display: grid; gap: .15rem; min-width: 0; }
+.objective-list strong { overflow: hidden; font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.objective-list small { color: #7b8292; font-size: .7rem; }
+.empty { padding: 1.5rem 0; color: var(--color-text-muted); font-size: .8rem; text-align: center; }
+.suggestions button { display: flex; width: 100%; min-height: 2.9rem; align-items: center; justify-content: space-between; padding: 0; border: 0; border-bottom: 1px solid #edf0f5; background: transparent; color: #20263a; cursor: pointer; font-size: .8rem; text-align: left; }
+.suggestions i { color: #9aa3b2; font-size: 1.3rem; font-style: normal; }

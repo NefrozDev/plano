@@ -53,10 +53,10 @@ describe('DashboardComponent', () => {
   it('updates navigation, tasks, and the profile menu', () => {
     const component =
       TestBed.createComponent(DashboardComponent).componentInstance;
-    component.selectNavigation('Objectifs');
+    component.selectNavigation('Agenda');
     component.toggleTask(0);
     component.toggleProfileMenu();
-    expect(component.activeNavigation).toBe('Objectifs');
+    expect(component.activeNavigation).toBe('Agenda');
     expect(component.completedTasks()).toBe(2);
     expect(component.profileMenuOpen()).toBeTrue();
   });
@@ -72,6 +72,30 @@ describe('DashboardComponent', () => {
     component.selectNavigation('Liste');
 
     expect(navigate).toHaveBeenCalledOnceWith('/lists');
+  });
+
+  it('opens the objectives page from the bottom navigation', () => {
+    const component =
+      TestBed.createComponent(DashboardComponent).componentInstance;
+    const navigate = spyOn(
+      TestBed.inject(Router),
+      'navigateByUrl',
+    ).and.resolveTo(true);
+
+    component.selectNavigation('Objectifs');
+
+    expect(navigate).toHaveBeenCalledOnceWith('/objectives');
+  });
+
+  it('shows the two active objectives due first, linked to their pages', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const goals = (fixture.nativeElement as HTMLElement).querySelectorAll('.goals-card .goal');
+
+    expect(goals.length).toBe(2);
+    expect(goals[0].textContent).toContain('Méditer 30 min par jour');
+    expect(goals[1].getAttribute('href')).toBe('/objectives/courir-10-km');
+    expect(goals[1].textContent).toContain('65%');
   });
 
   it('logs out and returns to login', () => {

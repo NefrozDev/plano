@@ -1,146 +1,351 @@
 <app-auth-shell [compact]="true">
-  <section class="setup-list" aria-labelledby="setup-title">
-    <h2 id="setup-title" class="visually-hidden">Configurer votre groupe</h2>
-
-    <article class="setup-card">
-      <div class="setup-card__content">
-        <div class="illustration illustration--people" aria-hidden="true">
-          <svg viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="57" fill="#F1F6FF" />
-            <path
-              d="M27 54 60 27l33 27"
-              fill="none"
-              stroke="#4F78EC"
-              stroke-width="8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M36 49v39h48V49"
-              fill="#DCEAFF"
-              stroke="#325BE2"
-              stroke-width="4"
-              stroke-linejoin="round"
-            />
-            <circle cx="60" cy="55" r="11" fill="#fff" />
-            <path
-              d="m54 53 6 7 8-10"
-              fill="none"
-              stroke="#DF32E2"
-              stroke-width="4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <circle cx="39" cy="82" r="10" fill="#5B83ED" />
-            <circle cx="60" cy="79" r="11" fill="#32E2A5" />
-            <circle cx="82" cy="82" r="10" fill="#F4C36A" />
-            <path
-              d="M25 105c1-14 7-20 14-20s13 6 14 20M45 105c1-16 7-23 15-23s14 7 15 23M68 105c1-14 7-20 14-20s13 6 14 20"
-              fill="#325BE2"
-              opacity=".86"
-            />
-          </svg>
-        </div>
-        <div>
-          <h3>Créer un groupe</h3>
-          <p>
-            Créez votre espace partagé et invitez vos proches à vous rejoindre.
-          </p>
-        </div>
+  <section class="groups-page" aria-labelledby="groups-title">
+    @if (loading()) {
+      <div class="loading-card" role="status">
+        <span class="button-spinner" aria-hidden="true"></span>
+        Chargement de votre groupe…
       </div>
+    } @else {
+      @if (group(); as currentGroup) {
+        <header class="group-heading">
+          <span class="group-emblem" aria-hidden="true">
+            <svg viewBox="0 0 48 48">
+              <circle cx="18" cy="17" r="7" />
+              <circle cx="33" cy="20" r="5" />
+              <path
+                d="M5 39c0-9 5-13 13-13s13 4 13 13M27 30c2-2 4-3 7-3 6 0 9 4 9 11"
+              />
+            </svg>
+          </span>
+          <div>
+            <p>Mon groupe</p>
+            <h2 id="groups-title">{{ currentGroup.name }}</h2>
+            <span class="role-pill">{{
+              isOwner() ? "Propriétaire" : "Membre"
+            }}</span>
+          </div>
+        </header>
 
-      @if (showCreateForm()) {
-        <form class="group-form" (ngSubmit)="submit()" novalidate>
-          <label for="group-name">Nom du groupe</label>
-          <input
-            id="group-name"
-            class="form-control"
-            type="text"
-            autocomplete="organization"
-            maxlength="80"
-            placeholder="Ex. Les Explorateurs"
-            [formControl]="form.controls.name"
-            [attr.aria-invalid]="
-              form.controls.name.invalid &&
-              (form.controls.name.touched || submitted)
-            "
-          />
-          @if (
-            form.controls.name.invalid &&
-            (form.controls.name.touched || submitted)
-          ) {
-            <p class="field-error">
-              Saisissez un nom entre 2 et 80 caractères.
-            </p>
-          }
-          @if (submissionError()) {
-            <p class="form-error" role="alert">{{ submissionError() }}</p>
-          }
-          <div class="form-actions">
-            <button
-              class="secondary-button"
-              type="button"
-              (click)="closeCreateForm()"
+        @if (submissionError()) {
+          <p class="form-error" role="alert">{{ submissionError() }}</p>
+        }
+        @if (actionMessage()) {
+          <p class="success-message" role="status">{{ actionMessage() }}</p>
+        }
+
+        <article class="group-card invite-card">
+          <div class="card-title">
+            <span class="card-icon card-icon--violet" aria-hidden="true"
+              >↗</span
             >
-              Annuler
+            <div>
+              <h3>Inviter des proches</h3>
+              <p>
+                Partagez ce code pour leur permettre de rejoindre le groupe.
+              </p>
+            </div>
+          </div>
+          <button class="invite-code" type="button" (click)="copyInviteCode()">
+            <span>{{ currentGroup.inviteCode }}</span>
+            <strong>{{ linkCopied() ? "Copié !" : "Copier" }}</strong>
+          </button>
+          @if (isOwner()) {
+            <button
+              class="text-button"
+              type="button"
+              [disabled]="busyAction() === 'rotate'"
+              (click)="rotateInviteCode()"
+            >
+              {{
+                busyAction() === "rotate"
+                  ? "Génération…"
+                  : "Générer un nouveau code"
+              }}
             </button>
+          }
+        </article>
+
+        <article class="group-card">
+          <div class="card-title">
+            <span class="card-icon card-icon--mint" aria-hidden="true">●</span>
+            <div>
+              <h3>Membres</h3>
+              <p>
+                {{ currentGroup.members.length }} personne{{
+                  currentGroup.members.length > 1 ? "s" : ""
+                }}
+                dans ce groupe
+              </p>
+            </div>
+          </div>
+          <div class="member-list">
+            @for (member of currentGroup.members; track member.id) {
+              <div class="member-row">
+                <span class="member-avatar">{{ memberInitials(member) }}</span>
+                <div class="member-identity">
+                  <strong>{{ memberName(member) }}</strong>
+                  <small>{{ member.email }}</small>
+                </div>
+                <span class="member-role">{{
+                  member.role === "owner" ? "Propriétaire" : "Membre"
+                }}</span>
+                @if (isOwner() && member.id !== currentUserId()) {
+                  <div class="member-actions">
+                    <button
+                      type="button"
+                      [disabled]="!!busyAction()"
+                      (click)="transferOwnership(member)"
+                    >
+                      Nommer propriétaire
+                    </button>
+                    <button
+                      class="danger-text"
+                      type="button"
+                      [disabled]="!!busyAction()"
+                      (click)="removeMember(member)"
+                    >
+                      Retirer
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </article>
+
+        @if (isOwner()) {
+          <article class="group-card">
+            <div class="card-title">
+              <span class="card-icon card-icon--blue" aria-hidden="true"
+                >✎</span
+              >
+              <div>
+                <h3>Nom du groupe</h3>
+                <p>Ce nom est visible par tous les membres.</p>
+              </div>
+            </div>
+            <form
+              class="inline-form"
+              [formGroup]="renameForm"
+              (ngSubmit)="rename()"
+            >
+              <input
+                class="form-control"
+                type="text"
+                maxlength="80"
+                formControlName="name"
+                aria-label="Nouveau nom du groupe"
+              />
+              <button
+                class="compact-primary"
+                type="submit"
+                [disabled]="!!busyAction() || renameForm.invalid"
+              >
+                {{ busyAction() === "rename" ? "…" : "Enregistrer" }}
+              </button>
+            </form>
+          </article>
+        }
+
+        <article class="group-card danger-zone">
+          <h3>{{ isOwner() ? "Supprimer le groupe" : "Quitter le groupe" }}</h3>
+          <p>
+            @if (isOwner()) {
+              Cette action supprime le groupe pour tous ses membres et ne peut
+              pas être annulée.
+            } @else {
+              Vous perdrez l’accès aux contenus partagés avec ce groupe.
+            }
+          </p>
+          @if (isOwner()) {
+            <button
+              class="danger-button"
+              type="button"
+              [disabled]="!!busyAction()"
+              (click)="deleteGroup()"
+            >
+              {{
+                busyAction() === "delete"
+                  ? "Suppression…"
+                  : "Supprimer le groupe"
+              }}
+            </button>
+          } @else {
+            <button
+              class="danger-button"
+              type="button"
+              [disabled]="!!busyAction()"
+              (click)="leaveGroup()"
+            >
+              {{ busyAction() === "leave" ? "Départ…" : "Quitter le groupe" }}
+            </button>
+          }
+        </article>
+
+        <button class="back-button" type="button" (click)="skip()">
+          ← Retour à l’accueil
+        </button>
+      } @else {
+        <header class="setup-heading">
+          <p>Un espace pour avancer ensemble</p>
+          <h2 id="groups-title">Configurez votre groupe</h2>
+        </header>
+
+        @if (submissionError()) {
+          <p class="form-error" role="alert">{{ submissionError() }}</p>
+        }
+        @if (actionMessage()) {
+          <p class="success-message" role="status">{{ actionMessage() }}</p>
+        }
+
+        <article class="setup-card">
+          <div class="setup-card__content">
+            <span
+              class="setup-illustration setup-illustration--blue"
+              aria-hidden="true"
+            >
+              <svg viewBox="0 0 80 80">
+                <path d="M15 38 40 17l25 21v28H15Z" />
+                <circle cx="40" cy="38" r="8" />
+                <path d="M27 65c1-12 5-17 13-17s12 5 13 17" />
+              </svg>
+            </span>
+            <div>
+              <h3>Créer un groupe</h3>
+              <p>Créez votre espace partagé et invitez vos proches.</p>
+            </div>
+          </div>
+          @if (mode() === "create") {
+            <form
+              class="group-form"
+              [formGroup]="form"
+              (ngSubmit)="submit()"
+              novalidate
+            >
+              <label for="group-name">Nom du groupe</label>
+              <input
+                id="group-name"
+                class="form-control"
+                type="text"
+                maxlength="80"
+                placeholder="Ex. Les Explorateurs"
+                formControlName="name"
+              />
+              @if (
+                form.controls.name.invalid &&
+                (form.controls.name.touched || submitted)
+              ) {
+                <p class="field-error">
+                  Saisissez un nom entre 2 et 80 caractères.
+                </p>
+              }
+              <div class="form-actions">
+                <button
+                  class="secondary-button"
+                  type="button"
+                  (click)="closeCreateForm()"
+                >
+                  Annuler
+                </button>
+                <button
+                  class="primary-button"
+                  type="submit"
+                  [disabled]="!!busyAction()"
+                >
+                  {{
+                    busyAction() === "create" ? "Création…" : "Créer le groupe"
+                  }}
+                </button>
+              </div>
+            </form>
+          } @else {
             <button
               class="primary-button"
-              type="submit"
-              [disabled]="submitting()"
+              type="button"
+              (click)="openCreateForm()"
             >
-              @if (submitting()) {
-                <span class="button-spinner" aria-hidden="true"></span>
-              }
-              {{ submitting() ? "Création…" : "Créer le groupe" }}
+              Créer un groupe
             </button>
+          }
+        </article>
+
+        <article class="setup-card">
+          <div class="setup-card__content">
+            <span
+              class="setup-illustration setup-illustration--violet"
+              aria-hidden="true"
+            >
+              <svg viewBox="0 0 80 80">
+                <rect x="13" y="27" width="54" height="39" rx="7" />
+                <path d="m15 31 25 19 25-19M31 27v-5a9 9 0 0 1 18 0v5" />
+              </svg>
+            </span>
+            <div>
+              <h3>Rejoindre un groupe</h3>
+              <p>Acceptez une invitation avec le code reçu.</p>
+            </div>
           </div>
-        </form>
-      } @else {
-        <button class="primary-button" type="button" (click)="openCreateForm()">
-          Créer un groupe
+          @if (mode() === "join") {
+            <form
+              class="group-form"
+              [formGroup]="joinForm"
+              (ngSubmit)="join()"
+              novalidate
+            >
+              <label for="invite-code">Code d’invitation</label>
+              <input
+                id="invite-code"
+                class="form-control code-input"
+                type="text"
+                maxlength="8"
+                placeholder="ABCD1234"
+                autocomplete="off"
+                formControlName="inviteCode"
+              />
+              @if (
+                joinForm.controls.inviteCode.invalid &&
+                (joinForm.controls.inviteCode.touched || joinSubmitted)
+              ) {
+                <p class="field-error">
+                  Le code doit contenir exactement 8 caractères.
+                </p>
+              }
+              <div class="form-actions">
+                <button
+                  class="secondary-button"
+                  type="button"
+                  (click)="closeJoinForm()"
+                >
+                  Annuler
+                </button>
+                <button
+                  class="primary-button"
+                  type="submit"
+                  [disabled]="!!busyAction()"
+                >
+                  {{
+                    busyAction() === "join"
+                      ? "Connexion…"
+                      : "Rejoindre le groupe"
+                  }}
+                </button>
+              </div>
+            </form>
+          } @else {
+            <button
+              class="outline-button"
+              type="button"
+              (click)="showJoinInfo()"
+            >
+              Saisir un code
+            </button>
+          }
+        </article>
+
+        <button class="back-button" type="button" (click)="skip()">
+          Je le ferai plus tard
         </button>
       }
-    </article>
-
-    <article class="setup-card">
-      <div class="setup-card__content">
-        <div class="illustration illustration--invite" aria-hidden="true">
-          <svg viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="57" fill="#F5F1FF" />
-            <path d="M24 51h72v48H24z" fill="#DCEAFF" />
-            <path d="m24 52 36 29 36-29v47H24z" fill="#9D79F2" opacity=".55" />
-            <path
-              d="m24 99 29-26M96 99 67 73"
-              stroke="#6B2DEB"
-              stroke-width="4"
-            />
-            <path
-              d="M53 49c-5-5-5-13 0-18l7-7c5-5 13-5 18 0s5 13 0 18l-5 5M67 41c5 5 5 13 0 18l-7 7c-5 5-13 5-18 0s-5-13 0-18l5-5"
-              fill="none"
-              stroke="#6B2DEB"
-              stroke-width="7"
-              stroke-linecap="round"
-            />
-          </svg>
-        </div>
-        <div>
-          <h3>Rejoindre un groupe</h3>
-          <p>
-            Utilisez le code d’invitation d’un proche pour rejoindre son groupe.
-          </p>
-        </div>
-      </div>
-      <button class="outline-button" type="button" (click)="showJoinInfo()">
-        Rejoindre un groupe
-      </button>
-      @if (joinMessage()) {
-        <p class="info-message" role="status">{{ joinMessage() }}</p>
-      }
-    </article>
-
-    <button class="skip-button" type="button" (click)="skip()">
-      Je le ferai plus tard
-    </button>
+    }
   </section>
 </app-auth-shell>

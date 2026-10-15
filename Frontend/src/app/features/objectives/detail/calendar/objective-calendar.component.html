@@ -1,0 +1,89 @@
+@if (objective(); as objective) {
+  @if (objective.tracking === 'metric') {
+    <div class="month-nav">
+      <button type="button" aria-label="Mois précédent" (click)="shiftMonth(-1)">‹</button>
+      <h2 aria-live="polite">{{ monthLabel() }}</h2>
+      <button type="button" aria-label="Mois suivant" (click)="shiftMonth(1)">›</button>
+    </div>
+
+    <div class="calendar" role="group" [attr.aria-label]="'Calendrier ' + monthLabel()">
+      @for (weekday of weekdays; track $index) {
+        <span class="weekday" aria-hidden="true">{{ weekday }}</span>
+      }
+      @for (week of weeks(); track week[0].date) {
+        @for (day of week; track day.date) {
+          <button
+            type="button"
+            class="day"
+            [class.outside]="!day.inMonth"
+            [class.today]="day.date === today"
+            [class.selected]="day.date === selected()"
+            [attr.aria-pressed]="day.date === selected()"
+            [attr.aria-label]="dayLabel(day.date)"
+            (click)="selectDay(day.date)"
+          >
+            <span>{{ day.day }}</span>
+            @if (dayStatus(day.date); as status) {
+              <i [class]="'marker ' + status" aria-hidden="true"></i>
+            }
+          </button>
+        }
+      }
+    </div>
+
+    <ul class="legend" aria-label="Légende">
+      @for (status of statuses; track status[0]) {
+        <li><i [class]="'marker ' + status[0]" aria-hidden="true"></i>{{ status[1] }}</li>
+      }
+    </ul>
+
+    <section class="day-panel" aria-live="polite">
+      <h3>{{ selectedLabel() }}</h3>
+      @for (session of selectedSessions(); track session.id) {
+        <div class="session">
+          <i [class]="'marker ' + session.status" aria-hidden="true"></i>
+          <span><strong>{{ session.label }}</strong><small>{{ statusLabels[session.status] }}</small></span>
+          @if (session.status === 'done' || session.status === 'planned') {
+            <b>{{ formatValue(session) }}</b>
+          }
+          <button type="button" [attr.aria-label]="'Supprimer ' + session.label" (click)="removeSession(session.id)">×</button>
+        </div>
+      } @empty {
+        <p class="empty">Aucune séance ce jour-là.</p>
+      }
+
+      @if (formOpen()) {
+        <form
+          class="session-form"
+          (submit)="$event.preventDefault(); addSession(label.value, value.valueAsNumber, duration.valueAsNumber, $any(statusSelect.value))"
+        >
+          <input #label aria-label="Intitulé de la séance" maxlength="60" placeholder="Ex. : Sortie 5 km" />
+          <label class="with-unit">
+            <input #value type="number" min="0" step="0.1" aria-label="Valeur" />
+            <span>{{ objective.metric?.unit }}</span>
+          </label>
+          <label class="with-unit">
+            <input #duration type="number" min="0" step="1" aria-label="Durée en minutes (facultatif)" />
+            <span>min</span>
+          </label>
+          <select #statusSelect aria-label="Statut de la séance">
+            @for (option of statuses; track option[0]) {
+              <option [value]="option[0]" [selected]="option[0] === defaultStatus()">{{ option[1] }}</option>
+            }
+          </select>
+          @if (formError()) {
+            <p class="field-error" role="alert">{{ formError() }}</p>
+          }
+          <div class="form-actions">
+            <button type="button" class="secondary" (click)="formOpen.set(false); formError.set('')">Annuler</button>
+            <button type="submit" class="primary">Ajouter</button>
+          </div>
+        </form>
+      } @else {
+        <button type="button" class="add-session" (click)="formOpen.set(true)">＋ Ajouter une séance</button>
+      }
+    </section>
+  } @else {
+    <p class="unavailable">Le calendrier est disponible pour les objectifs chiffrés.</p>
+  }
+}

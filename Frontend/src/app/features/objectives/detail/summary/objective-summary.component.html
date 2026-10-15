@@ -1,0 +1,145 @@
+@if (objective(); as objective) {
+  @if (view(); as view) {
+    <section class="hero" [style.--tint]="view.tint">
+      <app-objective-icon
+        size="lg"
+        [category]="objective.category"
+        [color]="view.tint"
+        [completed]="objective.status === 'completed'"
+      />
+      @if (editingTitle()) {
+        <input
+          #titleInput
+          class="title-input"
+          aria-label="Titre de l’objectif"
+          maxlength="80"
+          [value]="objective.title"
+          (keydown.enter)="saveTitle(titleInput.value)"
+          (keydown.escape)="editingTitle.set(false)"
+          (blur)="saveTitle(titleInput.value)"
+        />
+      } @else {
+        <h2>
+          {{ objective.title }}
+          <button type="button" aria-label="Renommer l’objectif" (click)="editingTitle.set(true)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16Z" /><path d="m13.5 6.5 4 4" /></svg>
+          </button>
+        </h2>
+      }
+      <p class="due">{{ view.due }}</p>
+      @if (objective.status === 'paused' || objective.archived) {
+        <p class="pill">{{ objective.archived ? 'Archivé' : 'En pause' }}</p>
+      }
+      <strong class="percent">{{ view.progressText }}</strong>
+      <span class="caption">Progression</span>
+      <div
+        class="progress"
+        role="progressbar"
+        aria-label="Progression de l’objectif"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-valuenow]="view.progress"
+      ><i [style.width.%]="view.progress"></i></div>
+    </section>
+
+    <section class="tiles" aria-label="Chiffres clés">
+      @for (tile of view.tiles; track tile.label) {
+        <div class="tile"><strong>{{ tile.value }}</strong><span>{{ tile.label }}</span></div>
+      }
+    </section>
+
+    <section class="rows">
+      <div class="row-block">
+        <button class="row" type="button" [attr.aria-expanded]="openRow() === 'description'" (click)="toggleRow('description')">
+          <span><b>Description</b><small>{{ objective.description || 'Ajouter une description' }}</small></span>
+          <i aria-hidden="true">›</i>
+        </button>
+        @if (openRow() === 'description') {
+          <textarea
+            class="editor"
+            rows="3"
+            maxlength="200"
+            aria-label="Description"
+            [value]="objective.description"
+            (change)="updateText('description', $any($event.target).value)"
+          ></textarea>
+        }
+      </div>
+
+      <div class="row-block">
+        <button class="row" type="button" [attr.aria-expanded]="openRow() === 'plan'" (click)="toggleRow('plan')">
+          <span><b>Plan</b><small>{{ objective.plan || 'Définir un plan' }}</small></span>
+          <i aria-hidden="true">›</i>
+        </button>
+        @if (openRow() === 'plan') {
+          <input
+            class="editor"
+            maxlength="120"
+            aria-label="Plan"
+            placeholder="Ex. : 3 entraînements par semaine"
+            [value]="objective.plan"
+            (change)="updateText('plan', $any($event.target).value)"
+          />
+        }
+      </div>
+
+      <div class="row-block">
+        <button class="row" type="button" [attr.aria-expanded]="openRow() === 'reminder'" (click)="toggleRow('reminder')">
+          <span><b>Rappels</b><small>{{ view.reminder }} · Échéance : {{ view.dueReminder }}</small></span>
+          <i aria-hidden="true">›</i>
+        </button>
+        @if (openRow() === 'reminder') {
+          <div class="reminder-editor">
+            <label>Fréquence
+              <select [value]="objective.reminder.frequency" (change)="updateReminder({ frequency: $any($event.target).value })">
+                <option value="none">Aucun rappel</option>
+                <option value="daily">Chaque jour</option>
+                <option value="weekly">Chaque semaine</option>
+              </select>
+            </label>
+            @if (objective.reminder.frequency === 'weekly') {
+              <label>Jour
+                <select (change)="updateReminder({ weekday: +$any($event.target).value })">
+                  @for (day of weekdays; track day; let index = $index) {
+                    <option [value]="index" [selected]="index === objective.reminder.weekday">{{ day }}</option>
+                  }
+                </select>
+              </label>
+            }
+            @if (objective.reminder.frequency !== 'none') {
+              <label>Heure
+                <input type="time" [value]="objective.reminder.time" (change)="updateReminder({ time: $any($event.target).value })" />
+              </label>
+            }
+            <label>Avant l’échéance
+              <select (change)="updateDueReminder($any($event.target).value)">
+                @for (option of dueReminders; track option[0]) {
+                  <option [value]="option[0]" [selected]="option[0] === objective.dueReminder">{{ option[1] }}</option>
+                }
+              </select>
+            </label>
+          </div>
+        }
+      </div>
+
+      <a class="row" [routerLink]="['/objectives', objective.id, 'share']">
+        <span>
+          <b>Partagé avec</b>
+          @if (view.avatars.length) {
+            <span class="avatars">
+              @for (person of view.avatars; track person.id) {
+                <span class="avatar" [style.background]="person.color" [attr.title]="person.name">{{ person.initials }}</span>
+              }
+              @if (view.extraPeople) {
+                <span class="avatar more">+{{ view.extraPeople }}</span>
+              }
+            </span>
+          } @else {
+            <small>Personne pour l’instant</small>
+          }
+        </span>
+        <i aria-hidden="true">›</i>
+      </a>
+    </section>
+  }
+}

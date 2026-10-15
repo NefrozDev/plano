@@ -3,13 +3,20 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import {
+  formatDate,
+  objectiveProgress,
+  objectiveTint,
+} from '../objectives/objective.utils';
+import { ObjectivesStore } from '../objectives/objectives.store';
+import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.component';
 
 type NavigationItem = 'Accueil' | 'Agenda' | 'Liste' | 'Objectifs';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, ObjectiveIconComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -17,6 +24,7 @@ export class DashboardComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly appData = inject(PlanoDataStore);
+  private readonly objectivesStore = inject(ObjectivesStore);
 
   readonly navigation: readonly NavigationItem[] = [
     'Accueil',
@@ -29,6 +37,21 @@ export class DashboardComponent {
   readonly completedTasks = computed(
     () => this.tasks().filter((task) => task.done).length,
   );
+  readonly goals = computed(() =>
+    this.objectivesStore
+      .objectives()
+      .filter((objective) => objective.status === 'active' && !objective.archived)
+      .sort((first, second) => (first.dueDate ?? '9999').localeCompare(second.dueDate ?? '9999'))
+      .slice(0, 2)
+      .map((objective) => ({
+        id: objective.id,
+        title: objective.title,
+        category: objective.category,
+        progress: objectiveProgress(objective),
+        due: objective.dueDate ? `échéance : ${formatDate(objective.dueDate)}` : 'sans échéance',
+        tint: objectiveTint(objective.category, this.objectivesStore.settings().categoryColors),
+      })),
+  );
   readonly displayName = computed(
     () => this.auth.user()?.firstName || this.auth.user()?.username || 'vous',
   );
@@ -40,6 +63,10 @@ export class DashboardComponent {
   selectNavigation(item: NavigationItem): void {
     if (item === 'Liste') {
       void this.router.navigateByUrl('/lists');
+      return;
+    }
+    if (item === 'Objectifs') {
+      void this.router.navigateByUrl('/objectives');
       return;
     }
     this.activeNavigation = item;

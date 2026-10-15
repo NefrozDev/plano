@@ -7,3 +7,17 @@ export interface GroupSummary {
   role: GroupRole;
   createdAt: Date;
 }
+
+export interface GroupMemberSummary {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  role: GroupRole;
+  joinedAt: Date;
+}
+
+export interface GroupDetails extends GroupSummary {
+  members: GroupMemberSummary[];
+}

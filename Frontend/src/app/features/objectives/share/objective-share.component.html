@@ -1,0 +1,61 @@
+<app-objective-header
+  heading="Partager l’objectif"
+  [backLink]="['/objectives', objective()?.id ?? '']"
+  backLabel="Fermer le partage"
+  variant="close"
+/>
+
+@if (objective(); as objective) {
+  <div class="content">
+    <div class="summary">
+      <app-objective-icon [category]="objective.category" [color]="tint()" />
+      <strong>{{ objective.title }}</strong>
+    </div>
+
+    <section>
+      <h2>Partager avec</h2>
+      @if (!isOwner()) {
+        <p class="note">Partagé par {{ owner()?.name ?? 'une autre personne' }} : seule la personne propriétaire peut modifier le partage.</p>
+      }
+      <ul class="people">
+        @for (person of candidates(); track person.id) {
+          <li>
+            <label [class.disabled]="!isOwner()">
+              <span class="avatar" [style.background]="person.color" aria-hidden="true">{{ person.initials }}</span>
+              <span class="name">{{ person.name }}</span>
+              <input type="checkbox" [checked]="isSelected(person.id)" [disabled]="!isOwner()" (change)="toggle(person.id)" />
+              <i class="check" aria-hidden="true"></i>
+            </label>
+          </li>
+        }
+      </ul>
+      @if (isOwner()) {
+        @if (inviteOpen()) {
+          <form class="invite" (submit)="$event.preventDefault(); invite(inviteName.value)">
+            <input #inviteName class="form-control" maxlength="40" placeholder="Nom de la personne" aria-label="Nom de la personne à inviter" />
+            <button type="submit">Ajouter</button>
+          </form>
+        } @else {
+          <button class="link-button" type="button" (click)="inviteOpen.set(true)">＋ Inviter d’autres personnes</button>
+        }
+      }
+    </section>
+
+    <section>
+      <h2>Lien de partage</h2>
+      <div class="link">
+        <span>{{ shareLink() }}</span>
+        <button type="button" (click)="copyLink()">{{ copied() ? 'Copié !' : 'Copier' }}</button>
+      </div>
+      @if (copyFailed()) {
+        <p class="field-error" role="alert">Copie impossible : sélectionnez le lien pour le copier.</p>
+      }
+    </section>
+  </div>
+
+  <div class="actions">
+    <button class="primary-button" type="button" [disabled]="!isOwner()" (click)="share()">Partager</button>
+  </div>
+} @else {
+  <p class="empty">Cet objectif n’existe pas ou a été supprimé.</p>
+}

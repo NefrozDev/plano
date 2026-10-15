@@ -1,0 +1,59 @@
+<app-objective-header heading="Filtres" backLink="/objectives" backLabel="Retour aux objectifs">
+  <button class="reset" type="button" (click)="store.resetFilters()">Réinitialiser</button>
+</app-objective-header>
+
+<div class="content">
+  <fieldset>
+    <legend>Statut</legend>
+    <label class="option">
+      <span>Tous</span>
+      <input type="checkbox" [checked]="!filters().statuses.length" (change)="clear('statuses', $event)" />
+      <i aria-hidden="true"></i>
+    </label>
+    @for (status of statuses; track status[0]) {
+      <label class="option">
+        <span>{{ status[1] }}</span>
+        <input type="checkbox" [checked]="filters().statuses.includes(status[0])" (change)="toggleStatus(status[0])" />
+        <i aria-hidden="true"></i>
+      </label>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Catégories</legend>
+    <label class="option">
+      <span>Toutes</span>
+      <input type="checkbox" [checked]="!filters().categories.length" (change)="clear('categories', $event)" />
+      <i aria-hidden="true"></i>
+    </label>
+    @for (category of categories; track category.value) {
+      <label class="option">
+        <span class="category">
+          <app-objective-icon [category]="category.value" [color]="category.color" />
+          {{ category.label }}
+        </span>
+        <input type="checkbox" [checked]="filters().categories.includes(category.value)" (change)="toggleCategory(category.value)" />
+        <i aria-hidden="true"></i>
+      </label>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Tri</legend>
+    <div class="sort">
+      <select aria-label="Trier par" (change)="setSort({ sort: $any($event.target).value })">
+        <option value="dueDate" [selected]="filters().sort === 'dueDate'">Date d’échéance</option>
+        <option value="progress" [selected]="filters().sort === 'progress'">Progression</option>
+        <option value="title" [selected]="filters().sort === 'title'">Nom</option>
+      </select>
+      <select aria-label="Ordre du tri" (change)="setSort({ direction: $any($event.target).value })">
+        <option value="asc" [selected]="filters().direction === 'asc'">Croissant</option>
+        <option value="desc" [selected]="filters().direction === 'desc'">Décroissant</option>
+      </select>
+    </div>
+  </fieldset>
+</div>
+
+<div class="actions">
+  <a class="primary-button" routerLink="/objectives">Afficher {{ resultCount() }} objectif(s)</a>
+</div>

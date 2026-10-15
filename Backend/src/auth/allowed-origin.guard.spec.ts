@@ -62,4 +62,19 @@ describe('AllowedOriginGuard', () => {
       ),
     ).toBe(true);
   });
+
+  it('defaults to the local frontend when FRONTEND_URL is not set', () => {
+    const defaultGuard = new AllowedOriginGuard(new ConfigService({}));
+
+    expect(
+      defaultGuard.canActivate(
+        contextFor('POST', { origin: 'http://localhost:4200' }),
+      ),
+    ).toBe(true);
+    expect(() =>
+      defaultGuard.canActivate(
+        contextFor('POST', { origin: 'https://plano.example' }),
+      ),
+    ).toThrow(ForbiddenException);
+  });
 });
