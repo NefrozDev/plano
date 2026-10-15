@@ -1,0 +1,87 @@
+<section class="list-editor" aria-labelledby="editor-title">
+  <header class="editor-header">
+    <button type="button" aria-label="Annuler les modifications" (click)="close.emit()">×</button>
+    <h2 id="editor-title">Modifier la liste</h2>
+    <button class="save-editor" type="button" aria-label="Enregistrer les modifications" (click)="submit()">✓</button>
+  </header>
+
+  <div class="editor-content">
+    <label class="editor-field">
+      <span>Nom de la liste</span>
+      <input
+        type="text"
+        [value]="draftName()"
+        (input)="draftName.set($any($event.target).value)"
+      />
+    </label>
+
+    <fieldset class="editor-options icon-options">
+      <legend>Icône</legend>
+      <div>
+        @for (icon of iconChoices; track icon.value) {
+          <button
+            type="button"
+            [class.selected]="draftIcon() === icon.value"
+            [attr.aria-label]="icon.label"
+            [attr.aria-pressed]="draftIcon() === icon.value"
+            (click)="draftIcon.set(icon.value)"
+          >
+            @switch (icon.value) {
+              @case ('cart') {
+                <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 6h4l2.5 14h13l3-10H9" /><circle cx="13" cy="25" r="1.5" /><circle cx="23" cy="25" r="1.5" /></svg>
+              }
+              @case ('home') {
+                <svg viewBox="0 0 32 32" aria-hidden="true"><path d="m5 15 11-9 11 9v12H5Z" /><path d="M13 27v-8h6v8" /></svg>
+              }
+              @case ('suitcase') {
+                <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="10" width="22" height="17" rx="2" /><path d="M12 10V7h8v3M10 14v9M22 14v9M5 17h22" /></svg>
+              }
+              @case ('gift') {
+                <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="12" width="22" height="15" rx="1" /><path d="M4 12h24v-5H4ZM16 7v20M16 7c-5 0-7-1-7-3 0-3 6-2 7 3Zm0 0c5 0 7-1 7-3 0-3-6-2-7 3Z" /></svg>
+              }
+              @case ('tools') {
+                <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20 5a7 7 0 0 0-8 9L5 21a3 3 0 0 0 4 4l7-7a7 7 0 0 0 9-8l-5 5-4-4Z" /></svg>
+              }
+            }
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="editor-options color-options">
+      <legend>Couleur</legend>
+      <div>
+        @for (color of colorChoices; track color) {
+          <button
+            type="button"
+            [class.selected]="draftColor() === color"
+            [style.background]="color"
+            [attr.aria-label]="'Choisir la couleur ' + color"
+            [attr.aria-pressed]="draftColor() === color"
+            (click)="draftColor.set(color)"
+          ><span aria-hidden="true">✓</span></button>
+        }
+      </div>
+    </fieldset>
+
+    <section class="sharing-editor" aria-labelledby="sharing-title">
+      <h3 id="sharing-title">Partagée avec</h3>
+      <div class="sharing-row">
+        <div><span class="avatar avatar-one">A</span><span class="avatar avatar-two">M</span><span class="avatar avatar-three">S</span></div>
+        <button type="button"><span aria-hidden="true">＋</span> Inviter</button>
+      </div>
+    </section>
+
+    <label class="editor-field description-field">
+      <span>Description</span>
+      <textarea
+        rows="3"
+        placeholder="Ajouter une description..."
+        [value]="draftDescription()"
+        (input)="draftDescription.set($any($event.target).value)"
+      ></textarea>
+    </label>
+
+    <button class="delete-list" type="button">Supprimer la liste</button>
+  </div>
+</section>

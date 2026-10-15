@@ -1,0 +1,66 @@
+<section class="sharing-panel" aria-labelledby="sharing-panel-title">
+  <header>
+    <button type="button" aria-label="Retour à la liste" (click)="close.emit()">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
+    </button>
+    <h2 id="sharing-panel-title">Partager la liste</h2>
+    <button type="button" aria-label="Informations sur le partage">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></svg>
+    </button>
+  </header>
+
+  <div class="sharing-content">
+    <div class="shared-list-summary">
+      <span class="shared-list-icon" [style.background]="color()">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 6h4l2.5 14h13l3-10H9" /><circle cx="13" cy="25" r="1.5" /><circle cx="23" cy="25" r="1.5" /></svg>
+      </span>
+      <div><strong>{{ listTitle() }}</strong><small>{{ sharingEnabled() ? 'Partagée' : 'Privée' }}</small></div>
+    </div>
+
+    <section class="sharing-members">
+      <h3>Membres ({{ members().length }})</h3>
+      @for (member of members(); track member.id) {
+        <div class="sharing-member">
+          <span class="member-avatar" [style.background]="member.color">{{ member.initials }}</span>
+          <strong>{{ member.name }}</strong>
+          @if (member.role === 'owner') {
+            <span class="owner-role">{{ roleLabels.owner }}</span>
+          } @else {
+            <select [value]="member.role" [attr.aria-label]="'Droits de ' + member.name" (change)="updateRole(member.id, $any($event.target).value)">
+              <option value="editor">{{ roleLabels.editor }}</option>
+              <option value="viewer">{{ roleLabels.viewer }}</option>
+            </select>
+          }
+        </div>
+      }
+
+      @if (inviteFormOpen()) {
+        <div class="invite-form">
+          <input type="email" placeholder="Adresse e-mail" [value]="inviteEmail()" (input)="inviteEmail.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); invite()" />
+          <select aria-label="Permission de la personne invitée" [value]="inviteRole()" (change)="inviteRole.set($any($event.target).value)">
+            <option value="editor">Modification</option>
+            <option value="viewer">Lecture seule</option>
+          </select>
+          <button type="button" [disabled]="!inviteEmail().trim()" (click)="invite()">Inviter</button>
+        </div>
+      } @else {
+        <button class="invite-people" type="button" (click)="inviteFormOpen.set(true)"><span aria-hidden="true">＋</span> Inviter des personnes</button>
+      }
+    </section>
+
+    <section class="invitation-link">
+      <h3>Lien d’invitation</h3>
+      <p>Toute personne avec le lien peut consulter.</p>
+      @if (sharingEnabled()) {
+        <div><span>{{ invitationLink() }}</span><button type="button" (click)="copyInvitationLink()">{{ linkCopied() ? 'Copié !' : 'Copier' }}</button></div>
+        <small>Vous pouvez désactiver le lien à tout moment.</small>
+      } @else {
+        <button class="enable-sharing" type="button" (click)="setSharing(true)">Activer le lien de partage</button>
+      }
+    </section>
+
+    @if (sharingEnabled()) {
+      <button class="stop-sharing" type="button" (click)="setSharing(false)">Arrêter le partage</button>
+    }
+  </div>
+</section>

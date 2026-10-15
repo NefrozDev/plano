@@ -1,0 +1,50 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { createMockPlanoData } from '@plano/common';
+import { ListEditorComponent, ListEdits } from './list-editor.component';
+
+describe('ListEditorComponent', () => {
+  let fixture: ComponentFixture<ListEditorComponent>;
+  let editor: ListEditorComponent;
+  let saved: ListEdits[];
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(ListEditorComponent);
+    fixture.componentRef.setInput('list', createMockPlanoData().lists[0]);
+    fixture.componentRef.setInput('description', 'Pour samedi');
+    editor = fixture.componentInstance;
+    saved = [];
+    editor.save.subscribe((edits) => saved.push(edits));
+    fixture.detectChanges();
+  });
+
+  it('starts from the current list and emits the edited drafts', () => {
+    expect(editor.draftName()).toBe('Courses');
+    expect(editor.draftDescription()).toBe('Pour samedi');
+
+    editor.draftName.set('  Courses du week-end ');
+    editor.draftIcon.set('gift');
+    editor.draftColor.set('#e65591');
+    editor.submit();
+
+    expect(saved).toEqual([
+      { name: 'Courses du week-end', icon: 'gift', color: '#e65591', description: 'Pour samedi' },
+    ]);
+  });
+
+  it('keeps the current name when the draft is blank', () => {
+    editor.draftName.set('   ');
+    editor.submit();
+
+    expect(saved[0].name).toBe('Courses');
+  });
+
+  it('emits close from the cancel button without saving', () => {
+    let closed = false;
+    editor.close.subscribe(() => (closed = true));
+
+    ((fixture.nativeElement as HTMLElement).querySelector('.editor-header button') as HTMLButtonElement).click();
+
+    expect(closed).toBeTrue();
+    expect(saved).toEqual([]);
+  });
+});

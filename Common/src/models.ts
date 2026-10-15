@@ -58,7 +58,6 @@ export interface ListDetail {
   sections: ListSection[];
   members: ListMember[];
   sharingEnabled: boolean;
-  total: number;
 }
 
 export interface DashboardDay {

@@ -1,0 +1,136 @@
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import type { ListEntry } from '@plano/common';
+
+/** Pointer travel (px) under which a press still counts as a tap. */
+const TAP_TOLERANCE = 6;
+/** Left swipe (px) past which releasing the row asks to delete it. */
+const DELETE_THRESHOLD = -32;
+/** Furthest the row slides, uncovering the delete button. */
+const MAX_OFFSET = -58;
+
+/**
+ * One list entry: tap to open, circle to toggle, swipe left to delete, and a
+ * handle that starts a drag (the parent tracks the drag across rows).
+ */
+@Component({
+  selector: 'app-list-entry-row',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="entry-shell" [class.revealed]="offset() < 0">
+      <button
+        class="delete-entry"
+        type="button"
+        [attr.aria-label]="'Supprimer définitivement ' + entry().name"
+        (click)="remove.emit()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
+      </button>
+      <div
+        class="entry"
+        [class.done]="entry().done"
+        [class.highlighted]="entry().highlighted"
+        [class.dragging]="dragging()"
+        [attr.data-section-id]="sectionId()"
+        [attr.data-entry-id]="entry().id"
+        [style.transform]="'translateX(' + offset() + 'px) scale(' + (dragging() ? 0.98 : 1) + ')'"
+        (click)="handleClick($event)"
+        (pointerdown)="startSwipe($event)"
+        (pointermove)="moveSwipe($event)"
+        (pointerup)="finishSwipe()"
+        (pointercancel)="finishSwipe()"
+      >
+        <button
+          class="entry-toggle"
+          type="button"
+          [attr.aria-label]="'Marquer ' + entry().name + (entry().done ? ' comme non terminé' : ' comme terminé')"
+          [attr.aria-pressed]="entry().done"
+          (click)="$event.stopPropagation(); toggle.emit()"
+        ><i aria-hidden="true"></i></button>
+        <span>{{ entry().name }}</span>
+        <button
+          class="drag-handle"
+          type="button"
+          [attr.aria-label]="'Déplacer ' + entry().name"
+          [attr.aria-grabbed]="dragging()"
+          (click)="$event.preventDefault(); $event.stopPropagation()"
+          (pointerdown)="startDrag($event)"
+        >⠿</button>
+      </div>
+    </div>
+  `,
+  styles: `
+    :host { display: block; }
+    .entry-shell { position: relative; overflow: hidden; border-radius: .5rem; }
+    .entry { position: relative; z-index: 1; display: grid; min-height: 2.6rem; grid-template-columns: 1.7rem 1fr auto; gap: .55rem; align-items: center; cursor: pointer; touch-action: pan-y; transition: transform 180ms ease; }
+    .entry-shell.revealed .entry { transition: transform 120ms ease-out; }
+    .delete-entry { position: absolute; top: 0; right: 0; bottom: 0; display: grid; width: 3.65rem; place-items: center; border: 0; background: #d92d20; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
+    .entry-shell.revealed .delete-entry { opacity: 1; pointer-events: auto; }
+    .delete-entry svg { width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+    .entry-toggle { display: grid; padding: 0; place-items: center; border: 0; background: transparent; cursor: pointer; }
+    .entry-toggle i { display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 2px solid #aab4c5; border-radius: 50%; }
+    .entry.done .entry-toggle i { border-color: #3264ed; background: #3264ed; }
+    .entry.done .entry-toggle i::after { width: .55rem; height: .3rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.1rem) rotate(-45deg); }
+    .entry.highlighted .entry-toggle i { border-color: #ff9d72; }
+    .entry span { font-size: .8rem; font-weight: 550; }
+    .entry.done span { color: #737b89; text-decoration: line-through; }
+  `,
+})
+export class ListEntryRowComponent {
+  readonly entry = input.required<ListEntry>();
+  readonly sectionId = input.required<string>();
+  readonly dragging = input(false);
+
+  readonly toggle = output<void>();
+  readonly open = output<void>();
+  readonly remove = output<void>();
+  readonly dragStart = output<void>();
+
+  private readonly gesture = signal<{ startX: number; currentX: number } | null>(null);
+  /** A swipe ends with a click on the row; that click must not open the entry. */
+  private suppressNextClick = false;
+
+  readonly offset = computed(() => {
+    const gesture = this.gesture();
+    return gesture ? Math.max(MAX_OFFSET, Math.min(0, gesture.currentX - gesture.startX)) : 0;
+  });
+
+  startSwipe(event: PointerEvent): void {
+    if ((event.target as HTMLElement).closest('.drag-handle, .entry-toggle')) return;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    this.gesture.set({ startX: event.clientX, currentX: event.clientX });
+  }
+
+  moveSwipe(event: PointerEvent): void {
+    const gesture = this.gesture();
+    if (!gesture) return;
+    if (Math.abs(event.clientX - gesture.startX) > TAP_TOLERANCE) event.preventDefault();
+    this.gesture.set({ ...gesture, currentX: event.clientX });
+  }
+
+  finishSwipe(): void {
+    const gesture = this.gesture();
+    if (!gesture) return;
+    this.gesture.set(null);
+    const distance = gesture.currentX - gesture.startX;
+    if (Math.abs(distance) > TAP_TOLERANCE) this.suppressNextClick = true;
+    if (distance < DELETE_THRESHOLD) this.remove.emit();
+  }
+
+  handleClick(event: MouseEvent): void {
+    if (this.suppressNextClick) {
+      this.suppressNextClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    this.open.emit();
+  }
+
+  startDrag(event: PointerEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    this.dragStart.emit();
+  }
+}

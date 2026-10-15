@@ -4,7 +4,7 @@
   </a>
   <h1 class="list-title">{{ title() }}</h1>
   <div class="header-actions">
-    <button class="icon-button" type="button" aria-label="Partager la liste" (click)="openSharing()">
+    <button class="icon-button" type="button" aria-label="Partager la liste" (click)="sharingOpen.set(true)">
       <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="10" cy="8" r="3.5" /><path d="M3.5 20v-3c0-3 2.2-5 6.5-5s6.5 2 6.5 5v3Z" /><circle cx="19" cy="9" r="2.5" /><path d="M17 13c3.7-.4 5.5 1.4 5.5 4v3h-4" /></svg>
     </button>
     <button
@@ -31,111 +31,73 @@
 
 <section class="members" aria-label="Membres de la liste">
   <app-avatar-stack [people]="members()" [max]="3" />
-  <button type="button" aria-label="Ajouter un membre" (click)="openSharing()">＋</button>
+  <button type="button" aria-label="Ajouter un membre" (click)="sharingOpen.set(true)">＋</button>
 </section>
 
 <section class="overall-progress" aria-label="Progression de la liste">
-  <div><i [style.width.%]="(completed() / total()) * 100" [style.background]="listColor()"></i></div>
+  <div><i [style.width.%]="progress()" [style.background]="color()"></i></div>
   <strong>{{ completed() }} / {{ total() }}</strong>
 </section>
 
 <section class="detail-content">
-  @for (section of sections(); track section.name; let sectionIndex = $index) {
-    @if (isSectionCollapsed(section.name)) {
+  @for (view of sectionViews(); track view.section.id) {
+    @if (view.collapsed) {
       <button
         class="section-summary"
         type="button"
-        [style.--section-color]="section.color"
-        [style.--section-progress]="sectionProgress(section) + '%'"
+        [style.--section-color]="view.section.color"
+        [style.--section-progress]="view.progress + '%'"
         [attr.aria-expanded]="false"
-        (click)="toggleSection(section.name)"
+        (click)="toggleSection(view.section.id)"
       >
-        <i [style.background]="section.color" aria-hidden="true"></i>
-        <strong>{{ section.name }}</strong>
-        <span>{{ sectionCompleted(section) }} / {{ section.entries.length }}</span>
+        <i [style.background]="view.section.color" aria-hidden="true"></i>
+        <strong>{{ view.section.name }}</strong>
+        <span>{{ view.completed }} / {{ view.section.entries.length }}</span>
         <b aria-hidden="true">›</b>
       </button>
     } @else {
       <section
         class="entry-section"
-        [style.--section-color]="section.color"
-        [style.--section-progress]="sectionProgress(section) + '%'"
+        [style.--section-color]="view.section.color"
+        [style.--section-progress]="view.progress + '%'"
       >
         <header>
           <button
             class="section-title"
             type="button"
             [attr.aria-expanded]="true"
-            (click)="toggleSection(section.name)"
-          >{{ section.name }}</button>
-          <button type="button" [attr.aria-label]="'Options pour ' + section.name">•••</button>
+            (click)="toggleSection(view.section.id)"
+          >{{ view.section.name }}</button>
+          <button type="button" [attr.aria-label]="'Options pour ' + view.section.name">•••</button>
         </header>
-        @for (displayed of displayedEntries(section); track displayed.entry.name) {
-          <div
-            class="entry-shell"
-            [class.revealed]="swipeOffset(sectionIndex, displayed.index) < 0"
-          >
-            <button
-              class="delete-entry"
-              type="button"
-              [attr.aria-label]="'Supprimer définitivement ' + displayed.entry.name"
-              (click)="requestDeleteEntry(sectionIndex, displayed.index)"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
-            </button>
-            <div
-              class="entry"
-              [class.done]="displayed.entry.done"
-              [class.highlighted]="displayed.entry.highlighted"
-              [class.dragging]="draggedEntry()?.sectionIndex === sectionIndex && draggedEntry()?.entryIndex === displayed.index"
-              [attr.data-section-index]="sectionIndex"
-              [attr.data-entry-index]="displayed.index"
-              [style.transform]="'translateX(' + swipeOffset(sectionIndex, displayed.index) + 'px) scale(' + (draggedEntry()?.sectionIndex === sectionIndex && draggedEntry()?.entryIndex === displayed.index ? '0.98' : '1') + ')'"
-              (click)="handleEntryClick($event, sectionIndex, displayed.index)"
-              (pointerdown)="startSwipe(sectionIndex, displayed.index, $event)"
-              (pointermove)="moveSwipe($event)"
-              (pointerup)="finishSwipe()"
-              (pointercancel)="finishSwipe()"
-            >
-              <button
-                class="entry-toggle"
-                type="button"
-                [attr.aria-label]="displayed.entry.done ? 'Marquer ' + displayed.entry.name + ' comme non terminé' : 'Marquer ' + displayed.entry.name + ' comme terminé'"
-                [attr.aria-pressed]="displayed.entry.done"
-                (click)="$event.stopPropagation(); toggleEntry(sectionIndex, displayed.index)"
-              ><i aria-hidden="true"></i></button>
-              <span>{{ displayed.entry.name }}</span>
-              <button
-                class="drag-handle"
-                type="button"
-                [attr.aria-label]="'Déplacer ' + displayed.entry.name"
-                [attr.aria-grabbed]="draggedEntry()?.sectionIndex === sectionIndex && draggedEntry()?.entryIndex === displayed.index"
-                (click)="$event.preventDefault(); $event.stopPropagation()"
-                (pointerdown)="startPointerDrag(sectionIndex, displayed.index, $event)"
-                (pointermove)="movePointerDrag($event)"
-                (pointerup)="finishPointerDrag($event)"
-                (pointercancel)="finishPointerDrag($event)"
-              >⠿</button>
-            </div>
-          </div>
+        @for (entry of view.entries; track entry.id) {
+          <app-list-entry-row
+            [entry]="entry"
+            [sectionId]="view.section.id"
+            [dragging]="dragged()?.entryId === entry.id"
+            (toggle)="toggleEntry(view.section.id, entry.id)"
+            (open)="openEntry(view.section.id, entry.id)"
+            (remove)="requestDeleteEntry(view.section.id, entry)"
+            (dragStart)="startDrag(view.section.id, entry.id)"
+          />
         }
-        @if (editingSection() === sectionIndex) {
+        @if (addingTo() === view.section.id) {
           <input
+            appAutofocus
             class="new-entry-input"
             type="text"
             placeholder="Nouvel élément..."
-            [attr.data-new-entry-section]="sectionIndex"
             [value]="newEntryValue()"
             (input)="newEntryValue.set($any($event.target).value)"
-            (keydown.enter)="$event.preventDefault(); finishAdding(sectionIndex)"
+            (keydown.enter)="$event.preventDefault(); finishAdding(view.section.id)"
             (keydown.escape)="cancelAdding()"
-            (blur)="finishAdding(sectionIndex)"
+            (blur)="finishAdding(view.section.id)"
           />
         } @else {
           <button
             class="empty-entry"
             type="button"
-            (click)="beginAdding(sectionIndex)"
+            (click)="beginAdding(view.section.id)"
           ><span aria-hidden="true">＋</span> Ajouter un élément</button>
         }
       </section>
@@ -145,258 +107,34 @@
 
 <app-bottom-nav active="lists" />
 
-@if (listEditorOpen()) {
-  <section class="list-editor" aria-labelledby="editor-title">
-    <header class="editor-header">
-      <button type="button" aria-label="Annuler les modifications" (click)="closeListEditor()">×</button>
-      <h2 id="editor-title">Modifier la liste</h2>
-      <button class="save-editor" type="button" aria-label="Enregistrer les modifications" (click)="saveListEditor()">✓</button>
-    </header>
-
-    <div class="editor-content">
-      <label class="editor-field">
-        <span>Nom de la liste</span>
-        <input
-          type="text"
-          [value]="draftName()"
-          (input)="draftName.set($any($event.target).value)"
-        />
-      </label>
-
-      <fieldset class="editor-options icon-options">
-        <legend>Icône</legend>
-        <div>
-          @for (icon of iconChoices; track icon.value) {
-            <button
-              type="button"
-              [class.selected]="selectedIcon() === icon.value"
-              [attr.aria-label]="icon.label"
-              [attr.aria-pressed]="selectedIcon() === icon.value"
-              (click)="selectedIcon.set(icon.value)"
-            >
-              @switch (icon.value) {
-                @case ('cart') {
-                  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 6h4l2.5 14h13l3-10H9" /><circle cx="13" cy="25" r="1.5" /><circle cx="23" cy="25" r="1.5" /></svg>
-                }
-                @case ('home') {
-                  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="m5 15 11-9 11 9v12H5Z" /><path d="M13 27v-8h6v8" /></svg>
-                }
-                @case ('suitcase') {
-                  <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="10" width="22" height="17" rx="2" /><path d="M12 10V7h8v3M10 14v9M22 14v9M5 17h22" /></svg>
-                }
-                @case ('gift') {
-                  <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="12" width="22" height="15" rx="1" /><path d="M4 12h24v-5H4ZM16 7v20M16 7c-5 0-7-1-7-3 0-3 6-2 7 3Zm0 0c5 0 7-1 7-3 0-3-6-2-7 3Z" /></svg>
-                }
-                @case ('tools') {
-                  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20 5a7 7 0 0 0-8 9L5 21a3 3 0 0 0 4 4l7-7a7 7 0 0 0 9-8l-5 5-4-4Z" /></svg>
-                }
-              }
-            </button>
-          }
-        </div>
-      </fieldset>
-
-      <fieldset class="editor-options color-options">
-        <legend>Couleur</legend>
-        <div>
-          @for (color of colorChoices; track color) {
-            <button
-              type="button"
-              [class.selected]="listColor() === color"
-              [style.background]="color"
-              [attr.aria-label]="'Choisir la couleur ' + color"
-              [attr.aria-pressed]="listColor() === color"
-              (click)="listColor.set(color)"
-            ><span aria-hidden="true">✓</span></button>
-          }
-        </div>
-      </fieldset>
-
-      <section class="sharing-editor" aria-labelledby="sharing-title">
-        <h3 id="sharing-title">Partagée avec</h3>
-        <div class="sharing-row">
-          <div><span class="avatar avatar-one">A</span><span class="avatar avatar-two">M</span><span class="avatar avatar-three">S</span></div>
-          <button type="button"><span aria-hidden="true">＋</span> Inviter</button>
-        </div>
-      </section>
-
-      <label class="editor-field description-field">
-        <span>Description</span>
-        <textarea
-          rows="3"
-          placeholder="Ajouter une description..."
-          [value]="description()"
-          (input)="description.set($any($event.target).value)"
-        ></textarea>
-      </label>
-
-      <button class="delete-list" type="button">Supprimer la liste</button>
-    </div>
-  </section>
+@if (listEditorOpen() && list(); as list) {
+  <app-list-editor
+    [list]="list"
+    [description]="description()"
+    (save)="saveList($event)"
+    (close)="listEditorOpen.set(false)"
+  />
 }
 
 @if (sectionCreatorOpen()) {
-  <div class="section-sheet-layer">
-    <button class="sheet-backdrop" type="button" aria-label="Fermer" (click)="closeSectionCreator()"></button>
-    <section class="section-sheet" aria-labelledby="section-sheet-title">
-      <header>
-        <button type="button" aria-label="Annuler" (click)="closeSectionCreator()">×</button>
-        <h2 id="section-sheet-title">Ajouter une section</h2>
-        <button class="save-section" type="button" aria-label="Ajouter la section" [disabled]="!newSectionName().trim()" (click)="saveSection()">✓</button>
-      </header>
-      <label>
-        <span>Nom de la section</span>
-        <input
-          data-new-section-name
-          type="text"
-          placeholder="Ex. : Produits frais"
-          [value]="newSectionName()"
-          (input)="newSectionName.set($any($event.target).value)"
-          (keydown.enter)="$event.preventDefault(); saveSection()"
-        />
-      </label>
-      <fieldset>
-        <legend>Couleur</legend>
-        <div>
-          @for (color of colorChoices; track color) {
-            <button
-              type="button"
-              [class.selected]="newSectionColor() === color"
-              [style.background]="color"
-              [attr.aria-label]="'Choisir la couleur ' + color"
-              [attr.aria-pressed]="newSectionColor() === color"
-              (click)="newSectionColor.set(color)"
-            ><span aria-hidden="true">✓</span></button>
-          }
-        </div>
-      </fieldset>
-    </section>
-  </div>
+  <app-list-section-creator (create)="addSection($event)" (close)="sectionCreatorOpen.set(false)" />
 }
 
-@if (activeEntry(); as entry) {
-  <section class="entry-details" aria-labelledby="entry-details-title">
-    <header>
-      <button type="button" aria-label="Retour à la liste" (click)="closeEntryDetails()">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
-      </button>
-      <h2 id="entry-details-title">Détail d’un élément</h2>
-      <button type="button" aria-label="Plus d’options">⋮</button>
-    </header>
-
-    <div class="entry-details-content">
-      <div class="entry-name-editor">
-        <button
-          class="details-toggle"
-          type="button"
-          [class.done]="entry.done"
-          [attr.aria-pressed]="entry.done"
-          (click)="updateSelectedEntry({ done: !entry.done })"
-        ><i aria-hidden="true"></i></button>
-        <input aria-label="Nom de l’élément" [value]="entry.name" (input)="updateSelectedEntry({ name: $any($event.target).value })" />
-      </div>
-
-      <section class="detail-fields">
-        <div class="detail-field">
-          <span>Dans la liste</span>
-          <strong>{{ title() }}</strong>
-        </div>
-        <div class="detail-field">
-          <span>Section</span>
-          <strong>{{ activeEntrySection()?.name }}</strong>
-        </div>
-        <div class="detail-field two-line">
-          <span>Ajouté par</span>
-          <strong>{{ entry.addedBy }}</strong>
-          <small>{{ entry.addedAt }}</small>
-        </div>
-        <label class="detail-field">
-          <span>Assigné à</span>
-          <select [value]="entry.assignedTo" (change)="updateSelectedEntry({ assignedTo: $any($event.target).value })">
-            <option value="">Non assigné</option>
-            <option value="Alex">Alex</option>
-            <option value="Camille">Camille</option>
-            <option value="Sam">Sam</option>
-          </select>
-        </label>
-        <label class="detail-field">
-          <span>Rappel</span>
-          <input type="datetime-local" [value]="entry.reminder" (change)="updateSelectedEntry({ reminder: $any($event.target).value })" />
-        </label>
-        <label class="detail-notes">
-          <span>Notes</span>
-          <textarea rows="5" placeholder="Ajouter une note…" [value]="entry.notes" (input)="updateSelectedEntry({ notes: $any($event.target).value })"></textarea>
-        </label>
-      </section>
-    </div>
-  </section>
+@if (activeEntry(); as active) {
+  <app-list-entry-details
+    [entry]="active.entry"
+    [listTitle]="title()"
+    [sectionName]="active.section.name"
+    (change)="updateActiveEntry($event)"
+    (close)="selected.set(null)"
+  />
 }
 
 @if (sharingOpen()) {
-  <section class="sharing-panel" aria-labelledby="sharing-panel-title">
-    <header>
-      <button type="button" aria-label="Retour à la liste" (click)="closeSharing()">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
-      </button>
-      <h2 id="sharing-panel-title">Partager la liste</h2>
-      <button type="button" aria-label="Informations sur le partage">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></svg>
-      </button>
-    </header>
-
-    <div class="sharing-content">
-      <div class="shared-list-summary">
-        <span class="shared-list-icon" [style.background]="listColor()">
-          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 6h4l2.5 14h13l3-10H9" /><circle cx="13" cy="25" r="1.5" /><circle cx="23" cy="25" r="1.5" /></svg>
-        </span>
-        <div><strong>{{ title() }}</strong><small>{{ sharingEnabled() ? 'Partagée' : 'Privée' }}</small></div>
-      </div>
-
-      <section class="sharing-members">
-        <h3>Membres ({{ members().length }})</h3>
-        @for (member of members(); track member.id) {
-          <div class="sharing-member">
-            <span class="member-avatar" [style.background]="member.color">{{ member.initials }}</span>
-            <strong>{{ member.name }}</strong>
-            @if (member.role === 'owner') {
-              <span class="owner-role">{{ roleLabel(member.role) }}</span>
-            } @else {
-              <select [value]="member.role" [attr.aria-label]="'Droits de ' + member.name" (change)="updateMemberRole(member.id, $any($event.target).value)">
-                <option value="editor">Peut modifier</option>
-                <option value="viewer">Peut consulter</option>
-              </select>
-            }
-          </div>
-        }
-
-        @if (inviteFormOpen()) {
-          <div class="invite-form">
-            <input type="email" placeholder="Adresse e-mail" [value]="inviteEmail()" (input)="inviteEmail.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); inviteMember()" />
-            <select aria-label="Permission de la personne invitée" [value]="inviteRole()" (change)="inviteRole.set($any($event.target).value)">
-              <option value="editor">Modification</option>
-              <option value="viewer">Lecture seule</option>
-            </select>
-            <button type="button" [disabled]="!inviteEmail().trim()" (click)="inviteMember()">Inviter</button>
-          </div>
-        } @else {
-          <button class="invite-people" type="button" (click)="inviteFormOpen.set(true)"><span aria-hidden="true">＋</span> Inviter des personnes</button>
-        }
-      </section>
-
-      <section class="invitation-link">
-        <h3>Lien d’invitation</h3>
-        <p>Toute personne avec le lien peut consulter.</p>
-        @if (sharingEnabled()) {
-          <div><span>{{ invitationLink }}</span><button type="button" (click)="copyInvitationLink()">{{ linkCopied() ? 'Copié !' : 'Copier' }}</button></div>
-          <small>Vous pouvez désactiver le lien à tout moment.</small>
-        } @else {
-          <button class="enable-sharing" type="button" (click)="enableSharing()">Activer le lien de partage</button>
-        }
-      </section>
-
-      @if (sharingEnabled()) {
-        <button class="stop-sharing" type="button" (click)="stopSharing()">Arrêter le partage</button>
-      }
-    </div>
-  </section>
+  <app-list-sharing-panel
+    [slug]="slug"
+    [listTitle]="title()"
+    [color]="color()"
+    (close)="sharingOpen.set(false)"
+  />
 }

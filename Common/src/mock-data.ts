@@ -11,7 +11,7 @@ import type {
 import { agendaSeed } from './agenda-mock-data';
 
 const lists: PlanoList[] = [
-  { slug: 'courses', name: 'Courses', detail: 'Partagée avec 2 personnes', completed: 3, total: 8, icon: 'cart', color: '#2ecb70', surface: '#f0fff5', ownership: 'shared' },
+  { slug: 'courses', name: 'Courses', detail: 'Partagée avec 2 personnes', completed: 3, total: 12, icon: 'cart', color: '#2ecb70', surface: '#f0fff5', ownership: 'shared' },
   { slug: 'maison', name: 'Maison', detail: 'Partagée avec 2 personnes', completed: 5, total: 12, icon: 'home', color: '#7868ef', surface: '#f7f4ff', ownership: 'shared' },
   { slug: 'vacances-ete', name: 'Vacances été', detail: 'Partagée avec 3 personnes', completed: 8, total: 15, icon: 'suitcase', color: '#f4a51c', surface: '#fff9ec', ownership: 'shared' },
   { slug: 'idees-cadeaux', name: 'Idées cadeaux', detail: 'Privée', completed: 4, total: 10, icon: 'gift', color: '#e65591', surface: '#fff1f7', ownership: 'mine' },
@@ -35,7 +35,6 @@ function entry(id: string, name: string, done = false, extras: Partial<ListEntry
 const courses: ListDetail = {
   description: '',
   sharingEnabled: true,
-  total: 8,
   members: [
     { id: 'camille', name: 'Camille', initials: 'C', color: '#A76142', role: 'owner' },
     { id: 'alex', name: 'Alex', initials: 'A', color: '#D07863', role: 'editor' },
@@ -52,7 +51,6 @@ const courses: ListDetail = {
 const emptyDetail = (): ListDetail => ({
   description: '',
   sharingEnabled: false,
-  total: 0,
   members: [{ id: 'camille', name: 'Camille', initials: 'C', color: '#A76142', role: 'owner' }],
   sections: [],
 });
