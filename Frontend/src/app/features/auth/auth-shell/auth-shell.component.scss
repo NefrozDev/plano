@@ -11,9 +11,13 @@
 }
 
 .auth-shell {
+  position: relative;
   display: flex;
   width: min(100%, 430px);
-  min-height: 100dvh;
+  /* Fixed height like the app's mobile shell: long content scrolls inside the frame. */
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   flex-direction: column;
   margin: 0 auto;
   padding: calc(4.5rem + env(safe-area-inset-top)) 1.25rem calc(2rem + env(safe-area-inset-bottom));
@@ -21,6 +25,26 @@
 
 .auth-brand {
   text-align: center;
+}
+
+/* Look comes from the global .icon-bubble; only the placement is local. */
+.back-bubble {
+  position: absolute;
+  top: calc(1rem + env(safe-area-inset-top));
+  left: 1rem;
+}
+
+/*
+ * Zero-height sticky strip at the end of the scrolling frame: it stays pinned
+ * to the bottom of the visible area, so projected overlays (toasts) float above
+ * the content without taking layout space.
+ */
+.overlay-anchor {
+  position: sticky;
+  z-index: 5;
+  bottom: 0;
+  height: 0;
+  margin-top: auto;
 }
 
 .auth-brand__mark {
@@ -83,7 +107,7 @@
   }
 
   .auth-shell {
-    min-height: min(820px, calc(100vh - 4rem));
+    height: min(820px, calc(100vh - 4rem));
     padding-right: 1.8rem;
     padding-left: 1.8rem;
     border: 1px solid rgb(50 91 226 / 12%);

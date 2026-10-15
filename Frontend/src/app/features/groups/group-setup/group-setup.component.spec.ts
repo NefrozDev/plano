@@ -163,14 +163,10 @@ describe('GroupSetupComponent', () => {
       component.rotateInviteCode();
       component.transferOwnership(member);
       component.removeMember(member);
-      component.leaveGroup();
-      component.deleteGroup();
 
       expect(groups.rotateInviteCode).not.toHaveBeenCalled();
       expect(groups.transferOwnership).not.toHaveBeenCalled();
       expect(groups.removeMember).not.toHaveBeenCalled();
-      expect(groups.leave).not.toHaveBeenCalled();
-      expect(groups.delete).not.toHaveBeenCalled();
     });
 
     it('rotates the invite code and transfers ownership', () => {
@@ -227,10 +223,11 @@ describe('GroupSetupComponent', () => {
       expect(component.actionMessage()).toBe('Vous avez quitté le groupe.');
 
       component.group.set(group);
+      component.openDialog('danger');
       component.deleteGroup();
-      expect(confirm).toHaveBeenCalledWith(
-        'Supprimer définitivement le groupe « Les Explorateurs » ?',
-      );
+      // The modal is the confirmation step: no extra browser prompt.
+      expect(confirm).not.toHaveBeenCalled();
+      expect(component.dialog()).toBeNull();
       expect(component.actionMessage()).toBe('Le groupe a été supprimé.');
     });
 
@@ -334,5 +331,129 @@ describe('GroupSetupComponent', () => {
       'Les Explorateurs',
     );
     expect(fixture.componentInstance.isOwner()).toBeTrue();
+  });
+
+  it('goes back home from the back bubble of the management view', () => {
+    groups.getMine.and.returnValue(of(group));
+    const navigate = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const fixture = TestBed.createComponent(GroupSetupComponent);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const back = element.querySelector('.back-bubble') as HTMLButtonElement;
+
+    expect(back.getAttribute('aria-label')).toBe('Retour à l’accueil');
+    expect(element.textContent).not.toContain('Retour à l’accueil');
+
+    back.click();
+    expect(navigate).toHaveBeenCalledOnceWith('/');
+  });
+  describe('management modals', () => {
+    function renderGroup(role: 'owner' | 'member') {
+      groups.getMine.and.returnValue(of({ ...group, role }));
+      const fixture = TestBed.createComponent(GroupSetupComponent);
+      fixture.detectChanges();
+      return { fixture, element: fixture.nativeElement as HTMLElement };
+    }
+
+    const bubbleLabels = (element: HTMLElement): (string | null)[] =>
+      Array.from(element.querySelectorAll('.group-tools button')).map((button) =>
+        button.getAttribute('aria-label'),
+      );
+
+    it('shows rename and delete bubbles to the owner, leave to members', () => {
+      expect(bubbleLabels(renderGroup('owner').element)).toEqual([
+        'Renommer le groupe',
+        'Supprimer le groupe',
+      ]);
+      expect(bubbleLabels(renderGroup('member').element)).toEqual([
+        'Quitter le groupe',
+      ]);
+    });
+
+    it('renames from the modal, which starts from the current name and closes on success', () => {
+      const { fixture, element } = renderGroup('owner');
+      component = fixture.componentInstance;
+      component.renameForm.controls.name.setValue('Brouillon abandonné');
+
+      (element.querySelector('.group-tools button') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      TestBed.flushEffects();
+      const dialog = element.querySelector('dialog') as HTMLDialogElement;
+      expect(dialog.open).toBeTrue();
+      expect(component.renameForm.controls.name.value).toBe('Les Explorateurs');
+
+      component.renameForm.controls.name.setValue('Les Aventuriers');
+      (dialog.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+      fixture.detectChanges();
+      TestBed.flushEffects();
+
+      expect(groups.update).toHaveBeenCalledOnceWith('Les Aventuriers');
+      expect(component.dialog()).toBeNull();
+      expect(dialog.open).toBeFalse();
+    });
+
+    it('confirms a rename with a floating toast instead of an inline message', () => {
+      const { fixture, element } = renderGroup('owner');
+      component = fixture.componentInstance;
+      component.openDialog('rename');
+      component.renameForm.controls.name.setValue('Les Aventuriers');
+      component.rename();
+      fixture.detectChanges();
+
+      expect(element.querySelector('app-toast .toast')?.textContent).toContain('Nom modifié.');
+      expect(element.querySelector('.success-message')).toBeNull();
+      // Projected into the frame's sticky overlay strip, outside the page flow.
+      expect(element.querySelector('.overlay-anchor app-toast')).not.toBeNull();
+
+      (element.querySelector('app-toast .toast') as HTMLButtonElement).click();
+      expect(component.actionMessage()).toBe('');
+    });
+
+    it('keeps the modal open and shows the error inside it when an action fails', () => {
+      groups.update.and.returnValue(
+        throwError(
+          () => new HttpErrorResponse({ status: 409, error: { message: 'Nom déjà pris.' } }),
+        ),
+      );
+      const { fixture, element } = renderGroup('owner');
+      component = fixture.componentInstance;
+      component.openDialog('rename');
+      component.rename();
+      fixture.detectChanges();
+
+      expect(component.dialog()).toBe('rename');
+      expect(element.querySelector('dialog .form-error')?.textContent).toContain('Nom déjà pris.');
+      // The page-level error stays hidden behind an open modal.
+      expect(element.querySelector('.groups-page > .form-error')).toBeNull();
+
+      component.closeDialog();
+      expect(component.submissionError()).toBe('');
+    });
+
+    it('lets a member leave through the danger modal', () => {
+      const { fixture, element } = renderGroup('member');
+      component = fixture.componentInstance;
+      (element.querySelector('.group-tools button') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      const dialog = element.querySelectorAll('app-modal-dialog');
+      expect(dialog.length).toBe(1);
+      expect(dialog[0].querySelector('h2')?.textContent).toBe('Quitter le groupe');
+
+      (dialog[0].querySelector('.danger-button') as HTMLButtonElement).click();
+      expect(groups.leave).toHaveBeenCalledTimes(1);
+      expect(component.group()).toBeNull();
+    });
+
+    it('closes the modal from its cancel button', () => {
+      const { fixture, element } = renderGroup('owner');
+      component = fixture.componentInstance;
+      component.openDialog('danger');
+      fixture.detectChanges();
+
+      (element.querySelectorAll('.dialog-actions .secondary-button')[1] as HTMLButtonElement).click();
+      expect(component.dialog()).toBeNull();
+      expect(groups.delete).not.toHaveBeenCalled();
+    });
   });
 });

@@ -1,5 +1,17 @@
 <div class="auth-page">
   <main class="auth-shell" [class.auth-shell--compact]="compact">
+    @if (backLabel) {
+      <button
+        class="icon-bubble back-bubble"
+        type="button"
+        [attr.aria-label]="backLabel"
+        (click)="back.emit()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m15 5-7 7 7 7" />
+        </svg>
+      </button>
+    }
     <header class="auth-brand" aria-labelledby="plano-title">
       <svg
         class="auth-brand__mark"
@@ -27,5 +39,9 @@
     </header>
 
     <ng-content />
+
+    <div class="overlay-anchor">
+      <ng-content select="[shell-overlay]" />
+    </div>
   </main>
 </div>

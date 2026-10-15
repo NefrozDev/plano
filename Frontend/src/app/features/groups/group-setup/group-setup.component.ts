@@ -11,14 +11,22 @@ import { Observable, finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { GroupDetails, GroupMember } from '../../../core/groups/group.models';
 import { GroupsService } from '../../../core/groups/groups.service';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
+import { ToastComponent } from '../../../shared/ui/toast.component';
 import { AuthShellComponent } from '../../auth/auth-shell/auth-shell.component';
 
 type SetupMode = 'choice' | 'create' | 'join';
+type GroupDialog = 'rename' | 'danger';
 
 @Component({
   selector: 'app-group-setup',
   standalone: true,
-  imports: [AuthShellComponent, ReactiveFormsModule],
+  imports: [
+    AuthShellComponent,
+    ModalDialogComponent,
+    ReactiveFormsModule,
+    ToastComponent,
+  ],
   templateUrl: './group-setup.component.html',
   styleUrl: './group-setup.component.scss',
 })
@@ -50,6 +58,8 @@ export class GroupSetupComponent implements OnInit {
   readonly group = signal<GroupDetails | null>(null);
   readonly loading = signal(true);
   readonly mode = signal<SetupMode>('choice');
+  /** Open management modal: rename, or delete/leave depending on the role. */
+  readonly dialog = signal<GroupDialog | null>(null);
   readonly submissionError = signal('');
   readonly actionMessage = signal('');
   readonly busyAction = signal('');
@@ -96,6 +106,19 @@ export class GroupSetupComponent implements OnInit {
 
   closeJoinForm(): void {
     this.mode.set('choice');
+    this.submissionError.set('');
+  }
+
+  openDialog(dialog: GroupDialog): void {
+    this.clearFeedback();
+    if (dialog === 'rename') {
+      this.renameForm.reset({ name: this.group()?.name ?? '' });
+    }
+    this.dialog.set(dialog);
+  }
+
+  closeDialog(): void {
+    this.dialog.set(null);
     this.submissionError.set('');
   }
 
@@ -217,7 +240,6 @@ export class GroupSetupComponent implements OnInit {
   }
 
   leaveGroup(): void {
-    if (!window.confirm('Quitter ce groupe ?')) return;
     this.runVoidAction(
       'leave',
       this.groups.leave(),
@@ -226,12 +248,6 @@ export class GroupSetupComponent implements OnInit {
   }
 
   deleteGroup(): void {
-    const groupName = this.group()?.name;
-    if (
-      !window.confirm(`Supprimer définitivement le groupe « ${groupName} » ?`)
-    ) {
-      return;
-    }
     this.runVoidAction(
       'delete',
       this.groups.delete(),
@@ -269,6 +285,7 @@ export class GroupSetupComponent implements OnInit {
     request.pipe(finalize(() => this.busyAction.set(''))).subscribe({
       next: (group) => {
         this.setGroup(group);
+        this.dialog.set(null);
         this.actionMessage.set(successMessage);
         if (navigateHome) void this.router.navigateByUrl('/');
       },
@@ -287,6 +304,7 @@ export class GroupSetupComponent implements OnInit {
     request.pipe(finalize(() => this.busyAction.set(''))).subscribe({
       next: () => {
         this.setGroup(null);
+        this.dialog.set(null);
         this.actionMessage.set(successMessage);
       },
       error: (error: unknown) =>

@@ -28,7 +28,7 @@
 }
 .group-heading {
   display: grid;
-  grid-template-columns: 3.6rem 1fr;
+  grid-template-columns: 3.6rem minmax(0, 1fr) auto;
   gap: 0.8rem;
   align-items: center;
 }
@@ -48,6 +48,16 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2.5;
+}
+.group-tools {
+  display: flex;
+  gap: 0.45rem;
+}
+.dialog-text {
+  margin: 0 0 0.9rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 .role-pill {
   display: inline-block;
@@ -153,8 +163,7 @@
 .secondary-button,
 .back-button,
 .text-button,
-.danger-button,
-.compact-primary {
+.danger-button {
   min-height: 2.55rem;
   border-radius: 0.7rem;
   cursor: pointer;
@@ -289,36 +298,11 @@
   background: var(--color-danger-surface);
   color: var(--color-danger);
 }
-.inline-form {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.5rem;
-}
-.compact-primary {
-  padding: 0 0.7rem;
-  border: 0;
-  background: var(--color-primary);
-  color: white;
-}
-.danger-zone {
-  border-color: rgb(180 35 24 / 20%);
-  background: rgb(255 249 248 / 96%);
-}
 .danger-button {
   width: 100%;
-  margin-top: 0.75rem;
   border: 1px solid rgb(180 35 24 / 35%);
   background: white;
   color: var(--color-danger);
-}
-.success-message {
-  margin: 0;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid rgb(50 226 165 / 35%);
-  border-radius: 0.65rem;
-  background: #ecfff7;
-  color: #087651;
-  font-size: 0.75rem;
 }
 button:disabled {
   cursor: default;

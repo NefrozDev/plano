@@ -1,4 +1,8 @@
-<app-auth-shell [compact]="true">
+<app-auth-shell
+  [compact]="true"
+  [backLabel]="group() ? 'Retour à l’accueil' : ''"
+  (back)="skip()"
+>
   <section class="groups-page" aria-labelledby="groups-title">
     @if (loading()) {
       <div class="loading-card" role="status">
@@ -7,7 +11,7 @@
       </div>
     } @else {
       @if (group(); as currentGroup) {
-        <header class="group-heading">
+        <header class="group-card group-heading">
           <span class="group-emblem" aria-hidden="true">
             <svg viewBox="0 0 48 48">
               <circle cx="18" cy="17" r="7" />
@@ -24,13 +28,52 @@
               isOwner() ? "Propriétaire" : "Membre"
             }}</span>
           </div>
+          <div class="group-tools">
+            @if (isOwner()) {
+              <button
+                class="icon-bubble"
+                type="button"
+                aria-label="Renommer le groupe"
+                title="Renommer le groupe"
+                [disabled]="!!busyAction()"
+                (click)="openDialog('rename')"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 20h4L19 9l-4-4L4 16Z" />
+                  <path d="m13.5 6.5 4 4" />
+                </svg>
+              </button>
+              <button
+                class="icon-bubble icon-bubble--danger"
+                type="button"
+                aria-label="Supprimer le groupe"
+                title="Supprimer le groupe"
+                [disabled]="!!busyAction()"
+                (click)="openDialog('danger')"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" />
+                </svg>
+              </button>
+            } @else {
+              <button
+                class="icon-bubble icon-bubble--danger"
+                type="button"
+                aria-label="Quitter le groupe"
+                title="Quitter le groupe"
+                [disabled]="!!busyAction()"
+                (click)="openDialog('danger')"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10" />
+                </svg>
+              </button>
+            }
+          </div>
         </header>
 
-        @if (submissionError()) {
+        @if (submissionError() && !dialog()) {
           <p class="form-error" role="alert">{{ submissionError() }}</p>
-        }
-        @if (actionMessage()) {
-          <p class="success-message" role="status">{{ actionMessage() }}</p>
         }
 
         <article class="group-card invite-card">
@@ -114,77 +157,101 @@
         </article>
 
         @if (isOwner()) {
-          <article class="group-card">
-            <div class="card-title">
-              <span class="card-icon card-icon--blue" aria-hidden="true"
-                >✎</span
-              >
-              <div>
-                <h3>Nom du groupe</h3>
-                <p>Ce nom est visible par tous les membres.</p>
-              </div>
-            </div>
-            <form
-              class="inline-form"
-              [formGroup]="renameForm"
-              (ngSubmit)="rename()"
-            >
+          <app-modal-dialog
+            heading="Renommer le groupe"
+            [open]="dialog() === 'rename'"
+            (closed)="closeDialog()"
+          >
+            <svg dialog-icon viewBox="0 0 24 24">
+              <path d="M4 20h4L19 9l-4-4L4 16Z" />
+              <path d="m13.5 6.5 4 4" />
+            </svg>
+            <p class="dialog-text">Ce nom est visible par tous les membres.</p>
+            @if (submissionError()) {
+              <p class="form-error" role="alert">{{ submissionError() }}</p>
+            }
+            <form [formGroup]="renameForm" (ngSubmit)="rename()">
               <input
                 class="form-control"
                 type="text"
                 maxlength="80"
                 formControlName="name"
                 aria-label="Nouveau nom du groupe"
+                autofocus
               />
-              <button
-                class="compact-primary"
-                type="submit"
-                [disabled]="!!busyAction() || renameForm.invalid"
-              >
-                {{ busyAction() === "rename" ? "…" : "Enregistrer" }}
-              </button>
+              <div class="dialog-actions">
+                <button
+                  class="secondary-button"
+                  type="button"
+                  (click)="closeDialog()"
+                >
+                  Annuler
+                </button>
+                <button
+                  class="primary-button"
+                  type="submit"
+                  [disabled]="!!busyAction() || renameForm.invalid"
+                >
+                  {{ busyAction() === "rename" ? "…" : "Enregistrer" }}
+                </button>
+              </div>
             </form>
-          </article>
+          </app-modal-dialog>
         }
 
-        <article class="group-card danger-zone">
-          <h3>{{ isOwner() ? "Supprimer le groupe" : "Quitter le groupe" }}</h3>
-          <p>
+        <app-modal-dialog
+          tone="danger"
+          [heading]="isOwner() ? 'Supprimer le groupe' : 'Quitter le groupe'"
+          [open]="dialog() === 'danger'"
+          (closed)="closeDialog()"
+        >
+          <svg dialog-icon viewBox="0 0 24 24">
             @if (isOwner()) {
-              Cette action supprime le groupe pour tous ses membres et ne peut
-              pas être annulée.
+              <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" />
+            } @else {
+              <path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10" />
+            }
+          </svg>
+          <p class="dialog-text">
+            @if (isOwner()) {
+              « {{ currentGroup.name }} » sera supprimé pour tous ses membres.
+              Cette action ne peut pas être annulée.
             } @else {
               Vous perdrez l’accès aux contenus partagés avec ce groupe.
             }
           </p>
-          @if (isOwner()) {
-            <button
-              class="danger-button"
-              type="button"
-              [disabled]="!!busyAction()"
-              (click)="deleteGroup()"
-            >
-              {{
-                busyAction() === "delete"
-                  ? "Suppression…"
-                  : "Supprimer le groupe"
-              }}
-            </button>
-          } @else {
-            <button
-              class="danger-button"
-              type="button"
-              [disabled]="!!busyAction()"
-              (click)="leaveGroup()"
-            >
-              {{ busyAction() === "leave" ? "Départ…" : "Quitter le groupe" }}
-            </button>
+          @if (submissionError()) {
+            <p class="form-error" role="alert">{{ submissionError() }}</p>
           }
-        </article>
-
-        <button class="back-button" type="button" (click)="skip()">
-          ← Retour à l’accueil
-        </button>
+          <div class="dialog-actions">
+            <button
+              class="secondary-button"
+              type="button"
+              (click)="closeDialog()"
+            >
+              Annuler
+            </button>
+            @if (isOwner()) {
+              <button
+                class="danger-button"
+                type="button"
+                [disabled]="!!busyAction()"
+                (click)="deleteGroup()"
+              >
+                {{ busyAction() === "delete" ? "Suppression…" : "Supprimer" }}
+              </button>
+            } @else {
+              <button
+                class="danger-button"
+                type="button"
+                [disabled]="!!busyAction()"
+                (click)="leaveGroup()"
+              >
+                {{ busyAction() === "leave" ? "Départ…" : "Quitter" }}
+              </button>
+            }
+          </div>
+        </app-modal-dialog>
       } @else {
         <header class="setup-heading">
           <p>Un espace pour avancer ensemble</p>
@@ -193,9 +260,6 @@
 
         @if (submissionError()) {
           <p class="form-error" role="alert">{{ submissionError() }}</p>
-        }
-        @if (actionMessage()) {
-          <p class="success-message" role="status">{{ actionMessage() }}</p>
         }
 
         <article class="setup-card">
@@ -348,4 +412,10 @@
       }
     }
   </section>
+
+  <app-toast
+    shell-overlay
+    [message]="actionMessage()"
+    (dismissed)="actionMessage.set('')"
+  />
 </app-auth-shell>
