@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -45,6 +45,7 @@ type RegisterField =
   imports: [AuthShellComponent, ReactiveFormsModule, RouterLink],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterComponent {
   private readonly formBuilder = inject(FormBuilder);
@@ -82,19 +83,20 @@ export class RegisterComponent {
     { validators: matchingPasswordsValidator },
   );
 
-  submitted = false;
-  submitting = false;
-  submissionError = '';
-  readonly apiFieldErrors: Partial<Record<RegisterField, string>> = {};
+  readonly submitted = signal(false);
+  readonly submitting = signal(false);
+  readonly submissionError = signal('');
+  /** Server-side errors shown under a field, e.g. a username already taken. */
+  readonly apiFieldErrors = signal<Partial<Record<RegisterField, string>>>({});
 
   showError(controlName: RegisterField): boolean {
     const control = this.form.controls[controlName];
-    return control.invalid && (control.touched || this.submitted);
+    return control.invalid && (control.touched || this.submitted());
   }
 
   passwordConfirmationError(): string {
     const confirmation = this.form.controls.passwordConfirmation;
-    if (!(confirmation.touched || this.submitted)) {
+    if (!(confirmation.touched || this.submitted())) {
       return '';
     }
 
@@ -108,16 +110,16 @@ export class RegisterComponent {
   }
 
   submit(): void {
-    this.submitted = true;
+    this.submitted.set(true);
     this.clearApiErrors();
     this.normalizeTextFields();
 
-    if (this.form.invalid || this.submitting) {
+    if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.submitting = true;
+    this.submitting.set(true);
     const value = this.form.getRawValue();
 
     this.auth
@@ -129,7 +131,7 @@ export class RegisterComponent {
         password: value.password,
         acceptedTerms: value.acceptedTerms,
       })
-      .pipe(finalize(() => (this.submitting = false)))
+      .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => void this.router.navigateByUrl('/group/setup'),
         error: (error: unknown) => this.handleRegistrationError(error),
@@ -137,9 +139,8 @@ export class RegisterComponent {
   }
 
   private clearApiErrors(): void {
-    this.submissionError = '';
-    delete this.apiFieldErrors.username;
-    delete this.apiFieldErrors.email;
+    this.submissionError.set('');
+    this.apiFieldErrors.set({});
   }
 
   private normalizeTextFields(): void {
@@ -161,22 +162,22 @@ export class RegisterComponent {
     if (error instanceof HttpErrorResponse && error.status === 409) {
       const message = serverMessage(error).toLowerCase();
       if (message.includes('mail')) {
-        this.apiFieldErrors.email = 'Cette adresse e-mail est déjà utilisée.';
+        this.apiFieldErrors.set({ email: 'Cette adresse e-mail est déjà utilisée.' });
         return;
       }
       if (message.includes('username') || message.includes('utilisateur')) {
-        this.apiFieldErrors.username = 'Ce nom d’utilisateur est déjà utilisé.';
+        this.apiFieldErrors.set({ username: 'Ce nom d’utilisateur est déjà utilisé.' });
         return;
       }
     }
 
-    this.submissionError = httpErrorMessage(error, {
+    this.submissionError.set(httpErrorMessage(error, {
       unexpected: UNEXPECTED_ERROR_MESSAGE,
       byStatus: {
         400: 'Certaines informations sont invalides. Vérifiez le formulaire.',
         409: 'Un compte utilise déjà ce nom d’utilisateur ou cette adresse e-mail.',
       },
       fallback: 'La création du compte a échoué. Veuillez réessayer.',
-    });
+    }));
   }
 }

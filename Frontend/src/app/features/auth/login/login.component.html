@@ -46,23 +46,23 @@
         Mot de passe oublié&nbsp;?
       </button>
 
-      @if (recoveryMessage) {
+      @if (recoveryMessage()) {
         <p id="recovery-information" class="form-information" role="status">
-          {{ recoveryMessage }}
+          {{ recoveryMessage() }}
         </p>
       }
 
-      @if (submissionError) {
-        <div class="form-error" role="alert">{{ submissionError }}</div>
+      @if (submissionError()) {
+        <div class="form-error" role="alert">{{ submissionError() }}</div>
       }
 
       <button
         class="primary-button"
         type="submit"
-        [disabled]="submitting"
-        [attr.aria-busy]="submitting"
+        [disabled]="submitting()"
+        [attr.aria-busy]="submitting()"
       >
-        @if (submitting) {
+        @if (submitting()) {
           <span class="button-spinner" aria-hidden="true"></span>
           Connexion…
         } @else {

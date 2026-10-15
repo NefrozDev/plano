@@ -297,7 +297,7 @@
               />
               @if (
                 form.controls.name.invalid &&
-                (form.controls.name.touched || submitted)
+                (form.controls.name.touched || submitted())
               ) {
                 <p class="field-error">
                   Saisissez un nom entre 2 et 80 caractères.
@@ -368,7 +368,7 @@
               />
               @if (
                 joinForm.controls.inviteCode.invalid &&
-                (joinForm.controls.inviteCode.touched || joinSubmitted)
+                (joinForm.controls.inviteCode.touched || joinSubmitted())
               ) {
                 <p class="field-error">
                   Le code doit contenir exactement 8 caractères.

@@ -1,10 +1,10 @@
 <div class="auth-page">
-  <main class="auth-shell" [class.auth-shell--compact]="compact">
-    @if (backLabel) {
+  <main class="auth-shell" [class.auth-shell--compact]="compact()">
+    @if (backLabel()) {
       <button
         class="icon-bubble back-bubble"
         type="button"
-        [attr.aria-label]="backLabel"
+        [attr.aria-label]="backLabel()"
         (click)="back.emit()"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">

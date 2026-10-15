@@ -1,4 +1,11 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -30,6 +37,7 @@ type GroupDialog = 'rename' | 'danger';
   ],
   templateUrl: './group-setup.component.html',
   styleUrl: './group-setup.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GroupSetupComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
@@ -71,8 +79,8 @@ export class GroupSetupComponent implements OnInit {
   readonly showCreateForm = computed(() => this.mode() === 'create');
   readonly submitting = computed(() => this.busyAction() === 'create');
 
-  submitted = false;
-  joinSubmitted = false;
+  readonly submitted = signal(false);
+  readonly joinSubmitted = signal(false);
 
   ngOnInit(): void {
     this.loadGroup();
@@ -129,7 +137,7 @@ export class GroupSetupComponent implements OnInit {
   }
 
   submit(): void {
-    this.submitted = true;
+    this.submitted.set(true);
     const name = this.normalizeControl(this.form.controls.name);
     if (this.form.invalid || this.busyAction()) {
       this.form.markAllAsTouched();
@@ -139,7 +147,7 @@ export class GroupSetupComponent implements OnInit {
   }
 
   join(): void {
-    this.joinSubmitted = true;
+    this.joinSubmitted.set(true);
     const inviteCode = this.normalizeControl(this.joinForm.controls.inviteCode, (value) =>
       value.trim().toUpperCase(),
     );

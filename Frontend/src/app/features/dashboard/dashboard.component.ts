@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
@@ -17,6 +17,7 @@ import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.componen
   imports: [RouterLink, BottomNavComponent, ObjectiveIconComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent {
   private readonly auth = inject(AuthService);
@@ -25,7 +26,7 @@ export class DashboardComponent {
   private readonly objectivesStore = inject(ObjectivesStore);
   private readonly agendaStore = inject(AgendaStore);
 
-  readonly weekDays = this.appData.data().dashboard.weekDays;
+  readonly weekDays = computed(() => this.appData.data().dashboard.weekDays);
   readonly tasks = computed(() => this.appData.data().dashboard.tasks);
   readonly completedTasks = computed(
     () => this.tasks().filter((task) => task.done).length,

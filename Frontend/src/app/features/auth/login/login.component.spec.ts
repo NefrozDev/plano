@@ -70,7 +70,7 @@ describe('LoginComponent', () => {
   it('shows password recovery information', () => {
     component.showRecoveryInfo();
 
-    expect(component.recoveryMessage).toContain('prochainement disponible');
+    expect(component.recoveryMessage()).toContain('prochainement disponible');
   });
 
   it('submits trimmed username, keeps the password intact, and navigates', () => {
@@ -85,7 +85,7 @@ describe('LoginComponent', () => {
       password: ' pass word ',
     });
     expect(navigate).toHaveBeenCalledOnceWith('/');
-    expect(component.submitting).toBeFalse();
+    expect(component.submitting()).toBeFalse();
   });
 
   it('accepts a local return URL and rejects a protocol-relative one', () => {
@@ -104,7 +104,7 @@ describe('LoginComponent', () => {
 
   it('does not submit twice while a request is pending', () => {
     fillValidForm();
-    component.submitting = true;
+    component.submitting.set(true);
 
     component.submit();
 
@@ -121,8 +121,8 @@ describe('LoginComponent', () => {
 
     component.submit();
 
-    expect(component.submissionError).toContain('incorrect');
-    expect(component.submitting).toBeFalse();
+    expect(component.submissionError()).toContain('incorrect');
+    expect(component.submitting()).toBeFalse();
   });
 
   it('maps offline, unexpected, and server failures', () => {
@@ -134,10 +134,10 @@ describe('LoginComponent', () => {
     );
 
     component.submit();
-    expect(component.submissionError).toContain('Impossible de joindre');
+    expect(component.submissionError()).toContain('Impossible de joindre');
     component.submit();
-    expect(component.submissionError).toContain('inattendue');
+    expect(component.submissionError()).toContain('inattendue');
     component.submit();
-    expect(component.submissionError).toContain('connexion a échoué');
+    expect(component.submissionError()).toContain('connexion a échoué');
   });
 });

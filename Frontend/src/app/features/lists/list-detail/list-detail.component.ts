@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import type { ListEntry, ListMember, ListSection, ShareRole } from '@plano/common';
 import { createId } from '../../../core/time/dates';
@@ -40,6 +40,7 @@ function createEntry(
   imports: [RouterLink, AvatarStackComponent, BottomNavComponent],
   templateUrl: './list-detail.component.html',
   styleUrl: './list-detail.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(pointermove)': 'movePointerDrag($event)',
     '(pointerup)': 'endDrag()',

@@ -47,11 +47,11 @@
           formControlName="username"
           autocomplete="username"
           placeholder="Choisissez un nom d’utilisateur"
-          [attr.aria-invalid]="showError('username') || !!apiFieldErrors.username"
-          [attr.aria-describedby]="showError('username') || apiFieldErrors.username ? 'register-username-error' : null"
+          [attr.aria-invalid]="showError('username') || !!apiFieldErrors().username"
+          [attr.aria-describedby]="showError('username') || apiFieldErrors().username ? 'register-username-error' : null"
         />
-        @if (apiFieldErrors.username) {
-          <p id="register-username-error" class="field-error">{{ apiFieldErrors.username }}</p>
+        @if (apiFieldErrors().username) {
+          <p id="register-username-error" class="field-error">{{ apiFieldErrors().username }}</p>
         } @else if (showError('username')) {
           <p id="register-username-error" class="field-error">
             Utilisez 3 à 30 lettres, chiffres, points, tirets ou tirets bas.
@@ -69,11 +69,11 @@
           autocomplete="email"
           inputmode="email"
           placeholder="Entrez votre adresse e-mail"
-          [attr.aria-invalid]="showError('email') || !!apiFieldErrors.email"
-          [attr.aria-describedby]="showError('email') || apiFieldErrors.email ? 'register-email-error' : null"
+          [attr.aria-invalid]="showError('email') || !!apiFieldErrors().email"
+          [attr.aria-describedby]="showError('email') || apiFieldErrors().email ? 'register-email-error' : null"
         />
-        @if (apiFieldErrors.email) {
-          <p id="register-email-error" class="field-error">{{ apiFieldErrors.email }}</p>
+        @if (apiFieldErrors().email) {
+          <p id="register-email-error" class="field-error">{{ apiFieldErrors().email }}</p>
         } @else if (showError('email')) {
           <p id="register-email-error" class="field-error">Saisissez une adresse e-mail valide.</p>
         }
@@ -135,17 +135,17 @@
         </p>
       }
 
-      @if (submissionError) {
-        <div class="form-error" role="alert">{{ submissionError }}</div>
+      @if (submissionError()) {
+        <div class="form-error" role="alert">{{ submissionError() }}</div>
       }
 
       <button
         class="primary-button"
         type="submit"
-        [disabled]="submitting"
-        [attr.aria-busy]="submitting"
+        [disabled]="submitting()"
+        [attr.aria-busy]="submitting()"
       >
-        @if (submitting) {
+        @if (submitting()) {
           <span class="button-spinner" aria-hidden="true"></span>
           Création…
         } @else {
