@@ -77,6 +77,29 @@ describe('ObjectivesOverviewComponent', () => {
     expect(element.querySelector('.filter-note')).toBeNull();
   });
 
+  it('switches between list and grid from the header and remembers the choice', () => {
+    const toggle = element.querySelector('.overview-header > button.icon-button') as HTMLButtonElement;
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    expect(toggle.getAttribute('aria-label')).toBe('Afficher les objectifs en grille');
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(store.settings().defaultView).toBe('grid');
+    expect(element.querySelector('.content')?.classList).toContain('grid-view');
+    expect(toggle.getAttribute('aria-label')).toBe('Afficher les objectifs en liste');
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(store.settings().defaultView).toBe('list');
+  });
+
+  it('opens filters from their own icon next to search, not from the view toggle', () => {
+    const filters = element.querySelector('[aria-label="Filtrer et trier les objectifs"]');
+
+    expect(filters?.getAttribute('href')).toBe('/objectives/filters');
+    expect(filters?.closest('.header-actions')).not.toBeNull();
+  });
+
   it('opens the overflow menu with settings', () => {
     (element.querySelector('.more-button') as HTMLButtonElement).click();
     fixture.detectChanges();

@@ -45,6 +45,11 @@ export class ObjectivesOverviewComponent {
     this.showAllCompleted() ? this.completed() : this.completed().slice(0, 1),
   );
 
+  /** Same behaviour as the Lists header: the choice is saved as the default view. */
+  toggleView(): void {
+    this.store.updateSettings({ defaultView: this.gridView() ? 'list' : 'grid' });
+  }
+
   selectTab(tab: ObjectiveTab): void {
     this.activeTab.set(tab);
     this.showAllCompleted.set(false);
