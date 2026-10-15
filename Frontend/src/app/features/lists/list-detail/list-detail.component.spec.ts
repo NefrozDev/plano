@@ -2,6 +2,7 @@ import { convertToParamMap } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { ListDetailComponent } from './list-detail.component';
+import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { ListsStore } from '../lists.store';
 
 describe('ListDetailComponent', () => {
@@ -362,17 +363,17 @@ describe('ListDetailComponent', () => {
       expect(component.revealedEntry()).toBeNull();
     });
 
-    it('asks before deleting when confirmation is enabled', () => {
-      const confirm = spyOn(window, 'confirm').and.returnValue(false);
-      component.requestDeleteEntry(0, 0);
-      expect(confirm).toHaveBeenCalledWith(jasmine.stringContaining('Lait'));
+    it('asks before deleting when confirmation is enabled', async () => {
+      const confirm = spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(false);
+      await component.requestDeleteEntry(0, 0);
+      expect(confirm).toHaveBeenCalledWith(jasmine.objectContaining({ message: jasmine.stringContaining('Lait') }));
       expect(component.sections()[0].entries.length).toBe(4);
 
-      confirm.and.returnValue(true);
-      component.requestDeleteEntry(0, 0);
+      confirm.and.resolveTo(true);
+      await component.requestDeleteEntry(0, 0);
       expect(component.sections()[0].entries.length).toBe(3);
 
-      component.requestDeleteEntry(0, 99);
+      await component.requestDeleteEntry(0, 99);
       expect(confirm).toHaveBeenCalledTimes(2);
     });
   });

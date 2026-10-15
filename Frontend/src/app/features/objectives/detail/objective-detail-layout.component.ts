@@ -1,4 +1,3 @@
-import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -9,6 +8,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { ObjectivesStore } from '../objectives.store';
+import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveContext } from './objective-context';
 
@@ -30,7 +30,7 @@ interface DetailTab {
 export class ObjectiveDetailLayoutComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly document = inject(DOCUMENT);
+  private readonly confirm = inject(ConfirmService);
   private readonly store = inject(ObjectivesStore);
   private readonly context = inject(ObjectiveContext);
 
@@ -83,10 +83,17 @@ export class ObjectiveDetailLayoutComponent {
     this.menuOpen.set(false);
   }
 
-  remove(): void {
+  async remove(): Promise<void> {
     const objective = this.objective();
     if (!objective) return;
-    if (!this.document.defaultView?.confirm(`Supprimer définitivement « ${objective.title} » ?`)) return;
+    this.menuOpen.set(false);
+    const confirmed = await this.confirm.ask({
+      heading: 'Supprimer l’objectif ?',
+      message: `« ${objective.title} » sera supprimé définitivement.`,
+      confirmLabel: 'Supprimer',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     this.store.remove(objective.id);
     void this.router.navigateByUrl('/objectives');
   }

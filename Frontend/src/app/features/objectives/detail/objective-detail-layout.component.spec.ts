@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { ObjectivesStore } from '../objectives.store';
+import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { OBJECTIVES_ROUTES } from '../objectives.routes';
 import { provideObjectivesTesting } from '../objectives.testing';
 import { ObjectiveDetailLayoutComponent } from './objective-detail-layout.component';
@@ -70,13 +71,14 @@ describe('ObjectiveDetailLayoutComponent', () => {
     layout().toggleArchive();
     expect(store.find('courir-10-km')?.archived).toBeTrue();
 
-    const confirm = spyOn(window, 'confirm').and.returnValue(false);
-    layout().remove();
+    const confirm = spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(false);
+    await layout().remove();
     expect(store.find('courir-10-km')).toBeDefined();
 
-    confirm.and.returnValue(true);
+    confirm.and.resolveTo(true);
     const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
-    layout().remove();
+    await layout().remove();
+    expect(confirm).toHaveBeenCalledWith(jasmine.objectContaining({ tone: 'danger', message: '« Courir 10 km » sera supprimé définitivement.' }));
     expect(store.find('courir-10-km')).toBeUndefined();
     expect(navigate).toHaveBeenCalledWith('/objectives');
   });
@@ -91,10 +93,10 @@ describe('ObjectiveDetailLayoutComponent', () => {
 
   it('ignores menu actions when the objective is missing', async () => {
     await harness.navigateByUrl('/objectives/inconnu');
-    const confirm = spyOn(window, 'confirm');
+    const confirm = spyOn(TestBed.inject(ConfirmService), 'ask');
     layout().togglePause();
     layout().toggleArchive();
-    layout().remove();
+    await layout().remove();
 
     expect(confirm).not.toHaveBeenCalled();
     expect(layout().tabs()).toEqual([]);

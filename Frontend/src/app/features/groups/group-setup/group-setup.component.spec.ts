@@ -10,6 +10,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { GroupDetails } from '../../../core/groups/group.models';
 import { GroupsService } from '../../../core/groups/groups.service';
+import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { GroupSetupComponent } from './group-setup.component';
 
 describe('GroupSetupComponent', () => {
@@ -155,42 +156,42 @@ describe('GroupSetupComponent', () => {
 
     beforeEach(() => {
       component.group.set({ ...group, members: [...group.members, member] });
-      confirm = spyOn(window, 'confirm').and.returnValue(true);
+      confirm = spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(true);
     });
 
-    it('does nothing when the user cancels a confirmation', () => {
-      confirm.and.returnValue(false);
-      component.rotateInviteCode();
-      component.transferOwnership(member);
-      component.removeMember(member);
+    it('does nothing when the user cancels a confirmation', async () => {
+      confirm.and.resolveTo(false);
+      await component.rotateInviteCode();
+      await component.transferOwnership(member);
+      await component.removeMember(member);
 
       expect(groups.rotateInviteCode).not.toHaveBeenCalled();
       expect(groups.transferOwnership).not.toHaveBeenCalled();
       expect(groups.removeMember).not.toHaveBeenCalled();
     });
 
-    it('rotates the invite code and transfers ownership', () => {
-      component.rotateInviteCode();
+    it('rotates the invite code and transfers ownership', async () => {
+      await component.rotateInviteCode();
       expect(component.actionMessage()).toBe('Nouveau code généré.');
 
-      component.transferOwnership(member);
+      await component.transferOwnership(member);
       expect(confirm).toHaveBeenCalledWith(
-        'Transférer la propriété du groupe à Grace Hopper ?',
+        jasmine.objectContaining({ message: 'Grace Hopper deviendra propriétaire du groupe.' }),
       );
       expect(groups.transferOwnership).toHaveBeenCalledOnceWith('user-2');
       expect(component.isOwner()).toBeFalse();
       expect(component.busyAction()).toBe('');
     });
 
-    it('removes a member locally once the server confirms', () => {
-      component.removeMember(member);
+    it('removes a member locally once the server confirms', async () => {
+      await component.removeMember(member);
 
       expect(groups.removeMember).toHaveBeenCalledOnceWith('user-2');
       expect(component.group()?.members.map(({ id }) => id)).toEqual(['user-1']);
       expect(component.actionMessage()).toBe('Membre retiré du groupe.');
     });
 
-    it('keeps the member and reports the error when removal fails', () => {
+    it('keeps the member and reports the error when removal fails', async () => {
       groups.removeMember.and.returnValue(
         throwError(
           () =>
@@ -200,19 +201,19 @@ describe('GroupSetupComponent', () => {
             }),
         ),
       );
-      component.removeMember(member);
+      await component.removeMember(member);
 
       // Validation errors arrive as an array of messages.
       expect(component.submissionError()).toBe('Membre inconnu. Réessayez.');
       expect(component.group()?.members.length).toBe(2);
     });
 
-    it('handles a removal finishing after the group disappeared', () => {
+    it('handles a removal finishing after the group disappeared', async () => {
       groups.removeMember.and.callFake(() => {
         component.group.set(null);
         return of(undefined);
       });
-      component.removeMember(member);
+      await component.removeMember(member);
 
       expect(component.group()).toBeNull();
     });

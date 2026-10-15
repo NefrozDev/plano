@@ -11,6 +11,7 @@ import { Observable, finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { GroupDetails, GroupMember } from '../../../core/groups/group.models';
 import { GroupsService } from '../../../core/groups/groups.service';
+import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { ToastComponent } from '../../../shared/ui/toast.component';
 import { AuthShellComponent } from '../../auth/auth-shell/auth-shell.component';
@@ -35,6 +36,7 @@ export class GroupSetupComponent implements OnInit {
   private readonly groups = inject(GroupsService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly confirm = inject(ConfirmService);
 
   readonly form = this.formBuilder.nonNullable.group({
     name: [
@@ -182,14 +184,13 @@ export class GroupSetupComponent implements OnInit {
     }
   }
 
-  rotateInviteCode(): void {
-    if (
-      !window.confirm(
-        'Générer un nouveau code ? L’ancien code ne permettra plus de rejoindre le groupe.',
-      )
-    ) {
-      return;
-    }
+  async rotateInviteCode(): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      heading: 'Générer un nouveau code ?',
+      message: 'L’ancien code ne permettra plus de rejoindre le groupe.',
+      confirmLabel: 'Générer',
+    });
+    if (!confirmed) return;
     this.runGroupAction(
       'rotate',
       this.groups.rotateInviteCode(),
@@ -198,14 +199,13 @@ export class GroupSetupComponent implements OnInit {
     );
   }
 
-  transferOwnership(member: GroupMember): void {
-    if (
-      !window.confirm(
-        `Transférer la propriété du groupe à ${this.memberName(member)} ?`,
-      )
-    ) {
-      return;
-    }
+  async transferOwnership(member: GroupMember): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      heading: 'Transférer la propriété ?',
+      message: `${this.memberName(member)} deviendra propriétaire du groupe.`,
+      confirmLabel: 'Transférer',
+    });
+    if (!confirmed) return;
     this.runGroupAction(
       `transfer-${member.id}`,
       this.groups.transferOwnership(member.id),
@@ -214,9 +214,14 @@ export class GroupSetupComponent implements OnInit {
     );
   }
 
-  removeMember(member: GroupMember): void {
-    if (!window.confirm(`Retirer ${this.memberName(member)} du groupe ?`))
-      return;
+  async removeMember(member: GroupMember): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      heading: 'Retirer ce membre ?',
+      message: `${this.memberName(member)} n’aura plus accès au groupe.`,
+      confirmLabel: 'Retirer',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     this.clearFeedback();
     this.busyAction.set(`remove-${member.id}`);
     this.groups

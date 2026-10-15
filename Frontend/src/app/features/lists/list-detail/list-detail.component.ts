@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import type { ListEntry, ListMember, ListSection, ShareRole } from '@plano/common';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
+import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { ListIcon, ListsStore } from '../lists.store';
 
 const LIST_NAMES: Readonly<Record<string, string>> = {
@@ -52,6 +53,7 @@ export class ListDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly document = inject(DOCUMENT);
   private readonly listsStore = inject(ListsStore);
+  private readonly confirm = inject(ConfirmService);
   private readonly slug = this.route.snapshot.paramMap.get('slug') ?? '';
   private readonly currentList = this.listsStore.list(this.slug);
   private readonly currentDetail = this.listsStore.detail(this.slug);
@@ -459,7 +461,7 @@ export class ListDetailComponent {
     }
     this.swipeGesture.set(null);
     if (distance < -32) {
-      this.requestDeleteEntry(gesture.sectionIndex, gesture.entryIndex);
+      void this.requestDeleteEntry(gesture.sectionIndex, gesture.entryIndex);
       return;
     }
     this.revealedEntry.set(null);
@@ -564,14 +566,17 @@ export class ListDetailComponent {
     this.persistDetail();
   }
 
-  requestDeleteEntry(sectionIndex: number, entryIndex: number): void {
+  async requestDeleteEntry(sectionIndex: number, entryIndex: number): Promise<void> {
     const entry = this.sections()[sectionIndex]?.entries[entryIndex];
     if (!entry) return;
-    if (
-      this.listsStore.settings().confirmDelete &&
-      !this.document.defaultView?.confirm(`Supprimer définitivement « ${entry.name} » ?`)
-    ) {
-      return;
+    if (this.listsStore.settings().confirmDelete) {
+      const confirmed = await this.confirm.ask({
+        heading: 'Supprimer l’élément ?',
+        message: `« ${entry.name} » sera supprimé définitivement.`,
+        confirmLabel: 'Supprimer',
+        tone: 'danger',
+      });
+      if (!confirmed) return;
     }
     this.deleteEntry(sectionIndex, entryIndex);
   }
