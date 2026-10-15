@@ -18,7 +18,8 @@ describe('ListsComponent', () => {
 
     expect(element.querySelector('h1')?.textContent).toBe('Listes');
     expect(element.querySelectorAll('.list-card').length).toBe(5);
-    expect(element.querySelectorAll('.bottom-navigation button').length).toBe(4);
+    expect(element.querySelectorAll('app-bottom-nav a').length).toBe(4);
+    expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
     expect(element.querySelector('.quick-add')).toBeNull();
   });
 

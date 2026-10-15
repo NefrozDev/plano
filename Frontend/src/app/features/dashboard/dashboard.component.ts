@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import {
   formatDate,
   objectiveProgress,
@@ -13,12 +14,10 @@ import { AgendaStore } from '../agenda/agenda.store';
 import { formatTime, timePart } from '../agenda/agenda.utils';
 import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.component';
 
-type NavigationItem = 'Accueil' | 'Agenda' | 'Liste' | 'Objectifs';
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, ObjectiveIconComponent],
+  imports: [RouterLink, BottomNavComponent, ObjectiveIconComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -29,12 +28,6 @@ export class DashboardComponent {
   private readonly objectivesStore = inject(ObjectivesStore);
   private readonly agendaStore = inject(AgendaStore);
 
-  readonly navigation: readonly NavigationItem[] = [
-    'Accueil',
-    'Agenda',
-    'Liste',
-    'Objectifs',
-  ];
   readonly weekDays = this.appData.data().dashboard.weekDays;
   readonly tasks = computed(() => this.appData.data().dashboard.tasks);
   readonly completedTasks = computed(
@@ -70,24 +63,6 @@ export class DashboardComponent {
   readonly profileMenuOpen = signal(false);
   readonly logoutPending = signal(false);
   readonly logoutError = signal('');
-  activeNavigation: NavigationItem = 'Accueil';
-
-  selectNavigation(item: NavigationItem): void {
-    if (item === 'Liste') {
-      void this.router.navigateByUrl('/lists');
-      return;
-    }
-    if (item === 'Agenda') {
-      void this.router.navigateByUrl('/agenda');
-      return;
-    }
-    if (item === 'Objectifs') {
-      void this.router.navigateByUrl('/objectives');
-      return;
-    }
-    this.activeNavigation = item;
-  }
-
   toggleTask(index: number): void {
     this.appData.update((data) => ({
       ...data,

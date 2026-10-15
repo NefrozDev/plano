@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
 import type { ObjectiveCategory, ObjectiveReminder, ObjectiveTracking } from '@plano/common';
 import { OBJECTIVE_CATEGORIES, WEEKDAY_LABELS } from '../objective.utils';
 import { ObjectivesStore } from '../objectives.store';
-import { ObjectiveHeaderComponent } from '../ui/objective-header.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 
 type WizardStep = 1 | 2 | 3;
@@ -22,7 +22,7 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
 @Component({
   selector: 'app-objective-create',
   standalone: true,
-  imports: [ReactiveFormsModule, ObjectiveHeaderComponent, ObjectiveIconComponent],
+  imports: [ReactiveFormsModule, PageHeaderComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-create.component.html',
   styleUrl: './objective-create.component.scss',

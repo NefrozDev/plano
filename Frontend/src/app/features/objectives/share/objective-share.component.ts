@@ -3,13 +3,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, Router } from '@angular/router';
 import { objectiveTint } from '../objective.utils';
 import { ObjectivesStore } from '../objectives.store';
-import { ObjectiveHeaderComponent } from '../ui/objective-header.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 
 @Component({
   selector: 'app-objective-share',
   standalone: true,
-  imports: [ObjectiveHeaderComponent, ObjectiveIconComponent],
+  imports: [PageHeaderComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-share.component.html',
   styleUrl: './objective-share.component.scss',

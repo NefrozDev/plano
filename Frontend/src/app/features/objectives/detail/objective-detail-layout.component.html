@@ -1,5 +1,5 @@
 @if (objective(); as objective) {
-  <app-objective-header
+  <app-page-header
     [heading]="objective.title"
     backLink="/objectives"
     backLabel="Retour aux objectifs"
@@ -32,7 +32,7 @@
         </div>
       }
     </div>
-  </app-objective-header>
+  </app-page-header>
 
   @if (tabs().length) {
     <nav class="tabs" aria-label="Vues de l’objectif">
@@ -51,7 +51,7 @@
     <router-outlet (activate)="onActivate($event)" />
   </div>
 } @else {
-  <app-objective-header heading="Objectif" backLink="/objectives" backLabel="Retour aux objectifs" />
+  <app-page-header heading="Objectif" backLink="/objectives" backLabel="Retour aux objectifs" />
   <p class="not-found">
     Cet objectif n’existe pas ou a été supprimé.
     <a routerLink="/objectives">Retour aux objectifs</a>

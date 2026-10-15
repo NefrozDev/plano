@@ -12,13 +12,13 @@ import { Router, RouterLink } from '@angular/router';
 import type { Objective, ObjectiveCategory } from '@plano/common';
 import { formatDate, objectiveTint } from '../objective.utils';
 import { DEFAULT_OBJECTIVE_FILTERS, ObjectivesStore } from '../objectives.store';
-import { ObjectiveHeaderComponent } from '../ui/objective-header.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 
 @Component({
   selector: 'app-objectives-search',
   standalone: true,
-  imports: [RouterLink, ObjectiveHeaderComponent, ObjectiveIconComponent],
+  imports: [RouterLink, PageHeaderComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-search.component.html',
   styleUrl: './objectives-search.component.scss',

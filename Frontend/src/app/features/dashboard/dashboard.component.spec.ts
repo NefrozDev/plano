@@ -43,9 +43,10 @@ describe('DashboardComponent', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('h1')?.textContent).toContain('Bonjour Ada');
     expect(element.textContent).toContain('Mes objectifs');
-    expect(element.querySelectorAll('.bottom-navigation button').length).toBe(
-      4,
-    );
+    expect(
+      Array.from(element.querySelectorAll('app-bottom-nav a')).map((link) => link.getAttribute('href')),
+    ).toEqual(['/', '/agenda', '/lists', '/objectives']);
+    expect(element.querySelector('app-bottom-nav a.active')?.textContent).toContain('Accueil');
   });
 
   it('falls back to the username and anonymous display value', () => {
@@ -57,41 +58,13 @@ describe('DashboardComponent', () => {
     expect(component.displayName()).toBe('vous');
   });
 
-  it('updates navigation, tasks, and the profile menu', () => {
+  it('updates tasks and the profile menu', () => {
     const component =
       TestBed.createComponent(DashboardComponent).componentInstance;
-    component.selectNavigation('Accueil');
     component.toggleTask(0);
     component.toggleProfileMenu();
-    expect(component.activeNavigation).toBe('Accueil');
     expect(component.completedTasks()).toBe(2);
     expect(component.profileMenuOpen()).toBeTrue();
-  });
-
-  it('opens the lists page from the bottom navigation', () => {
-    const component =
-      TestBed.createComponent(DashboardComponent).componentInstance;
-    const navigate = spyOn(
-      TestBed.inject(Router),
-      'navigateByUrl',
-    ).and.resolveTo(true);
-
-    component.selectNavigation('Liste');
-
-    expect(navigate).toHaveBeenCalledOnceWith('/lists');
-  });
-
-  it('opens the agenda from the bottom navigation', () => {
-    const component =
-      TestBed.createComponent(DashboardComponent).componentInstance;
-    const navigate = spyOn(
-      TestBed.inject(Router),
-      'navigateByUrl',
-    ).and.resolveTo(true);
-
-    component.selectNavigation('Agenda');
-
-    expect(navigate).toHaveBeenCalledOnceWith('/agenda');
   });
 
   it('previews today from the agenda, linking to each item', () => {
@@ -119,19 +92,6 @@ describe('DashboardComponent', () => {
     TestBed.inject(AgendaStore).updateFilters({ showEvents: false });
     fixture.detectChanges();
     expect(element.querySelector('.agenda-card .card-link')?.getAttribute('href')).toBe('/agenda/new');
-  });
-
-  it('opens the objectives page from the bottom navigation', () => {
-    const component =
-      TestBed.createComponent(DashboardComponent).componentInstance;
-    const navigate = spyOn(
-      TestBed.inject(Router),
-      'navigateByUrl',
-    ).and.resolveTo(true);
-
-    component.selectNavigation('Objectifs');
-
-    expect(navigate).toHaveBeenCalledOnceWith('/objectives');
   });
 
   it('shows the two active objectives due first, linked to their pages', () => {

@@ -2,14 +2,14 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { DueReminder, ObjectiveSettings } from '@plano/common';
 import { DUE_REMINDER_LABELS } from '../objective.utils';
 import { ObjectivesStore } from '../objectives.store';
-import { ObjectiveHeaderComponent } from '../ui/objective-header.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 
 type ToggleSetting = 'showArchived' | 'notifications' | 'showPercentage' | 'categoryColors';
 
 @Component({
   selector: 'app-objectives-settings',
   standalone: true,
-  imports: [ObjectiveHeaderComponent],
+  imports: [PageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-settings.component.html',
   styleUrl: './objectives-settings.component.scss',

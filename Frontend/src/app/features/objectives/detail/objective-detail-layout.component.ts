@@ -9,7 +9,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { ObjectivesStore } from '../objectives.store';
-import { ObjectiveHeaderComponent } from '../ui/objective-header.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveContext } from './objective-context';
 
 interface DetailTab {
@@ -21,7 +21,7 @@ interface DetailTab {
 @Component({
   selector: 'app-objective-detail-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ObjectiveHeaderComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, PageHeaderComponent],
   providers: [ObjectiveContext],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-detail-layout.component.html',

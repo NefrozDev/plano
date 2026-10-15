@@ -1,6 +1,4 @@
-:host { display: block; }
-.app-canvas { min-height: 100dvh; background: var(--color-surface); }
-.mobile-shell { position: relative; display: flex; width: 100%; height: 100dvh; min-height: 0; flex-direction: column; overflow: hidden; background: #fff; }
+:host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
 .detail-header { display: grid; grid-template-columns: auto 1fr auto; gap: .5rem; align-items: center; padding: calc(1.8rem + env(safe-area-inset-top)) 1.05rem .65rem; }
 .icon-button { display: grid; width: 2.35rem; height: 2.35rem; padding: .35rem; place-items: center; border: 0; background: transparent; color: #1d2538; cursor: pointer; text-decoration: none; }
 .icon-button svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
@@ -42,11 +40,3 @@
 .section-summary strong { font-size: .88rem; }
 .section-summary span { color: #7b8393; font-size: .78rem; font-weight: 650; }
 .section-summary b { font-size: 1.75rem; }
-.bottom-navigation { position: absolute; z-index: 10; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(4, 1fr); padding: .35rem 0 calc(.25rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border); background: white; }
-.bottom-navigation button { display: grid; gap: .1rem; min-height: 3.6rem; place-items: center; border: 0; background: transparent; color: #272b32; cursor: pointer; font-size: .67rem; }
-.bottom-navigation button span { font-size: 1.7rem; line-height: 1; }
-.bottom-navigation button.active { color: var(--color-primary); }
-@media (min-width: 700px) {
-  .app-canvas { display: grid; padding: 2rem; place-items: center; }
-  .mobile-shell { width: min(100%, 430px); height: min(844px, calc(100vh - 4rem)); border: 8px solid #171c2b; border-radius: 2.8rem; box-shadow: var(--shadow-page); }
-}

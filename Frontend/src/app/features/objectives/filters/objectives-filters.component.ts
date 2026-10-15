@@ -3,13 +3,13 @@ import { RouterLink } from '@angular/router';
 import type { ObjectiveCategory, ObjectiveStatus } from '@plano/common';
 import { OBJECTIVE_CATEGORIES, STATUS_LABELS } from '../objective.utils';
 import { ObjectiveFilters, ObjectivesStore } from '../objectives.store';
-import { ObjectiveHeaderComponent } from '../ui/objective-header.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 
 @Component({
   selector: 'app-objectives-filters',
   standalone: true,
-  imports: [RouterLink, ObjectiveHeaderComponent, ObjectiveIconComponent],
+  imports: [RouterLink, PageHeaderComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-filters.component.html',
   styleUrl: './objectives-filters.component.scss',

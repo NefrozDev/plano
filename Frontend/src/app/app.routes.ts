@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authenticatedGuard, guestGuard } from './core/auth/auth.guard';
+import { MobileShellLayoutComponent } from './shared/ui/mobile-shell-layout.component';
 
 export const routes: Routes = [
   {
@@ -30,24 +31,6 @@ export const routes: Routes = [
     title: 'Mon groupe | Plano',
   },
   {
-    path: 'lists',
-    canActivate: [authenticatedGuard],
-    loadComponent: () =>
-      import('./features/lists/lists.component').then(
-        (component) => component.ListsComponent,
-      ),
-    title: 'Listes | Plano',
-  },
-  {
-    path: 'lists/:slug',
-    canActivate: [authenticatedGuard],
-    loadComponent: () =>
-      import('./features/lists/list-detail/list-detail.component').then(
-        (component) => component.ListDetailComponent,
-      ),
-    title: 'Détail de la liste | Plano',
-  },
-  {
     path: 'agenda',
     canActivate: [authenticatedGuard],
     loadChildren: () =>
@@ -64,14 +47,37 @@ export const routes: Routes = [
       ),
   },
   {
+    // Top-level screens without their own route file share the phone-frame shell.
     path: '',
-    pathMatch: 'full',
+    component: MobileShellLayoutComponent,
     canActivate: [authenticatedGuard],
-    loadComponent: () =>
-      import('./features/dashboard/dashboard.component').then(
-        (component) => component.DashboardComponent,
-      ),
-    title: 'Plano',
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard.component').then(
+            (component) => component.DashboardComponent,
+          ),
+        title: 'Plano',
+      },
+      {
+        path: 'lists',
+        loadComponent: () =>
+          import('./features/lists/lists.component').then(
+            (component) => component.ListsComponent,
+          ),
+        title: 'Listes | Plano',
+      },
+      {
+        path: 'lists/:slug',
+        loadComponent: () =>
+          import('./features/lists/list-detail/list-detail.component').then(
+            (component) => component.ListDetailComponent,
+          ),
+        title: 'Détail de la liste | Plano',
+      },
+    ],
   },
   { path: '**', redirectTo: '' },
 ];

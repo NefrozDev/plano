@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import type { ListEntry, ListMember, ListSection, ShareRole } from '@plano/common';
+import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { ListIcon, ListsStore } from '../lists.store';
 
 const LIST_NAMES: Readonly<Record<string, string>> = {
@@ -37,9 +38,14 @@ function createId(prefix: string): string {
 @Component({
   selector: 'app-list-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, BottomNavComponent],
   templateUrl: './list-detail.component.html',
   styleUrl: './list-detail.component.scss',
+  host: {
+    '(pointermove)': 'movePointerDrag($event)',
+    '(pointerup)': 'endDrag()',
+    '(pointercancel)': 'endDrag()',
+  },
 })
 export class ListDetailComponent {
   private readonly route = inject(ActivatedRoute);
