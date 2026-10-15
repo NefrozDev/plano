@@ -122,66 +122,18 @@ describe('RegisterComponent', () => {
     expect(auth.register).not.toHaveBeenCalled();
   });
 
-  it('maps an e-mail conflict next to the e-mail field', () => {
-    auth.register.and.returnValue(
-      throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 409,
-            statusText: 'Conflict',
-            error: { message: 'email already exists' },
-          }),
-      ),
-    );
-    component.form.setValue({
-      lastName: 'Lovelace',
-      firstName: 'Ada',
-      username: 'ada',
-      email: 'ada@example.com',
-      password: 'password123',
-      passwordConfirmation: 'password123',
-      acceptedTerms: true,
-    });
-
-    component.submit();
-
-    expect(component.apiFieldErrors().email).toContain('déjà utilisée');
-    expect(component.submissionError()).toBe('');
-  });
-
-  it('maps username conflicts from either supported server wording', () => {
-    fillValidForm();
-    auth.register.and.returnValues(
-      throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 409,
-            error: { message: 'username already exists' },
-          }),
-      ),
-      throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 409,
-            error: { message: 'nom utilisateur déjà utilisé' },
-          }),
-      ),
-    );
-
-    component.submit();
-    expect(component.apiFieldErrors().username).toContain('déjà utilisé');
-    component.submit();
-    expect(component.apiFieldErrors().username).toContain('déjà utilisé');
-  });
-
-  it('uses a generic conflict message when the server names no field', () => {
+  it('shows the API conflict without guessing which field is taken', () => {
+    // The API names neither field on purpose, so accounts cannot be enumerated.
     fillValidForm();
     auth.register.and.returnValue(
       throwError(
         () =>
           new HttpErrorResponse({
             status: 409,
-            error: { message: ['account', 'already exists'] },
+            error: {
+              message:
+                "Ce nom d'utilisateur ou cette adresse e-mail est déjà utilisé.",
+            },
           }),
       ),
     );

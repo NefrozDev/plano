@@ -47,12 +47,10 @@
           formControlName="username"
           autocomplete="username"
           placeholder="Choisissez un nom d’utilisateur"
-          [attr.aria-invalid]="showError('username') || !!apiFieldErrors().username"
-          [attr.aria-describedby]="showError('username') || apiFieldErrors().username ? 'register-username-error' : null"
+          [attr.aria-invalid]="showError('username')"
+          [attr.aria-describedby]="showError('username') ? 'register-username-error' : null"
         />
-        @if (apiFieldErrors().username) {
-          <p id="register-username-error" class="field-error">{{ apiFieldErrors().username }}</p>
-        } @else if (showError('username')) {
+        @if (showError('username')) {
           <p id="register-username-error" class="field-error">
             Utilisez 3 à 30 lettres, chiffres, points, tirets ou tirets bas.
           </p>
@@ -69,12 +67,10 @@
           autocomplete="email"
           inputmode="email"
           placeholder="Entrez votre adresse e-mail"
-          [attr.aria-invalid]="showError('email') || !!apiFieldErrors().email"
-          [attr.aria-describedby]="showError('email') || apiFieldErrors().email ? 'register-email-error' : null"
+          [attr.aria-invalid]="showError('email')"
+          [attr.aria-describedby]="showError('email') ? 'register-email-error' : null"
         />
-        @if (apiFieldErrors().email) {
-          <p id="register-email-error" class="field-error">{{ apiFieldErrors().email }}</p>
-        } @else if (showError('email')) {
+        @if (showError('email')) {
           <p id="register-email-error" class="field-error">Saisissez une adresse e-mail valide.</p>
         }
       </div>

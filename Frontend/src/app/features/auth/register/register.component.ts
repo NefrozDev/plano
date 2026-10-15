@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   AbstractControl,
@@ -14,7 +13,6 @@ import { AuthService } from '../../../core/auth/auth.service';
 import {
   UNEXPECTED_ERROR_MESSAGE,
   httpErrorMessage,
-  serverMessage,
 } from '../../../core/http/http-error-message';
 import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 
@@ -86,8 +84,6 @@ export class RegisterComponent {
   readonly submitted = signal(false);
   readonly submitting = signal(false);
   readonly submissionError = signal('');
-  /** Server-side errors shown under a field, e.g. a username already taken. */
-  readonly apiFieldErrors = signal<Partial<Record<RegisterField, string>>>({});
 
   showError(controlName: RegisterField): boolean {
     const control = this.form.controls[controlName];
@@ -111,7 +107,7 @@ export class RegisterComponent {
 
   submit(): void {
     this.submitted.set(true);
-    this.clearApiErrors();
+    this.submissionError.set('');
     this.normalizeTextFields();
 
     if (this.form.invalid || this.submitting()) {
@@ -134,13 +130,9 @@ export class RegisterComponent {
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => void this.router.navigateByUrl('/group/setup'),
-        error: (error: unknown) => this.handleRegistrationError(error),
+        error: (error: unknown) =>
+          this.submissionError.set(this.registrationErrorMessage(error)),
       });
-  }
-
-  private clearApiErrors(): void {
-    this.submissionError.set('');
-    this.apiFieldErrors.set({});
   }
 
   private normalizeTextFields(): void {
@@ -157,27 +149,15 @@ export class RegisterComponent {
     this.form.updateValueAndValidity({ emitEvent: false });
   }
 
-  private handleRegistrationError(error: unknown): void {
-    // A conflict names the field that is already taken when the API says which one.
-    if (error instanceof HttpErrorResponse && error.status === 409) {
-      const message = serverMessage(error).toLowerCase();
-      if (message.includes('mail')) {
-        this.apiFieldErrors.set({ email: 'Cette adresse e-mail est déjà utilisée.' });
-        return;
-      }
-      if (message.includes('username') || message.includes('utilisateur')) {
-        this.apiFieldErrors.set({ username: 'Ce nom d’utilisateur est déjà utilisé.' });
-        return;
-      }
-    }
-
-    this.submissionError.set(httpErrorMessage(error, {
+  /** The API does not say which of username or e-mail is taken, so accounts cannot be enumerated. */
+  private registrationErrorMessage(error: unknown): string {
+    return httpErrorMessage(error, {
       unexpected: UNEXPECTED_ERROR_MESSAGE,
       byStatus: {
         400: 'Certaines informations sont invalides. Vérifiez le formulaire.',
         409: 'Un compte utilise déjà ce nom d’utilisateur ou cette adresse e-mail.',
       },
       fallback: 'La création du compte a échoué. Veuillez réessayer.',
-    }));
+    });
   }
 }
