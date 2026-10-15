@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnInit,
   computed,
   inject,
@@ -15,6 +16,7 @@ import {
 import { Router } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ClipboardService } from '../../../core/browser/clipboard.service';
 import { httpErrorMessage } from '../../../core/http/http-error-message';
 import { GroupDetails, GroupMember } from '../../../core/groups/group.models';
 import { GroupsService } from '../../../core/groups/groups.service';
@@ -45,6 +47,8 @@ export class GroupSetupComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly confirm = inject(ConfirmService);
+  private readonly clipboard = inject(ClipboardService);
+  private copiedTimer?: ReturnType<typeof setTimeout>;
 
   readonly form = this.formBuilder.nonNullable.group({
     name: [
@@ -81,6 +85,10 @@ export class GroupSetupComponent implements OnInit {
 
   readonly submitted = signal(false);
   readonly joinSubmitted = signal(false);
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.copiedTimer));
+  }
 
   ngOnInit(): void {
     this.loadGroup();
@@ -170,13 +178,13 @@ export class GroupSetupComponent implements OnInit {
   async copyInviteCode(): Promise<void> {
     const code = this.group()?.inviteCode;
     if (!code) return;
-    try {
-      await navigator.clipboard.writeText(code);
-      this.linkCopied.set(true);
-      setTimeout(() => this.linkCopied.set(false), 1800);
-    } catch {
+    if (!(await this.clipboard.copy(code))) {
       this.actionMessage.set(`Code d’invitation : ${code}`);
+      return;
     }
+    this.linkCopied.set(true);
+    clearTimeout(this.copiedTimer);
+    this.copiedTimer = setTimeout(() => this.linkCopied.set(false), 1800);
   }
 
   async rotateInviteCode(): Promise<void> {

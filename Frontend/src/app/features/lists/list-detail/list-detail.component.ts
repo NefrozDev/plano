@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import type { ListEntry, ListMember, ListSection, ShareRole } from '@plano/common';
+import { ClipboardService } from '../../../core/browser/clipboard.service';
 import { createId } from '../../../core/time/dates';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
@@ -52,6 +53,7 @@ export class ListDetailComponent {
   private readonly document = inject(DOCUMENT);
   private readonly listsStore = inject(ListsStore);
   private readonly confirm = inject(ConfirmService);
+  private readonly clipboard = inject(ClipboardService);
   private readonly slug = this.route.snapshot.paramMap.get('slug') ?? '';
   private readonly currentList = this.listsStore.list(this.slug);
   private readonly currentDetail = this.listsStore.detail(this.slug);
@@ -373,10 +375,7 @@ export class ListDetailComponent {
   }
 
   async copyInvitationLink(): Promise<void> {
-    await this.document.defaultView?.navigator.clipboard?.writeText(
-      `https://${this.invitationLink}`,
-    );
-    this.linkCopied.set(true);
+    this.linkCopied.set(await this.clipboard.copy(`https://${this.invitationLink}`));
   }
 
   stopSharing(): void {
