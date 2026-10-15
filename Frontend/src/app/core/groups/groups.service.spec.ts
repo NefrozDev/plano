@@ -1,9 +1,10 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   HttpTestingController,
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { apiCredentialsInterceptor } from '../http/api-credentials.interceptor';
 import { GroupsService } from './groups.service';
 
 describe('GroupsService', () => {
@@ -12,7 +13,11 @@ describe('GroupsService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        // Credentials are added by the interceptor, as in the real app config.
+        provideHttpClient(withInterceptors([apiCredentialsInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     service = TestBed.inject(GroupsService);
     http = TestBed.inject(HttpTestingController);
