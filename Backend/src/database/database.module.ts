@@ -1,19 +1,30 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
-import { dirname, isAbsolute, resolve } from 'node:path';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { DatabaseWriteLockService } from './database-write-lock.service';
 import { CreateAuthTables1786940000000 } from './migrations/1786940000000-create-auth-tables';
 import { CreateGroupTables1787020000000 } from './migrations/1787020000000-create-group-tables';
 
-function resolveDatabasePath(configuredPath: string): string {
-  if (isAbsolute(configuredPath)) {
-    return configuredPath;
+/**
+ * The Backend folder: the nearest parent with a package.json. __dirname is
+ * Backend/src/database in tests but Backend/dist/Backend/src/database once
+ * built, so a fixed number of `..` would not fit both.
+ */
+function backendRoot(): string {
+  let directory = __dirname;
+  while (!existsSync(join(directory, 'package.json'))) {
+    directory = dirname(directory);
   }
+  return directory;
+}
 
-  // __dirname is Backend/src/database in tests and Backend/dist/database at runtime.
-  return resolve(__dirname, '..', '..', configuredPath);
+function resolveDatabasePath(configuredPath: string): string {
+  return isAbsolute(configuredPath)
+    ? configuredPath
+    : resolve(backendRoot(), configuredPath);
 }
 
 @Module({
