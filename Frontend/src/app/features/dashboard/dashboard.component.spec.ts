@@ -4,6 +4,9 @@ import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthUser } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
+import { APP_CLOCK } from '../../core/time/dates';
+import { AgendaStore } from '../agenda/agenda.store';
+import { TEST_TODAY } from '../../testing/plano-testing';
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
@@ -26,7 +29,11 @@ describe('DashboardComponent', () => {
     auth.logout.and.returnValue(of(void 0));
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
-      providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: auth },
+        { provide: APP_CLOCK, useValue: () => new Date(TEST_TODAY) },
+      ],
     }).compileComponents();
   });
 
@@ -53,10 +60,10 @@ describe('DashboardComponent', () => {
   it('updates navigation, tasks, and the profile menu', () => {
     const component =
       TestBed.createComponent(DashboardComponent).componentInstance;
-    component.selectNavigation('Agenda');
+    component.selectNavigation('Accueil');
     component.toggleTask(0);
     component.toggleProfileMenu();
-    expect(component.activeNavigation).toBe('Agenda');
+    expect(component.activeNavigation).toBe('Accueil');
     expect(component.completedTasks()).toBe(2);
     expect(component.profileMenuOpen()).toBeTrue();
   });
@@ -72,6 +79,46 @@ describe('DashboardComponent', () => {
     component.selectNavigation('Liste');
 
     expect(navigate).toHaveBeenCalledOnceWith('/lists');
+  });
+
+  it('opens the agenda from the bottom navigation', () => {
+    const component =
+      TestBed.createComponent(DashboardComponent).componentInstance;
+    const navigate = spyOn(
+      TestBed.inject(Router),
+      'navigateByUrl',
+    ).and.resolveTo(true);
+
+    component.selectNavigation('Agenda');
+
+    expect(navigate).toHaveBeenCalledOnceWith('/agenda');
+  });
+
+  it('previews today from the agenda, linking to each item', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const events = element.querySelectorAll('.agenda-card .event');
+
+    // Thursday 15 October has 7 items: the card shows 3 and links to the rest.
+    expect(events.length).toBe(3);
+    expect(events[0].textContent).toContain('09:00');
+    expect(events[0].getAttribute('href')).toBe('/agenda/events/rendez-vous-projet?date=2026-10-15');
+    expect(element.querySelector('.agenda-card a.card-link')?.textContent).toContain('voir tout (7)');
+    expect(element.querySelector('.section-heading a')?.getAttribute('href')).toBe('/agenda');
+  });
+
+  it('labels all-day items and offers to plan an empty day', () => {
+    // Friday 16 October only has Camille's birthday (all day).
+    TestBed.overrideProvider(APP_CLOCK, { useValue: () => new Date(2026, 9, 16, 8) });
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.agenda-card .event strong')?.textContent).toBe('Journée');
+
+    TestBed.inject(AgendaStore).updateFilters({ showEvents: false });
+    fixture.detectChanges();
+    expect(element.querySelector('.agenda-card .card-link')?.getAttribute('href')).toBe('/agenda/new');
   });
 
   it('opens the objectives page from the bottom navigation', () => {

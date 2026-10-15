@@ -30,7 +30,7 @@ describe('ObjectivesOverviewComponent', () => {
     expect(element.textContent).toContain('Terminé le 30 août 2026');
     expect(element.textContent).toContain('En pause');
     expect(element.querySelector('.fab')?.getAttribute('href')).toBe('/objectives/new');
-    expect(element.querySelector('.bottom-navigation .active')?.textContent).toContain('Objectifs');
+    expect(element.querySelector('app-bottom-nav .active')?.textContent).toContain('Objectifs');
   });
 
   it('switches tabs and labels the archived section', () => {

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-/** Phone-frame shell shared by every objectives screen. */
+/** Phone-frame shell for feature areas whose screens are routed children (objectives, agenda). */
 @Component({
-  selector: 'app-objectives-layout',
+  selector: 'app-mobile-shell-layout',
   standalone: true,
   imports: [RouterOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,4 +22,4 @@ import { RouterOutlet } from '@angular/router';
     }
   `,
 })
-export class ObjectivesLayoutComponent {}
+export class MobileShellLayoutComponent {}

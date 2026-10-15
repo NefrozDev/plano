@@ -27,17 +27,19 @@ describe('Plano data adapters', () => {
     expect(adapter.load()?.dashboard.tasks[0].done).toBeTrue();
   });
 
-  it('backfills objectives into data saved before they existed', () => {
+  it('backfills objectives and agenda into data saved before they existed', () => {
     const adapter = new BrowserStoragePlanoDataAdapter();
     const legacy: Partial<PlanoData> = createMockPlanoData();
     legacy.lists![0].name = 'Courses gardées';
     delete legacy.objectives;
+    delete legacy.agenda;
     localStorage.setItem('plano:data:v1', JSON.stringify(legacy));
 
     const loaded = adapter.load();
 
     expect(loaded?.lists[0].name).toBe('Courses gardées');
     expect(loaded?.objectives.items.length).toBeGreaterThan(0);
+    expect(loaded?.agenda.events.length).toBeGreaterThan(0);
   });
 
   it('ignores malformed or unsupported stored data', () => {

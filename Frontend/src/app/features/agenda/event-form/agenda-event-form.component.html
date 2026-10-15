@@ -1,0 +1,135 @@
+<app-page-header
+  [heading]="editingId ? 'Modifier l’événement' : 'Nouvel événement'"
+  [backLink]="cancelLink()"
+  [backQueryParams]="cancelParams"
+  backLabel="Annuler"
+  variant="close"
+>
+  @if (!missing) {
+    <button class="save" type="submit" form="event-form" aria-label="Enregistrer l’événement">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+    </button>
+  }
+</app-page-header>
+
+@if (missing) {
+  <p class="missing">Cet événement n’existe plus.</p>
+} @else {
+  <form id="event-form" class="body" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    @if (step() === 1) {
+      <label class="field">
+        <span>Titre</span>
+        <input class="form-control" formControlName="title" maxlength="120" placeholder="Ex. : Déjeuner avec Camille" [attr.aria-invalid]="showError('title')" />
+        @if (showError('title')) {<span class="field-error">Donnez un titre à l’événement.</span>}
+      </label>
+
+      <label class="row">
+        <span>Toute la journée</span>
+        <input class="toggle" type="checkbox" role="switch" formControlName="allDay" />
+      </label>
+      <label class="row"><span>Date</span><input type="date" formControlName="date" /></label>
+      @if (form.controls.allDay.value) {
+        <label class="row"><span>Date de fin</span><input type="date" formControlName="endDate" [min]="form.controls.date.value" /></label>
+      } @else {
+        <label class="row"><span>Heure de début</span><input type="time" formControlName="startTime" (change)="onStartTimeChange()" /></label>
+        <label class="row"><span>Heure de fin</span><input type="time" formControlName="endTime" /></label>
+      }
+      @if (chronologyError()) {
+        <p class="field-error" role="alert">La fin doit être après le début.</p>
+      }
+      <label class="row">
+        <span>Calendrier</span>
+        <select formControlName="calendarId">
+          @for (calendar of calendars(); track calendar.id) {<option [value]="calendar.id">● {{ calendar.name }}</option>}
+        </select>
+      </label>
+      <label class="row"><span>Lieu</span><input formControlName="location" maxlength="120" placeholder="Ajouter un lieu" /></label>
+      <button class="row link-row" type="button" (click)="pickerOpen.set(true)">
+        <span>Participants</span>
+        @if (people().length) {
+          <span class="avatars">
+            @for (person of people().slice(0, 4); track person.id) {
+              <span class="avatar" [style.background]="person.color" [attr.title]="person.name">{{ person.initials }}</span>
+            }
+            @if (people().length > 4) {<span class="avatar more">+{{ people().length - 4 }}</span>}
+          </span>
+        } @else {
+          <span class="value">Inviter des personnes ›</span>
+        }
+      </button>
+      <label class="field">
+        <span>Description</span>
+        <textarea class="form-control" rows="3" formControlName="description" maxlength="500" placeholder="Ajouter une description"></textarea>
+      </label>
+      <button class="step-link" type="button" (click)="step.set(2)">Plus d’options ›</button>
+    } @else {
+      <label class="row">
+        <span>Récurrence</span>
+        <select formControlName="recurrence">
+          @for (option of recurrences; track option[0]) {<option [value]="option[0]">{{ option[1] }}</option>}
+        </select>
+      </label>
+      <label class="row">
+        <span>Rappel</span>
+        <select formControlName="reminderMinutes">
+          @for (option of reminders; track option.label) {<option [ngValue]="option.value">{{ option.label }}</option>}
+        </select>
+      </label>
+      <fieldset class="colors">
+        <legend>Couleur</legend>
+        <label class="swatch default" title="Couleur du calendrier">
+          <input type="radio" formControlName="color" [value]="null" aria-label="Couleur du calendrier" />
+          <i aria-hidden="true"></i>
+        </label>
+        @for (color of colors; track color) {
+          <label class="swatch" [style.--swatch]="color">
+            <input type="radio" formControlName="color" [value]="color" [attr.aria-label]="'Couleur ' + color" />
+            <i aria-hidden="true"></i>
+          </label>
+        }
+      </fieldset>
+      <label class="row">
+        <span>Conférence</span>
+        <input type="url" formControlName="conferenceUrl" placeholder="Ajouter un lien" [attr.aria-invalid]="showError('conferenceUrl')" />
+      </label>
+      @if (showError('conferenceUrl')) {<p class="field-error">Saisissez un lien web commençant par https://.</p>}
+      <div class="row">
+        <span>Pièces jointes</span>
+        <label class="value file-button">Ajouter un fichier<input #files class="visually-hidden" type="file" multiple (change)="addAttachments(files)" /></label>
+      </div>
+      @for (file of attachments(); track file.id) {
+        <p class="file">
+          <span>{{ file.name }} <small>{{ fileSize(file.size) }}</small></span>
+          <button type="button" [attr.aria-label]="'Retirer ' + file.name" (click)="removeAttachment(file.id)">×</button>
+        </p>
+      }
+      @if (attachmentError()) {<p class="field-error" role="alert">{{ attachmentError() }}</p>}
+      <label class="field">
+        <span>Notes</span>
+        <textarea class="form-control" rows="3" formControlName="notes" maxlength="1000" placeholder="Ajouter une note"></textarea>
+      </label>
+      <button class="step-link" type="button" [attr.aria-expanded]="advancedOpen()" (click)="advancedOpen.set(!advancedOpen())">
+        Options avancées {{ advancedOpen() ? '⌃' : '⌄' }}
+      </button>
+      @if (advancedOpen()) {
+        <label class="row">
+          <span>Disponibilité</span>
+          <select formControlName="availability"><option value="busy">Occupé</option><option value="free">Disponible</option></select>
+        </label>
+        <label class="row">
+          <span>Visibilité</span>
+          <select formControlName="visibility"><option value="default">Par défaut</option><option value="private">Privé</option></select>
+        </label>
+      }
+      <button class="step-link back" type="button" (click)="step.set(1)">‹ Informations principales</button>
+    }
+  </form>
+
+  @if (pickerOpen()) {
+    <app-agenda-participants-picker
+      [selected]="participantIds()"
+      (confirm)="setParticipants($event)"
+      (cancel)="pickerOpen.set(false)"
+    />
+  }
+}

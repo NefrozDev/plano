@@ -26,10 +26,13 @@ export class BrowserStoragePlanoDataAdapter implements PlanoDataAdapter {
       const value = localStorage.getItem(this.key);
       if (!value) return null;
       const parsed = JSON.parse(value) as Partial<PlanoData>;
-      // Objectives were added to v1 after release: backfill them instead of
+      // Objectives and agenda were added to v1 after release: backfill them instead of
       // discarding the lists a user already saved.
       if (parsed.objectives == null) {
         parsed.objectives = createMockPlanoData().objectives;
+      }
+      if (parsed.agenda == null) {
+        parsed.agenda = createMockPlanoData().agenda;
       }
       return parsed.version === 1 &&
         Array.isArray(parsed.lists) &&
@@ -42,7 +45,9 @@ export class BrowserStoragePlanoDataAdapter implements PlanoDataAdapter {
         Array.isArray(parsed.dashboard.tasks) &&
         Array.isArray(parsed.dashboard.weekDays) &&
         typeof parsed.objectives === 'object' &&
-        Array.isArray(parsed.objectives.items)
+        Array.isArray(parsed.objectives.items) &&
+        typeof parsed.agenda === 'object' &&
+        Array.isArray(parsed.agenda.events)
         ? parsed as PlanoData
         : null;
     } catch {

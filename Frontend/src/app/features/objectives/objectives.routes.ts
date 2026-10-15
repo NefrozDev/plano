@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { ObjectivesLayoutComponent } from './objectives-layout.component';
+import { MobileShellLayoutComponent } from '../../shared/ui/mobile-shell-layout.component';
 
 export const OBJECTIVES_ROUTES: Routes = [
   {
     path: '',
-    component: ObjectivesLayoutComponent,
+    component: MobileShellLayoutComponent,
     children: [
       {
         path: '',

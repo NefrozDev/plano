@@ -1,0 +1,100 @@
+<app-page-header
+  heading="Détail de l’événement"
+  [showHeading]="false"
+  backLink="/agenda"
+  [backQueryParams]="{ date: date() }"
+  backLabel="Retour à l’agenda"
+/>
+
+@if (details(); as d) {
+  <div class="content">
+    <h2><i [style.background]="d.color" aria-hidden="true"></i>{{ d.event.title }}</h2>
+
+    <ul class="facts">
+      <li>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16" /></svg>
+        {{ d.dateLabel }}
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 8v4l3 2" /></svg>
+        {{ d.timeLabel }}
+      </li>
+      @if (d.event.location) {
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11Z" /><circle cx="12" cy="10" r="2" /></svg>
+          {{ d.event.location }}
+        </li>
+      }
+      @if (d.people.length) {
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-4 3-6 6.5-6s6.5 2 6.5 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.5.5 4 2.5 4 6" /></svg>
+          <span>Avec</span>
+          <span class="avatars" [attr.aria-label]="d.peopleNames">
+            @for (person of d.people; track person.id) {
+              <span class="avatar" [style.background]="person.color" [attr.title]="person.name" aria-hidden="true">{{ person.initials }}</span>
+            }
+            @if (d.extraPeople) {
+              <span class="avatar more" aria-hidden="true">+{{ d.extraPeople }}</span>
+            }
+          </span>
+        </li>
+      }
+      @if (d.event.conferenceUrl) {
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="12" height="10" rx="2" /><path d="m15 11 6-3v8l-6-3" /></svg>
+          <a [href]="d.event.conferenceUrl" target="_blank" rel="noopener noreferrer">Rejoindre la visioconférence</a>
+        </li>
+      }
+    </ul>
+
+    @if (d.event.description) {
+      <p class="text">{{ d.event.description }}</p>
+    }
+
+    @if (d.attachments.length) {
+      <section class="block">
+        <h3>Pièces jointes</h3>
+        @for (file of d.attachments; track file.id) {
+          <p class="file"><span>{{ file.name }}</span><small>{{ file.sizeLabel }}</small></p>
+        }
+      </section>
+    }
+
+    @if (d.event.notes) {
+      <section class="block">
+        <h3>Notes</h3>
+        <p class="text">{{ d.event.notes }}</p>
+      </section>
+    }
+
+    <dl class="rows">
+      <div><dt>Rappel</dt><dd>{{ d.reminder }}</dd></div>
+      <div><dt>Calendrier</dt><dd><i [style.background]="d.calendarColor" aria-hidden="true"></i>{{ d.calendarName }}</dd></div>
+      <div><dt>Récurrence</dt><dd>{{ d.recurrence }}</dd></div>
+    </dl>
+
+    <div class="actions">
+      <a class="primary-button" [routerLink]="['/agenda/events', d.event.id, 'edit']">Modifier</a>
+      <button class="delete" type="button" (click)="deleteOpen.set(true)">Supprimer</button>
+    </div>
+  </div>
+
+  <app-modal-dialog heading="Supprimer l’événement" tone="danger" [open]="deleteOpen()" (closed)="deleteOpen.set(false)">
+    <svg dialog-icon viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
+    <p class="dialog-text">
+      « {{ d.event.title }} » sera supprimé.
+      @if (d.event.recurrence !== 'none') {
+        Toutes les occurrences de cet événement récurrent seront supprimées.
+      }
+    </p>
+    <div class="dialog-actions">
+      <button class="cancel" type="button" (click)="deleteOpen.set(false)">Annuler</button>
+      <button class="confirm" type="button" (click)="remove()">Supprimer</button>
+    </div>
+  </app-modal-dialog>
+} @else {
+  <p class="missing">
+    Cet événement n’existe pas ou a été supprimé.
+    <a routerLink="/agenda">Retour à l’agenda</a>
+  </p>
+}

@@ -1,0 +1,98 @@
+<header class="agenda-header">
+  <div class="menu-anchor">
+    <button
+      class="icon-button"
+      type="button"
+      aria-label="Changer de vue"
+      [attr.aria-expanded]="viewMenuOpen()"
+      (click)="viewMenuOpen.set(!viewMenuOpen())"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+    </button>
+    @if (viewMenuOpen()) {
+      <div class="view-menu" role="menu">
+        @for (option of views; track option.value) {
+          <button
+            type="button"
+            role="menuitemradio"
+            [attr.aria-checked]="view() === option.value"
+            [class.active]="view() === option.value"
+            (click)="go({ view: option.value })"
+          >{{ option.label }}</button>
+        }
+      </div>
+    }
+  </div>
+  <h1>Agenda</h1>
+  <div class="header-actions">
+    <a class="icon-button" routerLink="/agenda/search" aria-label="Rechercher dans l’agenda">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
+    </a>
+    <a class="icon-button" routerLink="/agenda/filters" aria-label="Filtrer l’agenda">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5Z" /></svg>
+      @if (store.activeFilterCount()) {
+        <i class="badge" aria-hidden="true">{{ store.activeFilterCount() }}</i>
+      }
+    </a>
+    <a class="icon-button" routerLink="/agenda/settings" aria-label="Paramètres de l’agenda">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h8.5M17.5 7H20M4 17h2.5M11.5 17H20" /><circle cx="15" cy="7" r="2.5" /><circle cx="9" cy="17" r="2.5" />
+      </svg>
+    </a>
+  </div>
+</header>
+
+<div class="date-bar">
+  <button class="nav" type="button" aria-label="Période précédente" (click)="shift(-1)">‹</button>
+  <button class="title" type="button" [attr.aria-label]="'Choisir une date, ' + title()" (click)="openDatePicker(picker)">
+    {{ title() }} <span aria-hidden="true">⌄</span>
+  </button>
+  <input #picker class="picker" type="date" tabindex="-1" aria-hidden="true" [value]="date()" (change)="pickDate(picker.value)" />
+  <button class="nav" type="button" aria-label="Période suivante" (click)="shift(1)">›</button>
+  @if (date() !== today) {
+    <button class="today" type="button" (click)="go({ date: today })">Aujourd’hui</button>
+  }
+</div>
+
+<div class="view-body" [class.week]="view() === 'week'">
+  @switch (view()) {
+    @case ('day') {
+      <app-agenda-day-view
+        [date]="date()"
+        [days]="weekDays()"
+        [items]="selectedItems()"
+        [now]="store.now()"
+        [hourFormat]="settings().hourFormat"
+        (selectDate)="go({ date: $event })"
+      />
+    }
+    @case ('week') {
+      <app-agenda-week-view
+        [days]="weekDays()"
+        [itemsByDate]="itemsByDate()"
+        [selected]="date()"
+        [hourFormat]="settings().hourFormat"
+        [weekNumber]="weekNumber()"
+        (openDay)="go({ view: 'day', date: $event })"
+        (createAt)="createAt($event)"
+      />
+    }
+    @case ('month') {
+      <app-agenda-month-view
+        [selected]="date()"
+        [today]="today"
+        [weekStartsOn]="settings().weekStartsOn"
+        [showWeekNumbers]="settings().showWeekNumbers"
+        [itemsByDate]="itemsByDate()"
+        [selectedItems]="selectedItems()"
+        (selectDate)="go({ date: $event })"
+      />
+    }
+  }
+</div>
+
+<a class="fab" routerLink="/agenda/new" [queryParams]="{ date: date() }" aria-label="Créer un événement">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+</a>
+
+<app-bottom-nav active="agenda" />

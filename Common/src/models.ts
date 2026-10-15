@@ -179,6 +179,89 @@ export interface ObjectivesData {
   recentIds: string[];
 }
 
+export type AgendaView = 'day' | 'week' | 'month';
+export type EventRecurrence = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+/**
+ * Local "floating" date-time `YYYY-MM-DDTHH:mm` (no timezone offset): an event at
+ * 09:00 stays at 09:00 wherever the agenda is opened.
+ */
+export type LocalDateTime = string;
+
+export interface AgendaCalendar {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface AgendaContact {
+  id: string;
+  name: string;
+  initials: string;
+  color: string;
+  /** Shown in the "Fréquemment contactés" section of the participant picker. */
+  frequent: boolean;
+}
+
+/** Metadata only: files are not uploaded until a backend exists. */
+export interface AgendaAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+}
+
+export interface AgendaEvent {
+  id: string;
+  title: string;
+  calendarId: string;
+  allDay: boolean;
+  start: LocalDateTime;
+  end: LocalDateTime;
+  location: string;
+  description: string;
+  participantIds: string[];
+  recurrence: EventRecurrence;
+  /** Minutes before the start; null = no reminder. */
+  reminderMinutes: number | null;
+  /** Overrides the calendar colour when set. */
+  color: string | null;
+  conferenceUrl: string;
+  attachments: AgendaAttachment[];
+  notes: string;
+  availability: 'busy' | 'free';
+  visibility: 'default' | 'private';
+}
+
+export interface AgendaSettings {
+  /** 1 = Monday, 0 = Sunday. */
+  weekStartsOn: 0 | 1;
+  defaultDurationMinutes: number;
+  timeZone: string;
+  defaultReminderMinutes: number | null;
+  eventNotifications: boolean;
+  invitationNotifications: boolean;
+  showWeekNumbers: boolean;
+  hourFormat: '24h' | '12h';
+}
+
+export interface AgendaFilters {
+  hiddenCalendarIds: string[];
+  showEvents: boolean;
+  /** Dated items from other features: list entry reminders, planned objective sessions. */
+  showTasks: boolean;
+  showPastEvents: boolean;
+}
+
+export interface AgendaData {
+  calendars: AgendaCalendar[];
+  contacts: AgendaContact[];
+  events: AgendaEvent[];
+  settings: AgendaSettings;
+  filters: AgendaFilters;
+  recentIds: string[];
+}
+
 export interface PlanoData {
   version: 1;
   lists: PlanoList[];
@@ -186,6 +269,7 @@ export interface PlanoData {
   listSettings: ListSettings;
   dashboard: DashboardData;
   objectives: ObjectivesData;
+  agenda: AgendaData;
 }
 
 /** Persistence port implemented by memory, browser storage, or a future API. */

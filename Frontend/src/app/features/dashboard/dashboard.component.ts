@@ -9,6 +9,8 @@ import {
   objectiveTint,
 } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
+import { AgendaStore } from '../agenda/agenda.store';
+import { formatTime, timePart } from '../agenda/agenda.utils';
 import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.component';
 
 type NavigationItem = 'Accueil' | 'Agenda' | 'Liste' | 'Objectifs';
@@ -25,6 +27,7 @@ export class DashboardComponent {
   private readonly router = inject(Router);
   private readonly appData = inject(PlanoDataStore);
   private readonly objectivesStore = inject(ObjectivesStore);
+  private readonly agendaStore = inject(AgendaStore);
 
   readonly navigation: readonly NavigationItem[] = [
     'Accueil',
@@ -36,6 +39,15 @@ export class DashboardComponent {
   readonly tasks = computed(() => this.appData.data().dashboard.tasks);
   readonly completedTasks = computed(
     () => this.tasks().filter((task) => task.done).length,
+  );
+  readonly todayItems = computed(() => this.agendaStore.itemsOn(this.agendaStore.today()));
+  readonly agendaPreview = computed(() =>
+    this.todayItems()
+      .slice(0, 3)
+      .map((item) => ({
+        item,
+        time: item.allDay ? 'Journée' : formatTime(timePart(item.start), this.agendaStore.settings().hourFormat),
+      })),
   );
   readonly goals = computed(() =>
     this.objectivesStore
@@ -63,6 +75,10 @@ export class DashboardComponent {
   selectNavigation(item: NavigationItem): void {
     if (item === 'Liste') {
       void this.router.navigateByUrl('/lists');
+      return;
+    }
+    if (item === 'Agenda') {
+      void this.router.navigateByUrl('/agenda');
       return;
     }
     if (item === 'Objectifs') {

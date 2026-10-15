@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import type { Objective } from '@plano/common';
 import {
   formatDate,
@@ -13,7 +14,7 @@ import { ObjectiveCardComponent, ObjectiveCardView } from '../ui/objective-card.
 @Component({
   selector: 'app-objectives-overview',
   standalone: true,
-  imports: [RouterLink, ObjectiveCardComponent],
+  imports: [RouterLink, ObjectiveCardComponent, BottomNavComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-overview.component.html',
   styleUrl: './objectives-overview.component.scss',

@@ -64,31 +64,23 @@
       <section class="dashboard-section" aria-labelledby="today-title">
         <div class="section-heading">
           <h2 id="today-title">Aujourd’hui</h2>
-          <button type="button">voir l’agenda →</button>
+          <a routerLink="/agenda">voir l’agenda →</a>
         </div>
         <div class="agenda-card">
-          <article>
-            <span class="event-icon event-icon--blue">▣</span>
-            <div>
-              <strong>9h00</strong>
-              <p>Rendez-vous banque</p>
-            </div>
-          </article>
-          <article>
-            <span class="event-icon event-icon--green">🛒</span>
-            <div>
-              <strong>14h30</strong>
-              <p>Courses du groupe</p>
-            </div>
-          </article>
-          <article>
-            <span class="event-icon event-icon--pink">◎</span>
-            <div>
-              <strong>16h00</strong>
-              <p>Méditation</p>
-            </div>
-          </article>
-          <button class="card-link" type="button">voir tout (3)</button>
+          @for (entry of agendaPreview(); track entry.item.key) {
+            <a class="event" [routerLink]="entry.item.link" [queryParams]="entry.item.queryParams" [style.--c]="entry.item.color">
+              <span class="event-icon" aria-hidden="true">●</span>
+              <div>
+                <strong>{{ entry.time }}</strong>
+                <p>{{ entry.item.title }}</p>
+              </div>
+            </a>
+          } @empty {
+            <a class="card-link" routerLink="/agenda/new">Rien de prévu aujourd’hui · + Ajouter un événement</a>
+          }
+          @if (todayItems().length > agendaPreview().length) {
+            <a class="card-link" routerLink="/agenda">voir tout ({{ todayItems().length }})</a>
+          }
         </div>
       </section>
 

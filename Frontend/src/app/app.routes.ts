@@ -48,6 +48,14 @@ export const routes: Routes = [
     title: 'Détail de la liste | Plano',
   },
   {
+    path: 'agenda',
+    canActivate: [authenticatedGuard],
+    loadChildren: () =>
+      import('./features/agenda/agenda.routes').then(
+        (routes) => routes.AGENDA_ROUTES,
+      ),
+  },
+  {
     path: 'objectives',
     canActivate: [authenticatedGuard],
     loadChildren: () =>

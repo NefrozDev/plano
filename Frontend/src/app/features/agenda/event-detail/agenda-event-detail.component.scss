@@ -1,0 +1,31 @@
+:host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+.content { flex: 1; min-height: 0; padding: 0 1.25rem 2rem; overflow-y: auto; }
+h2 { display: flex; gap: .6rem; align-items: center; margin: .2rem 0 1rem; font-size: 1.3rem; letter-spacing: -.03em; }
+h2 i, dd i { width: .7rem; height: .7rem; flex: none; border-radius: 50%; }
+.facts { display: grid; gap: .75rem; margin: 0; padding: 0; list-style: none; }
+.facts li { display: flex; gap: .6rem; align-items: center; color: #3c4658; font-size: .8rem; }
+.facts svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: #7b8292; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.facts a { color: var(--color-primary); font-weight: 650; }
+.avatars { display: flex; }
+.avatar { display: grid; width: 1.6rem; height: 1.6rem; margin-left: -.3rem; place-items: center; border: 2px solid white; border-radius: 50%; color: white; font-size: .58rem; font-weight: 750; }
+.avatar:first-child { margin-left: 0; }
+.avatar.more { background: #e9edf4; color: #5b6476; }
+.text { margin: 1rem 0 0; color: #5b6476; font-size: .78rem; line-height: 1.5; white-space: pre-line; }
+.block { margin-top: 1rem; }
+.block h3 { margin: 0; color: #394254; font-size: .74rem; }
+.block .text { margin-top: .35rem; }
+.file { display: flex; justify-content: space-between; margin: .4rem 0 0; padding: .5rem .65rem; border-radius: .55rem; background: #f4f6fa; font-size: .75rem; }
+.file small { color: #8a93a3; }
+.rows { margin: 1.2rem 0 0; border-top: 1px solid #edf0f5; }
+.rows div { display: flex; min-height: 2.9rem; align-items: center; justify-content: space-between; border-bottom: 1px solid #edf0f5; }
+dt { font-size: .8rem; font-weight: 650; }
+dd { display: flex; gap: .4rem; align-items: center; margin: 0; color: #6b7385; font-size: .76rem; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-top: 1.4rem; }
+.actions .primary-button { min-height: 2.9rem; text-decoration: none; }
+.delete, .confirm, .cancel { min-height: 2.9rem; border-radius: .78rem; cursor: pointer; font: inherit; font-size: .9rem; font-weight: 650; }
+.delete { border: 0; background: var(--color-danger-surface); color: var(--color-danger); }
+.dialog-text { margin: 0 0 .5rem; color: var(--color-text-muted); font-size: .78rem; line-height: 1.45; }
+.cancel { min-height: 2.6rem; border: 1px solid var(--color-border); background: white; color: var(--color-text); font-size: .8rem; }
+.confirm { min-height: 2.6rem; border: 1px solid rgb(180 35 24 / 35%); background: white; color: var(--color-danger); font-size: .8rem; }
+.missing { display: grid; gap: .8rem; margin: 3rem 1.5rem; color: var(--color-text-muted); font-size: .88rem; text-align: center; }
+.missing a { color: var(--color-primary); font-weight: 700; }

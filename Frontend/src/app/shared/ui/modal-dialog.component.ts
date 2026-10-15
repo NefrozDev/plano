@@ -1,8 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   effect,
+  inject,
   input,
   output,
   viewChild,
@@ -66,6 +68,12 @@ export class ModalDialogComponent {
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
 
   constructor() {
+    // A modal removed from the DOM while open (e.g. its content disappeared) must
+    // leave the top layer cleanly, otherwise later dialogs can misbehave.
+    inject(DestroyRef).onDestroy(() => {
+      const dialog = this.dialog().nativeElement;
+      if (dialog.open) dialog.close();
+    });
     effect(() => {
       const dialog = this.dialog().nativeElement;
       if (this.open() && !dialog.open) dialog.showModal();
