@@ -11,6 +11,11 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
+import {
+  UNEXPECTED_ERROR_MESSAGE,
+  httpErrorMessage,
+  serverMessage,
+} from '../../../core/http/http-error-message';
 import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 
 export const matchingPasswordsValidator: ValidatorFn = (
@@ -152,46 +157,26 @@ export class RegisterComponent {
   }
 
   private handleRegistrationError(error: unknown): void {
-    if (!(error instanceof HttpErrorResponse)) {
-      this.submissionError =
-        'Une erreur inattendue est survenue. Veuillez réessayer.';
-      return;
-    }
-
-    if (error.status === 0) {
-      this.submissionError =
-        'Impossible de joindre Plano. Vérifiez votre connexion.';
-      return;
-    }
-
-    if (error.status === 409) {
-      const serverMessage = this.serverMessage(error).toLowerCase();
-      if (serverMessage.includes('mail')) {
+    // A conflict names the field that is already taken when the API says which one.
+    if (error instanceof HttpErrorResponse && error.status === 409) {
+      const message = serverMessage(error).toLowerCase();
+      if (message.includes('mail')) {
         this.apiFieldErrors.email = 'Cette adresse e-mail est déjà utilisée.';
-      } else if (
-        serverMessage.includes('username') ||
-        serverMessage.includes('utilisateur')
-      ) {
-        this.apiFieldErrors.username = 'Ce nom d’utilisateur est déjà utilisé.';
-      } else {
-        this.submissionError =
-          'Un compte utilise déjà ce nom d’utilisateur ou cette adresse e-mail.';
+        return;
       }
-      return;
+      if (message.includes('username') || message.includes('utilisateur')) {
+        this.apiFieldErrors.username = 'Ce nom d’utilisateur est déjà utilisé.';
+        return;
+      }
     }
 
-    if (error.status === 400) {
-      this.submissionError =
-        'Certaines informations sont invalides. Vérifiez le formulaire.';
-      return;
-    }
-
-    this.submissionError =
-      'La création du compte a échoué. Veuillez réessayer.';
-  }
-
-  private serverMessage(error: HttpErrorResponse): string {
-    const message = (error.error as { message?: unknown } | null)?.message;
-    return Array.isArray(message) ? message.join(' ') : String(message ?? '');
+    this.submissionError = httpErrorMessage(error, {
+      unexpected: UNEXPECTED_ERROR_MESSAGE,
+      byStatus: {
+        400: 'Certaines informations sont invalides. Vérifiez le formulaire.',
+        409: 'Un compte utilise déjà ce nom d’utilisateur ou cette adresse e-mail.',
+      },
+      fallback: 'La création du compte a échoué. Veuillez réessayer.',
+    });
   }
 }

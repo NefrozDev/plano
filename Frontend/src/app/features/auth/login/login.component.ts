@@ -1,9 +1,9 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
+import { UNEXPECTED_ERROR_MESSAGE, httpErrorMessage } from '../../../core/http/http-error-message';
 import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 
 @Component({
@@ -87,18 +87,11 @@ export class LoginComponent {
   }
 
   private loginErrorMessage(error: unknown): string {
-    if (!(error instanceof HttpErrorResponse)) {
-      return 'Une erreur inattendue est survenue. Veuillez réessayer.';
-    }
-
-    if (error.status === 0) {
-      return 'Impossible de joindre Plano. Vérifiez votre connexion.';
-    }
-
-    if (error.status === 400 || error.status === 401) {
-      return 'Nom d’utilisateur ou mot de passe incorrect.';
-    }
-
-    return 'La connexion a échoué. Veuillez réessayer.';
+    const badCredentials = 'Nom d’utilisateur ou mot de passe incorrect.';
+    return httpErrorMessage(error, {
+      unexpected: UNEXPECTED_ERROR_MESSAGE,
+      byStatus: { 400: badCredentials, 401: badCredentials },
+      fallback: 'La connexion a échoué. Veuillez réessayer.',
+    });
   }
 }

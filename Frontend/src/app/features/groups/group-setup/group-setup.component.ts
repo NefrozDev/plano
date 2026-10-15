@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import {
   FormBuilder,
@@ -9,6 +8,7 @@ import {
 import { Router } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
+import { httpErrorMessage } from '../../../core/http/http-error-message';
 import { GroupDetails, GroupMember } from '../../../core/groups/group.models';
 import { GroupsService } from '../../../core/groups/groups.service';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
@@ -130,46 +130,33 @@ export class GroupSetupComponent implements OnInit {
 
   submit(): void {
     this.submitted = true;
-    const name = this.trimControl(this.form.controls.name);
+    const name = this.normalizeControl(this.form.controls.name);
     if (this.form.invalid || this.busyAction()) {
       this.form.markAllAsTouched();
       return;
     }
-
-    this.runGroupAction('create', this.groups.create({ name }), true);
+    this.runAction('create', this.groups.create({ name }), (group) => this.enterGroup(group));
   }
 
   join(): void {
     this.joinSubmitted = true;
-    const inviteCode = this.joinForm.controls.inviteCode.value
-      .trim()
-      .toUpperCase();
-    this.joinForm.controls.inviteCode.setValue(inviteCode, {
-      emitEvent: false,
-    });
-    this.joinForm.controls.inviteCode.updateValueAndValidity({
-      emitEvent: false,
-    });
+    const inviteCode = this.normalizeControl(this.joinForm.controls.inviteCode, (value) =>
+      value.trim().toUpperCase(),
+    );
     if (this.joinForm.invalid || this.busyAction()) {
       this.joinForm.markAllAsTouched();
       return;
     }
-
-    this.runGroupAction('join', this.groups.join({ inviteCode }), true);
+    this.runAction('join', this.groups.join({ inviteCode }), (group) => this.enterGroup(group));
   }
 
   rename(): void {
-    const name = this.trimControl(this.renameForm.controls.name);
+    const name = this.normalizeControl(this.renameForm.controls.name);
     if (this.renameForm.invalid || this.busyAction()) {
       this.renameForm.markAllAsTouched();
       return;
     }
-    this.runGroupAction(
-      'rename',
-      this.groups.update(name),
-      false,
-      'Nom modifié.',
-    );
+    this.runAction('rename', this.groups.update(name), (group) => this.setGroup(group), 'Nom modifié.');
   }
 
   async copyInviteCode(): Promise<void> {
@@ -191,10 +178,10 @@ export class GroupSetupComponent implements OnInit {
       confirmLabel: 'Générer',
     });
     if (!confirmed) return;
-    this.runGroupAction(
+    this.runAction(
       'rotate',
       this.groups.rotateInviteCode(),
-      false,
+      (group) => this.setGroup(group),
       'Nouveau code généré.',
     );
   }
@@ -206,10 +193,10 @@ export class GroupSetupComponent implements OnInit {
       confirmLabel: 'Transférer',
     });
     if (!confirmed) return;
-    this.runGroupAction(
+    this.runAction(
       `transfer-${member.id}`,
       this.groups.transferOwnership(member.id),
-      false,
+      (group) => this.setGroup(group),
       'Propriété transférée.',
     );
   }
@@ -222,42 +209,23 @@ export class GroupSetupComponent implements OnInit {
       tone: 'danger',
     });
     if (!confirmed) return;
-    this.clearFeedback();
-    this.busyAction.set(`remove-${member.id}`);
-    this.groups
-      .removeMember(member.id)
-      .pipe(finalize(() => this.busyAction.set('')))
-      .subscribe({
-        next: () => {
-          this.group.update((group) =>
-            group
-              ? {
-                  ...group,
-                  members: group.members.filter(({ id }) => id !== member.id),
-                }
-              : null,
-          );
-          this.actionMessage.set('Membre retiré du groupe.');
-        },
-        error: (error: unknown) =>
-          this.submissionError.set(this.errorMessage(error)),
-      });
+    this.runAction(
+      `remove-${member.id}`,
+      this.groups.removeMember(member.id),
+      () =>
+        this.group.update((group) =>
+          group ? { ...group, members: group.members.filter(({ id }) => id !== member.id) } : null,
+        ),
+      'Membre retiré du groupe.',
+    );
   }
 
   leaveGroup(): void {
-    this.runVoidAction(
-      'leave',
-      this.groups.leave(),
-      'Vous avez quitté le groupe.',
-    );
+    this.runAction('leave', this.groups.leave(), () => this.setGroup(null), 'Vous avez quitté le groupe.');
   }
 
   deleteGroup(): void {
-    this.runVoidAction(
-      'delete',
-      this.groups.delete(),
-      'Le groupe a été supprimé.',
-    );
+    this.runAction('delete', this.groups.delete(), () => this.setGroup(null), 'Le groupe a été supprimé.');
   }
 
   memberName(member: GroupMember): string {
@@ -279,36 +247,27 @@ export class GroupSetupComponent implements OnInit {
     }
   }
 
-  private runGroupAction(
+  /** Creating or joining a group completes the onboarding step. */
+  private enterGroup(group: GroupDetails): void {
+    this.setGroup(group);
+    void this.router.navigateByUrl('/');
+  }
+
+  /**
+   * Runs one server action at a time: `busyAction` names it for the buttons,
+   * success closes any dialog and shows `successMessage`, failure shows the error.
+   */
+  private runAction<T>(
     action: string,
-    request: Observable<GroupDetails>,
-    navigateHome: boolean,
+    request: Observable<T>,
+    onSuccess: (result: T) => void,
     successMessage = '',
   ): void {
     this.clearFeedback();
     this.busyAction.set(action);
     request.pipe(finalize(() => this.busyAction.set(''))).subscribe({
-      next: (group) => {
-        this.setGroup(group);
-        this.dialog.set(null);
-        this.actionMessage.set(successMessage);
-        if (navigateHome) void this.router.navigateByUrl('/');
-      },
-      error: (error: unknown) =>
-        this.submissionError.set(this.errorMessage(error)),
-    });
-  }
-
-  private runVoidAction(
-    action: string,
-    request: Observable<void>,
-    successMessage: string,
-  ): void {
-    this.clearFeedback();
-    this.busyAction.set(action);
-    request.pipe(finalize(() => this.busyAction.set(''))).subscribe({
-      next: () => {
-        this.setGroup(null);
+      next: (result) => {
+        onSuccess(result);
         this.dialog.set(null);
         this.actionMessage.set(successMessage);
       },
@@ -317,8 +276,19 @@ export class GroupSetupComponent implements OnInit {
     });
   }
 
-  private trimControl(control: FormControl<string>): string {
-    const value = control.value.trim();
+  private errorMessage(error: unknown): string {
+    return httpErrorMessage(error, {
+      useServerMessage: true,
+      fallback: 'L’action a échoué. Veuillez réessayer.',
+    });
+  }
+
+  /** Writes the cleaned value back so validators and the field show what is sent. */
+  private normalizeControl(
+    control: FormControl<string>,
+    normalize: (value: string) => string = (value) => value.trim(),
+  ): string {
+    const value = normalize(control.value);
     control.setValue(value, { emitEvent: false });
     control.updateValueAndValidity({ emitEvent: false });
     return value;
@@ -327,17 +297,5 @@ export class GroupSetupComponent implements OnInit {
   private clearFeedback(): void {
     this.submissionError.set('');
     this.actionMessage.set('');
-  }
-
-  private errorMessage(error: unknown): string {
-    if (error instanceof HttpErrorResponse) {
-      if (error.status === 0) {
-        return 'Impossible de joindre Plano. Vérifiez votre connexion.';
-      }
-      const message = (error.error as { message?: unknown } | null)?.message;
-      if (Array.isArray(message)) return message.join(' ');
-      if (typeof message === 'string') return message;
-    }
-    return 'L’action a échoué. Veuillez réessayer.';
   }
 }
