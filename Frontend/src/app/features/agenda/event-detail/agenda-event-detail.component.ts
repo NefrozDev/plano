@@ -12,7 +12,7 @@ import {
   datePart,
   formatFileSize,
   occurrencesBetween,
-  reminderLabel,
+  eventReminderLabel,
   timeRangeLabel,
 } from '../agenda.utils';
 
@@ -68,7 +68,7 @@ export class AgendaEventDetailComponent {
           : `Du ${formatLongDay(start)} au ${formatLongDay(end)}`,
       timeLabel: timeRangeLabel({ allDay: event.allDay, ...occurrence }, this.store.settings().hourFormat),
       people,
-      reminder: reminderLabel(event.reminderMinutes),
+      reminder: eventReminderLabel(event.reminderMinutes),
       recurrence: RECURRENCE_LABELS[event.recurrence],
       calendarName: calendar?.name ?? 'Sans calendrier',
       calendarColor: calendar?.color ?? '#94a3b8',

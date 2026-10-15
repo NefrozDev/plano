@@ -2,12 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import type { Objective } from '@plano/common';
-import {
-  formatDate,
-  objectiveProgress,
-  objectiveTint,
-  progressLabel,
-} from '../objective.utils';
+import { formatDate } from '../../../core/time/dates';
+import { objectiveProgress, objectiveTint, progressLabel } from '../objective.utils';
 import { ObjectiveTab, ObjectivesStore } from '../objectives.store';
 import { ObjectiveCardComponent, ObjectiveCardView } from '../ui/objective-card.component';
 

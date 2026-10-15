@@ -6,7 +6,7 @@ import type {
   IsoDate,
   LocalDateTime,
 } from '@plano/common';
-import { addDays, daysBetween, parseIsoDate, toIsoDate } from '../../core/time/dates';
+import { addDays, daysBetween, pad2, parseIsoDate, toIsoDate, toTimeOfDay } from '../../core/time/dates';
 
 /** Anything the agenda can display: an event occurrence or a dated task from another feature. */
 export interface AgendaItem {
@@ -70,7 +70,7 @@ export const TIME_ZONES: readonly { value: string; label: string }[] = [
 
 export const EVENT_COLORS: readonly string[] = ['#3264ed', '#22a95a', '#8b5cf6', '#f59e0b', '#ef4444', '#e65591', '#94a3b8'];
 
-export function reminderLabel(minutes: number | null): string {
+export function eventReminderLabel(minutes: number | null): string {
   return REMINDER_OPTIONS.find((option) => option.value === minutes)?.label ?? `${minutes} minutes avant`;
 }
 
@@ -98,8 +98,7 @@ function toDate(value: LocalDateTime): Date {
 }
 
 function fromDate(date: Date): LocalDateTime {
-  const time = `${`${date.getHours()}`.padStart(2, '0')}:${`${date.getMinutes()}`.padStart(2, '0')}`;
-  return toLocalDateTime(toIsoDate(date), time);
+  return toLocalDateTime(toIsoDate(date), toTimeOfDay(date));
 }
 
 export function addMinutes(value: LocalDateTime, minutes: number): LocalDateTime {
@@ -116,7 +115,7 @@ export function minutesBetween(from: LocalDateTime, to: LocalDateTime): number {
 export function formatTime(time: string, format: AgendaSettings['hourFormat']): string {
   if (format === '24h') return time;
   const [hours, minutes] = time.split(':').map(Number);
-  return `${hours % 12 || 12}:${`${minutes}`.padStart(2, '0')} ${hours < 12 ? 'AM' : 'PM'}`;
+  return `${hours % 12 || 12}:${pad2(minutes)} ${hours < 12 ? 'AM' : 'PM'}`;
 }
 
 export function timeRangeLabel(item: Pick<AgendaItem, 'allDay' | 'start' | 'end'>, format: AgendaSettings['hourFormat']): string {

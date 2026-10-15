@@ -11,7 +11,7 @@ import {
   minutesBetween,
   nextOccurrence,
   occurrencesBetween,
-  reminderLabel,
+  eventReminderLabel,
   timeRangeLabel,
 } from './agenda.utils';
 
@@ -131,9 +131,9 @@ describe('agenda utils', () => {
   });
 
   it('formats labels for reminders, file sizes and colours', () => {
-    expect(reminderLabel(null)).toBe('Aucun');
-    expect(reminderLabel(15)).toBe('15 minutes avant');
-    expect(reminderLabel(45)).toBe('45 minutes avant');
+    expect(eventReminderLabel(null)).toBe('Aucun');
+    expect(eventReminderLabel(15)).toBe('15 minutes avant');
+    expect(eventReminderLabel(45)).toBe('45 minutes avant');
     expect(formatFileSize(500)).toBe('500 o');
     expect(formatFileSize(245_760)).toBe('240 Ko');
     expect(formatFileSize(5 * 1024 * 1024)).toBe('5,0 Mo');

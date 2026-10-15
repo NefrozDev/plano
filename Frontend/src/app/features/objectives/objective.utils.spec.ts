@@ -1,20 +1,22 @@
 import { createMockPlanoData, type Objective } from '@plano/common';
 import {
   addDays,
-  categoryMeta,
   daysBetween,
   formatDate,
   formatDay,
-  formatDuration,
   formatMonth,
-  longestStreak,
-  metricCurrent,
   monthGrid,
   normalizeText,
+} from '../../core/time/dates';
+import {
+  categoryMeta,
+  formatDuration,
+  longestStreak,
+  metricCurrent,
   objectiveProgress,
   objectiveTint,
   progressLabel,
-  reminderLabel,
+  objectiveReminderLabel,
   slugify,
   withDerivedStatus,
 } from './objective.utils';
@@ -95,9 +97,9 @@ describe('objective utils', () => {
 
   describe('labels', () => {
     it('describes reminders in French', () => {
-      expect(reminderLabel({ frequency: 'none', time: '09:00', weekday: 0 })).toBe('Aucun rappel');
-      expect(reminderLabel({ frequency: 'daily', time: '08:00', weekday: 0 })).toBe('Chaque jour à 08:00');
-      expect(reminderLabel({ frequency: 'weekly', time: '09:00', weekday: 0 })).toBe('Chaque lundi à 09:00');
+      expect(objectiveReminderLabel({ frequency: 'none', time: '09:00', weekday: 0 })).toBe('Aucun rappel');
+      expect(objectiveReminderLabel({ frequency: 'daily', time: '08:00', weekday: 0 })).toBe('Chaque jour à 08:00');
+      expect(objectiveReminderLabel({ frequency: 'weekly', time: '09:00', weekday: 0 })).toBe('Chaque lundi à 09:00');
     });
 
     it('normalizes text for search and slugs', () => {
