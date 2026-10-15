@@ -6,14 +6,13 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
-  Req,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AllowedOriginGuard } from '../auth/allowed-origin.guard';
-import type { AuthenticatedRequest } from '../auth/auth.types';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { JoinGroupDto } from './dto/join-group.dto';
@@ -28,78 +27,66 @@ export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
   @Get('me')
-  getMine(@Req() request: AuthenticatedRequest): Promise<GroupDetails | null> {
-    return this.groupsService.findForUser(this.userId(request));
+  getMine(@CurrentUser('id') userId: string): Promise<GroupDetails | null> {
+    return this.groupsService.findForUser(userId);
   }
 
   @Post()
   create(
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser('id') userId: string,
     @Body() details: CreateGroupDto,
   ): Promise<GroupDetails> {
-    return this.groupsService.create(this.userId(request), details);
+    return this.groupsService.create(userId, details);
   }
 
   @Post('join')
   join(
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser('id') userId: string,
     @Body() details: JoinGroupDto,
   ): Promise<GroupDetails> {
-    return this.groupsService.join(this.userId(request), details);
+    return this.groupsService.join(userId, details);
   }
 
   @Patch('me')
   update(
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser('id') userId: string,
     @Body() details: UpdateGroupDto,
   ): Promise<GroupDetails> {
-    return this.groupsService.update(this.userId(request), details);
+    return this.groupsService.update(userId, details);
   }
 
   @Post('me/invite-code')
   @HttpCode(HttpStatus.OK)
-  rotateInviteCode(
-    @Req() request: AuthenticatedRequest,
-  ): Promise<GroupDetails> {
-    return this.groupsService.rotateInviteCode(this.userId(request));
+  rotateInviteCode(@CurrentUser('id') userId: string): Promise<GroupDetails> {
+    return this.groupsService.rotateInviteCode(userId);
   }
 
   @Patch('me/owner')
   transferOwnership(
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser('id') userId: string,
     @Body() details: TransferOwnershipDto,
   ): Promise<GroupDetails> {
-    return this.groupsService.transferOwnership(
-      this.userId(request),
-      details.userId,
-    );
+    return this.groupsService.transferOwnership(userId, details.userId);
   }
 
   @Delete('me/members/:userId')
   @HttpCode(HttpStatus.NO_CONTENT)
   removeMember(
-    @Req() request: AuthenticatedRequest,
-    @Param('userId') memberUserId: string,
+    @CurrentUser('id') userId: string,
+    @Param('userId', ParseUUIDPipe) memberUserId: string,
   ): Promise<void> {
-    return this.groupsService.removeMember(this.userId(request), memberUserId);
+    return this.groupsService.removeMember(userId, memberUserId);
   }
 
   @Post('me/leave')
   @HttpCode(HttpStatus.NO_CONTENT)
-  leave(@Req() request: AuthenticatedRequest): Promise<void> {
-    return this.groupsService.leave(this.userId(request));
+  leave(@CurrentUser('id') userId: string): Promise<void> {
+    return this.groupsService.leave(userId);
   }
 
   @Delete('me')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Req() request: AuthenticatedRequest): Promise<void> {
-    return this.groupsService.delete(this.userId(request));
-  }
-
-  private userId(request: AuthenticatedRequest): string {
-    if (!request.authUser) {
-      throw new UnauthorizedException('Session invalide ou expirée.');
-    }
-    return request.authUser.id;
+  delete(@CurrentUser('id') userId: string): Promise<void> {
+    return this.groupsService.delete(userId);
   }
 }

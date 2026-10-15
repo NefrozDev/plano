@@ -6,7 +6,6 @@ import {
   Post,
   Req,
   Res,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
@@ -14,6 +13,7 @@ import { AllowedOriginGuard } from './allowed-origin.guard';
 import { SESSION_COOKIE_NAME } from './auth.constants';
 import { AuthService } from './auth.service';
 import type { AuthenticatedRequest, AuthUser } from './auth.types';
+import { CurrentUser } from './current-user.decorator';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { SessionAuthGuard } from './session-auth.guard';
@@ -60,12 +60,8 @@ export class AuthController {
 
   @Get('session')
   @UseGuards(SessionAuthGuard)
-  getSession(@Req() request: AuthenticatedRequest): AuthUser {
-    if (!request.authUser) {
-      throw new UnauthorizedException('Session invalide ou expirée.');
-    }
-
-    return request.authUser;
+  getSession(@CurrentUser() user: AuthUser): AuthUser {
+    return user;
   }
 
   @Post('logout')
