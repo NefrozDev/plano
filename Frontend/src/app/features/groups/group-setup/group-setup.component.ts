@@ -20,6 +20,7 @@ import { ClipboardService } from '../../../core/browser/clipboard.service';
 import { httpErrorMessage } from '../../../core/http/http-error-message';
 import { GroupDetails, GroupMember } from '../../../core/groups/group.models';
 import { GroupsService } from '../../../core/groups/groups.service';
+import { initialsOf } from '../../../core/people/people';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { ToastComponent } from '../../../shared/ui/toast.component';
@@ -250,7 +251,7 @@ export class GroupSetupComponent implements OnInit {
 
   memberInitials(member: GroupMember): string {
     return (
-      `${member.firstName.charAt(0)}${member.lastName.charAt(0)}`.toUpperCase() ||
+      initialsOf(member.firstName, member.lastName) ||
       member.username.slice(0, 2).toUpperCase()
     );
   }

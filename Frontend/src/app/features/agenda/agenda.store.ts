@@ -9,6 +9,7 @@ import type {
   LocalDateTime,
 } from '@plano/common';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { createPerson } from '../../core/people/people';
 import { APP_CLOCK, createId, normalizeText, toIsoDate, toTimeOfDay } from '../../core/time/dates';
 import { categoryMeta } from '../objectives/objective.utils';
 import {
@@ -148,15 +149,9 @@ export class AgendaStore {
   }
 
   addContact(name: string): AgendaContact | null {
-    const trimmed = name.trim();
-    if (!trimmed) return null;
-    const contact: AgendaContact = {
-      id: createId('contact'),
-      name: trimmed,
-      initials: trimmed.charAt(0).toUpperCase(),
-      color: '#6387ed',
-      frequent: false,
-    };
+    const person = createPerson(name);
+    if (!person) return null;
+    const contact: AgendaContact = { ...person, frequent: false };
     this.updateData((data) => ({ ...data, contacts: [...data.contacts, contact] }));
     return contact;
   }

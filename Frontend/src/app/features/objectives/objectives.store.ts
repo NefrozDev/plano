@@ -13,6 +13,7 @@ import type {
   ObjectivesData,
 } from '@plano/common';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { createPerson } from '../../core/people/people';
 import {
   APP_CLOCK,
   compareDueDates,
@@ -241,14 +242,8 @@ export class ObjectivesStore {
   }
 
   addContact(name: string): ObjectiveContact | null {
-    const trimmed = name.trim();
-    if (!trimmed) return null;
-    const contact: ObjectiveContact = {
-      id: createId('contact'),
-      name: trimmed,
-      initials: trimmed.charAt(0).toUpperCase(),
-      color: '#6387ed',
-    };
+    const contact: ObjectiveContact | null = createPerson(name);
+    if (!contact) return null;
     this.updateData((data) => ({ ...data, contacts: [...data.contacts, contact] }));
     return contact;
   }

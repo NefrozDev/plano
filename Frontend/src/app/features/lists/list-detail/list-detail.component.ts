@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import type { ListEntry, ListMember, ListSection, ShareRole } from '@plano/common';
 import { ClipboardService } from '../../../core/browser/clipboard.service';
+import { NEW_PERSON_COLOR, initialsOf } from '../../../core/people/people';
 import { createId } from '../../../core/time/dates';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
@@ -342,10 +343,10 @@ export class ListDetailComponent {
     this.members.update((members) => [
       ...members,
       {
-        id: `${Date.now()}`,
+        id: createId('member'),
         name,
-        initials: name.slice(0, 1).toUpperCase(),
-        color: '#6387ED',
+        initials: initialsOf(name),
+        color: NEW_PERSON_COLOR,
         role: this.inviteRole(),
       },
     ]);
