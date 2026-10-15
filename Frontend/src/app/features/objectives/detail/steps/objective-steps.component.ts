@@ -9,7 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import type { ObjectiveStep } from '@plano/common';
-import { formatDate } from '../../objective.utils';
+import { formatDate } from '../../../../core/time/dates';
 import { ObjectivesStore } from '../../objectives.store';
 import { ObjectiveContext } from '../objective-context';
 

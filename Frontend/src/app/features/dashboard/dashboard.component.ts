@@ -4,11 +4,8 @@ import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
-import {
-  formatDate,
-  objectiveProgress,
-  objectiveTint,
-} from '../objectives/objective.utils';
+import { compareDueDates, formatDate } from '../../core/time/dates';
+import { objectiveProgress, objectiveTint } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaStore } from '../agenda/agenda.store';
 import { formatTime, timePart } from '../agenda/agenda.utils';
@@ -46,7 +43,7 @@ export class DashboardComponent {
     this.objectivesStore
       .objectives()
       .filter((objective) => objective.status === 'active' && !objective.archived)
-      .sort((first, second) => (first.dueDate ?? '9999').localeCompare(second.dueDate ?? '9999'))
+      .sort((first, second) => compareDueDates(first.dueDate, second.dueDate))
       .slice(0, 2)
       .map((objective) => ({
         id: objective.id,

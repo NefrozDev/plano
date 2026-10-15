@@ -15,10 +15,31 @@ export function parseIsoDate(date: IsoDate): Date {
   return new Date(year, month - 1, day);
 }
 
+/** Two-digit, zero-padded number ("07"). */
+export function pad2(value: number): string {
+  return `${value}`.padStart(2, '0');
+}
+
 export function toIsoDate(date: Date): IsoDate {
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+/** Local "HH:mm" of a date. */
+export function toTimeOfDay(date: Date): string {
+  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
+
+/** "HH:00" for an hour of the day. */
+export function hourTime(hour: number): string {
+  return `${pad2(hour)}:00`;
+}
+
+/** Sort order for optional due dates: earliest first, undated last. */
+export function compareDueDates(first: IsoDate | null, second: IsoDate | null): number {
+  if (first === second) return 0;
+  if (first === null) return 1;
+  if (second === null) return -1;
+  return first.localeCompare(second);
 }
 
 export function addDays(date: IsoDate, days: number): IsoDate {

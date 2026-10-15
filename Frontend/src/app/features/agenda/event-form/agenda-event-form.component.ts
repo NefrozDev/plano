@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import type { AgendaAttachment, AgendaContact, EventRecurrence, IsoDate } from '@plano/common';
-import { createId } from '../../../core/time/dates';
+import { createId, hourTime } from '../../../core/time/dates';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { AgendaEventDraft, AgendaStore } from '../agenda.store';
@@ -223,7 +223,7 @@ export class AgendaEventFormComponent {
     const today = this.store.today();
     const date: IsoDate = ISO_DATE.test(query.get('date') ?? '') ? query.get('date')! : today;
     const requested = query.get('time');
-    const nextHour = `${`${Math.min(23, Number(timePart(this.store.now()).slice(0, 2)) + 1)}`.padStart(2, '0')}:00`;
+    const nextHour = hourTime(Math.min(23, Number(timePart(this.store.now()).slice(0, 2)) + 1));
     const start = requested && TIME.test(requested) ? requested : date === today ? nextHour : '09:00';
     const end = timePart(addMinutes(toLocalDateTime(date, start), this.store.settings().defaultDurationMinutes));
     const visibleCalendar = this.calendars().find(

@@ -3,10 +3,10 @@ import type { IsoDate, ObjectiveSession, ObjectiveSessionStatus } from '@plano/c
 import {
   formatDay,
   formatMonth,
-  formatNumber,
   monthGrid,
   parseIsoDate,
-} from '../../objective.utils';
+} from '../../../../core/time/dates';
+import { formatNumber } from '../../objective.utils';
 import { ObjectivesStore } from '../../objectives.store';
 import { ObjectiveContext } from '../objective-context';
 

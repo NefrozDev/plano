@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import type { Objective, ObjectiveCategory } from '@plano/common';
 import { SearchFieldComponent } from '../../../shared/ui/search-field.component';
-import { formatDate, objectiveTint } from '../objective.utils';
+import { formatDate } from '../../../core/time/dates';
+import { objectiveTint } from '../objective.utils';
 import { DEFAULT_OBJECTIVE_FILTERS, ObjectivesStore } from '../objectives.store';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';

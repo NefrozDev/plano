@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import type { ListEntry, ListMember, ListSection, ShareRole } from '@plano/common';
+import { createId } from '../../../core/time/dates';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
@@ -31,10 +32,6 @@ function createEntry(
     notes: '',
     ...extras,
   };
-}
-
-function createId(prefix: string): string {
-  return `${prefix}-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
 }
 
 @Component({

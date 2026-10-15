@@ -1,4 +1,4 @@
-import { APP_CLOCK, daysBetween, normalizeText } from '../../core/time/dates';
+import { daysBetween, normalizeText, pad2 } from '../../core/time/dates';
 import type {
   DueReminder,
   IsoDate,
@@ -37,25 +37,6 @@ export const DUE_REMINDER_LABELS: Readonly<Record<DueReminder, string>> = {
 
 export const WEEKDAY_LABELS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const;
 
-// Generic date helpers now live in core/time; re-exported so existing imports keep working.
-export {
-  addDays,
-  daysBetween,
-  formatDate,
-  formatDay,
-  formatMonth,
-  formatShortDate,
-  monthGrid,
-  normalizeText,
-  parseIsoDate,
-  toIsoDate,
-  createId,
-} from '../../core/time/dates';
-export type { CalendarDay } from '../../core/time/dates';
-
-/** Objectives share the application clock. */
-export const OBJECTIVES_CLOCK = APP_CLOCK;
-
 export function categoryMeta(category: ObjectiveCategory): CategoryMeta {
   return OBJECTIVE_CATEGORIES.find((meta) => meta.value === category) ?? OBJECTIVE_CATEGORIES[4];
 }
@@ -74,7 +55,7 @@ export function formatNumber(value: number): string {
 export function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const rest = Math.round(minutes % 60);
-  return hours ? `${hours} h ${`${rest}`.padStart(2, '0')}` : `${rest} min`;
+  return hours ? `${hours} h ${pad2(rest)}` : `${rest} min`;
 }
 
 export function metricCurrent(objective: Objective): number {
@@ -137,7 +118,7 @@ export function withDerivedStatus(objective: Objective, today: IsoDate): Objecti
   return objective;
 }
 
-export function reminderLabel(reminder: ObjectiveReminder): string {
+export function objectiveReminderLabel(reminder: ObjectiveReminder): string {
   switch (reminder.frequency) {
     case 'none':
       return 'Aucun rappel';

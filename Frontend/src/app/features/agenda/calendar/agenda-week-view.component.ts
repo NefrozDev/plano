@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { AgendaSettings, IsoDate } from '@plano/common';
+import { hourTime } from '../../../core/time/dates';
 import { AgendaItem, formatTime, layoutDay, timeRangeLabel } from '../agenda.utils';
 import type { StripDay } from './agenda-day-view.component';
 
@@ -113,7 +114,7 @@ export class AgendaWeekViewComponent {
   readonly hourLabels = computed(() =>
     Array.from({ length: 24 }, (_, value) => ({
       value,
-      label: formatTime(`${`${value}`.padStart(2, '0')}:00`, this.hourFormat()),
+      label: formatTime(hourTime(value), this.hourFormat()),
     })),
   );
   readonly columns = computed(() =>
@@ -148,6 +149,6 @@ export class AgendaWeekViewComponent {
   onColumnClick(event: MouseEvent, date: IsoDate): void {
     if (event.target !== event.currentTarget) return;
     const hour = Math.min(23, Math.max(0, Math.floor(event.offsetY / HOUR_HEIGHT)));
-    this.createAt.emit({ date, time: `${`${hour}`.padStart(2, '0')}:00` });
+    this.createAt.emit({ date, time: hourTime(hour) });
   }
 }

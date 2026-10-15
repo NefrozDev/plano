@@ -1,4 +1,14 @@
-import { createId, formatLongDay, isoWeekNumber, monthGrid, startOfWeek } from './dates';
+import {
+  compareDueDates,
+  createId,
+  formatLongDay,
+  hourTime,
+  isoWeekNumber,
+  monthGrid,
+  pad2,
+  startOfWeek,
+  toTimeOfDay,
+} from './dates';
 
 describe('date helpers', () => {
   it('finds the first day of the week for Monday- and Sunday-first calendars', () => {
@@ -19,6 +29,18 @@ describe('date helpers', () => {
 
     expect(weeks[0].map((day) => day.day)).toEqual([27, 28, 29, 30, 1, 2, 3]);
     expect(weeks.every((week) => week.length === 7)).toBeTrue();
+  });
+
+  it('formats zero-padded times of day', () => {
+    expect(pad2(7)).toBe('07');
+    expect(pad2(12)).toBe('12');
+    expect(toTimeOfDay(new Date(2026, 9, 15, 9, 5))).toBe('09:05');
+    expect(hourTime(8)).toBe('08:00');
+  });
+
+  it('sorts due dates earliest first and undated objectives last', () => {
+    const dates = ['2026-12-01', null, '2026-10-20', null];
+    expect([...dates].sort(compareDueDates)).toEqual(['2026-10-20', '2026-12-01', null, null]);
   });
 
   it('formats long French day labels', () => {

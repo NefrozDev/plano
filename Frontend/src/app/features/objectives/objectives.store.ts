@@ -14,13 +14,16 @@ import type {
 } from '@plano/common';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
 import {
-  OBJECTIVES_CLOCK,
-  categoryMeta,
+  APP_CLOCK,
+  compareDueDates,
   createId,
   normalizeText,
+  toIsoDate,
+} from '../../core/time/dates';
+import {
+  categoryMeta,
   objectiveProgress,
   slugify,
-  toIsoDate,
   withDerivedStatus,
 } from './objective.utils';
 
@@ -59,7 +62,7 @@ const MAX_RECENT = 5;
 @Injectable({ providedIn: 'root' })
 export class ObjectivesStore {
   private readonly appData = inject(PlanoDataStore);
-  private readonly clock = inject(OBJECTIVES_CLOCK);
+  private readonly clock = inject(APP_CLOCK);
   private readonly data = computed(() => this.appData.data().objectives);
 
   readonly objectives = computed(() => this.data().items);
@@ -106,7 +109,7 @@ export class ObjectivesStore {
       if (sort === 'progress') return objectiveProgress(first) - objectiveProgress(second);
       if (sort === 'title') return first.title.localeCompare(second.title, 'fr');
       // Objectives without a due date always sort last.
-      return (first.dueDate ?? '9999').localeCompare(second.dueDate ?? '9999');
+      return compareDueDates(first.dueDate, second.dueDate);
     };
     return this.objectives()
       .filter(inTab)

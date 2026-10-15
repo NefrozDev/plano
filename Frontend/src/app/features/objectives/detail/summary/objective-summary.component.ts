@@ -15,19 +15,17 @@ import type {
   ObjectiveContact,
   ObjectiveReminder,
 } from '@plano/common';
+import { daysBetween, formatDate, formatShortDate } from '../../../../core/time/dates';
 import {
   DUE_REMINDER_LABELS,
   WEEKDAY_LABELS,
-  daysBetween,
-  formatDate,
   formatNumber,
-  formatShortDate,
   longestStreak,
   metricCurrent,
   objectiveProgress,
   objectiveTint,
   progressLabel,
-  reminderLabel,
+  objectiveReminderLabel,
 } from '../../objective.utils';
 import { AvatarStackComponent } from '../../../../shared/ui/avatar-stack.component';
 import { ObjectivesStore } from '../../objectives.store';
@@ -73,7 +71,7 @@ export class ObjectiveSummaryComponent {
       tint: objectiveTint(objective.category, settings.categoryColors),
       due: objective.dueDate ? `Échéance : ${formatDate(objective.dueDate)}` : 'Sans échéance',
       tiles: [...this.trackingTiles(objective), this.deadlineTile(objective)],
-      reminder: reminderLabel(objective.reminder),
+      reminder: objectiveReminderLabel(objective.reminder),
       dueReminder: DUE_REMINDER_LABELS[objective.dueReminder],
       people,
     };

@@ -9,7 +9,7 @@ import type {
   LocalDateTime,
 } from '@plano/common';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
-import { APP_CLOCK, createId, normalizeText, toIsoDate } from '../../core/time/dates';
+import { APP_CLOCK, createId, normalizeText, toIsoDate, toTimeOfDay } from '../../core/time/dates';
 import { categoryMeta } from '../objectives/objective.utils';
 import {
   AgendaItem,
@@ -66,8 +66,7 @@ export class AgendaStore {
 
   now(): LocalDateTime {
     const now = this.clock();
-    const time = `${`${now.getHours()}`.padStart(2, '0')}:${`${now.getMinutes()}`.padStart(2, '0')}`;
-    return toLocalDateTime(toIsoDate(now), time);
+    return toLocalDateTime(toIsoDate(now), toTimeOfDay(now));
   }
 
   event(id: string): AgendaEvent | undefined {
