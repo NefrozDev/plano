@@ -1,5 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -14,7 +13,6 @@ import { AuthService } from '../../../core/auth/auth.service';
 import {
   UNEXPECTED_ERROR_MESSAGE,
   httpErrorMessage,
-  serverMessage,
 } from '../../../core/http/http-error-message';
 import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 
@@ -45,6 +43,7 @@ type RegisterField =
   imports: [AuthShellComponent, ReactiveFormsModule, RouterLink],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterComponent {
   private readonly formBuilder = inject(FormBuilder);
@@ -82,19 +81,18 @@ export class RegisterComponent {
     { validators: matchingPasswordsValidator },
   );
 
-  submitted = false;
-  submitting = false;
-  submissionError = '';
-  readonly apiFieldErrors: Partial<Record<RegisterField, string>> = {};
+  readonly submitted = signal(false);
+  readonly submitting = signal(false);
+  readonly submissionError = signal('');
 
   showError(controlName: RegisterField): boolean {
     const control = this.form.controls[controlName];
-    return control.invalid && (control.touched || this.submitted);
+    return control.invalid && (control.touched || this.submitted());
   }
 
   passwordConfirmationError(): string {
     const confirmation = this.form.controls.passwordConfirmation;
-    if (!(confirmation.touched || this.submitted)) {
+    if (!(confirmation.touched || this.submitted())) {
       return '';
     }
 
@@ -108,16 +106,16 @@ export class RegisterComponent {
   }
 
   submit(): void {
-    this.submitted = true;
-    this.clearApiErrors();
+    this.submitted.set(true);
+    this.submissionError.set('');
     this.normalizeTextFields();
 
-    if (this.form.invalid || this.submitting) {
+    if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.submitting = true;
+    this.submitting.set(true);
     const value = this.form.getRawValue();
 
     this.auth
@@ -129,17 +127,12 @@ export class RegisterComponent {
         password: value.password,
         acceptedTerms: value.acceptedTerms,
       })
-      .pipe(finalize(() => (this.submitting = false)))
+      .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => void this.router.navigateByUrl('/group/setup'),
-        error: (error: unknown) => this.handleRegistrationError(error),
+        error: (error: unknown) =>
+          this.submissionError.set(this.registrationErrorMessage(error)),
       });
-  }
-
-  private clearApiErrors(): void {
-    this.submissionError = '';
-    delete this.apiFieldErrors.username;
-    delete this.apiFieldErrors.email;
   }
 
   private normalizeTextFields(): void {
@@ -156,21 +149,9 @@ export class RegisterComponent {
     this.form.updateValueAndValidity({ emitEvent: false });
   }
 
-  private handleRegistrationError(error: unknown): void {
-    // A conflict names the field that is already taken when the API says which one.
-    if (error instanceof HttpErrorResponse && error.status === 409) {
-      const message = serverMessage(error).toLowerCase();
-      if (message.includes('mail')) {
-        this.apiFieldErrors.email = 'Cette adresse e-mail est déjà utilisée.';
-        return;
-      }
-      if (message.includes('username') || message.includes('utilisateur')) {
-        this.apiFieldErrors.username = 'Ce nom d’utilisateur est déjà utilisé.';
-        return;
-      }
-    }
-
-    this.submissionError = httpErrorMessage(error, {
+  /** The API does not say which of username or e-mail is taken, so accounts cannot be enumerated. */
+  private registrationErrorMessage(error: unknown): string {
+    return httpErrorMessage(error, {
       unexpected: UNEXPECTED_ERROR_MESSAGE,
       byStatus: {
         400: 'Certaines informations sont invalides. Vérifiez le formulaire.',

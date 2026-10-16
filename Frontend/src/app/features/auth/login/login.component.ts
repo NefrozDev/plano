@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -12,6 +12,7 @@ import { AuthShellComponent } from '../auth-shell/auth-shell.component';
   imports: [AuthShellComponent, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
   private readonly formBuilder = inject(FormBuilder);
@@ -24,14 +25,14 @@ export class LoginComponent {
     password: ['', [Validators.required, Validators.maxLength(128)]],
   });
 
-  submitted = false;
-  submitting = false;
-  submissionError = '';
-  recoveryMessage = '';
+  readonly submitted = signal(false);
+  readonly submitting = signal(false);
+  readonly submissionError = signal('');
+  readonly recoveryMessage = signal('');
 
   showError(controlName: 'username' | 'password'): boolean {
     const control = this.form.controls[controlName];
-    return control.invalid && (control.touched || this.submitted);
+    return control.invalid && (control.touched || this.submitted());
   }
 
   fieldError(controlName: 'username' | 'password'): string {
@@ -48,21 +49,22 @@ export class LoginComponent {
   }
 
   showRecoveryInfo(): void {
-    this.recoveryMessage =
-      'La récupération du mot de passe sera prochainement disponible.';
+    this.recoveryMessage.set(
+      'La récupération du mot de passe sera prochainement disponible.',
+    );
   }
 
   submit(): void {
-    this.submitted = true;
-    this.submissionError = '';
-    this.recoveryMessage = '';
+    this.submitted.set(true);
+    this.submissionError.set('');
+    this.recoveryMessage.set('');
 
-    if (this.form.invalid || this.submitting) {
+    if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.submitting = true;
+    this.submitting.set(true);
     const rawValue = this.form.getRawValue();
 
     this.auth
@@ -70,12 +72,11 @@ export class LoginComponent {
         username: rawValue.username.trim(),
         password: rawValue.password,
       })
-      .pipe(finalize(() => (this.submitting = false)))
+      .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => void this.router.navigateByUrl(this.safeReturnUrl()),
-        error: (error: unknown) => {
-          this.submissionError = this.loginErrorMessage(error);
-        },
+        error: (error: unknown) =>
+          this.submissionError.set(this.loginErrorMessage(error)),
       });
   }
 

@@ -1,6 +1,6 @@
-import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ClipboardService } from '../../../core/browser/clipboard.service';
 import { objectiveTint } from '../objective.utils';
 import { ObjectivesStore } from '../objectives.store';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
@@ -16,7 +16,7 @@ import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 })
 export class ObjectiveShareComponent {
   private readonly router = inject(Router);
-  private readonly document = inject(DOCUMENT);
+  private readonly clipboard = inject(ClipboardService);
   private readonly store = inject(ObjectivesStore);
   private readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
 
@@ -57,14 +57,10 @@ export class ObjectiveShareComponent {
   }
 
   async copyLink(): Promise<void> {
-    try {
-      await this.document.defaultView?.navigator.clipboard.writeText(`https://${this.shareLink()}`);
-      this.copied.set(true);
-      this.copyFailed.set(false);
-    } catch {
-      // Clipboard access can be denied (permissions, insecure context): let the user copy by hand.
-      this.copyFailed.set(true);
-    }
+    // When the clipboard is refused, the template lets the user copy the link by hand.
+    const copied = await this.clipboard.copy(`https://${this.shareLink()}`);
+    this.copied.set(copied);
+    this.copyFailed.set(!copied);
   }
 
   share(): void {

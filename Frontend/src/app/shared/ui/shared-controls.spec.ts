@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { AvatarPerson, AvatarStackComponent } from './avatar-stack.component';
 import { SearchFieldComponent } from './search-field.component';
@@ -8,6 +8,7 @@ const person = (id: string, name: string): AvatarPerson => ({ id, name, initials
 
 @Component({
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SwitchRowComponent, SearchFieldComponent, AvatarStackComponent],
   template: `
     <app-switch-row label="Notifications" [hint]="hint()" [checked]="on()" (toggled)="on.set(!on())" />

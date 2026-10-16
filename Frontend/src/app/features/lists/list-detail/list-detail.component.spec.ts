@@ -1,493 +1,253 @@
-import { convertToParamMap } from '@angular/router';
-import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
-import { ListDetailComponent } from './list-detail.component';
+import { signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import type { AuthUser } from '../../../core/auth/auth.models';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { ListsStore } from '../lists.store';
+import { ListDetailComponent } from './list-detail.component';
 
 describe('ListDetailComponent', () => {
+  let fixture: ComponentFixture<ListDetailComponent>;
+  let component: ListDetailComponent;
+  let element: HTMLElement;
+  let store: ListsStore;
+
+  const entryNames = (sectionId: string) =>
+    component.sections().find(({ id }) => id === sectionId)?.entries.map(({ name }) => name);
+  const render = () => {
+    fixture.detectChanges();
+    return element;
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ListDetailComponent],
       providers: [
         provideRouter([]),
+        { provide: AuthService, useValue: { user: signal<AuthUser | null>(null) } },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ slug: 'courses' }) } },
         },
       ],
     }).compileComponents();
+    fixture = TestBed.createComponent(ListDetailComponent);
+    component = fixture.componentInstance;
+    element = fixture.nativeElement as HTMLElement;
+    store = TestBed.inject(ListsStore);
   });
 
-  it('renders the expanded list and toggles its entries', () => {
-    const fixture = TestBed.createComponent(ListDetailComponent);
-    fixture.detectChanges();
-    const component = fixture.componentInstance;
-    const element = fixture.nativeElement as HTMLElement;
+  it('renders the list from the store, with progress derived from its entries', () => {
+    render();
 
     expect(element.querySelector('.list-title')?.textContent).toContain('Courses');
     expect(element.querySelectorAll('.entry').length).toBe(12);
-    expect(component.completed()).toBe(3);
+    expect(element.querySelector('.overall-progress strong')?.textContent).toBe('3 / 12');
     const firstSection = element.querySelector('.entry-section') as HTMLElement;
     expect(firstSection.style.getPropertyValue('--section-progress')).toBe('25%');
-    component.toggleEntry(0, 0);
-    fixture.detectChanges();
+
+    component.toggleEntry('fresh', 'milk');
+    render();
+
     expect(component.completed()).toBe(4);
+    expect(store.list('courses')?.completed).toBe(4);
     expect(firstSection.style.getPropertyValue('--section-progress')).toBe('50%');
   });
 
-  it('collapses only the selected subsection when its title is clicked', () => {
-    const fixture = TestBed.createComponent(ListDetailComponent);
-    fixture.detectChanges();
-    const sectionTitle = (fixture.nativeElement as HTMLElement).querySelector(
-      '.section-title',
-    ) as HTMLButtonElement;
+  it('collapses only the section whose title is clicked, and reopens it', () => {
+    (render().querySelector('.section-title') as HTMLButtonElement).click();
+    render();
 
-    sectionTitle.click();
-    fixture.detectChanges();
+    expect(element.querySelectorAll('.section-summary').length).toBe(1);
+    expect(element.querySelectorAll('.entry').length).toBe(8);
+    expect((element.querySelector('.section-summary') as HTMLElement).style.getPropertyValue('--section-progress')).toBe('25%');
 
-    expect(fixture.componentInstance.isSectionCollapsed('Produits frais')).toBeTrue();
-    expect(fixture.componentInstance.isSectionCollapsed('Épicerie')).toBeFalse();
-    expect(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.section-summary')
-        .length,
-    ).toBe(1);
-    expect(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.entry').length,
-    ).toBe(8);
-    expect(
-      ((fixture.nativeElement as HTMLElement).querySelector(
-        '.section-summary',
-      ) as HTMLElement).style.getPropertyValue('--section-progress'),
-    ).toBe('25%');
+    component.toggleSection('fresh');
+    expect(component.sectionViews()[0].collapsed).toBeFalse();
   });
 
-  it('automatically collapses a subsection when it reaches 100%', () => {
-    const fixture = TestBed.createComponent(ListDetailComponent);
-    const component = fixture.componentInstance;
+  it('collapses a section automatically once all its entries are done', () => {
+    component.toggleEntry('fresh', 'milk');
+    component.toggleEntry('fresh', 'tomatoes');
+    component.toggleEntry('fresh', 'salad');
 
-    component.toggleEntry(0, 0);
-    component.toggleEntry(0, 2);
-    component.toggleEntry(0, 3);
-    fixture.detectChanges();
-
-    expect(component.sectionCompleted(component.sections()[0])).toBe(4);
-    expect(component.isSectionCollapsed('Produits frais')).toBeTrue();
-    const summary = (fixture.nativeElement as HTMLElement).querySelector(
-      '.section-summary',
-    ) as HTMLElement;
+    const summary = render().querySelector('.section-summary') as HTMLElement;
     expect(summary.textContent).toContain('4 / 4');
     expect(summary.style.getPropertyValue('--section-progress')).toBe('100%');
   });
 
-  it('reorders entries from their drag handles', () => {
-    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
+  it('opens entry details from a row and edits the entry in the store', () => {
+    (render().querySelector('.entry') as HTMLElement).click();
+    render();
 
-    component.reorderEntry(0, 0, 3);
+    expect(component.selected()).toEqual({ sectionId: 'fresh', entryId: 'milk' });
+    expect(element.querySelector('.entry-details')).not.toBeNull();
 
-    expect(component.sections()[0].entries.map((entry) => entry.name)).toEqual([
-      'Œufs',
-      'Tomates',
-      'Salade',
-      'Lait',
-    ]);
-  });
+    component.updateActiveEntry({ notes: 'Demi-écrémé' });
+    expect(component.activeEntry()?.entry.notes).toBe('Demi-écrémé');
 
-  it('does not select UI text but keeps editor text selectable', () => {
-    const fixture = TestBed.createComponent(ListDetailComponent);
-    fixture.detectChanges();
-    const sectionTitle = (fixture.nativeElement as HTMLElement).querySelector(
-      '.section-title',
-    ) as HTMLElement;
-
-    expect(getComputedStyle(sectionTitle).userSelect).toBe('none');
-
-    fixture.componentInstance.openListEditor();
-    fixture.detectChanges();
-    const editor = (fixture.nativeElement as HTMLElement).querySelector(
-      '.editor-field input',
-    ) as HTMLInputElement;
-    expect(getComputedStyle(editor).userSelect).toBe('text');
-  });
-
-  it('adds an entry from a sub-list empty row and ignores blank values', () => {
-    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
-    const initialLength = component.sections()[0].entries.length;
-
-    component.beginAdding(0);
-    component.finishAdding(0);
-    expect(component.sections()[0].entries.length).toBe(initialLength);
-
-    component.beginAdding(0);
-    component.newEntryValue.set('  Beurre  ');
-    component.finishAdding(0);
-    expect(component.sections()[0].entries.at(-1)?.name).toBe('Beurre');
-    expect(component.total()).toBe(9);
-  });
-
-  it('opens entry details from the row without toggling completion', () => {
-    const fixture = TestBed.createComponent(ListDetailComponent);
-    fixture.detectChanges();
-    const component = fixture.componentInstance;
-    const initialDone = component.sections()[0].entries[0].done;
-    const row = (fixture.nativeElement as HTMLElement).querySelector('.entry') as HTMLElement;
-
-    row.click();
-    fixture.detectChanges();
-
-    expect(component.sections()[0].entries[0].done).toBe(initialDone);
-    expect(component.selectedEntry()).toEqual({ sectionIndex: 0, entryIndex: 0 });
-    expect((fixture.nativeElement as HTMLElement).querySelector('.entry-details')).not.toBeNull();
+    (element.querySelector('.entry-details header button') as HTMLButtonElement).click();
+    expect(component.selected()).toBeNull();
+    component.updateActiveEntry({ notes: 'ignoré' });
+    expect(store.detail('courses')?.sections[0].entries[0].notes).toBe('Demi-écrémé');
   });
 
   it('toggles completion only from the left circle', () => {
-    const fixture = TestBed.createComponent(ListDetailComponent);
-    fixture.detectChanges();
-    const component = fixture.componentInstance;
-    const toggle = (fixture.nativeElement as HTMLElement).querySelector('.entry-toggle') as HTMLButtonElement;
-
-    toggle.click();
+    (render().querySelector('.entry-toggle') as HTMLButtonElement).click();
 
     expect(component.sections()[0].entries[0].done).toBeTrue();
-    expect(component.selectedEntry()).toBeNull();
+    expect(component.selected()).toBeNull();
   });
 
-  it('stores entry details and creates a new colored section', () => {
-    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
+  it('adds an entry from the empty row, ignoring blanks and stale blur events', () => {
+    component.beginAdding('fresh');
+    component.finishAdding('fresh');
+    expect(entryNames('fresh')?.length).toBe(4);
 
-    component.selectedEntry.set({ sectionIndex: 0, entryIndex: 0 });
-    component.updateSelectedEntry({ assignedTo: 'Sam', notes: 'Prendre du demi-écrémé' });
-    component.newSectionName.set('Surgelés');
-    component.newSectionColor.set('#3978ed');
-    component.saveSection();
+    component.beginAdding('grocery');
+    component.newEntryValue.set('Farine');
+    component.finishAdding('fresh');
+    expect(component.addingTo()).toBe('grocery');
 
-    expect(component.sections()[0].entries[0].assignedTo).toBe('Sam');
-    expect(component.sections()[0].entries[0].notes).toBe('Prendre du demi-écrémé');
-    expect(component.sections().at(-1)).toEqual(
-      jasmine.objectContaining({ name: 'Surgelés', color: '#3978ed', entries: [] }),
-    );
+    component.beginAdding('fresh');
+    component.newEntryValue.set('  Beurre  ');
+    component.finishAdding('fresh');
+    expect(entryNames('fresh')?.at(-1)).toBe('Beurre');
+    expect(component.sections()[0].entries.at(-1)?.addedBy).toBe('Vous');
+    expect(component.total()).toBe(13);
+
+    component.beginAdding('fresh');
+    component.cancelAdding();
+    expect(component.addingTo()).toBeNull();
   });
 
-  it('permanently deletes an entry and updates the total', () => {
-    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
+  it('focuses the new entry input when it appears', () => {
+    render();
+    component.beginAdding('fresh');
+    render();
 
-    component.deleteEntry(0, 0);
-
-    expect(component.sections()[0].entries.map((entry) => entry.name)).not.toContain(
-      'Lait',
-    );
-    expect(component.total()).toBe(7);
+    expect(document.activeElement).toBe(element.querySelector('.new-entry-input'));
   });
 
-  it('closes a revealed delete action without toggling the entry', () => {
-    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
-    const initialDone = component.sections()[0].entries[0].done;
-    const event = new MouseEvent('click', { cancelable: true });
-    component.revealedEntry.set({ sectionIndex: 0, entryIndex: 0 });
+  it('asks before deleting an entry when confirmation is enabled', async () => {
+    const confirm = spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(false);
+    const milk = component.sections()[0].entries[0];
 
-    component.handleEntryClick(event, 0, 0);
+    await component.requestDeleteEntry('fresh', milk);
+    expect(confirm).toHaveBeenCalledWith(jasmine.objectContaining({ message: jasmine.stringContaining('Lait') }));
+    expect(entryNames('fresh')).toContain('Lait');
 
-    expect(event.defaultPrevented).toBeTrue();
-    expect(component.revealedEntry()).toBeNull();
-    expect(component.sections()[0].entries[0].done).toBe(initialDone);
+    confirm.and.resolveTo(true);
+    await component.requestDeleteEntry('fresh', milk);
+    expect(entryNames('fresh')).not.toContain('Lait');
+    expect(component.total()).toBe(11);
+
+    store.updateSettings({ confirmDelete: false });
+    await component.requestDeleteEntry('fresh', component.sections()[0].entries[0]);
+    expect(confirm).toHaveBeenCalledTimes(2);
   });
 
-  it('permanently deletes an entry when a left swipe crosses the threshold', () => {
-    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
-    TestBed.inject(ListsStore).updateSettings({ confirmDelete: false });
-    component.swipeGesture.set({
-      sectionIndex: 0,
-      entryIndex: 0,
-      startX: 100,
-      currentX: 55,
-    });
-
-    component.finishSwipe();
-
-    expect(component.sections()[0].entries.map((entry) => entry.name)).not.toContain(
-      'Lait',
-    );
-    expect(component.swipeGesture()).toBeNull();
-  });
-
-  it('opens the list editor from the overflow menu and saves its name', () => {
-    const fixture = TestBed.createComponent(ListDetailComponent);
-    fixture.detectChanges();
-    const component = fixture.componentInstance;
-
-    component.toggleListMenu();
-    fixture.detectChanges();
-    expect(
-      (fixture.nativeElement as HTMLElement).textContent,
-    ).toContain('Modifier la liste');
-
-    component.openListEditor();
-    component.draftName.set('Courses du week-end');
-    component.saveListEditor();
-    fixture.detectChanges();
-
-    expect(component.title()).toBe('Courses du week-end');
-    expect(component.listEditorOpen()).toBeFalse();
-    expect(
-      (fixture.nativeElement as HTMLElement).querySelector('.list-title')
-        ?.textContent,
-    ).toContain('Courses du week-end');
-  });
-
-  it('saves the selected main-menu icon for the lists overview', () => {
-    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
-    const listsStore = TestBed.inject(ListsStore);
-
-    component.selectedIcon.set('gift');
-    component.saveListEditor();
-
-    expect(listsStore.list('courses')?.icon).toBe('gift');
-  });
-
-  it('opens sharing and stores member permissions', () => {
-    const fixture = TestBed.createComponent(ListDetailComponent);
-    const component = fixture.componentInstance;
-
-    component.openSharing();
-    component.updateMemberRole('alex', 'viewer');
-    component.inviteEmail.set('marie@example.com');
-    component.inviteRole.set('editor');
-    component.inviteMember();
-    fixture.detectChanges();
-
-    expect(component.members().find((member) => member.id === 'alex')?.role).toBe('viewer');
-    expect(component.members().at(-1)).toEqual(
-      jasmine.objectContaining({ name: 'Marie', role: 'editor' }),
-    );
-    expect((fixture.nativeElement as HTMLElement).querySelector('.sharing-panel')).not.toBeNull();
-  });
-
-  it('stops sharing while retaining the owner', () => {
-    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
-
-    component.stopSharing();
-
-    expect(component.sharingEnabled()).toBeFalse();
-    expect(component.members().map((member) => member.role)).toEqual(['owner']);
-  });
-
-  describe('gestures', () => {
-    let component: ListDetailComponent;
-
-    /** Minimal PointerEvent: only what the handlers read. */
-    function pointer(clientX = 0, target: HTMLElement = document.createElement('div')): PointerEvent {
-      return {
-        clientX,
-        clientY: 0,
-        pointerId: 1,
-        target,
-        currentTarget: { setPointerCapture: jasmine.createSpy('setPointerCapture') },
-        preventDefault: jasmine.createSpy('preventDefault'),
-        stopPropagation: jasmine.createSpy('stopPropagation'),
-      } as unknown as PointerEvent;
+  describe('dragging', () => {
+    /** A detached row, as `elementFromPoint` would return under the pointer. */
+    function row(sectionId: string, entryId: string): HTMLElement {
+      const entry = document.createElement('div');
+      entry.className = 'entry';
+      entry.dataset['sectionId'] = sectionId;
+      entry.dataset['entryId'] = entryId;
+      return entry;
     }
+    const pointer = () => new PointerEvent('pointermove', { cancelable: true });
 
-    /** A detached `.entry` row, as `elementFromPoint` would return under the pointer. */
-    function entryRow(sectionIndex: number, entryIndex: number): HTMLElement {
-      const row = document.createElement('div');
-      row.className = 'entry';
-      row.dataset['sectionIndex'] = `${sectionIndex}`;
-      row.dataset['entryIndex'] = `${entryIndex}`;
-      return row;
-    }
+    it('moves the dragged entry over rows of its own section only', () => {
+      const pointFinder = spyOn(document, 'elementFromPoint').and.returnValue(row('fresh', 'tomatoes'));
 
-    beforeEach(() => {
-      component = TestBed.createComponent(ListDetailComponent).componentInstance;
-    });
-
-    it('drags an entry over another row of the same section', () => {
-      const pointFinder = spyOn(document, 'elementFromPoint').and.returnValue(entryRow(0, 2));
-
-      component.movePointerDrag(pointer());
+      component.moveDrag(pointer());
       expect(pointFinder).not.toHaveBeenCalled();
 
-      component.startPointerDrag(0, 0, pointer());
-      component.movePointerDrag(pointer());
-      expect(component.sections()[0].entries[2].name).toBe('Lait');
-      expect(component.draggedEntry()).toEqual({ sectionIndex: 0, entryIndex: 2 });
+      component.startDrag('fresh', 'milk');
+      component.moveDrag(pointer());
+      expect(entryNames('fresh')).toEqual(['Œufs', 'Tomates', 'Lait', 'Salade']);
 
-      // Rows of other sections, the same row, or empty space are ignored.
-      pointFinder.and.returnValue(entryRow(1, 0));
-      component.movePointerDrag(pointer());
-      pointFinder.and.returnValue(entryRow(0, 2));
-      component.movePointerDrag(pointer());
+      // Rows of other sections, the dragged row itself, or empty space are ignored.
+      pointFinder.and.returnValue(row('grocery', 'pasta'));
+      component.moveDrag(pointer());
+      pointFinder.and.returnValue(row('fresh', 'milk'));
+      component.moveDrag(pointer());
       pointFinder.and.returnValue(null);
-      component.movePointerDrag(pointer());
-      expect(component.sections()[0].entries[2].name).toBe('Lait');
+      component.moveDrag(pointer());
+      expect(entryNames('fresh')).toEqual(['Œufs', 'Tomates', 'Lait', 'Salade']);
 
-      component.finishPointerDrag(pointer());
-      expect(component.draggedEntry()).toBeNull();
+      component.endDrag();
+      expect(component.dragged()).toBeNull();
     });
 
-    it('reveals the swipe offset while dragging left and clamps it', () => {
-      component.startSwipe(0, 1, pointer(200));
-      component.moveSwipe(pointer(190));
-      expect(component.swipeOffset(0, 1)).toBe(-10);
-      component.moveSwipe(pointer(50));
-      expect(component.swipeOffset(0, 1)).toBe(-58);
-      expect(component.swipeOffset(0, 0)).toBe(0);
-
-      // A short swipe is cancelled but swallows the click that follows.
-      component.moveSwipe(pointer(180));
-      component.finishSwipe();
-      expect(component.swipeGesture()).toBeNull();
-      const click = new MouseEvent('click', { cancelable: true });
-      component.handleEntryClick(click, 0, 1);
-      expect(click.defaultPrevented).toBeTrue();
-      expect(component.selectedEntry()).toBeNull();
-    });
-
-    it('ignores swipes starting on the handle or the toggle', () => {
-      const handle = document.createElement('button');
-      handle.className = 'drag-handle';
-      component.startSwipe(0, 0, pointer(100, handle));
-      component.moveSwipe(pointer(10));
-      component.finishSwipe();
-
-      expect(component.swipeGesture()).toBeNull();
-      expect(component.sections()[0].entries.length).toBe(4);
-    });
-
-    it('keeps a revealed row open offset and swallows its next click', () => {
-      component.revealedEntry.set({ sectionIndex: 0, entryIndex: 0 });
-      expect(component.swipeOffset(0, 0)).toBe(-58);
-
-      component.startSwipe(0, 0, pointer(100));
-      expect(component.suppressEntryClick()).toEqual({ sectionIndex: 0, entryIndex: 0 });
-      component.finishSwipe();
-      expect(component.revealedEntry()).toBeNull();
-    });
-
-    it('asks before deleting when confirmation is enabled', async () => {
-      const confirm = spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(false);
-      await component.requestDeleteEntry(0, 0);
-      expect(confirm).toHaveBeenCalledWith(jasmine.objectContaining({ message: jasmine.stringContaining('Lait') }));
-      expect(component.sections()[0].entries.length).toBe(4);
-
-      confirm.and.resolveTo(true);
-      await component.requestDeleteEntry(0, 0);
-      expect(component.sections()[0].entries.length).toBe(3);
-
-      await component.requestDeleteEntry(0, 99);
-      expect(confirm).toHaveBeenCalledTimes(2);
+    it('marks the dragged row', () => {
+      component.startDrag('fresh', 'milk');
+      render();
+      expect(element.querySelectorAll('.entry.dragging').length).toBe(1);
     });
   });
 
-  describe('panels and editors', () => {
-    let component: ListDetailComponent;
+  describe('panels', () => {
+    it('opens the list editor from the menu and saves it to the store', () => {
+      component.toggleListMenu();
+      expect(render().textContent).toContain('Modifier la liste');
 
-    beforeEach(() => {
-      component = TestBed.createComponent(ListDetailComponent).componentInstance;
+      component.openListEditor();
+      render();
+      expect(component.listMenuOpen()).toBeFalse();
+      expect(element.querySelector('app-list-editor')).not.toBeNull();
+
+      component.saveList({ name: 'Courses du week-end', icon: 'gift', color: '#e65591', description: 'Samedi' });
+      render();
+
+      expect(component.listEditorOpen()).toBeFalse();
+      expect(element.querySelector('.list-title')?.textContent).toContain('Courses du week-end');
+      expect(store.list('courses')).toEqual(jasmine.objectContaining({ icon: 'gift', color: '#e65591' }));
+      expect(store.detail('courses')?.description).toBe('Samedi');
     });
 
-    it('opens and closes the section creator, refusing blank names', () => {
+    it('adds a section from the section creator', () => {
       component.toggleListMenu();
       component.openSectionCreator();
-      expect(component.listMenuOpen()).toBeFalse();
-      expect(component.sectionCreatorOpen()).toBeTrue();
+      expect(render().querySelector('app-list-section-creator')).not.toBeNull();
 
-      component.newSectionName.set('   ');
-      component.saveSection();
-      expect(component.sections().length).toBe(4);
+      component.addSection({ name: 'Surgelés', color: '#3978ed' });
+      render();
 
-      component.closeSectionCreator();
       expect(component.sectionCreatorOpen()).toBeFalse();
+      expect(component.sections().at(-1)?.name).toBe('Surgelés');
+      expect(element.querySelectorAll('.entry-section').length).toBe(5);
     });
 
-    it('discards list editor changes on cancel', () => {
-      component.openListEditor();
-      component.draftName.set('Brouillon');
-      component.closeListEditor();
+    it('opens and closes the sharing panel', () => {
+      (render().querySelector('.members button') as HTMLButtonElement).click();
+      expect(render().querySelector('.sharing-panel')).not.toBeNull();
 
-      expect(component.draftName()).toBe('Courses');
-      expect(component.listEditorOpen()).toBeFalse();
-    });
-
-    it('keeps the previous name when saving a blank one', () => {
-      component.openListEditor();
-      component.draftName.set('   ');
-      component.saveListEditor();
-
-      expect(component.title()).toBe('Courses');
-    });
-
-    it('manages invitations, roles and the share link', async () => {
-      component.openSharing();
-      component.inviteEmail.set('  ');
-      component.inviteMember();
-      expect(component.members().length).toBe(3);
-
-      component.inviteEmail.set('@example.com');
-      component.inviteMember();
-      expect(component.members().at(-1)?.name).toBe('@example.com');
-
-      component.updateMemberRole('camille', 'viewer');
-      expect(component.members()[0].role).toBe('owner');
-      expect(component.roleLabel('owner')).toBe('Propriétaire');
-      expect(component.roleLabel('editor')).toBe('Peut modifier');
-      expect(component.roleLabel('viewer')).toBe('Peut consulter');
-
-      const writeText = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
-      await component.copyInvitationLink();
-      expect(writeText).toHaveBeenCalledWith('https://plano.app/l/courses-a1b2c3');
-      expect(component.linkCopied()).toBeTrue();
-
-      component.stopSharing();
-      component.enableSharing();
-      expect(component.sharingEnabled()).toBeTrue();
-      component.closeSharing();
-      expect(component.sharingOpen()).toBeFalse();
-    });
-
-    it('edits the selected entry and closes its details', () => {
-      component.updateSelectedEntry({ notes: 'ignoré' });
-      expect(component.activeEntry()).toBeNull();
-      expect(component.activeEntrySection()).toBeNull();
-
-      component.selectedEntry.set({ sectionIndex: 1, entryIndex: 2 });
-      expect(component.activeEntry()?.name).toBe('Huile d’olive');
-      expect(component.activeEntrySection()?.name).toBe('Épicerie');
-
-      component.closeEntryDetails();
-      expect(component.selectedEntry()).toBeNull();
-    });
-
-    it('cancels adding and ignores stale blur events from other sections', () => {
-      component.beginAdding(1);
-      component.newEntryValue.set('Farine');
-      component.finishAdding(0);
-      expect(component.editingSection()).toBe(1);
-
-      component.cancelAdding();
-      expect(component.editingSection()).toBeNull();
-      expect(component.newEntryValue()).toBe('');
-    });
-
-    it('reopens a collapsed section', () => {
-      component.toggleSection('Boissons');
-      component.toggleSection('Boissons');
-      expect(component.isSectionCollapsed('Boissons')).toBeFalse();
+      (element.querySelector('.sharing-panel header button') as HTMLButtonElement).click();
+      expect(render().querySelector('.sharing-panel')).toBeNull();
     });
   });
 
   it('applies the hide-completed and keep-order display settings', () => {
-    const component = TestBed.createComponent(ListDetailComponent).componentInstance;
-    const listsStore = TestBed.inject(ListsStore);
-    const section = component.sections()[0];
+    const freshNames = () => component.sectionViews()[0].entries.map(({ name }) => name);
 
     // Default: completed entries are shown, sorted last.
-    expect(component.displayedEntries(section).at(-1)?.entry.name).toBe('Œufs');
+    expect(freshNames().at(-1)).toBe('Œufs');
 
-    listsStore.updateSettings({ completedLast: false });
-    expect(component.displayedEntries(section)[1].entry.name).toBe('Œufs');
+    store.updateSettings({ completedLast: false });
+    expect(freshNames()[1]).toBe('Œufs');
 
-    listsStore.updateSettings({ showCompleted: false });
-    expect(component.displayedEntries(section).map(({ entry }) => entry.name)).not.toContain('Œufs');
-    expect(component.sectionProgress({ ...section, entries: [] })).toBe(0);
+    store.updateSettings({ showCompleted: false });
+    expect(freshNames()).not.toContain('Œufs');
+  });
+
+  it('does not select UI text but keeps editor text selectable', () => {
+    expect(getComputedStyle(render().querySelector('.section-title') as HTMLElement).userSelect).toBe('none');
+
+    component.openListEditor();
+    const input = render().querySelector('.editor-field input') as HTMLInputElement;
+    expect(getComputedStyle(input).userSelect).toBe('text');
   });
 });

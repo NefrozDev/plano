@@ -1,4 +1,3 @@
-import { UnauthorizedException } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthController } from './auth.controller';
 import type { AuthService } from './auth.service';
@@ -84,13 +83,8 @@ describe('AuthController', () => {
     );
   });
 
-  it('returns only the user attached by the session guard', () => {
-    expect(
-      controller.getSession({ authUser: user } as AuthenticatedRequest),
-    ).toEqual(user);
-    expect(() => controller.getSession({} as AuthenticatedRequest)).toThrow(
-      UnauthorizedException,
-    );
+  it('returns the user attached by the session guard', () => {
+    expect(controller.getSession(user)).toEqual(user);
   });
 
   it('revokes the current cookie and clears it', async () => {

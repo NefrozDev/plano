@@ -374,6 +374,10 @@ describe('Plano API (e2e)', () => {
       .expect(204);
 
     await request(app.getHttpServer())
+      .delete('/api/v1/groups/me/members/not-a-uuid')
+      .set('Cookie', memberCookie)
+      .expect(400);
+    await request(app.getHttpServer())
       .delete(`/api/v1/groups/me/members/${visitor.id}`)
       .set('Cookie', memberCookie)
       .expect(204);

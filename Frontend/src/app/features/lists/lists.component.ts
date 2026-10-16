@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { SwitchRowComponent } from '../../shared/ui/switch-row.component';
@@ -12,6 +12,7 @@ type ListFilter = 'all' | 'mine' | 'shared' | 'archived';
   imports: [RouterLink, BottomNavComponent, SwitchRowComponent],
   templateUrl: './lists.component.html',
   styleUrl: './lists.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ListsComponent {
   readonly listsStore = inject(ListsStore);
@@ -23,7 +24,7 @@ export class ListsComponent {
     { label: 'Archivées', value: 'archived' },
   ];
   readonly activeFilter = signal<ListFilter>('all');
-  readonly gridView = signal(this.listsStore.settings().defaultView === 'grid');
+  readonly gridView = computed(() => this.listsStore.settings().defaultView === 'grid');
   readonly menuOpen = signal(false);
   readonly settingsOpen = signal(false);
   readonly lists = this.listsStore.lists;
@@ -41,10 +42,7 @@ export class ListsComponent {
   }
 
   toggleView(): void {
-    this.gridView.update((gridView) => !gridView);
-    this.listsStore.updateSettings({
-      defaultView: this.gridView() ? 'grid' : 'list',
-    });
+    this.setDefaultView(this.gridView() ? 'list' : 'grid');
   }
 
   toggleMenu(): void {
@@ -58,7 +56,6 @@ export class ListsComponent {
 
   setDefaultView(view: 'list' | 'grid'): void {
     this.listsStore.updateSettings({ defaultView: view });
-    this.gridView.set(view === 'grid');
   }
 
   toggleSetting(

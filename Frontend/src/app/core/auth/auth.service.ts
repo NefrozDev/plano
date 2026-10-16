@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, of, shareReplay, tap } from 'rxjs';
+import { API_BASE_URL } from '../http/api-base-url';
 import {
   AuthStatus,
   AuthUser,
@@ -11,7 +12,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/v1/auth';
+  private readonly apiUrl = `${inject(API_BASE_URL)}/auth`;
   private readonly userState = signal<AuthUser | null>(null);
   private readonly statusState = signal<AuthStatus>('loading');
   private restoreRequest?: Observable<AuthUser | null>;
@@ -24,17 +25,13 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<AuthUser> {
     return this.http
-      .post<AuthUser>(`${this.apiUrl}/login`, credentials, {
-        withCredentials: true,
-      })
+      .post<AuthUser>(`${this.apiUrl}/login`, credentials)
       .pipe(tap((user) => this.setAuthenticated(user)));
   }
 
   register(details: RegisterRequest): Observable<AuthUser> {
     return this.http
-      .post<AuthUser>(`${this.apiUrl}/register`, details, {
-        withCredentials: true,
-      })
+      .post<AuthUser>(`${this.apiUrl}/register`, details)
       .pipe(tap((user) => this.setAuthenticated(user)));
   }
 
@@ -45,7 +42,7 @@ export class AuthService {
 
     if (!this.restoreRequest) {
       this.restoreRequest = this.http
-        .get<AuthUser>(`${this.apiUrl}/session`, { withCredentials: true })
+        .get<AuthUser>(`${this.apiUrl}/session`)
         .pipe(
           tap((user) => this.setAuthenticated(user)),
           catchError(() => {
@@ -64,7 +61,7 @@ export class AuthService {
 
   logout(): Observable<void> {
     return this.http
-      .post<void>(`${this.apiUrl}/logout`, null, { withCredentials: true })
+      .post<void>(`${this.apiUrl}/logout`, null)
       .pipe(tap(() => this.setAnonymous()));
   }
 

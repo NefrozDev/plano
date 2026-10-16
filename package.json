@@ -13,6 +13,7 @@
     "frontend:start": "npm --prefix Frontend start",
     "frontend:build": "npm --prefix Frontend run build",
     "frontend:watch": "npm --prefix Frontend run watch",
+    "frontend:lint": "npm --prefix Frontend run lint",
     "frontend:test": "npm --prefix Frontend test",
     "frontend:test:cov": "npm --prefix Frontend run test:cov",
     "test:coverage": "npm run backend:test:cov && npm run frontend:test:cov"

@@ -45,12 +45,7 @@ export class GroupsService {
   async create(userId: string, details: CreateGroupDto): Promise<GroupDetails> {
     await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
-        const existing = await manager.findOne(GroupMembership, {
-          where: { userId },
-        });
-        if (existing) {
-          throw new ConflictException('Vous appartenez déjà à un groupe.');
-        }
+        await this.requireNoMembership(manager, userId);
 
         const group = manager.create(Group, {
           id: randomUUID(),
@@ -77,12 +72,7 @@ export class GroupsService {
   async join(userId: string, details: JoinGroupDto): Promise<GroupDetails> {
     await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
-        const existing = await manager.findOne(GroupMembership, {
-          where: { userId },
-        });
-        if (existing) {
-          throw new ConflictException('Vous appartenez déjà à un groupe.');
-        }
+        await this.requireNoMembership(manager, userId);
 
         const group = await manager.findOne(Group, {
           where: { inviteCode: details.inviteCode },
@@ -216,6 +206,19 @@ export class GroupsService {
       throw new NotFoundException("Vous n'appartenez à aucun groupe.");
     }
     return details;
+  }
+
+  /** A user belongs to at most one group. */
+  private async requireNoMembership(
+    manager: EntityManager,
+    userId: string,
+  ): Promise<void> {
+    const existing = await manager.findOne(GroupMembership, {
+      where: { userId },
+    });
+    if (existing) {
+      throw new ConflictException('Vous appartenez déjà à un groupe.');
+    }
   }
 
   private async requireMembership(

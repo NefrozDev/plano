@@ -1,11 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import type { Person } from '../../core/people/people';
 
-export interface AvatarPerson {
-  id: string;
-  name: string;
-  initials: string;
-  color: string;
-}
+export type AvatarPerson = Person;
 
 /**
  * Overlapping initials bubbles, capped at `max` with a "+N" bubble.
