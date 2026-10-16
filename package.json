@@ -5,6 +5,8 @@
   "scripts": {
     "start:front": "npm --prefix Frontend start",
     "start:back": "npm --prefix Backend run start:dev",
+    "db:start": "docker compose up --detach --wait db",
+    "db:stop": "docker compose stop db",
     "backend:build": "npm --prefix Backend run build",
     "backend:lint": "npm --prefix Backend run lint",
     "backend:test": "npm --prefix Backend test",

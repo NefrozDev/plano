@@ -22,6 +22,14 @@ npm --prefix Frontend ci
 npm --prefix Backend ci
 ```
 
+The API stores its data in PostgreSQL. With Docker running, start a local
+database and give the API its configuration once:
+
+```bash
+npm run db:start
+cp Backend/.env.example Backend/.env
+```
+
 Then run the API and Angular development server in separate terminals:
 
 ```bash
@@ -45,13 +53,13 @@ The application is available at `http://localhost:4200/`. Angular proxies
 Registration and login use an opaque, persistent session cookie. The cookie is
 `HttpOnly`, so Angular cannot read or store the credential. On every app launch,
 Angular calls `GET /api/v1/auth/session`; the backend hashes the cookie token and
-looks up the matching session in its SQLite database. Users and sessions therefore
+looks up the matching session in its PostgreSQL database. Users and sessions therefore
 survive both browser and backend restarts. Logout revokes the stored session and
 clears the cookie.
 
-Local database files are created in `Backend/data/` and are intentionally ignored
-by Git. Backend configuration names and safe defaults are documented in
-`Backend/.env.example`.
+The local database keeps its data in a Docker volume; `npm run db:stop` stops it
+without deleting anything. Backend configuration names and safe defaults are
+documented in `Backend/.env.example`.
 
 ## Test coverage
 

@@ -1,14 +1,11 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { randomUUID } from 'node:crypto';
-import { rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { configureApp } from './../src/app.config';
 import { AppModule } from './../src/app.module';
 import type { AuthUser } from './../src/auth/auth.types';
+import { createTestDatabase } from './../src/database/testing/test-database';
 
 export const validRegistration = {
   firstName: 'Jamie',
@@ -38,13 +35,13 @@ export function cookiePair(setCookieHeader: string): string {
 
 export interface TestApp {
   app: INestApplication<App>;
-  /** Stops the app and starts a fresh one on the same database file. */
+  /** Stops the app and starts a fresh one on the same database. */
   restart(): Promise<INestApplication<App>>;
   close(): Promise<void>;
 }
 
-async function startApp(databasePath: string): Promise<INestApplication<App>> {
-  process.env.DATABASE_PATH = databasePath;
+async function startApp(databaseUrl: string): Promise<INestApplication<App>> {
+  process.env.DATABASE_URL = databaseUrl;
   process.env.AUTH_SCRYPT_COST = '1024';
   process.env.AUTH_SCRYPT_BLOCK_SIZE = '8';
   process.env.AUTH_SCRYPT_PARALLELIZATION = '1';
@@ -58,19 +55,19 @@ async function startApp(databasePath: string): Promise<INestApplication<App>> {
   return app;
 }
 
-/** The real AppModule with the runtime HTTP setup, on a throwaway SQLite file. */
+/** The real AppModule with the runtime HTTP setup, on a throwaway database. */
 export async function createTestApp(): Promise<TestApp> {
-  const databasePath = join(tmpdir(), `plano-e2e-${randomUUID()}.sqlite`);
+  const database = await createTestDatabase();
   const testApp: TestApp = {
-    app: await startApp(databasePath),
+    app: await startApp(database.url),
     restart: async () => {
       await testApp.app.close();
-      testApp.app = await startApp(databasePath);
+      testApp.app = await startApp(database.url);
       return testApp.app;
     },
     close: async () => {
       await testApp.app.close();
-      await rm(databasePath, { force: true });
+      await database.drop();
     },
   };
   return testApp;

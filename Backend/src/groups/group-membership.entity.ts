@@ -23,7 +23,10 @@ export class GroupMembership {
   userId!: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({
+    name: 'userId',
+    foreignKeyConstraintName: 'FK_group_memberships_user',
+  })
   user!: User;
 
   @Column({ type: 'varchar', length: 36 })
@@ -32,12 +35,15 @@ export class GroupMembership {
   @ManyToOne(() => Group, (group) => group.memberships, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'groupId' })
+  @JoinColumn({
+    name: 'groupId',
+    foreignKeyConstraintName: 'FK_group_memberships_group',
+  })
   group!: Group;
 
   @Column({ type: 'varchar', length: 16 })
   role!: GroupRole;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 }

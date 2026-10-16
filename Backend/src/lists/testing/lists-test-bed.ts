@@ -1,17 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import { DataSource } from 'typeorm';
-import { Session } from '../../auth/session.entity';
 import { DatabaseWriteLockService } from '../../database/database-write-lock.service';
 import { MIGRATIONS } from '../../database/migrations';
+import {
+  createTestDatabase,
+  ENTITIES,
+} from '../../database/testing/test-database';
 import { GroupMembership } from '../../groups/group-membership.entity';
 import { Group } from '../../groups/group.entity';
 import { GroupsService } from '../../groups/groups.service';
 import { User } from '../../users/user.entity';
-import { ListEntry } from '../entities/list-entry.entity';
-import { ListMember } from '../entities/list-member.entity';
-import { ListSection } from '../entities/list-section.entity';
-import { ListSettings } from '../entities/list-settings.entity';
-import { List } from '../entities/list.entity';
 import { ListAccessService } from '../list-access.service';
 import { ListContentService } from '../list-content.service';
 import { ListSettingsService } from '../list-settings.service';
@@ -30,26 +28,20 @@ export interface ListsTestBed {
   cyd: string;
   joinGroup(userId: string): Promise<void>;
   leaveGroup(userId: string): Promise<void>;
+  /** Closes the connections and drops the database. */
+  destroy(): Promise<void>;
 }
 
 /**
- * Real services on an in-memory SQLite database built by the app's migrations:
- * queries, constraints and access rules run for real, without a network port.
+ * Real services on a fresh PostgreSQL database built by the app's migrations:
+ * queries, constraints and access rules run for real, without starting the app.
  */
 export async function createListsTestBed(): Promise<ListsTestBed> {
+  const database = await createTestDatabase();
   const dataSource = new DataSource({
-    type: 'sqljs',
-    entities: [
-      User,
-      Session,
-      Group,
-      GroupMembership,
-      List,
-      ListMember,
-      ListSection,
-      ListEntry,
-      ListSettings,
-    ],
+    type: 'postgres',
+    url: database.url,
+    entities: ENTITIES,
     migrations: MIGRATIONS,
   });
   await dataSource.initialize();
@@ -95,6 +87,10 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
     joinGroup,
     leaveGroup: async (userId) => {
       await dataSource.manager.delete(GroupMembership, { userId });
+    },
+    destroy: async () => {
+      await dataSource.destroy();
+      await database.drop();
     },
   };
 }

@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/user.entity';
 import { ListSection } from './list-section.entity';
+import { List } from './list.entity';
 
 @Entity({ name: 'list_entries' })
 @Index('IDX_list_entries_section', ['sectionId'])
@@ -21,13 +22,23 @@ export class ListEntry {
   @Column({ type: 'varchar', length: 36 })
   listId!: string;
 
+  @ManyToOne(() => List, { onDelete: 'CASCADE' })
+  @JoinColumn({
+    name: 'listId',
+    foreignKeyConstraintName: 'FK_list_entries_list',
+  })
+  list!: List;
+
   @Column({ type: 'varchar', length: 36 })
   sectionId!: string;
 
   @ManyToOne(() => ListSection, (section) => section.entries, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'sectionId' })
+  @JoinColumn({
+    name: 'sectionId',
+    foreignKeyConstraintName: 'FK_list_entries_section',
+  })
   section!: ListSection;
 
   @Column({ type: 'varchar', length: 200 })
@@ -44,11 +55,21 @@ export class ListEntry {
   addedByUserId!: string | null;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'addedByUserId' })
+  @JoinColumn({
+    name: 'addedByUserId',
+    foreignKeyConstraintName: 'FK_list_entries_added_by',
+  })
   addedBy!: User | null;
 
   @Column({ type: 'varchar', length: 36, nullable: true })
   assignedToUserId!: string | null;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({
+    name: 'assignedToUserId',
+    foreignKeyConstraintName: 'FK_list_entries_assigned_to',
+  })
+  assignedTo!: User | null;
 
   /** Local `YYYY-MM-DDTHH:mm`. */
   @Column({ type: 'varchar', length: 16, nullable: true })
@@ -61,6 +82,6 @@ export class ListEntry {
   @Column({ type: 'integer' })
   position!: number;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 }

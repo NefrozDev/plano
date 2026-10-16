@@ -9,7 +9,10 @@ export class ListSettings implements ListSettingsShape {
   userId!: string;
 
   @OneToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({
+    name: 'userId',
+    foreignKeyConstraintName: 'FK_list_settings_user',
+  })
   user!: User;
 
   @Column({ type: 'varchar', length: 8, default: 'list' })

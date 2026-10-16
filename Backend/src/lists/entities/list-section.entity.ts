@@ -20,7 +20,10 @@ export class ListSection {
   listId!: string;
 
   @ManyToOne(() => List, (list) => list.sections, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'listId' })
+  @JoinColumn({
+    name: 'listId',
+    foreignKeyConstraintName: 'FK_list_sections_list',
+  })
   list!: List;
 
   @Column({ type: 'varchar', length: 80 })

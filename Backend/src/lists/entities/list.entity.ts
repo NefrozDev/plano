@@ -23,7 +23,7 @@ export class List {
   ownerId!: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'ownerId' })
+  @JoinColumn({ name: 'ownerId', foreignKeyConstraintName: 'FK_lists_owner' })
   owner!: User;
 
   @Column({ type: 'varchar', length: 80 })
@@ -41,7 +41,7 @@ export class List {
   @Column({ type: 'boolean', default: false })
   archived!: boolean;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 
   @OneToMany(() => ListMember, (member) => member.list)

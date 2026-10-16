@@ -27,10 +27,13 @@ export class Group {
   createdByUserId!: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'createdByUserId' })
+  @JoinColumn({
+    name: 'createdByUserId',
+    foreignKeyConstraintName: 'FK_groups_creator',
+  })
   createdBy!: User;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 
   @OneToMany(() => GroupMembership, (membership) => membership.group)

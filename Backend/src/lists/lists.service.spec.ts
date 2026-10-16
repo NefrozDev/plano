@@ -16,7 +16,7 @@ describe('ListsService', () => {
     bed = await createListsTestBed();
   });
 
-  afterEach(() => bed.dataSource.destroy());
+  afterEach(() => bed.destroy());
 
   const createList = (userId = bed.ada) =>
     bed.lists.create(userId, {

@@ -9,8 +9,8 @@ import {
 const id = { name: 'id', type: 'varchar', length: '36', isPrimary: true };
 const createdAt = {
   name: 'createdAt',
-  type: 'datetime',
-  default: 'CURRENT_TIMESTAMP',
+  type: 'timestamptz',
+  default: 'now()',
 };
 
 function references(
@@ -47,7 +47,7 @@ export class CreateListTables1787100000000 implements MigrationInterface {
             length: '500',
             default: "''",
           },
-          { name: 'archived', type: 'boolean', default: 0 },
+          { name: 'archived', type: 'boolean', default: false },
           createdAt,
         ],
         indices: [{ name: 'IDX_lists_owner', columnNames: ['ownerId'] }],
@@ -106,8 +106,8 @@ export class CreateListTables1787100000000 implements MigrationInterface {
           { name: 'listId', type: 'varchar', length: '36' },
           { name: 'sectionId', type: 'varchar', length: '36' },
           { name: 'name', type: 'varchar', length: '200' },
-          { name: 'done', type: 'boolean', default: 0 },
-          { name: 'highlighted', type: 'boolean', default: 0 },
+          { name: 'done', type: 'boolean', default: false },
+          { name: 'highlighted', type: 'boolean', default: false },
           {
             name: 'addedByUserId',
             type: 'varchar',
@@ -159,9 +159,9 @@ export class CreateListTables1787100000000 implements MigrationInterface {
             length: '8',
             default: "'list'",
           },
-          { name: 'showCounts', type: 'boolean', default: 1 },
-          { name: 'showCompleted', type: 'boolean', default: 1 },
-          { name: 'completedLast', type: 'boolean', default: 1 },
+          { name: 'showCounts', type: 'boolean', default: true },
+          { name: 'showCompleted', type: 'boolean', default: true },
+          { name: 'completedLast', type: 'boolean', default: true },
           {
             name: 'defaultReminder',
             type: 'varchar',
@@ -174,8 +174,8 @@ export class CreateListTables1787100000000 implements MigrationInterface {
             length: '8',
             default: "'mine'",
           },
-          { name: 'archiveCompleted', type: 'boolean', default: 0 },
-          { name: 'confirmDelete', type: 'boolean', default: 1 },
+          { name: 'archiveCompleted', type: 'boolean', default: false },
+          { name: 'confirmDelete', type: 'boolean', default: true },
         ],
         foreignKeys: [references('FK_list_settings_user', 'userId', 'users')],
       }),

@@ -23,19 +23,25 @@ export class ListMember {
   listId!: string;
 
   @ManyToOne(() => List, (list) => list.members, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'listId' })
+  @JoinColumn({
+    name: 'listId',
+    foreignKeyConstraintName: 'FK_list_members_list',
+  })
   list!: List;
 
   @Column({ type: 'varchar', length: 36 })
   userId!: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({
+    name: 'userId',
+    foreignKeyConstraintName: 'FK_list_members_user',
+  })
   user!: User;
 
   @Column({ type: 'varchar', length: 16 })
   role!: ListMemberRole;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 }

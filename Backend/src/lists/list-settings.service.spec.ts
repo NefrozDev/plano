@@ -10,7 +10,7 @@ describe('ListSettingsService', () => {
     bed = await createListsTestBed();
   });
 
-  afterEach(() => bed.dataSource.destroy());
+  afterEach(() => bed.destroy());
 
   it('starts from the defaults and keeps each user’s changes apart', async () => {
     const defaults = {

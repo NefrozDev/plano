@@ -29,7 +29,7 @@ describe('ListContentService', () => {
     ).id;
   });
 
-  afterEach(() => bed.dataSource.destroy());
+  afterEach(() => bed.destroy());
 
   const names = async () =>
     (await bed.lists.findOne(list.id, bed.ada)).sections[0].entries.map(

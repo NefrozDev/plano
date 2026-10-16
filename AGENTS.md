@@ -19,6 +19,7 @@ These instructions are also intended to be reusable when starting another Angula
 
 - Start Angular: `npm run start:front`
 - Start NestJS in watch mode: `npm run start:back`
+- Start or stop the local PostgreSQL (Docker): `npm run db:start`, `npm run db:stop`
 - Build NestJS: `npm run backend:build`
 - Lint NestJS: `npm run backend:lint`
 - Run NestJS unit tests: `npm run backend:test`
@@ -78,7 +79,7 @@ The `rootDir` must be `../..` (the repository root) because end-to-end tests imp
 
 - The backend may only `import type` from `@plano/common`; ESLint enforces it. Common is compiled with the Angular app, not shipped with the API, and type imports disappear at build time.
 - `Backend/tsconfig.json` sets `rootDir` to `..` so `Common/src` is part of the program. The build output is therefore `Backend/dist/Backend/src/main.js`: `nest-cli.json` (`entryFile`) and `start:prod` point there.
-- Never resolve runtime paths with a fixed number of `..` from `__dirname`: the depth differs between `src` and `dist`. Resolve from the Backend package root instead (see `database.module.ts`).
+- Never resolve runtime paths with a fixed number of `..` from `__dirname`: the depth differs between `src` and `dist`. Resolve from the Backend package root instead (walk up to the nearest `package.json`).
 
 After creating or moving a `tsconfig`, VS Code may retain its previous in-memory project graph. Only suggest **TypeScript: Restart TS Server** if correct configuration is present but stale diagnostics remain. A restart is a cache refresh, not a dependency fix.
 
