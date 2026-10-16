@@ -42,6 +42,20 @@ export class GroupsService {
     return this.toDetails(membership, members);
   }
 
+  /** Ids of everyone in the user's group, the user included; empty without a group. */
+  async findGroupMateIds(userId: string): Promise<string[]> {
+    const membership = await this.memberships.findOne({ where: { userId } });
+    if (!membership) return [];
+    const members = await this.memberships.find({
+      where: { groupId: membership.groupId },
+    });
+    return members.map((member) => member.userId);
+  }
+
+  async areGroupMates(userId: string, otherUserId: string): Promise<boolean> {
+    return (await this.findGroupMateIds(userId)).includes(otherUserId);
+  }
+
   async create(userId: string, details: CreateGroupDto): Promise<GroupDetails> {
     await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {

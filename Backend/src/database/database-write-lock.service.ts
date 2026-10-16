@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
 /**
- * sql.js owns a single in-process SQLite connection. Serializing writes prevents
- * overlapping requests from sharing or corrupting one another's transactions.
+ * Serializes the writes of this API process. It was required when sql.js held
+ * one shared SQLite connection; with PostgreSQL it still keeps read-then-write
+ * sequences, such as picking the next position, from interleaving.
  */
 @Injectable()
 export class DatabaseWriteLockService {

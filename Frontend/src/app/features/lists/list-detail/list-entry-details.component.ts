@@ -1,8 +1,12 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import type { ListEntry } from '@plano/common';
-import type { EntryChanges } from '../lists.store';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import type { ListEntry, ListMember, UpdateEntryRequest } from '@plano/common';
 
-/** Full-screen editor of one entry; every edit is emitted as it happens. */
+const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+
+/**
+ * Full-screen editor of one entry. Text fields are saved when they lose focus
+ * (`change`), not on every keystroke; viewers see the fields disabled.
+ */
 @Component({
   selector: 'app-list-entry-details',
   standalone: true,
@@ -14,7 +18,6 @@ import type { EntryChanges } from '../lists.store';
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
         </button>
         <h2 id="entry-details-title">Détail d’un élément</h2>
-        <button type="button" aria-label="Plus d’options">⋮</button>
       </header>
 
       <div class="entry-details-content">
@@ -24,9 +27,16 @@ import type { EntryChanges } from '../lists.store';
             type="button"
             [class.done]="entry().done"
             [attr.aria-pressed]="entry().done"
+            [disabled]="readonly()"
             (click)="change.emit({ done: !entry().done })"
           ><i aria-hidden="true"></i></button>
-          <input aria-label="Nom de l’élément" [value]="entry().name" (input)="change.emit({ name: $any($event.target).value })" />
+          <input
+            aria-label="Nom de l’élément"
+            maxlength="200"
+            [value]="entry().name"
+            [disabled]="readonly()"
+            (change)="rename($any($event.target))"
+          />
         </div>
 
         <section class="detail-fields">
@@ -41,24 +51,36 @@ import type { EntryChanges } from '../lists.store';
           <div class="detail-field two-line">
             <span>Ajouté par</span>
             <strong>{{ entry().addedBy }}</strong>
-            <small>{{ entry().addedAt }}</small>
+            <small>{{ addedAt() }}</small>
           </div>
           <label class="detail-field">
             <span>Assigné à</span>
-            <select [value]="entry().assignedTo" (change)="change.emit({ assignedTo: $any($event.target).value })">
-              <option value="">Non assigné</option>
-              <option value="Alex">Alex</option>
-              <option value="Camille">Camille</option>
-              <option value="Sam">Sam</option>
+            <select [disabled]="readonly()" (change)="change.emit({ assignedTo: $any($event.target).value || null })">
+              <option value="" [selected]="!entry().assignedTo">Non assigné</option>
+              @for (member of members(); track member.id) {
+                <option [value]="member.id" [selected]="member.id === entry().assignedTo">{{ member.name }}</option>
+              }
             </select>
           </label>
           <label class="detail-field">
             <span>Rappel</span>
-            <input type="datetime-local" [value]="entry().reminder" (change)="change.emit({ reminder: $any($event.target).value })" />
+            <input
+              type="datetime-local"
+              [value]="entry().reminder ?? ''"
+              [disabled]="readonly()"
+              (change)="change.emit({ reminder: $any($event.target).value || null })"
+            />
           </label>
           <label class="detail-notes">
             <span>Notes</span>
-            <textarea rows="5" placeholder="Ajouter une note…" [value]="entry().notes" (input)="change.emit({ notes: $any($event.target).value })"></textarea>
+            <textarea
+              rows="5"
+              maxlength="2000"
+              placeholder="Ajouter une note…"
+              [value]="entry().notes"
+              [disabled]="readonly()"
+              (change)="change.emit({ notes: $any($event.target).value })"
+            ></textarea>
           </label>
         </section>
       </div>
@@ -70,7 +92,22 @@ export class ListEntryDetailsComponent {
   readonly entry = input.required<ListEntry>();
   readonly listTitle = input.required<string>();
   readonly sectionName = input.required<string>();
+  /** People the entry can be assigned to. */
+  readonly members = input<readonly ListMember[]>([]);
+  readonly readonly = input(false);
 
-  readonly change = output<EntryChanges>();
+  readonly change = output<UpdateEntryRequest>();
   readonly close = output<void>();
+
+  readonly addedAt = computed(() => addedAtFormat.format(new Date(this.entry().addedAt)));
+
+  /** A blank name is refused: the field goes back to the saved one. */
+  rename(field: HTMLInputElement): void {
+    const name = field.value.trim();
+    if (name) {
+      this.change.emit({ name });
+    } else {
+      field.value = this.entry().name;
+    }
+  }
 }

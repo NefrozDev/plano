@@ -23,12 +23,12 @@ export class Session {
   userId!: string;
 
   @ManyToOne(() => User, (user) => user.sessions, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'FK_sessions_user' })
   user!: User;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamptz' })
   expiresAt!: Date;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 }

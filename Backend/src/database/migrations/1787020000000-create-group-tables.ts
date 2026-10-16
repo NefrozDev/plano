@@ -18,7 +18,7 @@ export class CreateGroupTables1787020000000 implements MigrationInterface {
           { name: 'name', type: 'varchar', length: '80' },
           { name: 'inviteCode', type: 'varchar', length: '8' },
           { name: 'createdByUserId', type: 'varchar', length: '36' },
-          { name: 'createdAt', type: 'datetime', default: 'CURRENT_TIMESTAMP' },
+          { name: 'createdAt', type: 'timestamptz', default: 'now()' },
         ],
       }),
     );
@@ -49,7 +49,7 @@ export class CreateGroupTables1787020000000 implements MigrationInterface {
           { name: 'userId', type: 'varchar', length: '36' },
           { name: 'groupId', type: 'varchar', length: '36' },
           { name: 'role', type: 'varchar', length: '16' },
-          { name: 'createdAt', type: 'datetime', default: 'CURRENT_TIMESTAMP' },
+          { name: 'createdAt', type: 'timestamptz', default: 'now()' },
         ],
       }),
     );

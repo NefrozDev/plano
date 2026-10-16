@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { createMockPlanoData } from '@plano/common';
+import { listDetail } from '../testing/lists-fixtures';
 import { ListEditorComponent, ListEdits } from './list-editor.component';
 
 describe('ListEditorComponent', () => {
@@ -9,8 +9,7 @@ describe('ListEditorComponent', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ListEditorComponent);
-    fixture.componentRef.setInput('list', createMockPlanoData().lists[0]);
-    fixture.componentRef.setInput('description', 'Pour samedi');
+    fixture.componentRef.setInput('list', listDetail({ description: 'Pour samedi' }));
     editor = fixture.componentInstance;
     saved = [];
     editor.save.subscribe((edits) => saved.push(edits));
@@ -36,6 +35,18 @@ describe('ListEditorComponent', () => {
     editor.submit();
 
     expect(saved[0].name).toBe('Courses');
+  });
+
+  it('asks to share or delete the list', () => {
+    const asked: string[] = [];
+    editor.share.subscribe(() => asked.push('share'));
+    editor.delete.subscribe(() => asked.push('delete'));
+    const element = fixture.nativeElement as HTMLElement;
+
+    (element.querySelector('.sharing-row button') as HTMLButtonElement).click();
+    (element.querySelector('.delete-list') as HTMLButtonElement).click();
+
+    expect(asked).toEqual(['share', 'delete']);
   });
 
   it('emits close from the cancel button without saving', () => {

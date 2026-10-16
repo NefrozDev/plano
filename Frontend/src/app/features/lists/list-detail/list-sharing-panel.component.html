@@ -4,63 +4,66 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
     </button>
     <h2 id="sharing-panel-title">Partager la liste</h2>
-    <button type="button" aria-label="Informations sur le partage">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></svg>
-    </button>
   </header>
 
   <div class="sharing-content">
     <div class="shared-list-summary">
-      <span class="shared-list-icon" [style.background]="color()">
+      <span class="shared-list-icon" [style.background]="list().color">
         <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 6h4l2.5 14h13l3-10H9" /><circle cx="13" cy="25" r="1.5" /><circle cx="23" cy="25" r="1.5" /></svg>
       </span>
-      <div><strong>{{ listTitle() }}</strong><small>{{ sharingEnabled() ? 'Partagée' : 'Privée' }}</small></div>
+      <div><strong>{{ list().name }}</strong><small>{{ list().memberCount > 1 ? 'Partagée' : 'Privée' }}</small></div>
     </div>
 
     <section class="sharing-members">
-      <h3>Membres ({{ members().length }})</h3>
+      <h3>Membres ({{ list().memberCount }})</h3>
       @for (member of members(); track member.id) {
         <div class="sharing-member">
-          <span class="member-avatar" [style.background]="member.color">{{ member.initials }}</span>
+          <span class="member-avatar" [style.background]="member.avatar.color">{{ member.avatar.initials }}</span>
           <strong>{{ member.name }}</strong>
-          @if (member.role === 'owner') {
-            <span class="owner-role">{{ roleLabels.owner }}</span>
+          @if (member.role === 'owner' || !isOwner()) {
+            <span class="owner-role">{{ roleLabels[member.role] }}</span>
           } @else {
             <select [value]="member.role" [attr.aria-label]="'Droits de ' + member.name" (change)="updateRole(member.id, $any($event.target).value)">
               <option value="editor">{{ roleLabels.editor }}</option>
               <option value="viewer">{{ roleLabels.viewer }}</option>
             </select>
+            <button type="button" [attr.aria-label]="'Retirer ' + member.name" (click)="removeMember(member.id)">×</button>
           }
         </div>
       }
 
-      @if (inviteFormOpen()) {
-        <div class="invite-form">
-          <input type="email" placeholder="Adresse e-mail" [value]="inviteEmail()" (input)="inviteEmail.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); invite()" />
-          <select aria-label="Permission de la personne invitée" [value]="inviteRole()" (change)="inviteRole.set($any($event.target).value)">
-            <option value="editor">Modification</option>
-            <option value="viewer">Lecture seule</option>
-          </select>
-          <button type="button" [disabled]="!inviteEmail().trim()" (click)="invite()">Inviter</button>
-        </div>
-      } @else {
-        <button class="invite-people" type="button" (click)="inviteFormOpen.set(true)"><span aria-hidden="true">＋</span> Inviter des personnes</button>
+      @if (isOwner()) {
+        @if (inviteFormOpen()) {
+          @if (groupMembers() === null) {
+            <p class="sharing-hint">Chargement des membres du groupe…</p>
+          } @else if (candidates().length) {
+            <div class="invite-form">
+              <select aria-label="Personne à inviter" [value]="inviteUserId()" (change)="inviteUserId.set($any($event.target).value)">
+                @for (candidate of candidates(); track candidate.id) {
+                  <option [value]="candidate.id">{{ memberName(candidate) }}</option>
+                }
+              </select>
+              <select aria-label="Permission de la personne invitée" [value]="inviteRole()" (change)="inviteRole.set($any($event.target).value)">
+                <option value="editor">Modification</option>
+                <option value="viewer">Lecture seule</option>
+              </select>
+              <button type="button" [disabled]="!inviteUserId()" (click)="invite()">Inviter</button>
+            </div>
+          } @else {
+            <p class="sharing-hint">Tous les membres de votre groupe ont déjà accès. Invitez d’autres personnes dans votre groupe pour partager avec elles.</p>
+          }
+        } @else {
+          <button class="invite-people" type="button" (click)="openInviteForm()"><span aria-hidden="true">＋</span> Inviter des membres du groupe</button>
+        }
       }
     </section>
 
-    <section class="invitation-link">
-      <h3>Lien d’invitation</h3>
-      <p>Toute personne avec le lien peut consulter.</p>
-      @if (sharingEnabled()) {
-        <div><span>{{ invitationLink() }}</span><button type="button" (click)="copyInvitationLink()">{{ linkCopied() ? 'Copié !' : 'Copier' }}</button></div>
-        <small>Vous pouvez désactiver le lien à tout moment.</small>
-      } @else {
-        <button class="enable-sharing" type="button" (click)="setSharing(true)">Activer le lien de partage</button>
+    @if (isOwner()) {
+      @if (list().memberCount > 1) {
+        <button class="stop-sharing" type="button" (click)="stopSharing()">Arrêter le partage</button>
       }
-    </section>
-
-    @if (sharingEnabled()) {
-      <button class="stop-sharing" type="button" (click)="setSharing(false)">Arrêter le partage</button>
+    } @else {
+      <button class="stop-sharing" type="button" (click)="leave()">Quitter la liste</button>
     }
   </div>
 </section>

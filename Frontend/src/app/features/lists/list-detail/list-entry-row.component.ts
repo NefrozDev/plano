@@ -18,14 +18,16 @@ const MAX_OFFSET = -58;
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="entry-shell" [class.revealed]="offset() < 0">
-      <button
-        class="delete-entry"
-        type="button"
-        [attr.aria-label]="'Supprimer définitivement ' + entry().name"
-        (click)="remove.emit()"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
-      </button>
+      @if (!readonly()) {
+        <button
+          class="delete-entry"
+          type="button"
+          [attr.aria-label]="'Supprimer définitivement ' + entry().name"
+          (click)="remove.emit()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
+        </button>
+      }
       <!-- Tapping anywhere on the row is a pointer shortcut: keyboard users open the entry with its name button. -->
       <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
       <div
@@ -47,18 +49,21 @@ const MAX_OFFSET = -58;
           type="button"
           [attr.aria-label]="'Marquer ' + entry().name + (entry().done ? ' comme non terminé' : ' comme terminé')"
           [attr.aria-pressed]="entry().done"
+          [disabled]="readonly()"
           (click)="$event.stopPropagation(); toggle.emit()"
         ><i aria-hidden="true"></i></button>
         <!-- Its click bubbles to the row, which opens the entry (or swallows it after a swipe). -->
         <button class="entry-name" type="button">{{ entry().name }}</button>
-        <button
-          class="drag-handle"
-          type="button"
-          [attr.aria-label]="'Déplacer ' + entry().name"
-          [attr.aria-grabbed]="dragging()"
-          (click)="$event.preventDefault(); $event.stopPropagation()"
-          (pointerdown)="startDrag($event)"
-        >⠿</button>
+        @if (!readonly()) {
+          <button
+            class="drag-handle"
+            type="button"
+            [attr.aria-label]="'Déplacer ' + entry().name"
+            [attr.aria-grabbed]="dragging()"
+            (click)="$event.preventDefault(); $event.stopPropagation()"
+            (pointerdown)="startDrag($event)"
+          >⠿</button>
+        }
       </div>
     </div>
   `,
@@ -71,6 +76,7 @@ const MAX_OFFSET = -58;
     .entry-shell.revealed .delete-entry { opacity: 1; pointer-events: auto; }
     .delete-entry svg { width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
     .entry-toggle { display: grid; padding: 0; place-items: center; border: 0; background: transparent; cursor: pointer; }
+    .entry-toggle:disabled { cursor: default; }
     .entry-toggle i { display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 2px solid #aab4c5; border-radius: 50%; }
     .entry.done .entry-toggle i { border-color: #3264ed; background: #3264ed; }
     .entry.done .entry-toggle i::after { width: .55rem; height: .3rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.1rem) rotate(-45deg); }
@@ -83,6 +89,8 @@ export class ListEntryRowComponent {
   readonly entry = input.required<ListEntry>();
   readonly sectionId = input.required<string>();
   readonly dragging = input(false);
+  /** Viewers can open the entry but not change, delete or move it. */
+  readonly readonly = input(false);
 
   readonly toggle = output<void>();
   readonly open = output<void>();
@@ -99,6 +107,7 @@ export class ListEntryRowComponent {
   });
 
   startSwipe(event: PointerEvent): void {
+    if (this.readonly()) return;
     if ((event.target as HTMLElement).closest('.drag-handle, .entry-toggle')) return;
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     this.gesture.set({ startX: event.clientX, currentX: event.clientX });

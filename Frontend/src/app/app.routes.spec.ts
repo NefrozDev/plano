@@ -7,7 +7,7 @@ describe('app routes', () => {
     const shell = routes.find((route) => route.component === MobileShellLayoutComponent);
 
     expect(shell?.canActivate).toEqual([authenticatedGuard]);
-    expect(shell?.children?.map((child) => child.path)).toEqual(['', 'lists', 'lists/:slug']);
+    expect(shell?.children?.map((child) => child.path)).toEqual(['', 'lists', 'lists/:listId']);
   });
 
   it('keeps the catch-all redirect last so the shell does not swallow feature routes', () => {

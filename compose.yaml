@@ -1,0 +1,22 @@
+# Local development services. Start the database with `npm run db:start`.
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: plano
+      POSTGRES_PASSWORD: plano
+      POSTGRES_DB: plano
+    ports:
+      # Reachable from this machine only.
+      - '127.0.0.1:5432:5432'
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U plano -d plano']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:

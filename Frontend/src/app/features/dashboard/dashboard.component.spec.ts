@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
@@ -6,7 +8,7 @@ import { AuthUser } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { APP_CLOCK } from '../../core/time/dates';
 import { AgendaStore } from '../agenda/agenda.store';
-import { TEST_TODAY } from '../../testing/plano-testing';
+import { TEST_TODAY, flushListReminders, settle } from '../../testing/plano-testing';
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
@@ -31,6 +33,8 @@ describe('DashboardComponent', () => {
       imports: [DashboardComponent],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: AuthService, useValue: auth },
         { provide: APP_CLOCK, useValue: () => new Date(TEST_TODAY) },
       ],
@@ -67,8 +71,10 @@ describe('DashboardComponent', () => {
     expect(component.profileMenuOpen()).toBeTrue();
   });
 
-  it('previews today from the agenda, linking to each item', () => {
+  it('previews today from the agenda, list reminders included, linking to each item', async () => {
     const fixture = TestBed.createComponent(DashboardComponent);
+    flushListReminders();
+    await settle();
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const events = element.querySelectorAll('.agenda-card .event');

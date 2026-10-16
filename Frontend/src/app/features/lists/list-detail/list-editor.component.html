@@ -10,6 +10,7 @@
       <span>Nom de la liste</span>
       <input
         type="text"
+        maxlength="80"
         [value]="draftName()"
         (input)="draftName.set($any($event.target).value)"
       />
@@ -67,8 +68,8 @@
     <section class="sharing-editor" aria-labelledby="sharing-title">
       <h3 id="sharing-title">Partagée avec</h3>
       <div class="sharing-row">
-        <div><span class="avatar avatar-one">A</span><span class="avatar avatar-two">M</span><span class="avatar avatar-three">S</span></div>
-        <button type="button"><span aria-hidden="true">＋</span> Inviter</button>
+        <app-avatar-stack [people]="people()" [max]="4" />
+        <button type="button" (click)="share.emit()"><span aria-hidden="true">＋</span> Inviter</button>
       </div>
     </section>
 
@@ -76,12 +77,13 @@
       <span>Description</span>
       <textarea
         rows="3"
+        maxlength="500"
         placeholder="Ajouter une description..."
         [value]="draftDescription()"
         (input)="draftDescription.set($any($event.target).value)"
       ></textarea>
     </label>
 
-    <button class="delete-list" type="button">Supprimer la liste</button>
+    <button class="delete-list" type="button" (click)="delete.emit()">Supprimer la liste</button>
   </div>
 </section>

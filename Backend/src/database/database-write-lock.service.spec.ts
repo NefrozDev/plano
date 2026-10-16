@@ -1,7 +1,7 @@
 import { DatabaseWriteLockService } from './database-write-lock.service';
 
 describe('DatabaseWriteLockService', () => {
-  it('serializes overlapping sql.js writes', async () => {
+  it('serializes overlapping writes', async () => {
     const lock = new DatabaseWriteLockService();
     const events: string[] = [];
     let releaseFirst: (() => void) | undefined;

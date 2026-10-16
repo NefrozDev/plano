@@ -1,75 +1,93 @@
-import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { ListsComponent } from './lists.component';
-import { ListsStore } from './lists.store';
+import { listDetail, listSettings, listSummary } from './testing/lists-fixtures';
 
 describe('ListsComponent', () => {
+  let fixture: ComponentFixture<ListsComponent>;
+  let component: ListsComponent;
+  let element: HTMLElement;
+  let http: HttpTestingController;
+
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ListsComponent],
-      providers: [provideRouter([])],
-    }).compileComponents();
-  });
+    TestBed.configureTestingModule({ imports: [ListsComponent], providers: providePlanoTesting() });
+    http = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(ListsComponent);
+    component = fixture.componentInstance;
+    element = fixture.nativeElement as HTMLElement;
 
-  it('renders the lists landing page with the same four-item navigation as home', () => {
-    const fixture = TestBed.createComponent(ListsComponent);
+    http.expectOne('/api/v1/lists').flush([
+      listSummary({ id: 'courses', name: 'Courses', memberCount: 2 }),
+      listSummary({ id: 'maison', name: 'Maison', memberCount: 1 }),
+      listSummary({ id: 'cadeaux', name: 'Cadeaux', ownership: 'shared', role: 'viewer' }),
+      listSummary({ id: 'ete', name: 'Été', archived: true }),
+    ]);
+    http.expectOne('/api/v1/settings/lists').flush(listSettings());
+    await settle();
     fixture.detectChanges();
-    const element = fixture.nativeElement as HTMLElement;
-
-    expect(element.querySelector('h1')?.textContent).toBe('Listes');
-    expect(element.querySelectorAll('.list-card').length).toBe(5);
-    expect(element.querySelectorAll('app-bottom-nav a').length).toBe(4);
-    expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
-    expect(element.querySelector('.quick-add')).toBeNull();
   });
 
-  it('filters personal, shared, and archived lists', () => {
-    const component = TestBed.createComponent(ListsComponent).componentInstance;
+  afterEach(() => http.verify());
+
+  it('renders the lists from the API with sharing captions and the shared navigation', () => {
+    expect(element.querySelector('h1')?.textContent).toBe('Listes');
+    const captions = Array.from(element.querySelectorAll('.list-copy small')).map((caption) => caption.textContent);
+    expect(captions).toEqual(['Partagée avec 1 personne', 'Privée', 'Partagée avec vous']);
+    expect(element.querySelector('.list-progress b')?.textContent).toBe('2 / 6');
+    expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
+  });
+
+  it('filters personal, shared and archived lists', () => {
+    const names = () => component.cards().map(({ list }) => list.name);
 
     component.selectFilter('mine');
-    expect(component.visibleLists().map((list) => list.name)).toEqual([
-      'Idées cadeaux',
-      'Projets maison',
-    ]);
+    expect(names()).toEqual(['Courses', 'Maison']);
     component.selectFilter('shared');
-    expect(component.visibleLists().length).toBe(3);
+    expect(names()).toEqual(['Cadeaux']);
     component.selectFilter('archived');
-    expect(component.visibleLists()).toEqual([]);
+    expect(names()).toEqual(['Été']);
   });
 
-  it('toggles between list and grid layouts from the header button', () => {
-    const fixture = TestBed.createComponent(ListsComponent);
-    fixture.detectChanges();
-    const element = fixture.nativeElement as HTMLElement;
-    const toggle = element.querySelector('.menu-button') as HTMLButtonElement;
-
-    expect(element.querySelector('.lists-content')?.classList).not.toContain(
-      'grid-view',
-    );
-    toggle.click();
+  it('switches to the grid layout and saves it as the default view', () => {
+    (element.querySelector('.menu-button') as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.gridView()).toBeTrue();
-    expect(element.querySelector('.lists-content')?.classList).toContain(
-      'grid-view',
-    );
-    expect(element.querySelectorAll('.grid-icon circle').length).toBe(6);
+    expect(element.querySelector('.lists-content')?.classList).toContain('grid-view');
+    const request = http.expectOne('/api/v1/settings/lists');
+    expect(request.request.body).toEqual({ defaultView: 'grid' });
+    request.flush(listSettings({ defaultView: 'grid' }));
   });
 
-  it('opens functional settings and applies overview preferences', () => {
-    const fixture = TestBed.createComponent(ListsComponent);
-    const component = fixture.componentInstance;
-    const store = TestBed.inject(ListsStore);
-
+  it('opens the settings and applies overview preferences', () => {
     component.openSettings();
-    component.setDefaultView('grid');
     component.toggleSetting('showCounts');
+    http.expectOne('/api/v1/settings/lists').flush(listSettings({ showCounts: false }));
     fixture.detectChanges();
 
-    expect(component.settingsOpen()).toBeTrue();
-    expect(component.gridView()).toBeTrue();
-    expect(store.settings().defaultView).toBe('grid');
-    expect((fixture.nativeElement as HTMLElement).querySelector('.settings-panel')).not.toBeNull();
-    expect((fixture.nativeElement as HTMLElement).querySelector('.list-progress b')).toBeNull();
+    expect(element.querySelector('.settings-panel')).not.toBeNull();
+    expect(element.querySelector('.list-progress b')).toBeNull();
+  });
+
+  it('creates a list and opens it in its editor', async () => {
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+    (element.querySelector('.new-list-button') as HTMLButtonElement).click();
+    const request = http.expectOne({ method: 'POST', url: '/api/v1/lists' });
+    expect(request.request.body).toEqual({ name: 'Nouvelle liste', icon: 'cart', color: '#2ecb70' });
+    request.flush(listDetail({ id: 'new-list' }));
+    await settle();
+
+    expect(navigate).toHaveBeenCalledWith(['/lists', 'new-list'], { queryParams: { edit: 1 } });
+  });
+
+  it('shows API failures in an error toast', async () => {
+    component.toggleSetting('confirmDelete');
+    http.expectOne('/api/v1/settings/lists').flush(null, { status: 500, statusText: 'Error' });
+    await settle();
+    fixture.detectChanges();
+
+    expect(element.querySelector('app-toast')?.textContent).toContain('échoué');
   });
 });

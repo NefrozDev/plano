@@ -70,7 +70,7 @@ export const routes: Routes = [
         title: 'Listes | Plano',
       },
       {
-        path: 'lists/:slug',
+        path: 'lists/:listId',
         loadComponent: () =>
           import('./features/lists/list-detail/list-detail.component').then(
             (component) => component.ListDetailComponent,

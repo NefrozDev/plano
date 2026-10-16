@@ -27,19 +27,15 @@ export class BrowserStoragePlanoDataAdapter implements PlanoDataAdapter {
       if (!value) return null;
       const parsed = JSON.parse(value) as Partial<PlanoData>;
       // Objectives and agenda were added to v1 after release: backfill them instead of
-      // discarding the lists a user already saved.
+      // discarding the data a user already saved.
       if (parsed.objectives == null) {
         parsed.objectives = createMockPlanoData().objectives;
       }
       if (parsed.agenda == null) {
         parsed.agenda = createMockPlanoData().agenda;
       }
-      return parsed.version === 1 &&
-        Array.isArray(parsed.lists) &&
-        typeof parsed.listDetails === 'object' &&
-        parsed.listDetails !== null &&
-        typeof parsed.listSettings === 'object' &&
-        parsed.listSettings !== null &&
+      const valid =
+        parsed.version === 1 &&
         typeof parsed.dashboard === 'object' &&
         parsed.dashboard !== null &&
         Array.isArray(parsed.dashboard.tasks) &&
@@ -47,8 +43,11 @@ export class BrowserStoragePlanoDataAdapter implements PlanoDataAdapter {
         typeof parsed.objectives === 'object' &&
         Array.isArray(parsed.objectives.items) &&
         typeof parsed.agenda === 'object' &&
-        Array.isArray(parsed.agenda.events)
-        ? parsed as PlanoData
+        Array.isArray(parsed.agenda.events);
+      // Rebuilt from the known keys: data now served by the API (lists) is dropped
+      // from storage on the next save.
+      return valid
+        ? { version: 1, dashboard: parsed.dashboard!, objectives: parsed.objectives, agenda: parsed.agenda }
         : null;
     } catch {
       return null;

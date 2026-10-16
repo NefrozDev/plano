@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { GroupsModule } from './groups/groups.module';
+import { ListsModule } from './lists/lists.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { GroupsModule } from './groups/groups.module';
     DatabaseModule,
     AuthModule,
     GroupsModule,
+    ListsModule,
     HealthModule,
   ],
 })

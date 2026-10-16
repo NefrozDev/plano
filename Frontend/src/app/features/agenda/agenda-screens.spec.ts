@@ -1,7 +1,7 @@
 import { Type } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
-import { providePlanoTesting } from '../../testing/plano-testing';
+import { flushListReminders, providePlanoTesting, settle } from '../../testing/plano-testing';
 import { AgendaStore } from './agenda.store';
 import { AgendaFiltersComponent } from './filters/agenda-filters.component';
 import { AgendaSearchComponent } from './search/agenda-search.component';
@@ -19,8 +19,11 @@ describe('Agenda secondary screens', () => {
     return { fixture, element: fixture.nativeElement as HTMLElement };
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({ providers: providePlanoTesting() });
+    TestBed.inject(AgendaStore).loadTasks();
+    flushListReminders();
+    await settle();
     store = TestBed.inject(AgendaStore);
   });
 

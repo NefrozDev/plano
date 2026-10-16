@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { providePlanoTesting } from '../../../testing/plano-testing';
+import { flushListReminders, providePlanoTesting } from '../../../testing/plano-testing';
 import { AGENDA_ROUTES } from '../agenda.routes';
 import { AgendaStore } from '../agenda.store';
 import { AgendaCalendarComponent } from './agenda-calendar.component';
@@ -32,6 +32,8 @@ describe('AgendaCalendarComponent', () => {
 
   it('opens on today’s day view with a "now" marker between past and upcoming items', async () => {
     await harness.navigateByUrl('/agenda');
+    flushListReminders();
+    await settle();
 
     expect(element().querySelector('.date-bar .title')?.textContent).toContain('Jeudi 15 octobre');
     expect(element().querySelector('.date-bar .today')).toBeNull();
@@ -95,6 +97,8 @@ describe('AgendaCalendarComponent', () => {
 
   it('shows the month grid with coloured dots and the selected day below', async () => {
     await harness.navigateByUrl('/agenda?view=month&date=2026-10-15');
+    flushListReminders();
+    await settle();
 
     expect(element().querySelector('app-agenda-month-view h2')?.textContent).toBe('Jeudi 15 octobre');
     expect(cardTitles().length).toBe(7);

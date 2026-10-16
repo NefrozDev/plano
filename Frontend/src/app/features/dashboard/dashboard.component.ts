@@ -61,6 +61,12 @@ export class DashboardComponent {
   readonly profileMenuOpen = signal(false);
   readonly logoutPending = signal(false);
   readonly logoutError = signal('');
+
+  constructor() {
+    // Today's agenda preview includes list reminders served by the API.
+    this.agendaStore.loadTasks();
+  }
+
   toggleTask(index: number): void {
     this.appData.update((data) => ({
       ...data,

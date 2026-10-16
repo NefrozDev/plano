@@ -11,6 +11,7 @@ import type {
 import { PlanoDataStore } from '../../core/data/plano-data.store';
 import { createPerson } from '../../core/people/people';
 import { APP_CLOCK, createId, normalizeText, toIsoDate, toTimeOfDay } from '../../core/time/dates';
+import { ListsStore } from '../lists/lists.store';
 import { categoryMeta } from '../objectives/objective.utils';
 import {
   AgendaItem,
@@ -39,6 +40,7 @@ const MAX_RECENT = 5;
 export class AgendaStore {
   private readonly appData = inject(PlanoDataStore);
   private readonly clock = inject(APP_CLOCK);
+  private readonly lists = inject(ListsStore);
   private readonly data = computed(() => this.appData.data().agenda);
 
   readonly calendars = computed(() => this.data().calendars);
@@ -60,6 +62,11 @@ export class AgendaStore {
       .recentIds.map((id) => this.event(id))
       .filter((event): event is AgendaEvent => !!event),
   );
+
+  /** Fetches the dated items of other features served by the API (list reminders). */
+  loadTasks(): void {
+    void this.lists.loadReminders();
+  }
 
   today(): IsoDate {
     return toIsoDate(this.clock());
@@ -231,27 +238,24 @@ export class AgendaStore {
     const data = this.appData.data();
     const inRange = (date: IsoDate): boolean => date >= from && date <= to;
 
-    const listTasks = data.lists.flatMap((list) =>
-      (data.listDetails[list.slug]?.sections ?? []).flatMap((section) =>
-        section.entries
-          .filter((entry) => entry.reminder && inRange(datePart(entry.reminder)))
-          .map((entry): AgendaItem => ({
-            key: `list:${list.slug}:${entry.id}`,
-            kind: 'task',
-            eventId: null,
-            title: entry.name,
-            subtitle: `Liste · ${list.name}`,
-            color: list.color,
-            allDay: false,
-            start: entry.reminder,
-            end: entry.reminder,
-            participantIds: [],
-            done: entry.done,
-            link: ['/lists', list.slug],
-            queryParams: {},
-          })),
-      ),
-    );
+    const listTasks = this.lists
+      .reminders()
+      .filter((task) => inRange(datePart(task.reminder)))
+      .map((task): AgendaItem => ({
+        key: `list:${task.listId}:${task.entryId}`,
+        kind: 'task',
+        eventId: null,
+        title: task.name,
+        subtitle: `Liste · ${task.listName}`,
+        color: task.listColor,
+        allDay: false,
+        start: task.reminder,
+        end: task.reminder,
+        participantIds: [],
+        done: task.done,
+        link: ['/lists', task.listId],
+        queryParams: {},
+      }));
 
     const sessionTasks = data.objectives.items
       .filter((objective) => !objective.archived)

@@ -1,21 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { ListEntry } from '@plano/common';
+import { entry as listEntry } from '../testing/lists-fixtures';
 import { ListEntryRowComponent } from './list-entry-row.component';
 
 describe('ListEntryRowComponent', () => {
   let fixture: ComponentFixture<ListEntryRowComponent>;
   let row: ListEntryRowComponent;
   let emitted: string[];
-  const entry: ListEntry = {
-    id: 'milk',
-    name: 'Lait',
-    done: false,
-    addedBy: 'Camille',
-    addedAt: '',
-    assignedTo: '',
-    reminder: '',
-    notes: '',
-  };
+  const entry = listEntry('milk', 'Lait');
 
   /** Minimal PointerEvent: only what the handlers read. */
   function pointer(clientX = 0, target: HTMLElement = document.createElement('div')): PointerEvent {
@@ -90,6 +81,22 @@ describe('ListEntryRowComponent', () => {
 
     expect(row.offset()).toBe(0);
     expect(emitted).toEqual([]);
+  });
+
+  it('lets viewers open the entry but not toggle, swipe, delete or drag it', () => {
+    fixture.componentRef.setInput('readonly', true);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect((element.querySelector('.entry-toggle') as HTMLButtonElement).disabled).toBeTrue();
+    expect(element.querySelector('.drag-handle')).toBeNull();
+    expect(element.querySelector('.delete-entry')).toBeNull();
+    row.startSwipe(pointer(200));
+    row.moveSwipe(pointer(50));
+    row.finishSwipe();
+    (element.querySelector('.entry-name') as HTMLButtonElement).click();
+
+    expect(emitted).toEqual(['open']);
   });
 
   it('starts a drag from the handle without starting a swipe', () => {

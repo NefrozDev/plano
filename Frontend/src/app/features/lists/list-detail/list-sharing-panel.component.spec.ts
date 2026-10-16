@@ -1,65 +1,114 @@
+import { signal } from '@angular/core';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import type { ListDetail } from '@plano/common';
+import type { AuthUser } from '../../../core/auth/auth.models';
+import { AuthService } from '../../../core/auth/auth.service';
+import { ConfirmService } from '../../../shared/ui/confirm.service';
+import { providePlanoTesting, settle } from '../../../testing/plano-testing';
 import { ListsStore } from '../lists.store';
+import { MEMBER_ID, OWNER_ID, listDetail, listSettings } from '../testing/lists-fixtures';
 import { ListSharingPanelComponent } from './list-sharing-panel.component';
 
 describe('ListSharingPanelComponent', () => {
   let fixture: ComponentFixture<ListSharingPanelComponent>;
   let panel: ListSharingPanelComponent;
+  let element: HTMLElement;
+  let http: HttpTestingController;
   let store: ListsStore;
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ListSharingPanelComponent);
-    fixture.componentRef.setInput('slug', 'courses');
-    fixture.componentRef.setInput('listTitle', 'Courses');
-    fixture.componentRef.setInput('color', '#2ecb70');
-    panel = fixture.componentInstance;
+  /** Opens `list` in the store, as the detail screen would, and shows the panel for it. */
+  async function create(list: ListDetail, currentUserId = OWNER_ID): Promise<void> {
+    TestBed.configureTestingModule({
+      providers: [
+        providePlanoTesting(),
+        { provide: AuthService, useValue: { user: signal({ id: currentUserId } as AuthUser) } },
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
     store = TestBed.inject(ListsStore);
+    const opening = store.open(list.id);
+    http.expectOne(`/api/v1/lists/${list.id}`).flush(list);
+    http.expectOne('/api/v1/settings/lists').flush(listSettings());
+    await opening;
+
+    fixture = TestBed.createComponent(ListSharingPanelComponent);
+    fixture.componentRef.setInput('list', list);
+    panel = fixture.componentInstance;
+    element = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
-  });
+  }
 
-  it('lists the members with their role labels', () => {
-    const element = fixture.nativeElement as HTMLElement;
+  afterEach(() => http.verify());
 
-    expect(element.querySelector('h3')?.textContent).toBe('Membres (3)');
-    expect(element.querySelector('.owner-role')?.textContent).toBe('Propriétaire');
-    expect(element.querySelector('.shared-list-summary small')?.textContent).toBe('Partagée');
-  });
+  it('lets the owner invite group mates who cannot see the list yet', async () => {
+    await create(listDetail());
 
-  it('invites a member, ignoring blank addresses, and closes the form', () => {
-    panel.inviteFormOpen.set(true);
-    panel.inviteEmail.set('  ');
-    panel.invite();
-    expect(panel.members().length).toBe(3);
+    panel.openInviteForm();
+    http.expectOne('/api/v1/groups/me').flush({
+      members: [
+        { id: OWNER_ID, firstName: 'Ada', lastName: 'Lovelace', username: 'ada' },
+        { id: MEMBER_ID, firstName: 'Bob', lastName: 'Martin', username: 'bob' },
+        { id: 'user-cyd', firstName: 'Cyd', lastName: 'Charisse', username: 'cyd' },
+      ],
+    });
+    fixture.detectChanges();
 
-    panel.inviteEmail.set('marie@example.com');
+    expect(panel.candidates().map(({ id }) => id)).toEqual(['user-cyd']);
+    expect(panel.inviteUserId()).toBe('user-cyd');
+
     panel.inviteRole.set('viewer');
-    panel.invite();
+    const inviting = panel.invite();
+    const request = http.expectOne('/api/v1/lists/list-1/members');
+    expect(request.request.body).toEqual({ userId: 'user-cyd', role: 'viewer' });
+    request.flush({ id: 'user-cyd', name: 'Cyd Charisse', role: 'viewer' });
+    await inviting;
 
-    expect(store.detail('courses')?.members.at(-1)).toEqual(
-      jasmine.objectContaining({ name: 'Marie', role: 'viewer' }),
-    );
-    expect(panel.inviteEmail()).toBe('');
     expect(panel.inviteFormOpen()).toBeFalse();
+    expect(store.detail()?.members.length).toBe(3);
   });
 
-  it('updates roles and toggles sharing through the store', () => {
-    panel.updateRole('alex', 'viewer');
-    expect(panel.members().find(({ id }) => id === 'alex')?.role).toBe('viewer');
+  it('explains when every group mate already has access', async () => {
+    await create(listDetail());
 
-    panel.setSharing(false);
-    expect(panel.sharingEnabled()).toBeFalse();
-    expect(panel.members().map(({ role }) => role)).toEqual(['owner']);
+    panel.openInviteForm();
+    http.expectOne('/api/v1/groups/me').flush({ members: [{ id: MEMBER_ID }] });
+    fixture.detectChanges();
 
-    panel.setSharing(true);
-    expect(panel.sharingEnabled()).toBeTrue();
+    expect(element.querySelector('.sharing-hint')?.textContent).toContain('déjà accès');
   });
 
-  it('copies the invitation link', async () => {
-    const writeText = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
+  it('changes roles, removes members and stops sharing for the owner', async () => {
+    await create(listDetail());
+    spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(true);
 
-    await panel.copyInvitationLink();
+    panel.updateRole(MEMBER_ID, 'viewer');
+    http
+      .expectOne(`/api/v1/lists/list-1/members/${MEMBER_ID}`)
+      .flush({ id: MEMBER_ID, name: 'Bob Martin', role: 'viewer' });
+    panel.removeMember(MEMBER_ID);
+    http.expectOne({ method: 'DELETE', url: `/api/v1/lists/list-1/members/${MEMBER_ID}` }).flush(null);
 
-    expect(writeText).toHaveBeenCalledWith('https://plano.app/l/courses-a1b2c3');
-    expect(panel.linkCopied()).toBeTrue();
+    const stopping = panel.stopSharing();
+    await settle();
+    http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1/members' }).flush(null);
+    await stopping;
+    expect(store.detail()?.members.map(({ role }) => role)).toEqual(['owner']);
+  });
+
+  it('shows members read-only to others and lets them leave', async () => {
+    await create(listDetail({ role: 'editor', ownership: 'shared' }), MEMBER_ID);
+    const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(true);
+
+    expect(element.querySelector('.sharing-member select')).toBeNull();
+    expect(element.querySelector('.invite-people')).toBeNull();
+
+    const leaving = panel.leave();
+    await settle();
+    http.expectOne({ method: 'DELETE', url: `/api/v1/lists/list-1/members/${MEMBER_ID}` }).flush(null);
+    await leaving;
+    expect(navigate).toHaveBeenCalledWith('/lists');
   });
 });

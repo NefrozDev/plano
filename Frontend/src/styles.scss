@@ -579,6 +579,10 @@ app-list-detail .invite-form input { grid-column: 1 / -1; width: 100%; padding: 
 app-list-detail .invite-form select, app-list-detail .invite-form button { min-height: 2.2rem; padding: 0 .65rem; border: 1px solid #DCE5F5; border-radius: .5rem; background: #F4F7FD; color: #526078; font: inherit; font-size: .72rem; }
 app-list-detail .invite-form button { background: var(--color-primary); color: white; cursor: pointer; font-weight: 700; }
 app-list-detail .invite-form button:disabled { cursor: default; opacity: .4; }
+app-list-detail .invite-form select:first-child { grid-column: 1 / -1; width: 100%; min-height: 2.4rem; }
+app-list-detail .sharing-member:has(> button) { grid-template-columns: 1.8rem 1fr auto auto; }
+app-list-detail .sharing-member > button { padding: 0 .25rem; border: 0; background: transparent; color: #8A93A3; cursor: pointer; font-size: 1.05rem; }
+app-list-detail .sharing-hint { margin: .7rem 0 0; color: #8A93A3; font-size: .74rem; line-height: 1.4; }
 app-list-detail .invitation-link p { margin: 0 0 .8rem; color: #778194; font-size: .72rem; }
 app-list-detail .invitation-link > div { display: grid; min-height: 2.7rem; grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 0 .7rem; border-radius: .6rem; background: #F2F6FF; color: #4B72DF; font-size: .72rem; }
 app-list-detail .invitation-link > div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -36,10 +36,10 @@ export class User {
   @Column({ type: 'text', select: false })
   passwordHash!: string;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamptz' })
   termsAcceptedAt!: Date;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 
   @OneToMany(() => Session, (session) => session.user)
