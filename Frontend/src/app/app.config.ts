@@ -1,4 +1,4 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 
@@ -11,6 +11,8 @@ import {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Angular 21 defaults to zoneless; keep Zone.js until the app is migrated deliberately.
+    provideZoneChangeDetection(),
     provideHttpClient(withInterceptors([apiCredentialsInterceptor])),
     provideRouter(routes),
     BrowserStoragePlanoDataAdapter,
