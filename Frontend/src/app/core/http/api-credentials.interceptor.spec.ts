@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
@@ -11,7 +11,7 @@ describe('apiCredentialsInterceptor', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withXhr(), withInterceptors([apiCredentialsInterceptor])),
+        provideHttpClient(withInterceptors([apiCredentialsInterceptor])),
         provideHttpClientTesting(),
       ],
     });
