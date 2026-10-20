@@ -69,7 +69,7 @@ describe('AgendaEventDetailComponent', () => {
 
     (element().querySelector('.delete') as HTMLButtonElement).click();
     harness.detectChanges();
-    TestBed.flushEffects();
+    TestBed.tick();
     const dialog = element().querySelector('dialog') as HTMLDialogElement;
     expect(dialog.open).toBeTrue();
     expect(dialog.textContent).toContain('Toutes les occurrences');

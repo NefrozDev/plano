@@ -37,7 +37,7 @@ describe('ModalDialogComponent', () => {
     new Promise((resolve) => dialog.addEventListener('close', () => resolve(), { once: true }));
   const render = (): void => {
     fixture.detectChanges();
-    TestBed.flushEffects();
+    TestBed.tick();
   };
 
   beforeEach(() => {

@@ -20,7 +20,7 @@ describe('ToastComponent', () => {
   // Effects (which start the countdown) run during change detection.
   const render = (): void => {
     fixture.detectChanges();
-    TestBed.flushEffects();
+    TestBed.tick();
     fixture.detectChanges();
   };
 

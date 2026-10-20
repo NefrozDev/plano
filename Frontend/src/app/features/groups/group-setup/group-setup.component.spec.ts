@@ -378,7 +378,6 @@ describe('GroupSetupComponent', () => {
 
       (element.querySelector('.group-tools button') as HTMLButtonElement).click();
       fixture.detectChanges();
-      TestBed.flushEffects();
       const dialog = element.querySelector('dialog') as HTMLDialogElement;
       expect(dialog.open).toBeTrue();
       expect(component.renameForm.controls.name.value).toBe('Les Explorateurs');
@@ -386,7 +385,6 @@ describe('GroupSetupComponent', () => {
       component.renameForm.controls.name.setValue('Les Aventuriers');
       (dialog.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
       fixture.detectChanges();
-      TestBed.flushEffects();
 
       expect(groups.update).toHaveBeenCalledOnceWith('Les Aventuriers');
       expect(component.dialog()).toBeNull();

@@ -52,7 +52,7 @@ describe('ObjectiveStepsComponent', () => {
 
   it('adds a step once on Enter, even though the input then blurs', () => {
     const input = openInput();
-    TestBed.flushEffects();
+    TestBed.tick();
     expect(document.activeElement).toBe(input);
 
     input.value = 'Écrire une carte postale';

@@ -49,7 +49,7 @@ describe('shared form controls', () => {
 
   it('search field two-way binds its value, labels the input and can take focus', () => {
     const { host, element } = render();
-    TestBed.flushEffects();
+    TestBed.tick();
     const input = element.querySelector('app-search-field input') as HTMLInputElement;
 
     expect(input.value).toBe('initial');

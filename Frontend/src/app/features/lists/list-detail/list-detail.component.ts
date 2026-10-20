@@ -1,5 +1,5 @@
-import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+
+import { ChangeDetectionStrategy, Component, computed, inject, signal, DOCUMENT } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import type { ListEntry, ListSection, UpdateEntryRequest } from '@plano/common';
 import { toPerson } from '../../../core/people/people';
