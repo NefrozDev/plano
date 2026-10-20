@@ -74,9 +74,11 @@ VPS that also hosts a Mailcow mail server:
 - `api`: the NestJS API. Migrations run when it starts.
 - `db`: PostgreSQL, reachable only on Plano's internal Docker network.
 
-GitHub Actions ([.github/workflows/images.yml](.github/workflows/images.yml))
-builds `ghcr.io/nefrozdev/plano-api` and `plano-web` on every push to `main`;
-the VPS only pulls them, so no build competes with the mail server for memory.
+GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lints,
+tests (with coverage thresholds) and builds both applications on every push and
+pull request. Only when all checks pass on `main` does it publish
+`ghcr.io/nefrozdev/plano-api` and `plano-web`; the VPS only pulls them, so no
+build competes with the mail server for memory.
 
 ### First install
 
@@ -111,7 +113,7 @@ the VPS only pulls them, so no build competes with the mail server for memory.
 
 ### Updating
 
-Wait for the Images workflow to finish, then:
+Wait for the CI workflow to finish (including its `images` job), then:
 
 ```bash
 cd ~/plano && git pull
