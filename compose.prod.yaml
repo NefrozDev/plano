@@ -8,6 +8,14 @@
 # Memory limits keep Plano from starving the mail stack.
 name: plano-prod
 
+# Docker keeps container logs forever by default; cap them so a noisy service
+# can never fill the disk shared with the mail server (30 MB per service).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
 services:
   db:
     image: postgres:18-alpine
@@ -19,6 +27,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql
     mem_limit: 384m
+    logging: *logging
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U plano -d plano']
       interval: 5s
@@ -39,6 +48,7 @@ services:
       SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
       NODE_OPTIONS: --max-old-space-size=192
     mem_limit: 320m
+    logging: *logging
     depends_on:
       db:
         condition: service_healthy
@@ -56,6 +66,7 @@ services:
       dockerfile: Frontend/Dockerfile
     restart: unless-stopped
     mem_limit: 64m
+    logging: *logging
     networks:
       default:
       mailcow:
