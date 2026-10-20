@@ -14,6 +14,7 @@ These instructions are also intended to be reusable when starting another Angula
 - Frontend and Backend may depend on Common. Common must not depend on either application.
 - Keep one Git repository at the root. When scaffolding nested applications, always disable creation of nested `.git` directories.
 - Install dependencies locally in the relevant package. Do not require global Angular or Nest CLI installations.
+- The Angular 22 frontend needs Node `^22.22.3` (or `^24.15`) and TypeScript 6.0. It still runs on Zone.js through `provideZoneChangeDetection()` in `app.config.ts`; going zoneless is a deliberate future change, not a side effect of an upgrade.
 
 ## Root commands
 
