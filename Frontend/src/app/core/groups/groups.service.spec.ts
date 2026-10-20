@@ -27,7 +27,7 @@ describe('GroupsService', () => {
 
     const request = http.expectOne('/api/v1/groups/me');
     expect(request.request.method).toBe('GET');
-    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.withCredentials).toBe(true);
     request.flush(null);
   });
 
@@ -37,7 +37,7 @@ describe('GroupsService', () => {
     const request = http.expectOne('/api/v1/groups');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ name: 'Les Explorateurs' });
-    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.withCredentials).toBe(true);
     request.flush({
       id: 'group-1',
       name: 'Les Explorateurs',
@@ -53,7 +53,7 @@ describe('GroupsService', () => {
     let request = http.expectOne('/api/v1/groups/join');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ inviteCode: 'ABC12345' });
-    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.withCredentials).toBe(true);
     request.flush({ members: [] });
 
     service.update('Nouveau nom').subscribe();

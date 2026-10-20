@@ -65,7 +65,7 @@ describe('ListSharingPanelComponent', () => {
     request.flush({ id: 'user-cyd', name: 'Cyd Charisse', role: 'viewer' });
     await inviting;
 
-    expect(panel.inviteFormOpen()).toBeFalse();
+    expect(panel.inviteFormOpen()).toBe(false);
     expect(store.detail()?.members.length).toBe(3);
   });
 
@@ -81,7 +81,7 @@ describe('ListSharingPanelComponent', () => {
 
   it('changes roles, removes members and stops sharing for the owner', async () => {
     await create(listDetail());
-    spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(true);
+    vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
 
     panel.updateRole(MEMBER_ID, 'viewer');
     http
@@ -99,8 +99,8 @@ describe('ListSharingPanelComponent', () => {
 
   it('shows members read-only to others and lets them leave', async () => {
     await create(listDetail({ role: 'editor', ownership: 'shared' }), MEMBER_ID);
-    const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
-    spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(true);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
 
     expect(element.querySelector('.sharing-member select')).toBeNull();
     expect(element.querySelector('.invite-people')).toBeNull();

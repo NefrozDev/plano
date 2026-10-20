@@ -58,7 +58,7 @@ describe('ListEntryDetailsComponent', () => {
 
     const controls = Array.from(element.querySelectorAll<HTMLInputElement>('input, select, textarea, .details-toggle'));
     expect(controls.length).toBe(5);
-    expect(controls.every((control) => control.disabled)).toBeTrue();
+    expect(controls.every((control) => control.disabled)).toBe(true);
   });
 });
 

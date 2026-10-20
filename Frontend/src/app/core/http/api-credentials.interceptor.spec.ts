@@ -25,7 +25,7 @@ describe('apiCredentialsInterceptor', () => {
     client.get('/api/v1/tasks').subscribe();
 
     const request = http.expectOne('/api/v1/tasks');
-    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.withCredentials).toBe(true);
     request.flush({});
   });
 
@@ -33,7 +33,7 @@ describe('apiCredentialsInterceptor', () => {
     client.get('https://example.test/public').subscribe();
 
     const request = http.expectOne('https://example.test/public');
-    expect(request.request.withCredentials).toBeFalse();
+    expect(request.request.withCredentials).toBe(false);
     request.flush({});
   });
 });

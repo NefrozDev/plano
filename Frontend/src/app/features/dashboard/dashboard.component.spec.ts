@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
@@ -12,7 +13,7 @@ import { TEST_TODAY, flushListReminders, settle } from '../../testing/plano-test
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
-  let auth: jasmine.SpyObj<AuthService> & {
+  let auth: MockedObject<Pick<AuthService, 'logout'>> & {
     user: ReturnType<typeof signal<AuthUser | null>>;
   };
   const user: AuthUser = {
@@ -25,10 +26,12 @@ describe('DashboardComponent', () => {
 
   beforeEach(async () => {
     auth = Object.assign(
-      jasmine.createSpyObj<AuthService>('AuthService', ['logout']),
+      {
+        logout: vi.fn().mockName('AuthService.logout'),
+      },
       { user: signal<AuthUser | null>(user) },
     );
-    auth.logout.and.returnValue(of(void 0));
+    auth.logout.mockReturnValue(of(void 0));
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
@@ -68,7 +71,7 @@ describe('DashboardComponent', () => {
     component.toggleTask(0);
     component.toggleProfileMenu();
     expect(component.completedTasks()).toBe(2);
-    expect(component.profileMenuOpen()).toBeTrue();
+    expect(component.profileMenuOpen()).toBe(true);
   });
 
   it('previews today from the agenda, list reminders included, linking to each item', async () => {
@@ -112,15 +115,12 @@ describe('DashboardComponent', () => {
   });
 
   it('logs out and returns to login', () => {
-    const component =
-      TestBed.createComponent(DashboardComponent).componentInstance;
-    const navigate = spyOn(
-      TestBed.inject(Router),
-      'navigateByUrl',
-    ).and.resolveTo(true);
+    const component = TestBed.createComponent(DashboardComponent).componentInstance;
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     component.logout();
     expect(auth.logout).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledOnceWith('/login');
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/login');
   });
 
   it('ignores duplicate logout clicks and reports failures', () => {
@@ -130,9 +130,9 @@ describe('DashboardComponent', () => {
     component.logout();
     expect(auth.logout).not.toHaveBeenCalled();
     component.logoutPending.set(false);
-    auth.logout.and.returnValue(throwError(() => new Error('offline')));
+    auth.logout.mockReturnValue(throwError(() => new Error('offline')));
     component.logout();
     expect(component.logoutError()).toContain('déconnexion a échoué');
-    expect(component.logoutPending()).toBeFalse();
+    expect(component.logoutPending()).toBe(false);
   });
 });

@@ -42,6 +42,7 @@ Backend/data/*.sqlite-*
 .sass-cache/
 /connect.lock
 **/coverage
+**/.vitest
 /libpeerconnection.log
 testem.log
 /typings

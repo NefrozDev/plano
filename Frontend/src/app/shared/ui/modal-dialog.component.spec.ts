@@ -49,13 +49,13 @@ describe('ModalDialogComponent', () => {
   });
 
   it('opens as a labelled modal and closes when the parent says so', async () => {
-    expect(dialog.open).toBeFalse();
+    expect(dialog.open).toBe(false);
 
     host.open.set(true);
     render();
-    expect(dialog.open).toBeTrue();
+    expect(dialog.open).toBe(true);
     // showModal() (not show()) puts the dialog in the top layer with a backdrop.
-    expect(dialog.matches(':modal')).toBeTrue();
+    expect(dialog.matches(':modal')).toBe(true);
     const title = dialog.querySelector('h2') as HTMLElement;
     expect(title.textContent).toBe('Renommer');
     expect(dialog.getAttribute('aria-labelledby')).toBe(title.id);
@@ -64,7 +64,7 @@ describe('ModalDialogComponent', () => {
     const closing = closeEvent();
     host.open.set(false);
     render();
-    expect(dialog.open).toBeFalse();
+    expect(dialog.open).toBe(false);
     await closing;
     expect(host.closedCount).toBe(1);
   });
@@ -74,13 +74,13 @@ describe('ModalDialogComponent', () => {
     render();
 
     (dialog.querySelector('.body') as HTMLElement).click();
-    expect(dialog.open).toBeTrue();
+    expect(dialog.open).toBe(true);
 
     const closing = closeEvent();
     dialog.click();
-    expect(dialog.open).toBeFalse();
+    expect(dialog.open).toBe(false);
     await closing;
-    expect(host.open()).toBeFalse();
+    expect(host.open()).toBe(false);
   });
 
   it('reports a native close (e.g. Escape) to the parent', async () => {
@@ -92,7 +92,7 @@ describe('ModalDialogComponent', () => {
     await closing;
 
     expect(host.closedCount).toBe(1);
-    expect(host.open()).toBeFalse();
+    expect(host.open()).toBe(false);
   });
 
   it('gives every dialog its own heading id and hides an empty icon slot', () => {

@@ -42,7 +42,7 @@ describe('ObjectivesSearchComponent', () => {
   });
 
   it('turns a suggestion into a category filter on the overview', () => {
-    const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     (element.querySelectorAll('.suggestions button')[2] as HTMLButtonElement).click();
 
     expect(TestBed.inject(ObjectivesStore).filters().categories).toEqual(['finance']);

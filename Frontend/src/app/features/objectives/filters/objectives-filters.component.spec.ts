@@ -23,8 +23,8 @@ describe('ObjectivesFiltersComponent', () => {
   });
 
   it('starts unfiltered and previews the number of results', () => {
-    expect(checkboxes(0)[0].checked).toBeTrue();
-    expect(checkboxes(1)[0].checked).toBeTrue();
+    expect(checkboxes(0)[0].checked).toBe(true);
+    expect(checkboxes(1)[0].checked).toBe(true);
     expect(element.querySelector('.actions a')?.textContent?.trim()).toBe('Afficher 7 objectif(s)');
   });
 
@@ -33,8 +33,10 @@ describe('ObjectivesFiltersComponent', () => {
     checkboxes(1)[1].click(); // Santé
     fixture.detectChanges();
 
-    expect(store.filters()).toEqual(jasmine.objectContaining({ statuses: ['active'], categories: ['health'] }));
-    expect(checkboxes(0)[0].checked).toBeFalse();
+    expect(store.filters()).toEqual(
+      expect.objectContaining({ statuses: ['active'], categories: ['health'] }),
+    );
+    expect(checkboxes(0)[0].checked).toBe(false);
     expect(element.querySelector('.actions a')?.textContent).toContain('Afficher 2');
 
     checkboxes(1)[1].click();
@@ -52,7 +54,7 @@ describe('ObjectivesFiltersComponent', () => {
     // Clicking it again must not untick it: "no restriction" cannot be deselected.
     checkboxes(0)[0].click();
     fixture.detectChanges();
-    expect(checkboxes(0)[0].checked).toBeTrue();
+    expect(checkboxes(0)[0].checked).toBe(true);
   });
 
   it('changes the sort and resets everything', () => {
@@ -61,7 +63,9 @@ describe('ObjectivesFiltersComponent', () => {
     sort.dispatchEvent(new Event('change'));
     direction.value = 'desc';
     direction.dispatchEvent(new Event('change'));
-    expect(store.filters()).toEqual(jasmine.objectContaining({ sort: 'progress', direction: 'desc' }));
+    expect(store.filters()).toEqual(
+      expect.objectContaining({ sort: 'progress', direction: 'desc' }),
+    );
 
     (element.querySelector('.reset') as HTMLButtonElement).click();
     expect(store.filters().sort).toBe('dueDate');

@@ -35,9 +35,9 @@ describe('ObjectiveHabitComponent', () => {
     });
 
     it('disables future and padded days', () => {
-      expect(day('Ven 16 octobre').disabled).toBeTrue();
-      expect(day('Lun 28 septembre').disabled).toBeTrue();
-      expect(day('Mer 14 octobre').disabled).toBeFalse();
+      expect(day('Ven 16 octobre').disabled).toBe(true);
+      expect(day('Lun 28 septembre').disabled).toBe(true);
+      expect(day('Mer 14 octobre').disabled).toBe(false);
     });
 
     it('toggles a day and recomputes the stats', () => {
@@ -54,11 +54,11 @@ describe('ObjectiveHabitComponent', () => {
       fixture.detectChanges();
 
       expect(element.querySelector('.month-nav span')?.textContent).toBe('Septembre 2026');
-      expect(component.stats()).toEqual(jasmine.objectContaining({ successes: 23, rate: 77 }));
+      expect(component.stats()).toEqual(expect.objectContaining({ successes: 23, rate: 77 }));
 
       component.shiftMonth(-1);
       // August is before the habit started: nothing can be tracked.
-      expect(component.stats()).toEqual(jasmine.objectContaining({ successes: 0, rate: 0 }));
+      expect(component.stats()).toEqual(expect.objectContaining({ successes: 0, rate: 0 }));
     });
 
     it('edits the reminder', () => {
@@ -70,7 +70,9 @@ describe('ObjectiveHabitComponent', () => {
       select.dispatchEvent(new Event('change'));
       fixture.detectChanges();
 
-      expect(store.find('mediter-30-min')?.reminder).toEqual(jasmine.objectContaining({ frequency: 'none', time: '06:45' }));
+      expect(store.find('mediter-30-min')?.reminder).toEqual(
+        expect.objectContaining({ frequency: 'none', time: '06:45' }),
+      );
       expect(element.querySelector('.reminder input')).toBeNull();
     });
 
@@ -78,7 +80,7 @@ describe('ObjectiveHabitComponent', () => {
       store.setPaused('mediter-30-min', true);
       fixture.detectChanges();
 
-      expect(day('Mer 14 octobre').disabled).toBeTrue();
+      expect(day('Mer 14 octobre').disabled).toBe(true);
       expect(element.querySelector('.hint')?.textContent).toContain('Reprenez');
     });
   });
@@ -95,7 +97,7 @@ describe('ObjectiveHabitComponent', () => {
     component.toggle('2026-10-14');
     component.updateReminder({ time: '10:00' });
 
-    expect(component.isChecked('2026-10-14')).toBeFalse();
+    expect(component.isChecked('2026-10-14')).toBe(false);
     expect(component.stats().successes).toBe(0);
   });
 

@@ -40,7 +40,7 @@ describe('AuthService', () => {
     const request = http.expectOne('/api/v1/auth/login');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(credentials);
-    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.withCredentials).toBe(true);
     request.flush(user);
 
     expect(result).toEqual(user);
@@ -63,7 +63,7 @@ describe('AuthService', () => {
     const request = http.expectOne('/api/v1/auth/register');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(details);
-    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.withCredentials).toBe(true);
     request.flush(user);
 
     expect(service.user()).toEqual(user);
@@ -77,7 +77,7 @@ describe('AuthService', () => {
 
     const request = http.expectOne('/api/v1/auth/session');
     expect(request.request.method).toBe('GET');
-    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.withCredentials).toBe(true);
     request.flush(user);
 
     service.restoreSession().subscribe((value) => restored.push(value));
@@ -105,7 +105,7 @@ describe('AuthService', () => {
     const request = http.expectOne('/api/v1/auth/logout');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toBeNull();
-    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.withCredentials).toBe(true);
     request.flush(null);
 
     expect(service.user()).toBeNull();

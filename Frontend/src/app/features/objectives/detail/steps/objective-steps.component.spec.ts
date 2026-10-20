@@ -61,7 +61,7 @@ describe('ObjectiveStepsComponent', () => {
     fixture.detectChanges();
 
     expect(store.find('apprendre-italien')!.steps.map((step) => step.label)).toEqual(
-      jasmine.arrayContaining(['Écrire une carte postale']),
+      expect.arrayContaining(['Écrire une carte postale']),
     );
     expect(store.find('apprendre-italien')!.steps.length).toBe(6);
   });
@@ -94,6 +94,6 @@ describe('ObjectiveStepsComponent', () => {
     component.add('Fantôme');
 
     expect(component.completedCount()).toBe(0);
-    expect(component.adding()).toBeFalse();
+    expect(component.adding()).toBe(false);
   });
 });

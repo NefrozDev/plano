@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { ObjectivesStore } from '../objectives.store';
@@ -8,7 +9,7 @@ describe('ObjectiveCreateComponent', () => {
   let fixture: ComponentFixture<ObjectiveCreateComponent>;
   let component: ObjectiveCreateComponent;
   let element: HTMLElement;
-  let navigate: jasmine.Spy;
+  let navigate: Mock;
 
   const submit = (): void => {
     (element.querySelector('.primary-button') as HTMLButtonElement).click();
@@ -24,7 +25,7 @@ describe('ObjectiveCreateComponent', () => {
     fixture = TestBed.createComponent(ObjectiveCreateComponent);
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
-    navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     fixture.detectChanges();
   });
 
@@ -87,12 +88,19 @@ describe('ObjectiveCreateComponent', () => {
     submit();
 
     const created = TestBed.inject(ObjectivesStore).find('courir-un-semi');
-    expect(created).toEqual(jasmine.objectContaining({
-      tracking: 'metric',
-      dueDate: null,
-      reminder: { frequency: 'weekly', time: '09:00', weekday: 5 },
-    }));
-    expect(created?.metric).toEqual({ unit: 'km', target: 21, aggregation: 'max', sessionsTarget: 0 });
+    expect(created).toEqual(
+      expect.objectContaining({
+        tracking: 'metric',
+        dueDate: null,
+        reminder: { frequency: 'weekly', time: '09:00', weekday: 5 },
+      }),
+    );
+    expect(created?.metric).toEqual({
+      unit: 'km',
+      target: 21,
+      aggregation: 'max',
+      sessionsTarget: 0,
+    });
     expect(navigate).toHaveBeenCalledWith(['/objectives', 'courir-un-semi'], { replaceUrl: true });
   });
 

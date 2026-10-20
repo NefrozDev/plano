@@ -5,7 +5,10 @@ import { ConfirmService } from './confirm.service';
 describe('ConfirmService', () => {
   let service: ConfirmService;
 
-  function renderHost(): { element: HTMLElement; detect: () => void } {
+  function renderHost(): {
+    element: HTMLElement;
+    detect: () => void;
+  } {
     const fixture = TestBed.createComponent(ConfirmHostComponent);
     fixture.detectChanges();
     return {
@@ -27,12 +30,12 @@ describe('ConfirmService', () => {
     detect();
 
     const dialog = element.querySelector('dialog') as HTMLDialogElement;
-    expect(dialog.open).toBeTrue();
+    expect(dialog.open).toBe(true);
     expect(dialog.textContent).toContain('« Lait » sera supprimé.');
     expect(dialog.querySelector('.confirm')?.classList).toContain('danger');
 
     (dialog.querySelector('.confirm') as HTMLButtonElement).click();
-    expect(await answer).toBeTrue();
+    expect(await answer).toBe(true);
     detect();
     expect(element.querySelector('dialog')).toBeNull();
   });
@@ -44,17 +47,17 @@ describe('ConfirmService', () => {
     expect(element.querySelector('.confirm')?.textContent?.trim()).toBe('Confirmer');
 
     (element.querySelector('.cancel') as HTMLButtonElement).click();
-    expect(await answer).toBeFalse();
+    expect(await answer).toBe(false);
   });
 
   it('cancels a pending question when a new one is asked, and ignores stray settles', async () => {
     const first = service.ask({ heading: 'A', message: 'a' });
     const second = service.ask({ heading: 'B', message: 'b' });
 
-    expect(await first).toBeFalse();
+    expect(await first).toBe(false);
     expect(service.request()?.heading).toBe('B');
     service.settle(true);
     service.settle(false);
-    expect(await second).toBeTrue();
+    expect(await second).toBe(true);
   });
 });

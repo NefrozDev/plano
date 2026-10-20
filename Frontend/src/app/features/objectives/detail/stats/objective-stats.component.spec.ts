@@ -56,7 +56,7 @@ describe('ObjectiveStatsComponent', () => {
 
     expect(chart.points.map((point) => point.value)).toEqual([3, 3.5, 4.2, 4.8, 5, 5.5, 6, 6.5]);
     expect(chart.ticks.map((tick) => tick.label)).toEqual(['0', '2,5', '5', '7,5', '10']);
-    expect(chart.line.startsWith('M')).toBeTrue();
+    expect(chart.line.startsWith('M')).toBe(true);
     expect(element.querySelector('.target-label')?.textContent).toBe('Objectif : 10 km');
     expect(element.querySelector('.chart-card header strong')?.textContent).toBe('6,5 km');
     // Lines rendered inside @for blocks must still be real SVG elements.
@@ -66,7 +66,7 @@ describe('ObjectiveStatsComponent', () => {
 
   it('shows a tooltip for the point nearest to the pointer', () => {
     const svg = element.querySelector('svg') as SVGSVGElement;
-    spyOn(svg, 'getBoundingClientRect').and.returnValue(new DOMRect(0, 0, 320, 180));
+    vi.spyOn(svg, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 320, 180));
     svg.dispatchEvent(new PointerEvent('pointermove', { clientX: 0 }));
     fixture.detectChanges();
 
@@ -129,7 +129,7 @@ describe('ObjectiveStatsComponent', () => {
 
   it('copes with a missing objective, a hidden chart and empty pointer input', () => {
     const svg = element.querySelector('svg') as SVGSVGElement;
-    spyOn(svg, 'getBoundingClientRect').and.returnValue(new DOMRect(0, 0, 0, 0));
+    vi.spyOn(svg, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 0, 0));
     component.trackPointer(new PointerEvent('pointermove', { clientX: 10 }), svg);
     // A zero-width (hidden) chart cannot map the pointer to a point.
     expect(component.activeIndex()).toBeNull();

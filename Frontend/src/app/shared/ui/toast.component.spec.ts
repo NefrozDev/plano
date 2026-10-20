@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ToastComponent } from './toast.component';
 
 /** Host owning the message, clearing it on dismissal like real parents do. */
@@ -25,11 +25,14 @@ describe('ToastComponent', () => {
   };
 
   beforeEach(() => {
+    vi.useFakeTimers();
     TestBed.configureTestingModule({ imports: [HostComponent] });
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
   });
+
+  afterEach(() => vi.useRealTimers());
 
   it('keeps an empty live region until there is a message', () => {
     render();
@@ -38,34 +41,34 @@ describe('ToastComponent', () => {
     expect(element.querySelector('.toast')).toBeNull();
   });
 
-  it('shows the message and dismisses it after the duration', fakeAsync(() => {
+  it('shows the message and dismisses it after the duration', () => {
     host.message.set('Nom modifié.');
     render();
     expect(element.querySelector('.toast .text')?.textContent).toBe('Nom modifié.');
 
-    tick(999);
+    vi.advanceTimersByTime(999);
     expect(host.message()).toBe('Nom modifié.');
-    tick(1);
+    vi.advanceTimersByTime(1);
     render();
     expect(host.message()).toBe('');
     expect(element.querySelector('.toast')).toBeNull();
-  }));
+  });
 
-  it('restarts the countdown when a new message replaces the current one', fakeAsync(() => {
+  it('restarts the countdown when a new message replaces the current one', () => {
     host.message.set('Nom modifié.');
     render();
-    tick(800);
+    vi.advanceTimersByTime(800);
 
     host.message.set('Nouveau code généré.');
     render();
-    tick(800);
+    vi.advanceTimersByTime(800);
     expect(host.message()).toBe('Nouveau code généré.');
 
-    tick(200);
+    vi.advanceTimersByTime(200);
     expect(host.message()).toBe('');
-  }));
+  });
 
-  it('closes early when the toast itself is clicked or tapped', fakeAsync(() => {
+  it('closes early when the toast itself is clicked or tapped', () => {
     host.message.set('Membre retiré du groupe.');
     render();
 
@@ -78,7 +81,7 @@ describe('ToastComponent', () => {
 
     expect(element.querySelector('.toast')).toBeNull();
     // The pending timer was cancelled with the message: nothing left to flush.
-    tick(1000);
+    vi.advanceTimersByTime(1000);
     expect(host.message()).toBe('');
-  }));
+  });
 });

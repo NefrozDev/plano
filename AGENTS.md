@@ -116,6 +116,7 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 
 - On non-Windows systems, use the equivalent local TypeScript executable.
 - NestJS 12 packages are ESM-only. Jest loads them through Node's `vm.SourceTextModule`, which exists only with `--experimental-vm-modules`: the backend `test*` scripts pass that flag to `node node_modules/jest/bin/jest.js`. Running `npx jest` directly fails with "Must use import to load ES Module". Production needs no flag (`require(esm)` is stable since Node 22.12).
+- Frontend unit tests run with Vitest in browser mode (headless Chromium through Playwright, `@angular/build:unit-test`), not jsdom: specs rely on `<dialog>.showModal()`, `navigator.clipboard` and real layout. Run `npx playwright install chromium` once per machine. Zone's `fakeAsync`/`tick` do not work under Vitest; use `vi.useFakeTimers()` and `vi.advanceTimersByTime()`.
 - TypeScript 6 no longer loads every installed `@types/*` package: `types` defaults to `[]`. `Backend/tsconfig.json` lists `node` and `jest`; `tsconfig.build.json` narrows it to `node` so production code cannot use Jest globals.
 
 ## Completion checklist

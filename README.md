@@ -144,7 +144,7 @@ The dumps stay on the VPS: copy them elsewhere regularly to survive losing the s
 
 ## Test coverage
 
-Run `npm run test:coverage` to generate both reports. Jest and Karma enforce a
+Run `npm run test:coverage` to generate both reports. Jest and Vitest enforce a
 minimum of 80% for statements, branches, functions, and lines; the command fails
 when either application falls below any threshold. Generated reports are written
 to each package's ignored `coverage/` directory.

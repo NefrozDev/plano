@@ -19,7 +19,7 @@ describe('people', () => {
   it('creates a person from a trimmed name, or null for a blank one', () => {
     const person = createPerson('  Alan Turing ');
     expect(person).toEqual({
-      id: jasmine.any(String),
+      id: expect.any(String),
       name: 'Alan Turing',
       initials: 'A',
       color: NEW_PERSON_COLOR,

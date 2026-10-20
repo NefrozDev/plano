@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import {
   ActivatedRouteSnapshot,
@@ -12,7 +13,7 @@ import { authenticatedGuard, guestGuard } from './auth.guard';
 import { AuthService } from './auth.service';
 
 describe('authentication guards', () => {
-  let auth: jasmine.SpyObj<AuthService>;
+  let auth: MockedObject<Pick<AuthService, 'restoreSession'>>;
   let router: Router;
 
   const user: AuthUser = {
@@ -24,7 +25,9 @@ describe('authentication guards', () => {
   };
 
   beforeEach(() => {
-    auth = jasmine.createSpyObj<AuthService>('AuthService', ['restoreSession']);
+    auth = {
+      restoreSession: vi.fn().mockName('AuthService.restoreSession'),
+    };
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -35,30 +38,28 @@ describe('authentication guards', () => {
   });
 
   it('allows an authenticated user to open a protected route', async () => {
-    auth.restoreSession.and.returnValue(of(user));
+    auth.restoreSession.mockReturnValue(of(user));
 
-    expect(await runGuard(authenticatedGuard, '/')).toBeTrue();
+    expect(await runGuard(authenticatedGuard, '/')).toBe(true);
   });
 
   it('redirects an anonymous user to login and preserves the return URL', async () => {
-    auth.restoreSession.and.returnValue(of(null));
+    auth.restoreSession.mockReturnValue(of(null));
 
     const result = await runGuard(authenticatedGuard, '/plan?week=2');
 
-    expect(result instanceof UrlTree).toBeTrue();
-    expect(router.serializeUrl(result as UrlTree)).toBe(
-      '/login?returnUrl=%2Fplan%3Fweek%3D2',
-    );
+    expect(result instanceof UrlTree).toBe(true);
+    expect(router.serializeUrl(result as UrlTree)).toBe('/login?returnUrl=%2Fplan%3Fweek%3D2');
   });
 
   it('allows an anonymous user to open a guest route', async () => {
-    auth.restoreSession.and.returnValue(of(null));
+    auth.restoreSession.mockReturnValue(of(null));
 
-    expect(await runGuard(guestGuard, '/login')).toBeTrue();
+    expect(await runGuard(guestGuard, '/login')).toBe(true);
   });
 
   it('redirects an authenticated user away from guest routes', async () => {
-    auth.restoreSession.and.returnValue(of(user));
+    auth.restoreSession.mockReturnValue(of(user));
 
     const result = await runGuard(guestGuard, '/login');
 

@@ -31,12 +31,14 @@ describe('ObjectivesSettingsComponent', () => {
     element.querySelectorAll<HTMLButtonElement>('[role="switch"]').forEach((toggle) => toggle.click());
     fixture.detectChanges();
 
-    expect(store.settings()).toEqual(jasmine.objectContaining({
-      showArchived: true,
-      notifications: false,
-      showPercentage: false,
-      categoryColors: false,
-    }));
+    expect(store.settings()).toEqual(
+      expect.objectContaining({
+        showArchived: true,
+        notifications: false,
+        showPercentage: false,
+        categoryColors: false,
+      }),
+    );
     expect(element.querySelector('.switch.on')).not.toBeNull();
   });
 
@@ -49,10 +51,12 @@ describe('ObjectivesSettingsComponent', () => {
     habits.value = 'none';
     habits.dispatchEvent(new Event('change'));
 
-    expect(store.settings()).toEqual(jasmine.objectContaining({
-      defaultView: 'grid',
-      defaultDueReminder: 'week-before',
-      habitReminders: 'none',
-    }));
+    expect(store.settings()).toEqual(
+      expect.objectContaining({
+        defaultView: 'grid',
+        defaultDueReminder: 'week-before',
+        habitReminders: 'none',
+      }),
+    );
   });
 });

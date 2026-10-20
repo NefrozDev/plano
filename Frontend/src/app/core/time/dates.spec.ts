@@ -28,7 +28,7 @@ describe('date helpers', () => {
     const weeks = monthGrid(2026, 9, 0);
 
     expect(weeks[0].map((day) => day.day)).toEqual([27, 28, 29, 30, 1, 2, 3]);
-    expect(weeks.every((week) => week.length === 7)).toBeTrue();
+    expect(weeks.every((week) => week.length === 7)).toBe(true);
   });
 
   it('formats zero-padded times of day', () => {
@@ -59,7 +59,11 @@ describe('date helpers', () => {
       expect(createId('file')).toMatch(/^file-[a-z0-9]+$/);
     } finally {
       // Remove the own property so the prototype method is visible again.
-      delete (globalThis.crypto as { randomUUID?: unknown }).randomUUID;
+      delete (
+        globalThis.crypto as {
+          randomUUID?: unknown;
+        }
+      ).randomUUID;
     }
     expect(typeof globalThis.crypto.randomUUID).toBe('function');
   });

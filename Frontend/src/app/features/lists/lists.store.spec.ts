@@ -21,21 +21,21 @@ describe('ListsStore', () => {
     const opening = store.open('list-1');
     http.expectOne('/api/v1/lists/list-1').flush(listDetail());
     http.expectOne('/api/v1/settings/lists').flush(listSettings());
-    expect(await opening).toBeTrue();
+    expect(await opening).toBe(true);
   }
 
   const names = (sectionIndex = 0) => store.detail()?.sections[sectionIndex].entries.map(({ name }) => name);
 
   it('loads the lists and the settings once', async () => {
     const loading = store.loadLists();
-    expect(store.loading()).toBeTrue();
+    expect(store.loading()).toBe(true);
     http.expectOne('/api/v1/lists').flush([listSummary()]);
     http.expectOne('/api/v1/settings/lists').flush(listSettings());
     await loading;
 
     expect(store.lists().map(({ name }) => name)).toEqual(['Courses']);
     expect(store.settings()?.defaultView).toBe('list');
-    expect(store.loading()).toBeFalse();
+    expect(store.loading()).toBe(false);
 
     const reloading = store.loadLists();
     http.expectOne('/api/v1/lists').flush([]);
@@ -50,7 +50,7 @@ describe('ListsStore', () => {
       .flush({ message: 'Liste introuvable.' }, { status: 404, statusText: 'Not Found' });
     http.expectOne('/api/v1/settings/lists').flush(listSettings());
 
-    expect(await opening).toBeFalse();
+    expect(await opening).toBe(false);
     expect(store.detail()).toBeNull();
     expect(store.error()).toBe('Liste introuvable.');
     store.clearError();
@@ -91,8 +91,8 @@ describe('ListsStore', () => {
       .expectOne('/api/v1/lists/list-1/entries/milk')
       .flush({ message: 'Vous pouvez seulement consulter cette liste.' }, { status: 403, statusText: 'Forbidden' });
 
-    expect(await toggling).toBeFalse();
-    expect(store.detail()?.sections[0].entries[0].done).toBeFalse();
+    expect(await toggling).toBe(false);
+    expect(store.detail()?.sections[0].entries[0].done).toBe(false);
     expect(store.error()).toBe('Vous pouvez seulement consulter cette liste.');
   });
 
@@ -150,7 +150,7 @@ describe('ListsStore', () => {
 
     const deleting = store.deleteList();
     http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-2' }).flush(null);
-    expect(await deleting).toBeTrue();
+    expect(await deleting).toBe(true);
     expect(store.lists()).toEqual([]);
     expect(store.detail()).toBeNull();
   });

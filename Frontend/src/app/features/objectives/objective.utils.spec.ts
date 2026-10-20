@@ -48,8 +48,8 @@ describe('objective utils', () => {
       const weeks = monthGrid(2026, 9);
       // October 2026 starts on a Thursday: Mon 28 → Wed 30 September pad the first week.
       expect(weeks[0].map((day) => day.day)).toEqual([28, 29, 30, 1, 2, 3, 4]);
-      expect(weeks[0][0].inMonth).toBeFalse();
-      expect(weeks.every((week) => week.length === 7)).toBeTrue();
+      expect(weeks[0][0].inMonth).toBe(false);
+      expect(weeks.every((week) => week.length === 7)).toBe(true);
       expect(weeks.at(-1)?.at(-1)?.date).toBe('2026-11-01');
     });
 
@@ -84,10 +84,14 @@ describe('objective utils', () => {
       const finished = { ...run, sessions: [...run.sessions, { id: 'x', date: '2026-10-15', status: 'done' as const, value: 10, label: '' }] };
 
       expect(withDerivedStatus(finished, '2026-10-15')).toEqual(
-        jasmine.objectContaining({ status: 'completed', completedOn: '2026-10-15' }),
+        expect.objectContaining({ status: 'completed', completedOn: '2026-10-15' }),
       );
-      expect(withDerivedStatus({ ...run, status: 'completed', completedOn: '2026-10-01' }, '2026-10-15')).toEqual(
-        jasmine.objectContaining({ status: 'active', completedOn: null }),
+      expect(
+        withDerivedStatus({ ...run, status: 'completed', completedOn: '2026-10-01' }, '2026-10-15'),
+      ).toEqual(expect.objectContaining({ status: 'active', completedOn: null }));
+      // A paused objective is never auto-completed.
+      expect(withDerivedStatus({ ...finished, status: 'paused' }, '2026-10-15').status).toBe(
+        'paused',
       );
       // A paused objective is never auto-completed.
       expect(withDerivedStatus({ ...finished, status: 'paused' }, '2026-10-15').status).toBe('paused');

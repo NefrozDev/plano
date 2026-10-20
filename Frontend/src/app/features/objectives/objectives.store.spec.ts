@@ -32,7 +32,8 @@ describe('ObjectivesStore', () => {
       expect(ids('archived')).toEqual(['apprendre-guitare']);
       // "Économiser" belongs to Camille: shared with me, so not in "Mes objectifs".
       expect(ids('mine')).not.toContain('economiser-1000');
-      expect(ids('shared')).toEqual(jasmine.arrayWithExactContents(['courir-10-km', 'economiser-1000']));
+      // Exact contents, in any order.
+      expect([...ids('shared')].sort()).toEqual(['courir-10-km', 'economiser-1000']);
     });
 
     it('includes archived objectives in "Tous" when the setting asks for it', () => {
@@ -65,16 +66,18 @@ describe('ObjectivesStore', () => {
     it('creates an objective from a draft and keeps only the fields of its tracking mode', () => {
       const created = store.create(draft);
 
-      expect(created).toEqual(jasmine.objectContaining({
-        id: 'courir-un-semi',
-        title: 'Courir un semi',
-        description: 'Avant le printemps',
-        ownerId: 'me',
-        createdOn: '2026-10-15',
-        dueReminder: 'day-before',
-        metric: null,
-        habit: null,
-      }));
+      expect(created).toEqual(
+        expect.objectContaining({
+          id: 'courir-un-semi',
+          title: 'Courir un semi',
+          description: 'Avant le printemps',
+          ownerId: 'me',
+          createdOn: '2026-10-15',
+          dueReminder: 'day-before',
+          metric: null,
+          habit: null,
+        }),
+      );
       expect(created.steps.map((step) => step.label)).toEqual(['10 km', '15 km']);
       // A second objective with the same title gets a unique id.
       expect(store.create(draft).id).not.toBe('courir-un-semi');
@@ -92,7 +95,9 @@ describe('ObjectivesStore', () => {
 
     it('completes an objective when its last step is ticked and reopens it when unticked', () => {
       store.toggleStep('apprendre-guitare', 'song');
-      expect(store.find('apprendre-guitare')).toEqual(jasmine.objectContaining({ status: 'completed', completedOn: '2026-10-15' }));
+      expect(store.find('apprendre-guitare')).toEqual(
+        expect.objectContaining({ status: 'completed', completedOn: '2026-10-15' }),
+      );
 
       store.toggleStep('apprendre-guitare', 'song');
       expect(store.find('apprendre-guitare')?.status).toBe('active');
@@ -148,7 +153,9 @@ describe('ObjectivesStore', () => {
 
     it('adds contacts with initials and ignores blank names', () => {
       expect(store.addContact('  ')).toBeNull();
-      expect(store.addContact('zoé')).toEqual(jasmine.objectContaining({ name: 'zoé', initials: 'Z' }));
+      expect(store.addContact('zoé')).toEqual(
+        expect.objectContaining({ name: 'zoé', initials: 'Z' }),
+      );
       expect(store.contacts().length).toBe(8);
     });
 

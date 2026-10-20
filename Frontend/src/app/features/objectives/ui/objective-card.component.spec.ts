@@ -75,7 +75,12 @@ describe('ObjectiveCardComponent', () => {
 
   describe('"En pause" pill', () => {
     const paused = { ...objectives[0], status: 'paused' as const };
-    const centre = (box: DOMRect): { x: number; y: number } => ({
+    const centre = (
+      box: DOMRect,
+    ): {
+      x: number;
+      y: number;
+    } => ({
       x: (box.left + box.right) / 2,
       y: (box.top + box.bottom) / 2,
     });

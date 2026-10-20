@@ -114,8 +114,10 @@ describe('AgendaCalendarComponent', () => {
   it('jumps to a date picked in the native date input, ignoring invalid values', async () => {
     await harness.navigateByUrl('/agenda');
     const picker = element().querySelector('.picker') as HTMLInputElement;
-    const showPicker = spyOn(picker, 'showPicker').and.throwError('not supported');
-    const focus = spyOn(picker, 'focus');
+    const showPicker = vi.spyOn(picker, 'showPicker').mockImplementation(() => {
+      throw new Error('not supported');
+    });
+    const focus = vi.spyOn(picker, 'focus').mockReturnValue(undefined);
 
     (element().querySelector('.date-bar .title') as HTMLButtonElement).click();
     expect(showPicker).toHaveBeenCalled();
@@ -128,7 +130,7 @@ describe('AgendaCalendarComponent', () => {
   });
 
   it('creates an event from a free slot of the week grid', async () => {
-    const navigate = spyOn(router, 'navigate').and.callThrough();
+    const navigate = vi.spyOn(router, 'navigate');
     await harness.navigateByUrl('/agenda?view=week&date=2026-10-15');
 
     component().createAt({ date: '2026-10-14', time: '08:00' });
