@@ -16,7 +16,7 @@ trap 'rm -f "$partial"' EXIT
 
 # Dump to a plain file first: in `pg_dump | gzip`, a failing pg_dump would
 # still produce a valid-looking archive and the script would report success.
-docker compose -f compose.prod.yaml exec -T db pg_dump -U plano -d plano > "$partial"
+docker compose -f compose.prod.yaml exec -T db pg_dump --clean --if-exists -U plano -d plano > "$partial"
 gzip -c "$partial" > "$file"
 
 find "$backup_dir" -name 'plano-*.sql.gz' -mtime +14 -delete
