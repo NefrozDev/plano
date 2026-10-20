@@ -4,14 +4,14 @@ import type { ListsService } from './lists.service';
 
 describe('ListsController', () => {
   const lists = {
-    findAll: jest.fn().mockResolvedValue([]),
-    findOne: jest.fn().mockResolvedValue({}),
-    update: jest.fn().mockResolvedValue({}),
-    removeMember: jest.fn().mockResolvedValue(undefined),
+    findAll: vi.fn().mockResolvedValue([]),
+    findOne: vi.fn().mockResolvedValue({}),
+    update: vi.fn().mockResolvedValue({}),
+    removeMember: vi.fn().mockResolvedValue(undefined),
   };
   const content = {
-    addEntry: jest.fn().mockResolvedValue({}),
-    reorderEntries: jest.fn().mockResolvedValue(undefined),
+    addEntry: vi.fn().mockResolvedValue({}),
+    reorderEntries: vi.fn().mockResolvedValue(undefined),
   };
   const controller = new ListsController(
     lists as unknown as ListsService,

@@ -1,5 +1,14 @@
 import { ConfigService } from '@nestjs/config';
+import { scrypt } from 'node:crypto';
 import { PasswordService } from './password.service';
+
+// ES module imports are live bindings that vi.spyOn cannot replace, so the
+// module is mocked instead. vi.mock is hoisted above the imports; the mock
+// delegates to the real scrypt unless a test overrides it.
+vi.mock('node:crypto', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:crypto')>();
+  return { ...actual, scrypt: vi.fn(actual.scrypt) };
+});
 
 describe('PasswordService', () => {
   let service: PasswordService;
@@ -83,21 +92,11 @@ describe('PasswordService', () => {
   });
 
   it('propagates key derivation failures', async () => {
-    // ts-jest compiles to CommonJS, so the service reads crypto.scrypt at call
-    // time and this spy intercepts it.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const crypto = require('node:crypto') as typeof import('node:crypto');
     const failure = new Error('scrypt failed');
-    const spy = jest
-      .spyOn(crypto, 'scrypt')
-      .mockImplementation((...args: unknown[]) => {
-        (args.at(-1) as (error: Error | null) => void)(failure);
-      });
+    vi.mocked(scrypt).mockImplementationOnce((...args: unknown[]) => {
+      (args.at(-1) as (error: Error | null) => void)(failure);
+    });
 
-    try {
-      await expect(service.hash('a password')).rejects.toBe(failure);
-    } finally {
-      spy.mockRestore();
-    }
+    await expect(service.hash('a password')).rejects.toBe(failure);
   });
 });

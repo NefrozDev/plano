@@ -12,7 +12,7 @@ describe('SessionAuthGuard', () => {
       username: 'ada',
       email: 'ada@example.com',
     };
-    const getSessionUser = jest.fn().mockResolvedValue(user);
+    const getSessionUser = vi.fn().mockResolvedValue(user);
     const guard = new SessionAuthGuard({
       getSessionUser,
     } as unknown as AuthService);
