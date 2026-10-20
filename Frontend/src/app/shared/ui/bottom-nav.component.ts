@@ -6,7 +6,6 @@ export type MainSection = 'home' | 'agenda' | 'lists' | 'objectives';
 /** Main tab bar shared by the top-level screens. */
 @Component({
   selector: 'app-bottom-nav',
-  standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

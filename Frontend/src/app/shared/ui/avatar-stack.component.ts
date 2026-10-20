@@ -9,7 +9,6 @@ export type AvatarPerson = Person;
  */
 @Component({
   selector: 'app-avatar-stack',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (people().length) {

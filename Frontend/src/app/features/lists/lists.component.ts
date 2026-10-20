@@ -26,7 +26,6 @@ function caption(list: ListSummary): string {
 
 @Component({
   selector: 'app-lists',
-  standalone: true,
   imports: [RouterLink, BottomNavComponent, SwitchRowComponent, ToastComponent],
   templateUrl: './lists.component.html',
   styleUrl: './lists.component.scss',

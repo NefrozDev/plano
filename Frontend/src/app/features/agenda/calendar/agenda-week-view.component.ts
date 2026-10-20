@@ -20,7 +20,6 @@ const FIRST_VISIBLE_HOUR = 7;
 
 @Component({
   selector: 'app-agenda-week-view',
-  standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

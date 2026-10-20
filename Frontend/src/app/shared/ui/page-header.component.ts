@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 /** Top bar of secondary screens: back/close link, centred title, projected actions. */
 @Component({
   selector: 'app-page-header',
-  standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

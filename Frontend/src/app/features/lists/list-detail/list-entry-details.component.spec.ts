@@ -63,7 +63,6 @@ describe('ListEntryDetailsComponent', () => {
 });
 
 @Component({
-  standalone: true,
   imports: [ListEntryDetailsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<app-list-entry-details

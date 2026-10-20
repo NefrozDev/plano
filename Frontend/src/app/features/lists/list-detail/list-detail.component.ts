@@ -37,7 +37,6 @@ function percent(part: number, whole: number): number {
  */
 @Component({
   selector: 'app-list-detail',
-  standalone: true,
   imports: [
     RouterLink,
     AutofocusDirective,

@@ -10,7 +10,6 @@ import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 
 @Component({
   selector: 'app-objectives-search',
-  standalone: true,
   imports: [RouterLink, PageHeaderComponent, SearchFieldComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-search.component.html',

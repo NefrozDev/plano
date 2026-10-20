@@ -13,7 +13,6 @@ import {
  */
 @Component({
   selector: 'app-toast',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div role="status" [attr.aria-live]="tone() === 'error' ? 'assertive' : 'polite'">

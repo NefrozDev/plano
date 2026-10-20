@@ -21,7 +21,6 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
 
 @Component({
   selector: 'app-objective-create',
-  standalone: true,
   imports: [ReactiveFormsModule, PageHeaderComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-create.component.html',

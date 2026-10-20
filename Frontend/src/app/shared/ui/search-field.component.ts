@@ -11,7 +11,6 @@ import {
 /** Rounded search input with a magnifier icon; bind the query with `[(value)]`. */
 @Component({
   selector: 'app-search-field',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <label class="search">

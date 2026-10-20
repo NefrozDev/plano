@@ -3,7 +3,6 @@ import type { ObjectiveCategory } from '@plano/common';
 
 @Component({
   selector: 'app-objective-icon',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class]': "'size-' + size()",

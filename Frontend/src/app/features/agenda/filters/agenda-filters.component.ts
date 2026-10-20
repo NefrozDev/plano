@@ -10,7 +10,6 @@ type DisplayFilter = keyof Pick<AgendaFilters, 'showEvents' | 'showTasks' | 'sho
 /** Screen 8. Filters are saved and apply to every agenda view. */
 @Component({
   selector: 'app-agenda-filters',
-  standalone: true,
   imports: [RouterLink, PageHeaderComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

@@ -13,7 +13,6 @@ export interface ObjectiveCardView {
 
 @Component({
   selector: 'app-objective-card',
-  standalone: true,
   imports: [RouterLink, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.tile]': 'tile()' },

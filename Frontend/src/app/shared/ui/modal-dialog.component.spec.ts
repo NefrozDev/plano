@@ -4,7 +4,6 @@ import { ModalDialogComponent } from './modal-dialog.component';
 
 /** Host owning the open state, the way real parents use the modal. */
 @Component({
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ModalDialogComponent],
   template: `

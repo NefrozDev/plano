@@ -14,7 +14,6 @@ const MAX_OFFSET = -58;
  */
 @Component({
   selector: 'app-list-entry-row',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="entry-shell" [class.revealed]="offset() < 0">

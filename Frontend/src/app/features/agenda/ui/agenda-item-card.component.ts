@@ -10,7 +10,6 @@ const MAX_AVATARS = 2;
 /** One agenda entry (event occurrence or dated task) as a tinted, clickable card. */
 @Component({
   selector: 'app-agenda-item-card',
-  standalone: true,
   imports: [RouterLink, AvatarStackComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

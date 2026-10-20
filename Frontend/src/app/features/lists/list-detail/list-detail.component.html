@@ -138,12 +138,12 @@
       (save)="saveList($event)"
       (share)="openSharingFromEditor()"
       (delete)="deleteList()"
-      (close)="listEditorOpen.set(false)"
+      (closed)="listEditorOpen.set(false)"
     />
   }
 
   @if (sectionCreatorOpen()) {
-    <app-list-section-creator (create)="addSection($event)" (close)="sectionCreatorOpen.set(false)" />
+    <app-list-section-creator (create)="addSection($event)" (closed)="sectionCreatorOpen.set(false)" />
   }
 
   @if (activeEntry(); as active) {
@@ -154,12 +154,12 @@
       [members]="list.members"
       [readonly]="!canEdit()"
       (entryChange)="updateActiveEntry($event)"
-      (close)="selected.set(null)"
+      (closed)="selected.set(null)"
     />
   }
 
   @if (sharingOpen()) {
-    <app-list-sharing-panel [list]="list" (close)="sharingOpen.set(false)" />
+    <app-list-sharing-panel [list]="list" (closed)="sharingOpen.set(false)" />
   }
 }
 

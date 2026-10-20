@@ -14,7 +14,6 @@ import { ObjectiveContext } from '../objective-context';
 
 @Component({
   selector: 'app-objective-habit',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-habit.component.html',
   styleUrl: './objective-habit.component.scss',

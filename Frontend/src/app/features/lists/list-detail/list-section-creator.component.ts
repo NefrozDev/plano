@@ -10,15 +10,14 @@ export interface NewSection {
 /** Bottom sheet asking for a section name and colour. */
 @Component({
   selector: 'app-list-section-creator',
-  standalone: true,
   imports: [AutofocusDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="section-sheet-layer">
-      <button class="sheet-backdrop" type="button" aria-label="Fermer" (click)="close.emit()"></button>
+      <button class="sheet-backdrop" type="button" aria-label="Fermer" (click)="closed.emit()"></button>
       <section class="section-sheet" aria-labelledby="section-sheet-title">
         <header>
-          <button type="button" aria-label="Annuler" (click)="close.emit()">×</button>
+          <button type="button" aria-label="Annuler" (click)="closed.emit()">×</button>
           <h2 id="section-sheet-title">Ajouter une section</h2>
           <button class="save-section" type="button" aria-label="Ajouter la section" [disabled]="!name().trim()" (click)="save()">✓</button>
         </header>
@@ -55,7 +54,7 @@ export interface NewSection {
 })
 export class ListSectionCreatorComponent {
   readonly create = output<NewSection>();
-  readonly close = output<void>();
+  readonly closed = output<void>();
 
   readonly colorChoices = LIST_COLOR_CHOICES;
   readonly name = signal('');

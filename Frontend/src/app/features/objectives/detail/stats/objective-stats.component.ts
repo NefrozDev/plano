@@ -35,7 +35,6 @@ export function niceStep(max: number, intervals = 4): number {
 
 @Component({
   selector: 'app-objective-stats',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-stats.component.html',
   styleUrl: './objective-stats.component.scss',

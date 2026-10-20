@@ -15,7 +15,6 @@ import { ObjectiveContext } from '../objective-context';
 
 @Component({
   selector: 'app-objective-steps',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-steps.component.html',
   styleUrl: './objective-steps.component.scss',

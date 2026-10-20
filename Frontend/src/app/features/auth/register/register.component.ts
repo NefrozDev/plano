@@ -40,7 +40,6 @@ type RegisterField =
 
 @Component({
   selector: 'app-register',
-  standalone: true,
   imports: [AuthShellComponent, ReactiveFormsModule, RouterLink],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',

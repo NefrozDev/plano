@@ -4,7 +4,6 @@ import { RouterOutlet } from '@angular/router';
 /** Phone-frame shell for feature areas whose screens are routed children (objectives, agenda). */
 @Component({
   selector: 'app-mobile-shell-layout',
-  standalone: true,
   imports: [RouterOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

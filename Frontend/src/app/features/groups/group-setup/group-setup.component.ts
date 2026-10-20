@@ -31,7 +31,6 @@ type GroupDialog = 'rename' | 'danger';
 
 @Component({
   selector: 'app-group-setup',
-  standalone: true,
   imports: [
     AuthShellComponent,
     ModalDialogComponent,

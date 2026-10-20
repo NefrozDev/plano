@@ -16,7 +16,6 @@ import { AgendaStore } from '../agenda.store';
 /** Screen 7: full-screen panel over the event form; edits a copy until confirmed. */
 @Component({
   selector: 'app-agenda-participants-picker',
-  standalone: true,
   imports: [SearchFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

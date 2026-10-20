@@ -7,7 +7,6 @@ import { SwitchRowComponent } from './switch-row.component';
 const person = (id: string, name: string): AvatarPerson => ({ id, name, initials: name.charAt(0), color: '#3264ed' });
 
 @Component({
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SwitchRowComponent, SearchFieldComponent, AvatarStackComponent],
   template: `

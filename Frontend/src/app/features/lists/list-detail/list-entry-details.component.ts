@@ -9,12 +9,11 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
  */
 @Component({
   selector: 'app-list-entry-details',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="entry-details" aria-labelledby="entry-details-title">
       <header>
-        <button type="button" aria-label="Retour à la liste" (click)="close.emit()">
+        <button type="button" aria-label="Retour à la liste" (click)="closed.emit()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
         </button>
         <h2 id="entry-details-title">Détail d’un élément</h2>
@@ -97,7 +96,7 @@ export class ListEntryDetailsComponent {
   readonly readonly = input(false);
 
   readonly entryChange = output<UpdateEntryRequest>();
-  readonly close = output<void>();
+  readonly closed = output<void>();
 
   readonly addedAt = computed(() => addedAtFormat.format(new Date(this.entry().addedAt)));
 

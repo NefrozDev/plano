@@ -19,7 +19,6 @@ type TimelineRow =
 
 @Component({
   selector: 'app-agenda-day-view',
-  standalone: true,
   imports: [RouterLink, AgendaItemCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

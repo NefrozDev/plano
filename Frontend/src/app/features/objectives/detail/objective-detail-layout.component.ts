@@ -20,7 +20,6 @@ interface DetailTab {
 
 @Component({
   selector: 'app-objective-detail-layout',
-  standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, PageHeaderComponent],
   providers: [ObjectiveContext],
   changeDetection: ChangeDetectionStrategy.OnPush,
