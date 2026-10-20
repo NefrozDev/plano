@@ -122,8 +122,25 @@ sudo docker compose -f compose.prod.yaml pull && sudo docker compose -f compose.
 
 Logs: `docker compose -f compose.prod.yaml logs -f api`.
 
-Restore a backup:
-`gunzip -c <file>.sql.gz | docker compose -f compose.prod.yaml exec -T db psql -U plano -d plano`.
+### Backups
+
+[deploy/backup.sh](deploy/backup.sh) writes a compressed dump to
+`/root/plano-backups` every night and keeps 14 days. Check that a dump is
+usable, without touching production:
+
+```bash
+sudo sh ~/plano/deploy/verify-backup.sh   # newest dump, or pass a file
+```
+
+It restores the dump into a throwaway PostgreSQL container and prints each
+table's row count. To restore into production (this overwrites live data;
+stop the API first):
+
+```bash
+gunzip -c <file>.sql.gz | sudo docker compose -f compose.prod.yaml exec -T db psql -U plano -d plano
+```
+
+The dumps stay on the VPS: copy them elsewhere regularly to survive losing the server.
 
 ## Test coverage
 
