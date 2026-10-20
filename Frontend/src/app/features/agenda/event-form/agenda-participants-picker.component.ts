@@ -22,7 +22,7 @@ import { AgendaStore } from '../agenda.store';
   template: `
     <section role="dialog" aria-modal="true" aria-labelledby="participants-title">
       <header>
-        <button type="button" aria-label="Annuler" (click)="cancel.emit()">
+        <button type="button" aria-label="Annuler" (click)="cancelled.emit()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
         </button>
         <h2 id="participants-title">Participants</h2>
@@ -80,7 +80,7 @@ export class AgendaParticipantsPickerComponent implements OnInit {
 
   readonly selected = input.required<readonly string[]>();
   readonly confirm = output<string[]>();
-  readonly cancel = output<void>();
+  readonly cancelled = output<void>();
 
   readonly query = signal('');
   readonly picked = signal<string[]>([]);

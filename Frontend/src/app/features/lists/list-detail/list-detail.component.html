@@ -84,7 +84,7 @@
               [sectionId]="view.section.id"
               [readonly]="!canEdit()"
               [dragging]="dragged()?.entryId === entry.id"
-              (toggle)="toggleEntry(view.section.id, entry)"
+              (toggled)="toggleEntry(view.section.id, entry)"
               (open)="openEntry(view.section.id, entry.id)"
               (remove)="requestDeleteEntry(entry)"
               (dragStart)="startDrag(view.section.id, entry.id)"
@@ -153,7 +153,7 @@
       [sectionName]="active.section.name"
       [members]="list.members"
       [readonly]="!canEdit()"
-      (change)="updateActiveEntry($event)"
+      (entryChange)="updateActiveEntry($event)"
       (close)="selected.set(null)"
     />
   }

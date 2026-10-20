@@ -124,7 +124,7 @@
     <app-agenda-participants-picker
       [selected]="participantIds()"
       (confirm)="setParticipants($event)"
-      (cancel)="pickerOpen.set(false)"
+      (cancelled)="pickerOpen.set(false)"
     />
   }
 }

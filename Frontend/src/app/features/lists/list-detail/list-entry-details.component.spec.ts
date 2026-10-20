@@ -1,3 +1,4 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { UpdateEntryRequest } from '@plano/common';
 import { MEMBER_ID, entry, listDetail } from '../testing/lists-fixtures';
@@ -15,7 +16,7 @@ describe('ListEntryDetailsComponent', () => {
     fixture.componentRef.setInput('sectionName', 'Produits frais');
     fixture.componentRef.setInput('members', listDetail().members);
     changes = [];
-    fixture.componentInstance.change.subscribe((change) => changes.push(change));
+    fixture.componentInstance.entryChange.subscribe((change) => changes.push(change));
     fixture.detectChanges();
     element = fixture.nativeElement as HTMLElement;
   });
@@ -58,5 +59,35 @@ describe('ListEntryDetailsComponent', () => {
     const controls = Array.from(element.querySelectorAll<HTMLInputElement>('input, select, textarea, .details-toggle'));
     expect(controls.length).toBe(5);
     expect(controls.every((control) => control.disabled)).toBeTrue();
+  });
+});
+
+@Component({
+  standalone: true,
+  imports: [ListEntryDetailsComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<app-list-entry-details
+    [entry]="entry"
+    listTitle="Courses"
+    sectionName="Produits frais"
+    [members]="members"
+    (entryChange)="received.push($event)"
+  />`,
+})
+class EntryDetailsHostComponent {
+  readonly entry = entry('milk', 'Lait', { assignedTo: MEMBER_ID });
+  readonly members = listDetail().members;
+  readonly received: unknown[] = [];
+}
+
+describe('ListEntryDetailsComponent in a parent template', () => {
+  it('hands the parent only update requests, never the bubbling DOM change events', () => {
+    const fixture = TestBed.createComponent(EntryDetailsHostComponent);
+    fixture.detectChanges();
+    const assignee = (fixture.nativeElement as HTMLElement).querySelector('select') as HTMLSelectElement;
+    assignee.value = '';
+    assignee.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(fixture.componentInstance.received).toEqual([{ assignedTo: null }]);
   });
 });

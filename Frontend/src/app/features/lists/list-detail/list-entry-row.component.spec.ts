@@ -26,7 +26,7 @@ describe('ListEntryRowComponent', () => {
     fixture.componentRef.setInput('sectionId', 'fresh');
     row = fixture.componentInstance;
     emitted = [];
-    row.toggle.subscribe(() => emitted.push('toggle'));
+    row.toggled.subscribe(() => emitted.push('toggle'));
     row.open.subscribe(() => emitted.push('open'));
     row.remove.subscribe(() => emitted.push('remove'));
     row.dragStart.subscribe(() => emitted.push('dragStart'));
