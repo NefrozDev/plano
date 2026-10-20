@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { AuthUser } from './auth.models';
@@ -21,7 +21,7 @@ describe('AuthService', () => {
     TestBed.configureTestingModule({
       providers: [
         // Credentials are added by the interceptor, as in the real app config.
-        provideHttpClient(withInterceptors([apiCredentialsInterceptor])),
+        provideHttpClient(withXhr(), withInterceptors([apiCredentialsInterceptor])),
         provideHttpClientTesting(),
       ],
     });

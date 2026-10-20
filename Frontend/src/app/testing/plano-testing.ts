@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { EnvironmentProviders, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -17,7 +17,7 @@ export const TEST_TODAY = new Date(2026, 9, 15, 10, 30);
 export function providePlanoTesting(routes: Routes = []): (Provider | EnvironmentProviders)[] {
   return [
     provideRouter(routes),
-    provideHttpClient(),
+    provideHttpClient(withXhr()),
     provideHttpClientTesting(),
     { provide: APP_CLOCK, useValue: () => new Date(TEST_TODAY) },
     { provide: PLANO_DATA_ADAPTER, useFactory: () => new MemoryPlanoDataAdapter() },
