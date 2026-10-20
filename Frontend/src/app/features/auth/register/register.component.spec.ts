@@ -161,4 +161,15 @@ describe('RegisterComponent', () => {
     component.submit();
     expect(component.submissionError()).toContain('création du compte a échoué');
   });
+
+  it('asks the user to wait when the API rate limits registrations', () => {
+    fillValidForm();
+    auth.register.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 429 })),
+    );
+
+    component.submit();
+
+    expect(component.submissionError()).toContain('Trop de tentatives');
+  });
 });

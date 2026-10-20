@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 export const NETWORK_ERROR_MESSAGE = 'Impossible de joindre Plano. Vérifiez votre connexion.';
 export const UNEXPECTED_ERROR_MESSAGE = 'Une erreur inattendue est survenue. Veuillez réessayer.';
+export const TOO_MANY_ATTEMPTS_MESSAGE = 'Trop de tentatives. Réessayez dans quelques minutes.';
 
 export interface HttpErrorMessages {
   /** Fallback when no other rule applies. */

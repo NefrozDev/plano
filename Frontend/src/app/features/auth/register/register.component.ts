@@ -11,6 +11,7 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import {
+  TOO_MANY_ATTEMPTS_MESSAGE,
   UNEXPECTED_ERROR_MESSAGE,
   httpErrorMessage,
 } from '../../../core/http/http-error-message';
@@ -156,6 +157,7 @@ export class RegisterComponent {
       byStatus: {
         400: 'Certaines informations sont invalides. Vérifiez le formulaire.',
         409: 'Un compte utilise déjà ce nom d’utilisateur ou cette adresse e-mail.',
+        429: TOO_MANY_ATTEMPTS_MESSAGE,
       },
       fallback: 'La création du compte a échoué. Veuillez réessayer.',
     });

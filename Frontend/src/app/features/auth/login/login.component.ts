@@ -3,7 +3,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
-import { UNEXPECTED_ERROR_MESSAGE, httpErrorMessage } from '../../../core/http/http-error-message';
+import {
+  TOO_MANY_ATTEMPTS_MESSAGE,
+  UNEXPECTED_ERROR_MESSAGE,
+  httpErrorMessage,
+} from '../../../core/http/http-error-message';
 import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 
 @Component({
@@ -91,7 +95,11 @@ export class LoginComponent {
     const badCredentials = 'Nom d’utilisateur ou mot de passe incorrect.';
     return httpErrorMessage(error, {
       unexpected: UNEXPECTED_ERROR_MESSAGE,
-      byStatus: { 400: badCredentials, 401: badCredentials },
+      byStatus: {
+        400: badCredentials,
+        401: badCredentials,
+        429: TOO_MANY_ATTEMPTS_MESSAGE,
+      },
       fallback: 'La connexion a échoué. Veuillez réessayer.',
     });
   }
