@@ -5,7 +5,6 @@ import { ModalDialogComponent } from './modal-dialog.component';
 /** Renders the pending `ConfirmService` question; mounted once in the root component. */
 @Component({
   selector: 'app-confirm-host',
-  standalone: true,
   imports: [ModalDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

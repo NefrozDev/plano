@@ -63,7 +63,7 @@ describe('ObjectiveSummaryComponent', () => {
   it('renames the objective inline and lets Escape cancel', () => {
     (element.querySelector('h2 button') as HTMLButtonElement).click();
     fixture.detectChanges();
-    TestBed.flushEffects();
+    TestBed.tick();
     const input = element.querySelector('.title-input') as HTMLInputElement;
     expect(document.activeElement).toBe(input);
 

@@ -12,7 +12,7 @@ describe('ConfirmService', () => {
       element: fixture.nativeElement as HTMLElement,
       detect: () => {
         fixture.detectChanges();
-        TestBed.flushEffects();
+        TestBed.tick();
       },
     };
   }

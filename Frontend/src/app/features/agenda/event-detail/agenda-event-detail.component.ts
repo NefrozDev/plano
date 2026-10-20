@@ -21,7 +21,6 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /** Screen 4. `?date=` selects which occurrence of a recurring event is shown. */
 @Component({
   selector: 'app-agenda-event-detail',
-  standalone: true,
   imports: [RouterLink, PageHeaderComponent, ModalDialogComponent, AvatarStackComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-event-detail.component.html',

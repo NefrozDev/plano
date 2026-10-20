@@ -9,12 +9,11 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
  */
 @Component({
   selector: 'app-list-entry-details',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="entry-details" aria-labelledby="entry-details-title">
       <header>
-        <button type="button" aria-label="Retour à la liste" (click)="close.emit()">
+        <button type="button" aria-label="Retour à la liste" (click)="closed.emit()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
         </button>
         <h2 id="entry-details-title">Détail d’un élément</h2>
@@ -28,7 +27,7 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
             [class.done]="entry().done"
             [attr.aria-pressed]="entry().done"
             [disabled]="readonly()"
-            (click)="change.emit({ done: !entry().done })"
+            (click)="entryChange.emit({ done: !entry().done })"
           ><i aria-hidden="true"></i></button>
           <input
             aria-label="Nom de l’élément"
@@ -55,7 +54,7 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
           </div>
           <label class="detail-field">
             <span>Assigné à</span>
-            <select [disabled]="readonly()" (change)="change.emit({ assignedTo: $any($event.target).value || null })">
+            <select [disabled]="readonly()" (change)="entryChange.emit({ assignedTo: $any($event.target).value || null })">
               <option value="" [selected]="!entry().assignedTo">Non assigné</option>
               @for (member of members(); track member.id) {
                 <option [value]="member.id" [selected]="member.id === entry().assignedTo">{{ member.name }}</option>
@@ -68,7 +67,7 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
               type="datetime-local"
               [value]="entry().reminder ?? ''"
               [disabled]="readonly()"
-              (change)="change.emit({ reminder: $any($event.target).value || null })"
+              (change)="entryChange.emit({ reminder: $any($event.target).value || null })"
             />
           </label>
           <label class="detail-notes">
@@ -79,7 +78,7 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
               placeholder="Ajouter une note…"
               [value]="entry().notes"
               [disabled]="readonly()"
-              (change)="change.emit({ notes: $any($event.target).value })"
+              (change)="entryChange.emit({ notes: $any($event.target).value })"
             ></textarea>
           </label>
         </section>
@@ -96,8 +95,8 @@ export class ListEntryDetailsComponent {
   readonly members = input<readonly ListMember[]>([]);
   readonly readonly = input(false);
 
-  readonly change = output<UpdateEntryRequest>();
-  readonly close = output<void>();
+  readonly entryChange = output<UpdateEntryRequest>();
+  readonly closed = output<void>();
 
   readonly addedAt = computed(() => addedAtFormat.format(new Date(this.entry().addedAt)));
 
@@ -105,7 +104,7 @@ export class ListEntryDetailsComponent {
   rename(field: HTMLInputElement): void {
     const name = field.value.trim();
     if (name) {
-      this.change.emit({ name });
+      this.entryChange.emit({ name });
     } else {
       field.value = this.entry().name;
     }

@@ -9,7 +9,6 @@ import { ObjectiveCardComponent, ObjectiveCardView } from '../ui/objective-card.
 
 @Component({
   selector: 'app-objectives-overview',
-  standalone: true,
   imports: [RouterLink, ObjectiveCardComponent, BottomNavComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-overview.component.html',

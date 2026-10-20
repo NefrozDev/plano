@@ -84,7 +84,7 @@
               [sectionId]="view.section.id"
               [readonly]="!canEdit()"
               [dragging]="dragged()?.entryId === entry.id"
-              (toggle)="toggleEntry(view.section.id, entry)"
+              (toggled)="toggleEntry(view.section.id, entry)"
               (open)="openEntry(view.section.id, entry.id)"
               (remove)="requestDeleteEntry(entry)"
               (dragStart)="startDrag(view.section.id, entry.id)"
@@ -138,12 +138,12 @@
       (save)="saveList($event)"
       (share)="openSharingFromEditor()"
       (delete)="deleteList()"
-      (close)="listEditorOpen.set(false)"
+      (closed)="listEditorOpen.set(false)"
     />
   }
 
   @if (sectionCreatorOpen()) {
-    <app-list-section-creator (create)="addSection($event)" (close)="sectionCreatorOpen.set(false)" />
+    <app-list-section-creator (create)="addSection($event)" (closed)="sectionCreatorOpen.set(false)" />
   }
 
   @if (activeEntry(); as active) {
@@ -153,13 +153,13 @@
       [sectionName]="active.section.name"
       [members]="list.members"
       [readonly]="!canEdit()"
-      (change)="updateActiveEntry($event)"
-      (close)="selected.set(null)"
+      (entryChange)="updateActiveEntry($event)"
+      (closed)="selected.set(null)"
     />
   }
 
   @if (sharingOpen()) {
-    <app-list-sharing-panel [list]="list" (close)="sharingOpen.set(false)" />
+    <app-list-sharing-panel [list]="list" (closed)="sharingOpen.set(false)" />
   }
 }
 

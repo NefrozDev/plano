@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 /** Settings row with a label (and optional hint) and an on/off switch. */
 @Component({
   selector: 'app-switch-row',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button class="switch-row" type="button" role="switch" [attr.aria-checked]="checked()" (click)="toggled.emit()">

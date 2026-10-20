@@ -9,7 +9,6 @@ type ToggleSetting = 'showArchived' | 'notifications' | 'showPercentage' | 'cate
 
 @Component({
   selector: 'app-objectives-settings',
-  standalone: true,
   imports: [PageHeaderComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-settings.component.html',

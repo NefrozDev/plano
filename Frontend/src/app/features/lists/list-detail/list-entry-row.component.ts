@@ -14,7 +14,6 @@ const MAX_OFFSET = -58;
  */
 @Component({
   selector: 'app-list-entry-row',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="entry-shell" [class.revealed]="offset() < 0">
@@ -50,7 +49,7 @@ const MAX_OFFSET = -58;
           [attr.aria-label]="'Marquer ' + entry().name + (entry().done ? ' comme non terminé' : ' comme terminé')"
           [attr.aria-pressed]="entry().done"
           [disabled]="readonly()"
-          (click)="$event.stopPropagation(); toggle.emit()"
+          (click)="$event.stopPropagation(); toggled.emit()"
         ><i aria-hidden="true"></i></button>
         <!-- Its click bubbles to the row, which opens the entry (or swallows it after a swipe). -->
         <button class="entry-name" type="button">{{ entry().name }}</button>
@@ -92,7 +91,7 @@ export class ListEntryRowComponent {
   /** Viewers can open the entry but not change, delete or move it. */
   readonly readonly = input(false);
 
-  readonly toggle = output<void>();
+  readonly toggled = output<void>();
   readonly open = output<void>();
   readonly remove = output<void>();
   readonly dragStart = output<void>();

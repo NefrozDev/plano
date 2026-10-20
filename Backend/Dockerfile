@@ -1,5 +1,5 @@
 # Build context: repository root (the API compiles type imports from Common).
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 COPY Backend/package.json Backend/package-lock.json Backend/
 RUN npm --prefix Backend ci
@@ -7,7 +7,7 @@ COPY Common Common
 COPY Backend Backend
 RUN npm --prefix Backend run build && npm --prefix Backend prune --omit=dev
 
-FROM node:22-alpine
+FROM node:24-alpine
 ENV NODE_ENV=production
 WORKDIR /app/Backend
 COPY --from=build /app/Backend/package.json ./

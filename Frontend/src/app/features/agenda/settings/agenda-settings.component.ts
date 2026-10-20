@@ -10,7 +10,6 @@ type ToggleSetting = 'eventNotifications' | 'invitationNotifications' | 'showWee
 /** Screen 10. */
 @Component({
   selector: 'app-agenda-settings',
-  standalone: true,
   imports: [PageHeaderComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

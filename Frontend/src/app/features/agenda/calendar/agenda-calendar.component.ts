@@ -25,7 +25,6 @@ const WEEKDAY_SHORT = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 /** Day, week and month views (screens 1–3). View and date live in the URL. */
 @Component({
   selector: 'app-agenda-calendar',
-  standalone: true,
   imports: [
     RouterLink,
     BottomNavComponent,

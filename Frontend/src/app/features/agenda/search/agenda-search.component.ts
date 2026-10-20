@@ -17,7 +17,6 @@ interface SearchRow {
 /** Screen 9. Suggestions turn into a query or into the matching agenda view. */
 @Component({
   selector: 'app-agenda-search',
-  standalone: true,
   imports: [RouterLink, PageHeaderComponent, SearchFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

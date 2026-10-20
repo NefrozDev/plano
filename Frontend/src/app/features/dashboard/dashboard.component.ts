@@ -13,7 +13,6 @@ import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.componen
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
   imports: [RouterLink, BottomNavComponent, ObjectiveIconComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',

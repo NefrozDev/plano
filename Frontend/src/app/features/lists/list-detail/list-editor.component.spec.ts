@@ -49,9 +49,9 @@ describe('ListEditorComponent', () => {
     expect(asked).toEqual(['share', 'delete']);
   });
 
-  it('emits close from the cancel button without saving', () => {
+  it('emits closed from the cancel button without saving', () => {
     let closed = false;
-    editor.close.subscribe(() => (closed = true));
+    editor.closed.subscribe(() => (closed = true));
 
     ((fixture.nativeElement as HTMLElement).querySelector('.editor-header button') as HTMLButtonElement).click();
 

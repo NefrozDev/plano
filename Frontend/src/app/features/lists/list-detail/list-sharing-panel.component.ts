@@ -15,7 +15,6 @@ import { ROLE_LABELS } from './list-options';
  */
 @Component({
   selector: 'app-list-sharing-panel',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-sharing-panel.component.html',
   styles: `:host { display: contents; }`,
@@ -28,7 +27,7 @@ export class ListSharingPanelComponent {
   private readonly auth = inject(AuthService);
 
   readonly list = input.required<ListDetail>();
-  readonly close = output<void>();
+  readonly closed = output<void>();
 
   readonly roleLabels = ROLE_LABELS;
   readonly isOwner = computed(() => this.list().role === 'owner');

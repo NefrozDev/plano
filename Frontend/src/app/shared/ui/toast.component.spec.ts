@@ -4,7 +4,6 @@ import { ToastComponent } from './toast.component';
 
 /** Host owning the message, clearing it on dismissal like real parents do. */
 @Component({
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ToastComponent],
   template: `<app-toast [message]="message()" [duration]="1000" (dismissed)="message.set('')" />`,
@@ -21,7 +20,7 @@ describe('ToastComponent', () => {
   // Effects (which start the countdown) run during change detection.
   const render = (): void => {
     fixture.detectChanges();
-    TestBed.flushEffects();
+    TestBed.tick();
     fixture.detectChanges();
   };
 

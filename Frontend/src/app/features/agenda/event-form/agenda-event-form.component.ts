@@ -43,7 +43,6 @@ function webUrl(control: AbstractControl<string>): ValidationErrors | null {
 /** Screens 5–6, used both to create (`/agenda/new`) and to edit (`/agenda/events/:id/edit`). */
 @Component({
   selector: 'app-agenda-event-form',
-  standalone: true,
   imports: [ReactiveFormsModule, PageHeaderComponent, AvatarStackComponent, AgendaParticipantsPickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-event-form.component.html',

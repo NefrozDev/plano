@@ -41,7 +41,6 @@ interface StatTile {
 
 @Component({
   selector: 'app-objective-summary',
-  standalone: true,
   imports: [RouterLink, AvatarStackComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-summary.component.html',

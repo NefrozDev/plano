@@ -22,7 +22,6 @@ const STATUS_PRIORITY: readonly ObjectiveSessionStatus[] = ['done', 'missed', 'p
 
 @Component({
   selector: 'app-objective-calendar',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-calendar.component.html',
   styleUrl: './objective-calendar.component.scss',

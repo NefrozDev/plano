@@ -4,7 +4,6 @@ import { ModalDialogComponent } from './modal-dialog.component';
 
 /** Host owning the open state, the way real parents use the modal. */
 @Component({
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ModalDialogComponent],
   template: `
@@ -38,7 +37,7 @@ describe('ModalDialogComponent', () => {
     new Promise((resolve) => dialog.addEventListener('close', () => resolve(), { once: true }));
   const render = (): void => {
     fixture.detectChanges();
-    TestBed.flushEffects();
+    TestBed.tick();
   };
 
   beforeEach(() => {

@@ -23,7 +23,6 @@ let nextId = 0;
  */
 @Component({
   selector: 'app-modal-dialog',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Backdrop clicks are a pointer shortcut: keyboard users close the dialog with Escape. -->

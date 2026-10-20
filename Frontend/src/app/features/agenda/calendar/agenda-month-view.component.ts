@@ -10,7 +10,6 @@ const MAX_DOTS = 3;
 
 @Component({
   selector: 'app-agenda-month-view',
-  standalone: true,
   imports: [RouterLink, AgendaItemCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

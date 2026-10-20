@@ -14,7 +14,6 @@ export interface ListEdits {
 /** Full-screen list editor working on drafts: nothing changes until save. */
 @Component({
   selector: 'app-list-editor',
-  standalone: true,
   imports: [AvatarStackComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-editor.component.html',
@@ -31,7 +30,7 @@ export class ListEditorComponent implements OnInit {
   readonly save = output<ListEdits>();
   readonly share = output<void>();
   readonly delete = output<void>();
-  readonly close = output<void>();
+  readonly closed = output<void>();
 
   readonly iconChoices = LIST_ICON_CHOICES;
   readonly colorChoices = LIST_COLOR_CHOICES;

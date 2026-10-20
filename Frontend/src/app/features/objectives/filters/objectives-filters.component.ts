@@ -8,7 +8,6 @@ import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 
 @Component({
   selector: 'app-objectives-filters',
-  standalone: true,
   imports: [RouterLink, PageHeaderComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-filters.component.html',

@@ -7,7 +7,6 @@ import { SwitchRowComponent } from './switch-row.component';
 const person = (id: string, name: string): AvatarPerson => ({ id, name, initials: name.charAt(0), color: '#3264ed' });
 
 @Component({
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SwitchRowComponent, SearchFieldComponent, AvatarStackComponent],
   template: `
@@ -50,7 +49,7 @@ describe('shared form controls', () => {
 
   it('search field two-way binds its value, labels the input and can take focus', () => {
     const { host, element } = render();
-    TestBed.flushEffects();
+    TestBed.tick();
     const input = element.querySelector('app-search-field input') as HTMLInputElement;
 
     expect(input.value).toBe('initial');
