@@ -1,0 +1,29 @@
+# Plain HTTP inside Docker: Mailcow's nginx terminates HTTPS in front of it.
+:80 {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy api:3000
+	}
+
+	handle {
+		root * /srv
+
+		# Angular content-hashes bundle names, so they never change in place.
+		@hashed path_regexp -[A-Z0-9]{8}\.(js|css)$
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+		header /index.html Cache-Control "no-cache"
+
+		# Unknown paths are client-side routes.
+		try_files {path} /index.html
+		file_server
+	}
+}

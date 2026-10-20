@@ -90,6 +90,18 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 - Do not hide migration warnings with `ignoreDeprecations` when the deprecated option can safely be removed.
 - With `isolatedModules` and decorator metadata enabled, import types used in decorated signatures with `import type`.
 
+## Deployment
+
+- Target: OVH VPS `57.129.169.235`, app served at `plano.synapseengineering.dev` (domain on Cloudflare, record kept DNS only so Mailcow's ACME client can validate it). The apex and `www` belong to the owner's portfolio on Vercel, which acts as the shell for their projects: never touch those DNS records.
+- The same VPS (Ubuntu 26.04, 3.7 GB RAM) runs Mailcow for `mail.synapseengineering.dev`. Mailcow's nginx owns ports 80/443 and terminates HTTPS for Plano too (`deploy/mailcow-plano.conf`, domain in Mailcow's `ADDITIONAL_SAN`). Plano publishes no port and joins the Mailcow Docker network as `plano-web`. Never change the firewall, Mailcow ports or its certificate flow: a mistake breaks e-mail. Mailcow's `data/conf/nginx/` is mounted as `/etc/nginx/conf.d` (loaded via `*.conf`); always run `nginx -t` in `nginx-mailcow` before reloading.
+- Memory is tight: keep `mem_limit` on every Plano service and never build images on the VPS.
+- Flow: GitHub Actions (`.github/workflows/images.yml`) pushes `ghcr.io/nefrozdev/plano-api` and `plano-web` on every push to `main`; on the VPS, `git pull`, then `docker compose -f compose.prod.yaml pull && ... up -d`.
+- Stack: Caddy (`Frontend/Dockerfile` + `deploy/Caddyfile`, plain HTTP) serves Angular and proxies `/api` to the `api` service; Postgres has no published port.
+- Frontend and API share one origin, so `FRONTEND_URL` is `https://$DOMAIN` and CORS/origin checks need no changes. Keep it that way unless a separate API domain is deliberately introduced.
+- Docker build context is the repository root for both images because they compile `Common/`. Keep `.dockerignore` excluding `node_modules`, `dist` and `.env`.
+- The production `.env` exists only on the VPS (template: `.env.production.example`). Use hex passwords: the DB password is embedded in `DATABASE_URL`.
+- If code starts relying on `req.ip`, `req.secure` or the client protocol, enable Express `trust proxy` first: requests arrive through Mailcow's nginx and Caddy.
+
 ## Testing expectations
 
 - Unit tests should exercise controllers/services without opening a network port.

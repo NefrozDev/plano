@@ -1,0 +1,10 @@
+# Docker builds use the repository root as context (both apps import Common).
+**/node_modules
+**/dist
+**/coverage
+**/.angular
+**/.env
+**/.env.local
+.git
+.vscode
+Backend/data
