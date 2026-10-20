@@ -24,7 +24,7 @@ describe('Plano data adapters', () => {
 
     adapter.save(data);
 
-    expect(adapter.load()?.dashboard.tasks[0].done).toBeTrue();
+    expect(adapter.load()?.dashboard.tasks[0].done).toBe(true);
   });
 
   it('backfills objectives and agenda into data saved before they existed', () => {

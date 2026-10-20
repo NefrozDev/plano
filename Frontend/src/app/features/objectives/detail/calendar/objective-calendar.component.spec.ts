@@ -82,8 +82,17 @@ describe('ObjectiveCalendarComponent', () => {
       expect(element.querySelector('.field-error')?.textContent).toContain('supérieure à 0');
 
       submit('Footing', '7', 'done', '45');
-      const added = store.find('courir-10-km')!.sessions.find((session) => session.date === '2026-10-15');
-      expect(added).toEqual(jasmine.objectContaining({ label: 'Footing', value: 7, status: 'done', durationMinutes: 45 }));
+      const added = store
+        .find('courir-10-km')!
+        .sessions.find((session) => session.date === '2026-10-15');
+      expect(added).toEqual(
+        expect.objectContaining({
+          label: 'Footing',
+          value: 7,
+          status: 'done',
+          durationMinutes: 45,
+        }),
+      );
       expect(store.find('courir-10-km')!.sessions.length).toBe(15);
       expect(element.querySelector('.session-form')).toBeNull();
 
@@ -111,7 +120,9 @@ describe('ObjectiveCalendarComponent', () => {
       fixture.detectChanges();
       (element.querySelector('.session button') as HTMLButtonElement).click();
 
-      expect(store.find('courir-10-km')!.sessions.some((session) => session.id === 'run-11')).toBeFalse();
+      expect(store.find('courir-10-km')!.sessions.some((session) => session.id === 'run-11')).toBe(
+        false,
+      );
     });
   });
 

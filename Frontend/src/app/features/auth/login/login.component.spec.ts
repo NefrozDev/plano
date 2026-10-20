@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
@@ -7,7 +8,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
-  let auth: jasmine.SpyObj<AuthService>;
+  let auth: MockedObject<Pick<AuthService, 'login'>>;
   let component: LoginComponent;
   let router: Router;
   let returnUrl: string | null;
@@ -22,7 +23,9 @@ describe('LoginComponent', () => {
 
   beforeEach(async () => {
     returnUrl = null;
-    auth = jasmine.createSpyObj<AuthService>('AuthService', ['login']);
+    auth = {
+      login: vi.fn().mockName('AuthService.login'),
+    };
     await TestBed.configureTestingModule({
       imports: [LoginComponent],
       providers: [
@@ -50,14 +53,14 @@ describe('LoginComponent', () => {
   it('marks empty fields as touched without calling the API', () => {
     component.submit();
 
-    expect(component.form.controls.username.touched).toBeTrue();
-    expect(component.form.controls.password.touched).toBeTrue();
+    expect(component.form.controls.username.touched).toBe(true);
+    expect(component.form.controls.password.touched).toBe(true);
     expect(auth.login).not.toHaveBeenCalled();
   });
 
   it('exposes required and maximum-length field errors', () => {
     component.form.controls.username.markAsTouched();
-    expect(component.showError('username')).toBeTrue();
+    expect(component.showError('username')).toBe(true);
     expect(component.fieldError('username')).toContain('Saisissez');
     expect(component.fieldError('password')).toContain('Saisissez');
 
@@ -74,23 +77,26 @@ describe('LoginComponent', () => {
   });
 
   it('submits trimmed username, keeps the password intact, and navigates', () => {
-    auth.login.and.returnValue(of(user));
-    const navigate = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    auth.login.mockReturnValue(of(user));
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     component.form.setValue({ username: '  ada  ', password: ' pass word ' });
 
     component.submit();
 
-    expect(auth.login).toHaveBeenCalledOnceWith({
+    expect(auth.login).toHaveBeenCalledTimes(1);
+
+    expect(auth.login).toHaveBeenCalledWith({
       username: 'ada',
       password: ' pass word ',
     });
-    expect(navigate).toHaveBeenCalledOnceWith('/');
-    expect(component.submitting()).toBeFalse();
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/');
+    expect(component.submitting()).toBe(false);
   });
 
   it('accepts a local return URL and rejects a protocol-relative one', () => {
-    auth.login.and.returnValue(of(user));
-    const navigate = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    auth.login.mockReturnValue(of(user));
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     fillValidForm();
     returnUrl = '/plan?week=2';
 
@@ -112,26 +118,23 @@ describe('LoginComponent', () => {
   });
 
   it('shows a useful message for rejected credentials', () => {
-    auth.login.and.returnValue(
-      throwError(
-        () => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }),
-      ),
+    auth.login.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' })),
     );
     component.form.setValue({ username: 'ada', password: 'wrong-pass' });
 
     component.submit();
 
     expect(component.submissionError()).toContain('incorrect');
-    expect(component.submitting()).toBeFalse();
+    expect(component.submitting()).toBe(false);
   });
 
   it('maps offline, unexpected, and server failures', () => {
     fillValidForm();
-    auth.login.and.returnValues(
-      throwError(() => new HttpErrorResponse({ status: 0 })),
-      throwError(() => new Error('unexpected')),
-      throwError(() => new HttpErrorResponse({ status: 503 })),
-    );
+    auth.login
+      .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 0 })))
+      .mockReturnValueOnce(throwError(() => new Error('unexpected')))
+      .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 503 })));
 
     component.submit();
     expect(component.submissionError()).toContain('Impossible de joindre');
@@ -143,9 +146,7 @@ describe('LoginComponent', () => {
 
   it('asks the user to wait when the API rate limits login attempts', () => {
     fillValidForm();
-    auth.login.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 429 })),
-    );
+    auth.login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 429 })));
 
     component.submit();
 

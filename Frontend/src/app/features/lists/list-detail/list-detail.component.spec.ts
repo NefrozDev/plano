@@ -96,7 +96,7 @@ describe('ListDetailComponent', () => {
     expect(element.querySelectorAll('.entry').length).toBe(2);
 
     component.toggleSection('fresh');
-    expect(component.sectionViews()[0].collapsed).toBeFalse();
+    expect(component.sectionViews()[0].collapsed).toBe(false);
   });
 
   it('opens entry details, offering the list members as assignees', async () => {
@@ -148,13 +148,15 @@ describe('ListDetailComponent', () => {
 
   it('asks before deleting an entry when the setting says so', async () => {
     await create();
-    const confirm = spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(false);
+    const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
     const milk = component.list()!.sections[0].entries[0];
 
     await component.requestDeleteEntry(milk);
-    expect(confirm).toHaveBeenCalledWith(jasmine.objectContaining({ message: jasmine.stringContaining('Lait') }));
+    expect(confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('Lait') }),
+    );
 
-    confirm.and.resolveTo(true);
+    confirm.mockResolvedValue(true);
     const deleting = component.requestDeleteEntry(milk);
     await settle();
     http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1/entries/milk' }).flush(null);
@@ -175,14 +177,16 @@ describe('ListDetailComponent', () => {
 
     it('reorders locally within the section and saves once on drop', async () => {
       await create({ settings: listSettings({ completedLast: false }) });
-      const pointFinder = spyOn(document, 'elementFromPoint').and.returnValue(row('fresh', 'tomatoes'));
+      const pointFinder = vi
+        .spyOn(document, 'elementFromPoint')
+        .mockReturnValue(row('fresh', 'tomatoes'));
 
       component.moveDrag(pointer());
       expect(pointFinder).not.toHaveBeenCalled();
 
       component.startDrag('fresh', 'milk');
       component.moveDrag(pointer());
-      pointFinder.and.returnValue(row('grocery', 'pasta'));
+      pointFinder.mockReturnValue(row('grocery', 'pasta'));
       component.moveDrag(pointer());
       expect(entryNames()).toEqual(['Œufs', 'Tomates', 'Lait', 'Salade']);
 
@@ -209,7 +213,7 @@ describe('ListDetailComponent', () => {
     expect(element.querySelector('.more-button')).toBeNull();
     expect(element.querySelector('.empty-entry')).toBeNull();
     expect(element.querySelector('.drag-handle')).toBeNull();
-    expect((element.querySelector('.entry-toggle') as HTMLButtonElement).disabled).toBeTrue();
+    expect((element.querySelector('.entry-toggle') as HTMLButtonElement).disabled).toBe(true);
     expect(element.querySelector('.members button')).toBeNull();
   });
 
@@ -229,7 +233,7 @@ describe('ListDetailComponent', () => {
 
     it('saves the editor and deletes the list', async () => {
       await create();
-      const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
       component.toggleListMenu();
       component.openListEditor();
       await render();
@@ -239,10 +243,12 @@ describe('ListDetailComponent', () => {
       expect(update.request.body).toEqual({ name: 'Courses du samedi', icon: 'gift', color: '#e65591', description: 'Samedi' });
       update.flush(listDetail({ name: 'Courses du samedi' }));
       await saving;
-      expect((await render()).querySelector('.list-title')?.textContent).toContain('Courses du samedi');
-      expect(component.listEditorOpen()).toBeFalse();
+      expect((await render()).querySelector('.list-title')?.textContent).toContain(
+        'Courses du samedi',
+      );
+      expect(component.listEditorOpen()).toBe(false);
 
-      spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(true);
+      vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
       const deleting = component.deleteList();
       await settle();
       http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1' }).flush(null);
@@ -261,7 +267,7 @@ describe('ListDetailComponent', () => {
       await adding;
       await render();
 
-      expect(component.sectionCreatorOpen()).toBeFalse();
+      expect(component.sectionCreatorOpen()).toBe(false);
       expect(element.querySelectorAll('.entry-section').length).toBe(3);
     });
   });

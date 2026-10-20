@@ -71,7 +71,7 @@ describe('ListsComponent', () => {
   });
 
   it('creates a list and opens it in its editor', async () => {
-    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
     (element.querySelector('.new-list-button') as HTMLButtonElement).click();
     const request = http.expectOne({ method: 'POST', url: '/api/v1/lists' });

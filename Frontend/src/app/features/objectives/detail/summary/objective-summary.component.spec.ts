@@ -98,10 +98,12 @@ describe('ObjectiveSummaryComponent', () => {
     plan.value = '4 sorties par semaine';
     plan.dispatchEvent(new Event('change'));
 
-    expect(store.find('courir-10-km')).toEqual(jasmine.objectContaining({
-      description: 'Nouvelle description',
-      plan: '4 sorties par semaine',
-    }));
+    expect(store.find('courir-10-km')).toEqual(
+      expect.objectContaining({
+        description: 'Nouvelle description',
+        plan: '4 sorties par semaine',
+      }),
+    );
   });
 
   it('edits reminders', () => {

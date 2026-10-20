@@ -13,7 +13,10 @@ import { AgendaWeekViewComponent } from './calendar/agenda-week-view.component';
 describe('Agenda secondary screens', () => {
   let store: AgendaStore;
 
-  function render<T>(component: Type<T>): { fixture: ComponentFixture<T>; element: HTMLElement } {
+  function render<T>(component: Type<T>): {
+    fixture: ComponentFixture<T>;
+    element: HTMLElement;
+  } {
     const fixture = TestBed.createComponent(component);
     fixture.detectChanges();
     return { fixture, element: fixture.nativeElement as HTMLElement };
@@ -32,12 +35,14 @@ describe('Agenda secondary screens', () => {
       const { fixture, element } = render(AgendaFiltersComponent);
       const checkboxes = element.querySelectorAll<HTMLInputElement>('.option input');
       expect(checkboxes.length).toBe(5);
-      expect(Array.from(checkboxes).every((box) => box.checked)).toBeTrue();
+      expect(Array.from(checkboxes).every((box) => box.checked)).toBe(true);
 
       checkboxes[1].click();
       (element.querySelectorAll<HTMLButtonElement>('.switch-row')[1]).click();
       fixture.detectChanges();
-      expect(store.filters()).toEqual(jasmine.objectContaining({ hiddenCalendarIds: ['travail'], showTasks: false }));
+      expect(store.filters()).toEqual(
+        expect.objectContaining({ hiddenCalendarIds: ['travail'], showTasks: false }),
+      );
       expect(element.querySelectorAll('.switch-row')[1].getAttribute('aria-checked')).toBe('false');
 
       (element.querySelector('.reset') as HTMLButtonElement).click();
@@ -124,7 +129,9 @@ describe('Agenda secondary screens', () => {
       choose(3, '60');
       choose(0, '1');
       choose(4, '24h');
-      expect(store.settings()).toEqual(jasmine.objectContaining({ defaultReminderMinutes: 60, weekStartsOn: 1, hourFormat: '24h' }));
+      expect(store.settings()).toEqual(
+        expect.objectContaining({ defaultReminderMinutes: 60, weekStartsOn: 1, hourFormat: '24h' }),
+      );
     });
   });
 
@@ -163,7 +170,10 @@ describe('Agenda secondary screens', () => {
       fixture.componentRef.setInput('weekNumber', 42);
       fixture.detectChanges();
       const element = fixture.nativeElement as HTMLElement;
-      const created: { date: string; time: string }[] = [];
+      const created: {
+        date: string;
+        time: string;
+      }[] = [];
       fixture.componentInstance.createAt.subscribe((slot) => created.push(slot));
 
       expect(element.querySelector('.corner')?.textContent).toBe('S42');

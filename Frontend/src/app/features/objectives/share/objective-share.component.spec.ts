@@ -37,8 +37,8 @@ describe('ObjectiveShareComponent', () => {
     });
 
     it('saves the new selection and returns to the objective', () => {
-      const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
-      (element.querySelectorAll<HTMLInputElement>('.people input')[1]).click();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      element.querySelectorAll<HTMLInputElement>('.people input')[1].click();
       component.toggle('camille');
       (element.querySelector('.primary-button') as HTMLButtonElement).click();
 
@@ -48,9 +48,9 @@ describe('ObjectiveShareComponent', () => {
 
     it('selects a person again after deselecting them', () => {
       component.toggle('alex');
-      expect(component.isSelected('alex')).toBeFalse();
+      expect(component.isSelected('alex')).toBe(false);
       component.toggle('alex');
-      expect(component.isSelected('alex')).toBeTrue();
+      expect(component.isSelected('alex')).toBe(true);
     });
 
     it('invites a new person and selects them', () => {
@@ -63,18 +63,18 @@ describe('ObjectiveShareComponent', () => {
 
       const zoe = store.contacts().find((contact) => contact.name === 'Zoé');
       expect(zoe).toBeDefined();
-      expect(component.isSelected(zoe!.id)).toBeTrue();
+      expect(component.isSelected(zoe!.id)).toBe(true);
       expect(element.querySelector('.invite')).toBeNull();
     });
 
     it('copies the share link, or explains when the clipboard is unavailable', async () => {
-      const writeText = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
+      const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
       await component.copyLink();
       fixture.detectChanges();
       expect(writeText).toHaveBeenCalledWith('https://plano.app/objectif/courir-10-km-a1b2c3');
       expect(element.querySelector('.link button')?.textContent).toBe('Copié !');
 
-      writeText.and.rejectWith(new Error('denied'));
+      writeText.mockRejectedValue(new Error('denied'));
       await component.copyLink();
       fixture.detectChanges();
       expect(element.querySelector('[role="alert"]')).not.toBeNull();
@@ -85,7 +85,7 @@ describe('ObjectiveShareComponent', () => {
     setUp('economiser-1000');
 
     expect(element.querySelector('.note')?.textContent).toContain('Partagé par Camille');
-    expect((element.querySelector('.primary-button') as HTMLButtonElement).disabled).toBeTrue();
+    expect((element.querySelector('.primary-button') as HTMLButtonElement).disabled).toBe(true);
     expect(element.querySelector('.link-button')).toBeNull();
 
     component.toggle('alex');

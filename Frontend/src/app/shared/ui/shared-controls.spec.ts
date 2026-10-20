@@ -41,7 +41,7 @@ describe('shared form controls', () => {
     host.hint.set('Plus de détails');
     fixture.detectChanges();
 
-    expect(host.on()).toBeTrue();
+    expect(host.on()).toBe(true);
     expect(button.getAttribute('aria-checked')).toBe('true');
     expect(element.querySelector('.switch')?.classList).toContain('on');
     expect(element.querySelector('app-switch-row small')?.textContent).toBe('Plus de détails');

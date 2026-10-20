@@ -27,7 +27,9 @@ describe('AgendaStore', () => {
         'Rendez-vous projet', 'Courses', 'Déjeuner', 'Appel avec Camille', 'Sport', 'Lait', 'Restaurant',
       ]);
       const task = store.itemsOn('2026-10-15').find((item) => item.kind === 'task');
-      expect(task).toEqual(jasmine.objectContaining({ subtitle: 'Liste · Courses', link: ['/lists', 'courses'] }));
+      expect(task).toEqual(
+        expect.objectContaining({ subtitle: 'Liste · Courses', link: ['/lists', 'courses'] }),
+      );
     });
 
     it('shows planned objective sessions as all-day tasks, first', () => {
@@ -75,13 +77,17 @@ describe('AgendaStore', () => {
     it('creates an event and fixes a non-positive duration with the default one', () => {
       const created = store.create(draft({ title: '  Café  ', start: '2026-10-16T08:00', end: '2026-10-16T07:00' }));
 
-      expect(created).toEqual(jasmine.objectContaining({ title: 'Café', end: '2026-10-16T09:00' }));
+      expect(created).toEqual(expect.objectContaining({ title: 'Café', end: '2026-10-16T09:00' }));
       expect(titles('2026-10-16')).toContain('Café');
     });
 
     it('stretches all-day events over whole days', () => {
-      const created = store.create(draft({ allDay: true, start: '2026-10-20T14:00', end: '2026-10-19T10:00' }));
-      expect(created).toEqual(jasmine.objectContaining({ start: '2026-10-20T00:00', end: '2026-10-20T23:59' }));
+      const created = store.create(
+        draft({ allDay: true, start: '2026-10-20T14:00', end: '2026-10-19T10:00' }),
+      );
+      expect(created).toEqual(
+        expect.objectContaining({ start: '2026-10-20T00:00', end: '2026-10-20T23:59' }),
+      );
     });
 
     it('updates and removes events, cleaning recent history', () => {
@@ -105,7 +111,9 @@ describe('AgendaStore', () => {
 
     it('adds contacts, ignoring blank names', () => {
       expect(store.addContact('   ')).toBeNull();
-      expect(store.addContact('zoé')).toEqual(jasmine.objectContaining({ name: 'zoé', initials: 'Z', frequent: false }));
+      expect(store.addContact('zoé')).toEqual(
+        expect.objectContaining({ name: 'zoé', initials: 'Z', frequent: false }),
+      );
     });
   });
 

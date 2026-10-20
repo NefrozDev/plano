@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import {
   BadRequestException,
   ConflictException,
@@ -44,31 +45,31 @@ function membershipRow(
 }
 
 describe('GroupsService', () => {
-  let memberships: { findOne: jest.Mock; find: jest.Mock };
+  let memberships: { findOne: Mock; find: Mock };
   let manager: {
-    findOne: jest.Mock;
-    create: jest.Mock;
-    save: jest.Mock;
-    delete: jest.Mock;
+    findOne: Mock;
+    create: Mock;
+    save: Mock;
+    delete: Mock;
   };
-  let dataSource: { transaction: jest.Mock };
+  let dataSource: { transaction: Mock };
   let service: GroupsService;
 
   beforeEach(() => {
-    memberships = { findOne: jest.fn(), find: jest.fn() };
+    memberships = { findOne: vi.fn(), find: vi.fn() };
     manager = {
-      findOne: jest.fn(),
-      create: jest.fn((_entity, value: object) => value),
-      save: jest.fn((value: object) => {
+      findOne: vi.fn(),
+      create: vi.fn((_entity, value: object) => value),
+      save: vi.fn((value: object) => {
         if ('inviteCode' in value) {
           Object.assign(value, { createdAt: new Date('2030-01-01T00:00:00Z') });
         }
         return Promise.resolve(value);
       }),
-      delete: jest.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
     };
     dataSource = {
-      transaction: jest.fn((operation: (value: typeof manager) => unknown) =>
+      transaction: vi.fn((operation: (value: typeof manager) => unknown) =>
         operation(manager),
       ),
     };

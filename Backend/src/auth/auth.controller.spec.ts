@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import type { Response } from 'express';
 import { AuthController } from './auth.controller';
 import type { AuthService } from './auth.service';
@@ -22,26 +23,26 @@ describe('AuthController', () => {
     expiresAt: new Date('2030-01-01T00:00:00.000Z'),
   };
   let authService: {
-    register: jest.Mock;
-    login: jest.Mock;
-    logout: jest.Mock;
+    register: Mock;
+    login: Mock;
+    logout: Mock;
   };
   let sessionSettings: {
-    setCookie: jest.Mock;
-    clearCookie: jest.Mock;
+    setCookie: Mock;
+    clearCookie: Mock;
   };
   let controller: AuthController;
   let response: Response;
 
   beforeEach(() => {
     authService = {
-      register: jest.fn().mockResolvedValue(authentication),
-      login: jest.fn().mockResolvedValue(authentication),
-      logout: jest.fn().mockResolvedValue(undefined),
+      register: vi.fn().mockResolvedValue(authentication),
+      login: vi.fn().mockResolvedValue(authentication),
+      logout: vi.fn().mockResolvedValue(undefined),
     };
     sessionSettings = {
-      setCookie: jest.fn(),
-      clearCookie: jest.fn(),
+      setCookie: vi.fn(),
+      clearCookie: vi.fn(),
     };
     controller = new AuthController(
       authService as unknown as AuthService,

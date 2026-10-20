@@ -9,15 +9,16 @@ describe('ClipboardService', () => {
   });
 
   it('copies the text and reports success', async () => {
-    const writeText = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
 
-    await expectAsync(service.copy('ABC')).toBeResolvedTo(true);
-    expect(writeText).toHaveBeenCalledOnceWith('ABC');
+    await expect(service.copy('ABC')).resolves.toEqual(true);
+    expect(writeText).toHaveBeenCalledTimes(1);
+    expect(writeText).toHaveBeenCalledWith('ABC');
   });
 
   it('reports failure instead of throwing when the copy is refused', async () => {
-    spyOn(navigator.clipboard, 'writeText').and.rejectWith(new Error('denied'));
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
 
-    await expectAsync(service.copy('ABC')).toBeResolvedTo(false);
+    await expect(service.copy('ABC')).resolves.toEqual(false);
   });
 });

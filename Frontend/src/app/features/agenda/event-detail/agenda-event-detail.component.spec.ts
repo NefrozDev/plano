@@ -65,13 +65,13 @@ describe('AgendaEventDetailComponent', () => {
 
   it('confirms deletion in a modal and returns to the agenda on that day', async () => {
     await harness.navigateByUrl('/agenda/events/sport?date=2026-10-22');
-    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
     (element().querySelector('.delete') as HTMLButtonElement).click();
     harness.detectChanges();
     TestBed.tick();
     const dialog = element().querySelector('dialog') as HTMLDialogElement;
-    expect(dialog.open).toBeTrue();
+    expect(dialog.open).toBe(true);
     expect(dialog.textContent).toContain('Toutes les occurrences');
 
     (dialog.querySelector('.confirm') as HTMLButtonElement).click();

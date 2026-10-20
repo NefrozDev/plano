@@ -115,19 +115,21 @@ describe('agenda utils', () => {
     ], '2026-10-15');
     const byKey = new Map(layout.map((entry) => [entry.item.key, entry]));
 
-    expect(byKey.has('all-day')).toBeFalse();
-    expect(byKey.get('a')).toEqual(jasmine.objectContaining({ column: 0, columns: 2, top: 540, height: 60 }));
-    expect(byKey.get('b')).toEqual(jasmine.objectContaining({ column: 1, columns: 2 }));
-    expect(byKey.get('c')).toEqual(jasmine.objectContaining({ column: 0, columns: 1 }));
+    expect(byKey.has('all-day')).toBe(false);
+    expect(byKey.get('a')).toEqual(
+      expect.objectContaining({ column: 0, columns: 2, top: 540, height: 60 }),
+    );
+    expect(byKey.get('b')).toEqual(expect.objectContaining({ column: 1, columns: 2 }));
+    expect(byKey.get('c')).toEqual(expect.objectContaining({ column: 0, columns: 1 }));
     // An event started the day before is clamped to midnight.
-    expect(byKey.get('night')).toEqual(jasmine.objectContaining({ top: 0, height: 60 }));
+    expect(byKey.get('night')).toEqual(expect.objectContaining({ top: 0, height: 60 }));
   });
 
   it('only accepts web links for conferences', () => {
-    expect(isSafeUrl('https://meet.example.com/abc')).toBeTrue();
-    expect(isSafeUrl('http://intranet.local/visio')).toBeTrue();
-    expect(isSafeUrl('javascript:alert(1)')).toBeFalse();
-    expect(isSafeUrl('pas un lien')).toBeFalse();
+    expect(isSafeUrl('https://meet.example.com/abc')).toBe(true);
+    expect(isSafeUrl('http://intranet.local/visio')).toBe(true);
+    expect(isSafeUrl('javascript:alert(1)')).toBe(false);
+    expect(isSafeUrl('pas un lien')).toBe(false);
   });
 
   it('formats labels for reminders, file sizes and colours', () => {
@@ -135,7 +137,7 @@ describe('agenda utils', () => {
     expect(eventReminderLabel(15)).toBe('15 minutes avant');
     expect(eventReminderLabel(45)).toBe('45 minutes avant');
     expect(formatFileSize(500)).toBe('500 o');
-    expect(formatFileSize(245_760)).toBe('240 Ko');
+    expect(formatFileSize(245760)).toBe('240 Ko');
     expect(formatFileSize(5 * 1024 * 1024)).toBe('5,0 Mo');
     expect(eventColor(seeded('appel-camille'), agenda.calendars)).toBe('#f59e0b');
     expect(eventColor(seeded('courses'), agenda.calendars)).toBe('#22a95a');

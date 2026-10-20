@@ -1,10 +1,6 @@
+import type { Mock, MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
-import {
-  TestBed,
-  fakeAsync,
-  flushMicrotasks,
-  tick,
-} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -14,7 +10,20 @@ import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { GroupSetupComponent } from './group-setup.component';
 
 describe('GroupSetupComponent', () => {
-  let groups: jasmine.SpyObj<GroupsService>;
+  let groups: MockedObject<
+    Pick<
+      GroupsService,
+      | 'getMine'
+      | 'create'
+      | 'join'
+      | 'update'
+      | 'rotateInviteCode'
+      | 'transferOwnership'
+      | 'removeMember'
+      | 'leave'
+      | 'delete'
+    >
+  >;
   let component: GroupSetupComponent;
   let router: Router;
   const group: GroupDetails = {
@@ -37,26 +46,26 @@ describe('GroupSetupComponent', () => {
   };
 
   beforeEach(async () => {
-    groups = jasmine.createSpyObj<GroupsService>('GroupsService', [
-      'getMine',
-      'create',
-      'join',
-      'update',
-      'rotateInviteCode',
-      'transferOwnership',
-      'removeMember',
-      'leave',
-      'delete',
-    ]);
-    groups.getMine.and.returnValue(of(null));
-    groups.create.and.returnValue(of(group));
-    groups.join.and.returnValue(of({ ...group, role: 'member' }));
-    groups.update.and.returnValue(of(group));
-    groups.rotateInviteCode.and.returnValue(of(group));
-    groups.transferOwnership.and.returnValue(of({ ...group, role: 'member' }));
-    groups.removeMember.and.returnValue(of(undefined));
-    groups.leave.and.returnValue(of(undefined));
-    groups.delete.and.returnValue(of(undefined));
+    groups = {
+      getMine: vi.fn().mockName('GroupsService.getMine'),
+      create: vi.fn().mockName('GroupsService.create'),
+      join: vi.fn().mockName('GroupsService.join'),
+      update: vi.fn().mockName('GroupsService.update'),
+      rotateInviteCode: vi.fn().mockName('GroupsService.rotateInviteCode'),
+      transferOwnership: vi.fn().mockName('GroupsService.transferOwnership'),
+      removeMember: vi.fn().mockName('GroupsService.removeMember'),
+      leave: vi.fn().mockName('GroupsService.leave'),
+      delete: vi.fn().mockName('GroupsService.delete'),
+    };
+    groups.getMine.mockReturnValue(of(null));
+    groups.create.mockReturnValue(of(group));
+    groups.join.mockReturnValue(of({ ...group, role: 'member' }));
+    groups.update.mockReturnValue(of(group));
+    groups.rotateInviteCode.mockReturnValue(of(group));
+    groups.transferOwnership.mockReturnValue(of({ ...group, role: 'member' }));
+    groups.removeMember.mockReturnValue(of(undefined));
+    groups.leave.mockReturnValue(of(undefined));
+    groups.delete.mockReturnValue(of(undefined));
 
     await TestBed.configureTestingModule({
       imports: [GroupSetupComponent],
@@ -71,54 +80,61 @@ describe('GroupSetupComponent', () => {
   });
 
   it('loads the current group and prepares its editable name', () => {
-    groups.getMine.and.returnValue(of(group));
+    groups.getMine.mockReturnValue(of(group));
     component.ngOnInit();
 
     expect(component.group()).toEqual(group);
     expect(component.renameForm.controls.name.value).toBe('Les Explorateurs');
-    expect(component.loading()).toBeFalse();
+    expect(component.loading()).toBe(false);
   });
 
   it('opens, closes, and validates the create form', () => {
     component.openCreateForm();
-    expect(component.showCreateForm()).toBeTrue();
+    expect(component.showCreateForm()).toBe(true);
     component.form.controls.name.setValue(' ');
     component.submit();
     expect(groups.create).not.toHaveBeenCalled();
     component.closeCreateForm();
-    expect(component.showCreateForm()).toBeFalse();
+    expect(component.showCreateForm()).toBe(false);
   });
 
   it('trims, creates, and navigates home', () => {
-    const navigate = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     component.form.controls.name.setValue('  Les Explorateurs  ');
     component.submit();
 
-    expect(groups.create).toHaveBeenCalledOnceWith({
+    expect(groups.create).toHaveBeenCalledTimes(1);
+
+    expect(groups.create).toHaveBeenCalledWith({
       name: 'Les Explorateurs',
     });
     expect(component.group()).toEqual(group);
-    expect(navigate).toHaveBeenCalledOnceWith('/');
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/');
   });
 
   it('normalizes and accepts an invitation code', () => {
-    const navigate = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     component.showJoinInfo();
     component.joinForm.controls.inviteCode.setValue('abcd1234');
     component.join();
 
-    expect(groups.join).toHaveBeenCalledOnceWith({ inviteCode: 'ABCD1234' });
-    expect(navigate).toHaveBeenCalledOnceWith('/');
+    expect(groups.join).toHaveBeenCalledTimes(1);
+
+    expect(groups.join).toHaveBeenCalledWith({ inviteCode: 'ABCD1234' });
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/');
   });
 
   it('renames the group and surfaces backend errors', () => {
     component.group.set(group);
     component.renameForm.controls.name.setValue('  Nouveau nom  ');
     component.rename();
-    expect(groups.update).toHaveBeenCalledOnceWith('Nouveau nom');
+    expect(groups.update).toHaveBeenCalledTimes(1);
+    expect(groups.update).toHaveBeenCalledWith('Nouveau nom');
     expect(component.actionMessage()).toContain('modifié');
 
-    groups.update.and.returnValue(
+    groups.update.mockReturnValue(
       throwError(
         () =>
           new HttpErrorResponse({
@@ -133,14 +149,13 @@ describe('GroupSetupComponent', () => {
   });
 
   it('supports skipping and maps offline failures', () => {
-    const navigate = spyOn(router, 'navigateByUrl').and.resolveTo(true);
-    groups.getMine.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 0 })),
-    );
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    groups.getMine.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
     component.loadGroup();
     expect(component.submissionError()).toContain('Impossible de joindre');
     component.skip();
-    expect(navigate).toHaveBeenCalledOnceWith('/');
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/');
   });
   describe('owner actions', () => {
     const member = {
@@ -152,15 +167,15 @@ describe('GroupSetupComponent', () => {
       role: 'member' as const,
       joinedAt: '2030-01-02T00:00:00Z',
     };
-    let confirm: jasmine.Spy;
+    let confirm: Mock;
 
     beforeEach(() => {
       component.group.set({ ...group, members: [...group.members, member] });
-      confirm = spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(true);
+      confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
     });
 
     it('does nothing when the user cancels a confirmation', async () => {
-      confirm.and.resolveTo(false);
+      confirm.mockResolvedValue(false);
       await component.rotateInviteCode();
       await component.transferOwnership(member);
       await component.removeMember(member);
@@ -176,23 +191,26 @@ describe('GroupSetupComponent', () => {
 
       await component.transferOwnership(member);
       expect(confirm).toHaveBeenCalledWith(
-        jasmine.objectContaining({ message: 'Grace Hopper deviendra propriétaire du groupe.' }),
+        expect.objectContaining({ message: 'Grace Hopper deviendra propriétaire du groupe.' }),
       );
-      expect(groups.transferOwnership).toHaveBeenCalledOnceWith('user-2');
-      expect(component.isOwner()).toBeFalse();
+      expect(groups.transferOwnership).toHaveBeenCalledTimes(1);
+      expect(groups.transferOwnership).toHaveBeenCalledWith('user-2');
+      expect(component.isOwner()).toBe(false);
       expect(component.busyAction()).toBe('');
     });
 
     it('removes a member locally once the server confirms', async () => {
       await component.removeMember(member);
 
-      expect(groups.removeMember).toHaveBeenCalledOnceWith('user-2');
+      expect(groups.removeMember).toHaveBeenCalledTimes(1);
+
+      expect(groups.removeMember).toHaveBeenCalledWith('user-2');
       expect(component.group()?.members.map(({ id }) => id)).toEqual(['user-1']);
       expect(component.actionMessage()).toBe('Membre retiré du groupe.');
     });
 
     it('keeps the member and reports the error when removal fails', async () => {
-      groups.removeMember.and.returnValue(
+      groups.removeMember.mockReturnValue(
         throwError(
           () =>
             new HttpErrorResponse({
@@ -209,7 +227,7 @@ describe('GroupSetupComponent', () => {
     });
 
     it('handles a removal finishing after the group disappeared', async () => {
-      groups.removeMember.and.callFake(() => {
+      groups.removeMember.mockImplementation(() => {
         component.group.set(null);
         return of(undefined);
       });
@@ -233,7 +251,7 @@ describe('GroupSetupComponent', () => {
     });
 
     it('uses a generic message for unexpected failures', () => {
-      groups.delete.and.returnValue(throwError(() => new Error('boom')));
+      groups.delete.mockReturnValue(throwError(() => new Error('boom')));
       component.deleteGroup();
 
       expect(component.submissionError()).toBe(
@@ -244,21 +262,28 @@ describe('GroupSetupComponent', () => {
   });
 
   describe('invite code', () => {
-    it('copies the code and resets the confirmation after a delay', fakeAsync(() => {
-      const writeText = spyOn(navigator.clipboard, 'writeText').and.resolveTo();
-      component.group.set(group);
+    it('copies the code and resets the confirmation after a delay', async () => {
+      vi.useFakeTimers();
+      try {
+        const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+        component.group.set(group);
 
-      void component.copyInviteCode();
-      flushMicrotasks();
-      expect(writeText).toHaveBeenCalledOnceWith('ABC12345');
-      expect(component.linkCopied()).toBeTrue();
+        await component.copyInviteCode();
+        expect(writeText).toHaveBeenCalledTimes(1);
+        expect(writeText).toHaveBeenCalledWith('ABC12345');
+        expect(component.linkCopied()).toBe(true);
 
-      tick(1800);
-      expect(component.linkCopied()).toBeFalse();
-    }));
+        vi.advanceTimersByTime(1799);
+        expect(component.linkCopied()).toBe(true);
+        vi.advanceTimersByTime(1);
+        expect(component.linkCopied()).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
 
     it('shows the code when the clipboard is unavailable', async () => {
-      spyOn(navigator.clipboard, 'writeText').and.rejectWith(new Error('denied'));
+      vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
       component.group.set(group);
 
       await component.copyInviteCode();
@@ -267,7 +292,7 @@ describe('GroupSetupComponent', () => {
     });
 
     it('ignores copy requests without a group', async () => {
-      const writeText = spyOn(navigator.clipboard, 'writeText');
+      const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
       await component.copyInviteCode();
       expect(writeText).not.toHaveBeenCalled();
     });
@@ -300,16 +325,14 @@ describe('GroupSetupComponent', () => {
     });
 
     it('reports backend errors without a usable message', () => {
-      groups.create.and.returnValue(
+      groups.create.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 500, error: null })),
       );
       component.form.controls.name.setValue('Valide');
       component.submit();
 
-      expect(component.submissionError()).toBe(
-        'L’action a échoué. Veuillez réessayer.',
-      );
-      expect(component.submitting()).toBeFalse();
+      expect(component.submissionError()).toBe('L’action a échoué. Veuillez réessayer.');
+      expect(component.submitting()).toBe(false);
     });
   });
 
@@ -324,19 +347,17 @@ describe('GroupSetupComponent', () => {
   });
 
   it('renders the owner management view', () => {
-    groups.getMine.and.returnValue(of(group));
+    groups.getMine.mockReturnValue(of(group));
     const fixture = TestBed.createComponent(GroupSetupComponent);
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      'Les Explorateurs',
-    );
-    expect(fixture.componentInstance.isOwner()).toBeTrue();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Les Explorateurs');
+    expect(fixture.componentInstance.isOwner()).toBe(true);
   });
 
   it('goes back home from the back bubble of the management view', () => {
-    groups.getMine.and.returnValue(of(group));
-    const navigate = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    groups.getMine.mockReturnValue(of(group));
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     const fixture = TestBed.createComponent(GroupSetupComponent);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
@@ -346,11 +367,12 @@ describe('GroupSetupComponent', () => {
     expect(element.textContent).not.toContain('Retour à l’accueil');
 
     back.click();
-    expect(navigate).toHaveBeenCalledOnceWith('/');
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/');
   });
   describe('management modals', () => {
     function renderGroup(role: 'owner' | 'member') {
-      groups.getMine.and.returnValue(of({ ...group, role }));
+      groups.getMine.mockReturnValue(of({ ...group, role }));
       const fixture = TestBed.createComponent(GroupSetupComponent);
       fixture.detectChanges();
       return { fixture, element: fixture.nativeElement as HTMLElement };
@@ -379,16 +401,18 @@ describe('GroupSetupComponent', () => {
       (element.querySelector('.group-tools button') as HTMLButtonElement).click();
       fixture.detectChanges();
       const dialog = element.querySelector('dialog') as HTMLDialogElement;
-      expect(dialog.open).toBeTrue();
+      expect(dialog.open).toBe(true);
       expect(component.renameForm.controls.name.value).toBe('Les Explorateurs');
 
       component.renameForm.controls.name.setValue('Les Aventuriers');
       (dialog.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
       fixture.detectChanges();
 
-      expect(groups.update).toHaveBeenCalledOnceWith('Les Aventuriers');
+      expect(groups.update).toHaveBeenCalledTimes(1);
+
+      expect(groups.update).toHaveBeenCalledWith('Les Aventuriers');
       expect(component.dialog()).toBeNull();
-      expect(dialog.open).toBeFalse();
+      expect(dialog.open).toBe(false);
     });
 
     it('confirms a rename with a floating toast instead of an inline message', () => {
@@ -409,7 +433,7 @@ describe('GroupSetupComponent', () => {
     });
 
     it('keeps the modal open and shows the error inside it when an action fails', () => {
-      groups.update.and.returnValue(
+      groups.update.mockReturnValue(
         throwError(
           () => new HttpErrorResponse({ status: 409, error: { message: 'Nom déjà pris.' } }),
         ),

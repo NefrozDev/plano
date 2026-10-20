@@ -14,7 +14,7 @@ These instructions are also intended to be reusable when starting another Angula
 - Frontend and Backend may depend on Common. Common must not depend on either application.
 - Keep one Git repository at the root. When scaffolding nested applications, always disable creation of nested `.git` directories.
 - Install dependencies locally in the relevant package. Do not require global Angular or Nest CLI installations.
-- Both apps run on Node 24 (`.nvmrc`, CI, Dockerfiles; keep them in sync). Angular 22 needs `^24.15` and TypeScript 6.0; with NestJS 12, Jest can only load its ESM-only packages on Node 24.9+. The frontend still runs on Zone.js through `provideZoneChangeDetection()` in `app.config.ts`; going zoneless is a deliberate future change, not a side effect of an upgrade.
+- Both apps run on Node 24 (`.nvmrc`, CI, Dockerfiles; keep them in sync). Angular 22 needs `^24.15` and TypeScript 6.0. The frontend still runs on Zone.js through `provideZoneChangeDetection()` in `app.config.ts`; going zoneless is a deliberate future change, not a side effect of an upgrade.
 
 ## Root commands
 
@@ -49,18 +49,18 @@ When creating a new backend in an existing repository:
 1. Use the Nest CLI through `npx`; do not install it globally.
 2. Use strict mode, npm, and skip Git initialization.
 3. Verify the target directory before scaffolding and preserve existing files.
-4. Confirm generated dependencies before installing more packages. The standard Nest scaffold already includes Jest, `ts-jest`, `@types/jest`, `@nestjs/testing`, and Supertest.
+4. Confirm generated dependencies before installing more packages. A CommonJS Nest scaffold still generates Jest; this repository uses Vitest (see Testing expectations), so replace it rather than adding a second runner. `@nestjs/testing` and Supertest are runner-agnostic.
 5. Add configuration and validation packages only when the application uses them.
 6. Add a health endpoint and cover it with both unit and end-to-end tests.
 7. Run build, lint, unit tests, and end-to-end tests before reporting completion.
 
-## TypeScript and Jest lessons
+## TypeScript and test-runner lessons
 
-### Jest globals missing in editor
+### Test globals missing in editor
 
-If VS Code reports that `describe`, `it`, `beforeEach`, or `expect` cannot be found, first verify that `jest` and `@types/jest` are installed. Do not reinstall them blindly.
+If VS Code reports that `describe`, `it`, `beforeEach`, `expect` or `vi` cannot be found, first verify that `vitest` is installed and that the relevant tsconfig lists `vitest/globals` in `types`. Do not reinstall packages blindly.
 
-End-to-end tests under `Backend/test/` need a TypeScript project that explicitly loads Jest globals. Preserve `Backend/test/tsconfig.json` with these essential settings:
+End-to-end tests under `Backend/test/` need a TypeScript project that explicitly loads the Vitest globals. Preserve `Backend/test/tsconfig.json` with these essential settings:
 
 ```json
 {
@@ -68,7 +68,7 @@ End-to-end tests under `Backend/test/` need a TypeScript project that explicitly
   "compilerOptions": {
     "noEmit": true,
     "rootDir": "../..",
-    "types": ["jest", "node"]
+    "types": ["node", "vitest/globals"]
   },
   "include": ["./**/*.ts", "../src/**/*.ts"]
 }
@@ -115,8 +115,10 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 ```
 
 - On non-Windows systems, use the equivalent local TypeScript executable.
-- NestJS 12 packages are ESM-only. Jest loads them through Node's `vm.SourceTextModule`, which exists only with `--experimental-vm-modules`: the backend `test*` scripts pass that flag to `node node_modules/jest/bin/jest.js`. Running `npx jest` directly fails with "Must use import to load ES Module". Production needs no flag (`require(esm)` is stable since Node 22.12).
-- TypeScript 6 no longer loads every installed `@types/*` package: `types` defaults to `[]`. `Backend/tsconfig.json` lists `node` and `jest`; `tsconfig.build.json` narrows it to `node` so production code cannot use Jest globals.
+- Backend tests run with Vitest (`vitest.config.mts`, `vitest.config.e2e.mts`). Vitest compiles TypeScript with esbuild, which drops the decorator metadata Nest's dependency injection needs, so both configs compile through SWC (`unplugin-swc`). The e2e config spreads the unit one: `mergeConfig` would concatenate the `include` arrays and run both suites.
+- Under Vitest the code runs as ES modules: `vi.spyOn` cannot replace a named import such as `scrypt` from `node:crypto`. Use `vi.mock()` with `importOriginal` instead (see `password.service.spec.ts`).
+- Frontend unit tests run with Vitest in browser mode (headless Chromium through Playwright, `@angular/build:unit-test`), not jsdom: specs rely on `<dialog>.showModal()`, `navigator.clipboard` and real layout. Run `npx playwright install chromium` once per machine. Zone's `fakeAsync`/`tick` do not work under Vitest; use `vi.useFakeTimers()` and `vi.advanceTimersByTime()`.
+- TypeScript 6 no longer loads every installed `@types/*` package: `types` defaults to `[]`. `Backend/tsconfig.json` lists `node` and `vitest/globals`; `tsconfig.build.json` narrows it to `node` so production code cannot use test globals.
 
 ## Completion checklist
 

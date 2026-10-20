@@ -14,9 +14,9 @@ describe('ListEntryRowComponent', () => {
       clientX,
       pointerId: 1,
       target,
-      currentTarget: { setPointerCapture: jasmine.createSpy('setPointerCapture') },
-      preventDefault: jasmine.createSpy('preventDefault'),
-      stopPropagation: jasmine.createSpy('stopPropagation'),
+      currentTarget: { setPointerCapture: vi.fn().mockName('setPointerCapture') },
+      preventDefault: vi.fn().mockName('preventDefault'),
+      stopPropagation: vi.fn().mockName('stopPropagation'),
     } as unknown as PointerEvent;
   }
 
@@ -65,7 +65,7 @@ describe('ListEntryRowComponent', () => {
 
     const click = new MouseEvent('click', { cancelable: true });
     row.handleClick(click);
-    expect(click.defaultPrevented).toBeTrue();
+    expect(click.defaultPrevented).toBe(true);
     expect(emitted).toEqual([]);
 
     row.handleClick(new MouseEvent('click'));
@@ -88,7 +88,7 @@ describe('ListEntryRowComponent', () => {
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
 
-    expect((element.querySelector('.entry-toggle') as HTMLButtonElement).disabled).toBeTrue();
+    expect((element.querySelector('.entry-toggle') as HTMLButtonElement).disabled).toBe(true);
     expect(element.querySelector('.drag-handle')).toBeNull();
     expect(element.querySelector('.delete-entry')).toBeNull();
     row.startSwipe(pointer(200));

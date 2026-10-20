@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import type { CreateGroupDto } from './dto/create-group.dto';
 import { GroupsController } from './groups.controller';
 import type { GroupsService } from './groups.service';
@@ -11,20 +12,20 @@ describe('GroupsController', () => {
     createdAt: new Date('2030-01-01T00:00:00Z'),
     members: [],
   };
-  let service: Record<string, jest.Mock>;
+  let service: Record<string, Mock>;
   let controller: GroupsController;
 
   beforeEach(() => {
     service = {
-      findForUser: jest.fn().mockResolvedValue(group),
-      create: jest.fn().mockResolvedValue(group),
-      join: jest.fn().mockResolvedValue(group),
-      update: jest.fn().mockResolvedValue(group),
-      rotateInviteCode: jest.fn().mockResolvedValue(group),
-      transferOwnership: jest.fn().mockResolvedValue(group),
-      removeMember: jest.fn().mockResolvedValue(undefined),
-      leave: jest.fn().mockResolvedValue(undefined),
-      delete: jest.fn().mockResolvedValue(undefined),
+      findForUser: vi.fn().mockResolvedValue(group),
+      create: vi.fn().mockResolvedValue(group),
+      join: vi.fn().mockResolvedValue(group),
+      update: vi.fn().mockResolvedValue(group),
+      rotateInviteCode: vi.fn().mockResolvedValue(group),
+      transferOwnership: vi.fn().mockResolvedValue(group),
+      removeMember: vi.fn().mockResolvedValue(undefined),
+      leave: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
     };
     controller = new GroupsController(service as unknown as GroupsService);
   });

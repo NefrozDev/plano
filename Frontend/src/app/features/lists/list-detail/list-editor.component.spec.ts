@@ -55,7 +55,7 @@ describe('ListEditorComponent', () => {
 
     ((fixture.nativeElement as HTMLElement).querySelector('.editor-header button') as HTMLButtonElement).click();
 
-    expect(closed).toBeTrue();
+    expect(closed).toBe(true);
     expect(saved).toEqual([]);
   });
 });

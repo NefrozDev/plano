@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -9,7 +10,7 @@ import { AgendaEventFormComponent } from './agenda-event-form.component';
 describe('AgendaEventFormComponent', () => {
   let harness: RouterTestingHarness;
   let store: AgendaStore;
-  let navigate: jasmine.Spy;
+  let navigate: Mock;
 
   const element = (): HTMLElement => harness.routeNativeElement as HTMLElement;
   const form = (): AgendaEventFormComponent =>
@@ -32,7 +33,7 @@ describe('AgendaEventFormComponent', () => {
     });
     store = TestBed.inject(AgendaStore);
     harness = await RouterTestingHarness.create();
-    navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   });
 
   describe('creating', () => {
@@ -40,9 +41,15 @@ describe('AgendaEventFormComponent', () => {
       store.updateSettings({ defaultDurationMinutes: 90, defaultReminderMinutes: 30 });
       await harness.navigateByUrl('/agenda/new?date=2026-10-20&time=14:00');
 
-      expect(form().form.getRawValue()).toEqual(jasmine.objectContaining({
-        date: '2026-10-20', startTime: '14:00', endTime: '15:30', reminderMinutes: 30, calendarId: 'personnel',
-      }));
+      expect(form().form.getRawValue()).toEqual(
+        expect.objectContaining({
+          date: '2026-10-20',
+          startTime: '14:00',
+          endTime: '15:30',
+          reminderMinutes: 30,
+          calendarId: 'personnel',
+        }),
+      );
       expect(element().querySelector('h1')?.textContent).toBe('Nouvel événement');
     });
 
@@ -50,9 +57,14 @@ describe('AgendaEventFormComponent', () => {
       store.toggleCalendar('personnel');
       await harness.navigateByUrl('/agenda/new');
 
-      expect(form().form.getRawValue()).toEqual(jasmine.objectContaining({
-        date: '2026-10-15', startTime: '11:00', endTime: '12:00', calendarId: 'travail',
-      }));
+      expect(form().form.getRawValue()).toEqual(
+        expect.objectContaining({
+          date: '2026-10-15',
+          startTime: '11:00',
+          endTime: '12:00',
+          calendarId: 'travail',
+        }),
+      );
     });
 
     it('requires a title and an end after the start, then saves and opens the event', async () => {
@@ -68,8 +80,13 @@ describe('AgendaEventFormComponent', () => {
       setInput('input[formcontrolname="endTime"]', '16:00');
       submit();
       const created = store.events().find((event) => event.title === 'Atelier');
-      expect(created).toEqual(jasmine.objectContaining({ start: '2026-10-20T14:00', end: '2026-10-20T16:00' }));
-      expect(navigate).toHaveBeenCalledWith(['/agenda/events', created!.id], { queryParams: { date: '2026-10-20' }, replaceUrl: true });
+      expect(created).toEqual(
+        expect.objectContaining({ start: '2026-10-20T14:00', end: '2026-10-20T16:00' }),
+      );
+      expect(navigate).toHaveBeenCalledWith(['/agenda/events', created!.id], {
+        queryParams: { date: '2026-10-20' },
+        replaceUrl: true,
+      });
     });
 
     it('keeps the duration when the start time moves', async () => {
@@ -96,9 +113,13 @@ describe('AgendaEventFormComponent', () => {
 
       setInput('input[formcontrolname="endDate"]', '2026-11-03');
       submit();
-      expect(store.events().find((event) => event.title === 'Vacances')).toEqual(jasmine.objectContaining({
-        allDay: true, start: '2026-11-01T00:00', end: '2026-11-03T23:59',
-      }));
+      expect(store.events().find((event) => event.title === 'Vacances')).toEqual(
+        expect.objectContaining({
+          allDay: true,
+          start: '2026-11-01T00:00',
+          end: '2026-11-03T23:59',
+        }),
+      );
     });
 
     it('collects the step 2 options and rejects unsafe conference links', async () => {
@@ -112,7 +133,7 @@ describe('AgendaEventFormComponent', () => {
       setInput('input[formcontrolname="conferenceUrl"]', 'javascript:alert(1)');
       submit();
       expect(element().textContent).toContain('lien web');
-      expect(store.events().some((event) => event.title === 'Revue')).toBeFalse();
+      expect(store.events().some((event) => event.title === 'Revue')).toBe(false);
 
       setInput('input[formcontrolname="conferenceUrl"]', 'https://meet.example.com/revue');
       (element().querySelector('.step-link:not(.back)') as HTMLButtonElement).click();
@@ -120,9 +141,14 @@ describe('AgendaEventFormComponent', () => {
       setInput('select[formcontrolname="visibility"]', 'private', 'change');
       submit();
 
-      expect(store.events().find((event) => event.title === 'Revue')).toEqual(jasmine.objectContaining({
-        recurrence: 'monthly', color: '#8b5cf6', conferenceUrl: 'https://meet.example.com/revue', visibility: 'private',
-      }));
+      expect(store.events().find((event) => event.title === 'Revue')).toEqual(
+        expect.objectContaining({
+          recurrence: 'monthly',
+          color: '#8b5cf6',
+          conferenceUrl: 'https://meet.example.com/revue',
+          visibility: 'private',
+        }),
+      );
     });
 
     it('sends the user back to step 1 when a main field is invalid', async () => {
@@ -140,7 +166,9 @@ describe('AgendaEventFormComponent', () => {
         ({ files: list, value: 'x' }) as unknown as HTMLInputElement;
 
       component.addAttachments(files([new File(['abc'], 'plan.pdf', { type: 'application/pdf' })]));
-      expect(component.attachments()).toEqual([jasmine.objectContaining({ name: 'plan.pdf', size: 3 })]);
+      expect(component.attachments()).toEqual([
+        expect.objectContaining({ name: 'plan.pdf', size: 3 }),
+      ]);
 
       const huge = new File(['x'], 'video.mp4');
       Object.defineProperty(huge, 'size', { value: 20 * 1024 * 1024 });
@@ -179,9 +207,15 @@ describe('AgendaEventFormComponent', () => {
       await harness.navigateByUrl('/agenda/events/courses/edit');
 
       expect(element().querySelector('h1')?.textContent).toBe('Modifier l’événement');
-      expect(form().form.getRawValue()).toEqual(jasmine.objectContaining({
-        title: 'Courses', date: '2026-10-15', startTime: '11:00', endTime: '12:00', location: 'Carrefour',
-      }));
+      expect(form().form.getRawValue()).toEqual(
+        expect.objectContaining({
+          title: 'Courses',
+          date: '2026-10-15',
+          startTime: '11:00',
+          endTime: '12:00',
+          location: 'Carrefour',
+        }),
+      );
       expect(form().participantIds()).toEqual(['alex']);
 
       setInput('input[formcontrolname="location"]', 'Marché');
@@ -192,7 +226,9 @@ describe('AgendaEventFormComponent', () => {
 
     it('prefills all-day events with their end date', async () => {
       await harness.navigateByUrl('/agenda/events/week-end-mer/edit');
-      expect(form().form.getRawValue()).toEqual(jasmine.objectContaining({ allDay: true, date: '2026-10-24', endDate: '2026-10-25' }));
+      expect(form().form.getRawValue()).toEqual(
+        expect.objectContaining({ allDay: true, date: '2026-10-24', endDate: '2026-10-25' }),
+      );
     });
 
     it('explains when the event to edit no longer exists', async () => {

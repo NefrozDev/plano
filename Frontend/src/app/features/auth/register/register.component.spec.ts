@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
@@ -7,7 +8,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { RegisterComponent } from './register.component';
 
 describe('RegisterComponent', () => {
-  let auth: jasmine.SpyObj<AuthService>;
+  let auth: MockedObject<Pick<AuthService, 'register'>>;
   let component: RegisterComponent;
   let router: Router;
 
@@ -20,7 +21,9 @@ describe('RegisterComponent', () => {
   };
 
   beforeEach(async () => {
-    auth = jasmine.createSpyObj<AuthService>('AuthService', ['register']);
+    auth = {
+      register: vi.fn().mockName('AuthService.register'),
+    };
     await TestBed.configureTestingModule({
       imports: [RegisterComponent],
       providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
@@ -55,10 +58,8 @@ describe('RegisterComponent', () => {
 
     component.submit();
 
-    expect(component.form.hasError('passwordMismatch')).toBeTrue();
-    expect(component.passwordConfirmationError()).toContain(
-      'correspondent pas',
-    );
+    expect(component.form.hasError('passwordMismatch')).toBe(true);
+    expect(component.passwordConfirmationError()).toContain('correspondent pas');
     expect(auth.register).not.toHaveBeenCalled();
   });
 
@@ -74,22 +75,22 @@ describe('RegisterComponent', () => {
   });
 
   it('shows invalid fields after they are touched or submitted', () => {
-    expect(component.showError('email')).toBeFalse();
+    expect(component.showError('email')).toBe(false);
     component.form.controls.email.markAsTouched();
-    expect(component.showError('email')).toBeTrue();
+    expect(component.showError('email')).toBe(true);
     component.submitted.set(true);
-    expect(component.showError('acceptedTerms')).toBeTrue();
+    expect(component.showError('acceptedTerms')).toBe(true);
   });
 
   it('enforces the username format used by the backend', () => {
     component.form.controls.username.setValue('not allowed!');
 
-    expect(component.form.controls.username.hasError('pattern')).toBeTrue();
+    expect(component.form.controls.username.hasError('pattern')).toBe(true);
   });
 
   it('submits only the backend contract and then opens group setup', () => {
-    auth.register.and.returnValue(of(user));
-    const navigate = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    auth.register.mockReturnValue(of(user));
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     component.form.setValue({
       lastName: '  Lovelace ',
       firstName: ' Ada  ',
@@ -102,7 +103,9 @@ describe('RegisterComponent', () => {
 
     component.submit();
 
-    expect(auth.register).toHaveBeenCalledOnceWith({
+    expect(auth.register).toHaveBeenCalledTimes(1);
+
+    expect(auth.register).toHaveBeenCalledWith({
       firstName: 'Ada',
       lastName: 'Lovelace',
       username: 'ada',
@@ -110,7 +113,8 @@ describe('RegisterComponent', () => {
       password: 'password123',
       acceptedTerms: true,
     });
-    expect(navigate).toHaveBeenCalledOnceWith('/group/setup');
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/group/setup');
   });
 
   it('does not submit twice while registration is pending', () => {
@@ -125,7 +129,7 @@ describe('RegisterComponent', () => {
   it('shows the API conflict without guessing which field is taken', () => {
     // The API names neither field on purpose, so accounts cannot be enumerated.
     fillValidForm();
-    auth.register.and.returnValue(
+    auth.register.mockReturnValue(
       throwError(
         () =>
           new HttpErrorResponse({
@@ -145,12 +149,11 @@ describe('RegisterComponent', () => {
 
   it('maps offline, malformed, validation, and server failures', () => {
     fillValidForm();
-    auth.register.and.returnValues(
-      throwError(() => new HttpErrorResponse({ status: 0 })),
-      throwError(() => new Error('unexpected')),
-      throwError(() => new HttpErrorResponse({ status: 400 })),
-      throwError(() => new HttpErrorResponse({ status: 500 })),
-    );
+    auth.register
+      .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 0 })))
+      .mockReturnValueOnce(throwError(() => new Error('unexpected')))
+      .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 400 })))
+      .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 500 })));
 
     component.submit();
     expect(component.submissionError()).toContain('Impossible de joindre');
@@ -164,9 +167,7 @@ describe('RegisterComponent', () => {
 
   it('asks the user to wait when the API rate limits registrations', () => {
     fillValidForm();
-    auth.register.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 429 })),
-    );
+    auth.register.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 429 })));
 
     component.submit();
 

@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { QueryFailedError, type DataSource, type Repository } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
@@ -17,83 +18,83 @@ describe('AuthService', () => {
     passwordHash: 'stored-password-hash',
   });
   let users: {
-    findOne: jest.Mock;
-    createQueryBuilder: jest.Mock;
+    findOne: Mock;
+    createQueryBuilder: Mock;
   };
   let sessions: {
-    create: jest.Mock;
-    save: jest.Mock;
-    createQueryBuilder: jest.Mock;
-    delete: jest.Mock;
+    create: Mock;
+    save: Mock;
+    createQueryBuilder: Mock;
+    delete: Mock;
   };
   let userQuery: {
-    addSelect: jest.Mock;
-    where: jest.Mock;
-    getOne: jest.Mock;
+    addSelect: Mock;
+    where: Mock;
+    getOne: Mock;
   };
   let sessionQuery: {
-    leftJoinAndSelect: jest.Mock;
-    where: jest.Mock;
-    getOne: jest.Mock;
+    leftJoinAndSelect: Mock;
+    where: Mock;
+    getOne: Mock;
   };
   let passwords: {
-    hash: jest.Mock;
-    verify: jest.Mock;
+    hash: Mock;
+    verify: Mock;
   };
   let manager: {
-    findOne: jest.Mock;
-    delete: jest.Mock;
-    create: jest.Mock;
-    save: jest.Mock;
+    findOne: Mock;
+    delete: Mock;
+    create: Mock;
+    save: Mock;
   };
   let managerCreated: object[];
   let dataSource: {
-    transaction: jest.Mock;
+    transaction: Mock;
   };
   let createdSession: Session | undefined;
   let service: AuthService;
 
   beforeEach(() => {
     userQuery = {
-      addSelect: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      getOne: jest.fn(),
+      addSelect: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      getOne: vi.fn(),
     };
     sessionQuery = {
-      leftJoinAndSelect: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      getOne: jest.fn(),
+      leftJoinAndSelect: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      getOne: vi.fn(),
     };
     users = {
-      findOne: jest.fn().mockResolvedValue(null),
-      createQueryBuilder: jest.fn().mockReturnValue(userQuery),
+      findOne: vi.fn().mockResolvedValue(null),
+      createQueryBuilder: vi.fn().mockReturnValue(userQuery),
     };
     createdSession = undefined;
     sessions = {
-      create: jest.fn((session: Session) => {
+      create: vi.fn((session: Session) => {
         createdSession = session;
         return session;
       }),
-      save: jest.fn((session: Session) => Promise.resolve(session)),
-      createQueryBuilder: jest.fn().mockReturnValue(sessionQuery),
-      delete: jest.fn().mockResolvedValue({ affected: 1, raw: [] }),
+      save: vi.fn((session: Session) => Promise.resolve(session)),
+      createQueryBuilder: vi.fn().mockReturnValue(sessionQuery),
+      delete: vi.fn().mockResolvedValue({ affected: 1, raw: [] }),
     };
     passwords = {
-      hash: jest.fn().mockResolvedValue('new-password-hash'),
-      verify: jest.fn(),
+      hash: vi.fn().mockResolvedValue('new-password-hash'),
+      verify: vi.fn(),
     };
     managerCreated = [];
     manager = {
-      findOne: jest.fn().mockResolvedValue(null),
-      delete: jest.fn().mockResolvedValue({ affected: 0, raw: [] }),
-      create: jest.fn((_entity: unknown, values: object) => {
+      findOne: vi.fn().mockResolvedValue(null),
+      delete: vi.fn().mockResolvedValue({ affected: 0, raw: [] }),
+      create: vi.fn((_entity: unknown, values: object) => {
         managerCreated.push(values);
         return values;
       }),
-      save: jest.fn((entity: object) => Promise.resolve(entity)),
+      save: vi.fn((entity: object) => Promise.resolve(entity)),
     };
     dataSource = {
-      transaction: jest.fn(
+      transaction: vi.fn(
         (operation: (transactionManager: unknown) => Promise<unknown>) =>
           operation(manager),
       ),

@@ -1,8 +1,9 @@
+import type { Mock } from 'vitest';
 import type { INestApplication } from '@nestjs/common';
 import { ValidationPipe } from '@nestjs/common';
 import { configureApp } from './app.config';
 
-function httpAdapterWith(set: jest.Mock) {
+function httpAdapterWith(set: Mock) {
   return { getInstance: () => ({ set }) };
 }
 
@@ -19,11 +20,11 @@ describe('configureApp', () => {
 
   it('applies the version prefix, credentialed CORS, cookies, and validation', () => {
     process.env.FRONTEND_URL = 'https://plano.example';
-    const set = jest.fn();
-    const setGlobalPrefix = jest.fn();
-    const enableCors = jest.fn();
-    const use = jest.fn();
-    const useGlobalPipes = jest.fn();
+    const set = vi.fn();
+    const setGlobalPrefix = vi.fn();
+    const enableCors = vi.fn();
+    const use = vi.fn();
+    const useGlobalPipes = vi.fn();
     const app = {
       getHttpAdapter: () => httpAdapterWith(set),
       setGlobalPrefix,
@@ -46,13 +47,13 @@ describe('configureApp', () => {
 
   it('uses the local Angular origin by default', () => {
     delete process.env.FRONTEND_URL;
-    const enableCors = jest.fn();
+    const enableCors = vi.fn();
     const app = {
-      getHttpAdapter: () => httpAdapterWith(jest.fn()),
-      setGlobalPrefix: jest.fn(),
+      getHttpAdapter: () => httpAdapterWith(vi.fn()),
+      setGlobalPrefix: vi.fn(),
       enableCors,
-      use: jest.fn(),
-      useGlobalPipes: jest.fn(),
+      use: vi.fn(),
+      useGlobalPipes: vi.fn(),
     } as unknown as INestApplication;
 
     configureApp(app);

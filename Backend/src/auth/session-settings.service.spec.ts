@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { ConfigService } from '@nestjs/config';
 import type { CookieOptions, Response } from 'express';
 import { SESSION_COOKIE_NAME } from './auth.constants';
@@ -6,17 +7,17 @@ import { SessionSettingsService } from './session-settings.service';
 describe('SessionSettingsService', () => {
   function responseSpy(): {
     response: Response;
-    cookie: jest.Mock;
-    clearCookie: jest.Mock;
+    cookie: Mock;
+    clearCookie: Mock;
     cookieOptions: CookieOptions[];
   } {
     const cookieOptions: CookieOptions[] = [];
-    const cookie = jest.fn(
+    const cookie = vi.fn(
       (_name: string, _value: string, options: CookieOptions) => {
         cookieOptions.push(options);
       },
     );
-    const clearCookie = jest.fn();
+    const clearCookie = vi.fn();
 
     return {
       response: { cookie, clearCookie } as unknown as Response,

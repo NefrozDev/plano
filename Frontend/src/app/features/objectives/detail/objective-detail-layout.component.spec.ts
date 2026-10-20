@@ -69,16 +69,21 @@ describe('ObjectiveDetailLayoutComponent', () => {
     expect(store.find('courir-10-km')?.status).toBe('active');
 
     layout().toggleArchive();
-    expect(store.find('courir-10-km')?.archived).toBeTrue();
+    expect(store.find('courir-10-km')?.archived).toBe(true);
 
-    const confirm = spyOn(TestBed.inject(ConfirmService), 'ask').and.resolveTo(false);
+    const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
     await layout().remove();
     expect(store.find('courir-10-km')).toBeDefined();
 
-    confirm.and.resolveTo(true);
-    const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    confirm.mockResolvedValue(true);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     await layout().remove();
-    expect(confirm).toHaveBeenCalledWith(jasmine.objectContaining({ tone: 'danger', message: '« Courir 10 km » sera supprimé définitivement.' }));
+    expect(confirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tone: 'danger',
+        message: '« Courir 10 km » sera supprimé définitivement.',
+      }),
+    );
     expect(store.find('courir-10-km')).toBeUndefined();
     expect(navigate).toHaveBeenCalledWith('/objectives');
   });
@@ -93,7 +98,7 @@ describe('ObjectiveDetailLayoutComponent', () => {
 
   it('ignores menu actions when the objective is missing', async () => {
     await harness.navigateByUrl('/objectives/inconnu');
-    const confirm = spyOn(TestBed.inject(ConfirmService), 'ask');
+    const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
     layout().togglePause();
     layout().toggleArchive();
     await layout().remove();
