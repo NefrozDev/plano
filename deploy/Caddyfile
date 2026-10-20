@@ -1,4 +1,12 @@
 # Plain HTTP inside Docker: Mailcow's nginx terminates HTTPS in front of it.
+{
+	servers {
+		# Keep the X-Forwarded-For chain from Mailcow's nginx, so the API can
+		# rate limit by real client IP instead of nginx's container address.
+		trusted_proxies static private_ranges
+	}
+}
+
 :80 {
 	encode zstd gzip
 
