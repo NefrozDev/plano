@@ -100,7 +100,7 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 - Frontend and API share one origin, so `FRONTEND_URL` is `https://$DOMAIN` and CORS/origin checks need no changes. Keep it that way unless a separate API domain is deliberately introduced.
 - Docker build context is the repository root for both images because they compile `Common/`. Keep `.dockerignore` excluding `node_modules`, `dist` and `.env`.
 - The production `.env` exists only on the VPS (template: `.env.production.example`). Use hex passwords: the DB password is embedded in `DATABASE_URL`.
-- If code starts relying on `req.ip`, `req.secure` or the client protocol, enable Express `trust proxy` first: requests arrive through Mailcow's nginx and Caddy.
+- Rate limiting (`@nestjs/throttler`, global guard, stricter `@Throttle` on login/register) keys on `req.ip`. That only works because `configureApp()` trusts private proxy hops and `deploy/Caddyfile` sets `trusted_proxies`; keep both, or every user shares one bucket. The store is in memory, which is fine only while the API runs as a single instance.
 
 ## Testing expectations
 
@@ -127,3 +127,9 @@ npm run backend:test:e2e
 ```
 
 Also run `git diff --check`. Do not claim the changes are committed or pushed unless Git confirms it.
+
+## Commits
+
+- Agents may commit on their own once a logical change is complete and verified; pushing stays with the owner.
+- Keep commits granular: one logical change each (for example infrastructure, backend feature, frontend follow-up), never a large mixed commit.
+- Message format: `<Prefix>: <imperative summary>` with `Feat`, `Fix`, `Impr`, `Chore`, `Test` or `Docs`, plus a short body explaining why when it is not obvious.
