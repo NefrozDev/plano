@@ -8,9 +8,14 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AllowedOriginGuard } from './allowed-origin.guard';
-import { SESSION_COOKIE_NAME } from './auth.constants';
+import {
+  LOGIN_THROTTLE,
+  REGISTER_THROTTLE,
+  SESSION_COOKIE_NAME,
+} from './auth.constants';
 import { AuthService } from './auth.service';
 import type { AuthenticatedRequest, AuthUser } from './auth.types';
 import { CurrentUser } from './current-user.decorator';
@@ -28,6 +33,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @Throttle(REGISTER_THROTTLE)
   async register(
     @Body() details: RegisterDto,
     @Res({ passthrough: true }) response: Response,
@@ -44,6 +50,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
+  @Throttle(LOGIN_THROTTLE)
   async login(
     @Body() credentials: LoginDto,
     @Res({ passthrough: true }) response: Response,

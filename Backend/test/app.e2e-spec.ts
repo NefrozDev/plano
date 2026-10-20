@@ -159,6 +159,26 @@ describe('Plano API (e2e)', () => {
     );
   });
 
+  it('rate limits repeated login attempts from the same client', async () => {
+    const attempt = () =>
+      request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ username: 'unknown.user', password: 'definitely-wrong' });
+
+    for (let i = 0; i < 10; i++) {
+      await attempt().expect(401);
+    }
+    const blocked = await attempt().expect(429);
+
+    expect(Number(blocked.headers['retry-after'])).toBeGreaterThan(0);
+  });
+
+  it('does not rate limit the health check', async () => {
+    for (let i = 0; i < 301; i++) {
+      await request(app.getHttpServer()).get('/api/v1/health').expect(200);
+    }
+  });
+
   it('revokes the session and clears the cookie on logout', async () => {
     const registration = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
