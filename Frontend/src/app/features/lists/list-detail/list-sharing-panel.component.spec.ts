@@ -77,6 +77,29 @@ describe('ListSharingPanelComponent', () => {
     fixture.detectChanges();
 
     expect(element.querySelector('.sharing-hint')?.textContent).toContain('déjà accès');
+    expect(panel.inviteUserId()).toBe('');
+  });
+
+  it('offers nobody to invite without a group or when the group cannot be loaded', async () => {
+    await create(listDetail());
+    const addMember = vi.spyOn(store, 'addMember');
+
+    panel.openInviteForm();
+    http.expectOne('/api/v1/groups/me').flush(null);
+    expect(panel.candidates()).toEqual([]);
+    expect(panel.inviteUserId()).toBe('');
+
+    panel.openInviteForm();
+    http
+      .expectOne('/api/v1/groups/me')
+      .flush({ message: 'Erreur' }, { status: 500, statusText: 'Server Error' });
+    fixture.detectChanges();
+    expect(panel.candidates()).toEqual([]);
+    expect(panel.inviteFormOpen()).toBe(true);
+
+    // With nobody selected, inviting sends nothing (http.verify() checks no request left).
+    await panel.invite();
+    expect(addMember).not.toHaveBeenCalled();
   });
 
   it('changes roles, removes members and stops sharing for the owner', async () => {

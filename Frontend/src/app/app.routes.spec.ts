@@ -1,8 +1,51 @@
+import { Type, reflectComponentType } from '@angular/core';
+import { Route, Routes } from '@angular/router';
 import { routes } from './app.routes';
-import { authenticatedGuard } from './core/auth/auth.guard';
+import { authenticatedGuard, guestGuard } from './core/auth/auth.guard';
 import { MobileShellLayoutComponent } from './shared/ui/mobile-shell-layout.component';
 
+/** Resolves a lazy loader the way the router does: a default export or the value itself. */
+async function load<T>(loader: () => unknown): Promise<T> {
+  const loaded = (await loader()) as T | { default: T };
+  return loaded && typeof loaded === 'object' && 'default' in loaded ? loaded.default : (loaded as T);
+}
+
+/** Every route of the tree, lazy children included, with its full path. */
+async function flatten(tree: Routes, parent = ''): Promise<{ path: string; route: Route }[]> {
+  const flat: { path: string; route: Route }[] = [];
+  for (const route of tree) {
+    const path = [parent, route.path].filter(Boolean).join('/');
+    flat.push({ path, route });
+    const children = route.loadChildren
+      ? await load<Routes>(route.loadChildren as () => unknown)
+      : route.children;
+    if (children) flat.push(...(await flatten(children, path)));
+  }
+  return flat;
+}
+
 describe('app routes', () => {
+  it('lazy-loads a real component for every routed screen', async () => {
+    const lazy = (await flatten(routes)).filter(({ route }) => route.loadComponent);
+
+    // Login, register, group setup, dashboard, lists and the agenda/objectives screens.
+    expect(lazy.length).toBeGreaterThan(10);
+    for (const { path, route } of lazy) {
+      const component = await load<Type<unknown>>(route.loadComponent as () => unknown);
+      expect(reflectComponentType(component), `/${path}`).not.toBeNull();
+    }
+  });
+
+  it('keeps login and register for guests and every other screen for signed-in users', () => {
+    const guardsOf = (path: string) => routes.find((route) => route.path === path)?.canActivate;
+
+    expect(guardsOf('login')).toEqual([guestGuard]);
+    expect(guardsOf('register')).toEqual([guestGuard]);
+    for (const path of ['group/setup', 'agenda', 'objectives']) {
+      expect(guardsOf(path), path).toEqual([authenticatedGuard]);
+    }
+  });
+
   it('renders the dashboard and lists inside the shared, guarded phone shell', () => {
     const shell = routes.find((route) => route.component === MobileShellLayoutComponent);
 

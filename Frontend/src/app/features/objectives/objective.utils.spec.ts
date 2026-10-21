@@ -15,7 +15,9 @@ import {
   metricCurrent,
   objectiveProgress,
   objectiveTint,
+  progressAmounts,
   progressLabel,
+  progressUnit,
   objectiveReminderLabel,
   slugify,
   withDerivedStatus,
@@ -79,6 +81,30 @@ describe('objective utils', () => {
       expect(objectiveProgress({ ...seeded('apprendre-italien'), steps: [] })).toBe(0);
     });
 
+    it('reports amounts and units for every tracking mode, missing details counting as zero', () => {
+      const steps = seeded('apprendre-italien');
+      const habit = seeded('mediter-30-jours');
+      const metric = seeded('courir-10-km');
+
+      expect(progressAmounts(steps)).toEqual({ current: 2, target: 5 });
+      expect(progressUnit(steps)).toBe('étapes');
+      expect(progressAmounts(habit)).toEqual({
+        current: habit.habit!.checkIns.length,
+        target: habit.habit!.targetDays,
+      });
+      expect(progressUnit(habit)).toBe('jours');
+      expect(progressAmounts(metric)).toEqual({ current: 6.5, target: 10 });
+      expect(progressUnit(metric)).toBe('km');
+
+      // Objectives saved without their tracking details must not crash the screens.
+      expect(progressAmounts({ ...habit, habit: null })).toEqual({ current: 0, target: 0 });
+      // Without a metric, done sessions are summed (the default aggregation) against no target.
+      expect(progressAmounts({ ...metric, metric: null })).toEqual({ current: 38.5, target: 0 });
+      expect(objectiveProgress({ ...metric, metric: null })).toBe(0);
+      expect(progressUnit({ ...metric, metric: null })).toBe('');
+      expect(objectiveProgress({ ...habit, habit: null })).toBe(0);
+    });
+
     it('completes, reopens or leaves objectives depending on their progress', () => {
       const run = seeded('courir-10-km');
       const finished = { ...run, sessions: [...run.sessions, { id: 'x', date: '2026-10-15', status: 'done' as const, value: 10, label: '' }] };
@@ -89,10 +115,6 @@ describe('objective utils', () => {
       expect(
         withDerivedStatus({ ...run, status: 'completed', completedOn: '2026-10-01' }, '2026-10-15'),
       ).toEqual(expect.objectContaining({ status: 'active', completedOn: null }));
-      // A paused objective is never auto-completed.
-      expect(withDerivedStatus({ ...finished, status: 'paused' }, '2026-10-15').status).toBe(
-        'paused',
-      );
       // A paused objective is never auto-completed.
       expect(withDerivedStatus({ ...finished, status: 'paused' }, '2026-10-15').status).toBe('paused');
       expect(withDerivedStatus(run, '2026-10-15')).toBe(run);

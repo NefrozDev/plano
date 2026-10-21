@@ -142,6 +142,48 @@ describe('ListsStore', () => {
     expect(store.detail()?.memberCount).toBe(1);
   });
 
+  it('removes a member, and keeps everyone when the server refuses to stop sharing', async () => {
+    await openList();
+    const membersBefore = store.detail()!.memberCount;
+
+    const removing = store.removeMember(MEMBER_ID);
+    const removal = http.expectOne(`/api/v1/lists/list-1/members/${MEMBER_ID}`);
+    expect(removal.request.method).toBe('DELETE');
+    removal.flush(null);
+    expect(await removing).toBe(true);
+    expect(store.detail()?.members.map(({ id }) => id)).not.toContain(MEMBER_ID);
+    expect(store.detail()?.memberCount).toBe(membersBefore - 1);
+
+    const members = store.detail()!.members;
+    const stopping = store.stopSharing();
+    http
+      .expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1/members' })
+      .flush({ message: 'Action interdite.' }, { status: 403, statusText: 'Forbidden' });
+    expect(await stopping).toBe(false);
+    expect(store.detail()?.members).toEqual(members);
+    expect(store.error()).toBe('Action interdite.');
+  });
+
+  it('sends no request without an open list and ignores late answers for a list left meanwhile', async () => {
+    // Nothing open: http.verify() in afterEach proves no request went out.
+    expect(await store.removeMember(MEMBER_ID)).toBe(false);
+    expect(await store.stopSharing()).toBe(false);
+
+    await openList();
+    const updating = store.updateMemberRole(MEMBER_ID, 'viewer');
+    const lateAnswer = http.expectOne(`/api/v1/lists/list-1/members/${MEMBER_ID}`);
+
+    // The user opens another list before the server answers.
+    const opening = store.open('list-2');
+    http.expectOne('/api/v1/lists/list-2').flush(listDetail({ id: 'list-2', name: 'Maison' }));
+    await opening;
+    lateAnswer.flush({ id: MEMBER_ID, name: 'Bob Martin', role: 'viewer' });
+    await updating;
+
+    expect(store.detail()?.id).toBe('list-2');
+    expect(store.detail()?.members).toEqual(listDetail({ id: 'list-2', name: 'Maison' }).members);
+  });
+
   it('creates and deletes lists', async () => {
     const creating = store.createList({ name: 'Maison', icon: 'home', color: '#7868ef' });
     http.expectOne({ method: 'POST', url: '/api/v1/lists' }).flush(listDetail({ id: 'list-2', name: 'Maison' }));
