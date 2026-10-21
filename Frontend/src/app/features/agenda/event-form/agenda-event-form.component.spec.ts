@@ -68,6 +68,8 @@ describe('AgendaEventFormComponent', () => {
     });
 
     it('requires a title and an end after the start, then saves and opens the event', async () => {
+      const create = vi.spyOn(store, 'create');
+      const update = vi.spyOn(store, 'update');
       await harness.navigateByUrl('/agenda/new?date=2026-10-20&time=14:00');
       submit();
       expect(element().querySelector('.field-error')?.textContent).toContain('titre');
@@ -76,13 +78,23 @@ describe('AgendaEventFormComponent', () => {
       setInput('input[formcontrolname="endTime"]', '13:00');
       submit();
       expect(element().textContent).toContain('La fin doit être après le début.');
+      // Invalid submissions neither save nor leave the form.
+      expect(create).not.toHaveBeenCalled();
+      expect(navigate).not.toHaveBeenCalled();
 
       setInput('input[formcontrolname="endTime"]', '16:00');
       submit();
+      expect(create).toHaveBeenCalledTimes(1);
+      // The form hands over the raw title; the store trims it (see `created` below).
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ title: '  Atelier ', start: '2026-10-20T14:00', end: '2026-10-20T16:00' }),
+      );
+      expect(update).not.toHaveBeenCalled();
       const created = store.events().find((event) => event.title === 'Atelier');
       expect(created).toEqual(
         expect.objectContaining({ start: '2026-10-20T14:00', end: '2026-10-20T16:00' }),
       );
+      expect(navigate).toHaveBeenCalledTimes(1);
       expect(navigate).toHaveBeenCalledWith(['/agenda/events', created!.id], {
         queryParams: { date: '2026-10-20' },
         replaceUrl: true,
@@ -110,16 +122,24 @@ describe('AgendaEventFormComponent', () => {
       setInput('input[formcontrolname="endDate"]', '2026-10-30');
       submit();
       expect(element().textContent).toContain('La fin doit être après le début.');
+      expect(store.events().some((event) => event.title === 'Vacances')).toBe(false);
+      expect(navigate).not.toHaveBeenCalled();
 
       setInput('input[formcontrolname="endDate"]', '2026-11-03');
       submit();
-      expect(store.events().find((event) => event.title === 'Vacances')).toEqual(
+      const saved = store.events().find((event) => event.title === 'Vacances');
+      expect(saved).toEqual(
         expect.objectContaining({
           allDay: true,
           start: '2026-11-01T00:00',
           end: '2026-11-03T23:59',
         }),
       );
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(navigate).toHaveBeenCalledWith(['/agenda/events', saved!.id], {
+        queryParams: { date: '2026-11-01' },
+        replaceUrl: true,
+      });
     });
 
     it('collects the step 2 options and rejects unsafe conference links', async () => {
@@ -134,6 +154,7 @@ describe('AgendaEventFormComponent', () => {
       submit();
       expect(element().textContent).toContain('lien web');
       expect(store.events().some((event) => event.title === 'Revue')).toBe(false);
+      expect(navigate).not.toHaveBeenCalled();
 
       setInput('input[formcontrolname="conferenceUrl"]', 'https://meet.example.com/revue');
       (element().querySelector('.step-link:not(.back)') as HTMLButtonElement).click();
@@ -149,14 +170,18 @@ describe('AgendaEventFormComponent', () => {
           visibility: 'private',
         }),
       );
+      expect(navigate).toHaveBeenCalledTimes(1);
     });
 
     it('sends the user back to step 1 when a main field is invalid', async () => {
       await harness.navigateByUrl('/agenda/new');
+      const create = vi.spyOn(store, 'create');
       form().step.set(2);
       submit();
 
       expect(form().step()).toBe(1);
+      expect(create).not.toHaveBeenCalled();
+      expect(navigate).not.toHaveBeenCalled();
     });
 
     it('adds attachments as metadata, with size and count limits', async () => {
@@ -174,6 +199,7 @@ describe('AgendaEventFormComponent', () => {
       Object.defineProperty(huge, 'size', { value: 20 * 1024 * 1024 });
       component.addAttachments(files([huge]));
       expect(component.attachmentError()).toContain('10 Mo');
+      expect(component.attachments().map(({ name }) => name)).toEqual(['plan.pdf']);
 
       component.addAttachments(files(Array.from({ length: 6 }, (_, index) => new File(['x'], `f${index}.txt`))));
       expect(component.attachments().length).toBe(5);
@@ -218,10 +244,20 @@ describe('AgendaEventFormComponent', () => {
       );
       expect(form().participantIds()).toEqual(['alex']);
 
+      const create = vi.spyOn(store, 'create');
+      const update = vi.spyOn(store, 'update');
       setInput('input[formcontrolname="location"]', 'Marché');
       submit();
+      expect(update).toHaveBeenCalledTimes(1);
+      expect(update).toHaveBeenCalledWith('courses', expect.objectContaining({ location: 'Marché' }));
+      expect(create).not.toHaveBeenCalled();
       expect(store.event('courses')?.location).toBe('Marché');
       expect(store.events().filter((event) => event.title === 'Courses').length).toBe(1);
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(navigate).toHaveBeenCalledWith(['/agenda/events', 'courses'], {
+        queryParams: { date: '2026-10-15' },
+        replaceUrl: true,
+      });
     });
 
     it('prefills all-day events with their end date', async () => {

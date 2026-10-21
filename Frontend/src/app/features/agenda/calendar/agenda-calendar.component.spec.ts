@@ -120,10 +120,13 @@ describe('AgendaCalendarComponent', () => {
     const focus = vi.spyOn(picker, 'focus').mockReturnValue(undefined);
 
     (element().querySelector('.date-bar .title') as HTMLButtonElement).click();
-    expect(showPicker).toHaveBeenCalled();
-    expect(focus).toHaveBeenCalled();
+    expect(showPicker).toHaveBeenCalledTimes(1);
+    // Browsers without showPicker() still get a focused input.
+    expect(focus).toHaveBeenCalledTimes(1);
 
     component().pickDate('pas une date');
+    await settle();
+    expect(router.url).toBe('/agenda');
     component().pickDate('2026-12-24');
     await settle();
     expect(router.url).toContain('date=2026-12-24');
@@ -133,7 +136,9 @@ describe('AgendaCalendarComponent', () => {
     const navigate = vi.spyOn(router, 'navigate');
     await harness.navigateByUrl('/agenda?view=week&date=2026-10-15');
 
+    navigate.mockClear();
     component().createAt({ date: '2026-10-14', time: '08:00' });
+    expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith(['/agenda/new'], { queryParams: { date: '2026-10-14', time: '08:00' } });
   });
 

@@ -34,6 +34,7 @@ describe('ListEditorComponent', () => {
     editor.draftName.set('   ');
     editor.submit();
 
+    expect(saved.length).toBe(1);
     expect(saved[0].name).toBe('Courses');
   });
 

@@ -17,8 +17,20 @@ describe('ClipboardService', () => {
   });
 
   it('reports failure instead of throwing when the copy is refused', async () => {
-    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
+    const writeText = vi
+      .spyOn(navigator.clipboard, 'writeText')
+      .mockRejectedValue(new Error('denied'));
 
     await expect(service.copy('ABC')).resolves.toEqual(false);
+    expect(writeText).toHaveBeenCalledTimes(1);
+    expect(writeText).toHaveBeenCalledWith('ABC');
+  });
+
+  it('reports failure when the browser exposes no clipboard (e.g. insecure context)', async () => {
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText');
+    vi.spyOn(navigator, 'clipboard', 'get').mockReturnValue(undefined as unknown as Clipboard);
+
+    await expect(service.copy('ABC')).resolves.toEqual(false);
+    expect(writeText).not.toHaveBeenCalled();
   });
 });

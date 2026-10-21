@@ -41,6 +41,7 @@ describe('authentication guards', () => {
     auth.restoreSession.mockReturnValue(of(user));
 
     expect(await runGuard(authenticatedGuard, '/')).toBe(true);
+    expect(auth.restoreSession).toHaveBeenCalledTimes(1);
   });
 
   it('redirects an anonymous user to login and preserves the return URL', async () => {
@@ -50,12 +51,14 @@ describe('authentication guards', () => {
 
     expect(result instanceof UrlTree).toBe(true);
     expect(router.serializeUrl(result as UrlTree)).toBe('/login?returnUrl=%2Fplan%3Fweek%3D2');
+    expect(auth.restoreSession).toHaveBeenCalledTimes(1);
   });
 
   it('allows an anonymous user to open a guest route', async () => {
     auth.restoreSession.mockReturnValue(of(null));
 
     expect(await runGuard(guestGuard, '/login')).toBe(true);
+    expect(auth.restoreSession).toHaveBeenCalledTimes(1);
   });
 
   it('redirects an authenticated user away from guest routes', async () => {
@@ -63,7 +66,9 @@ describe('authentication guards', () => {
 
     const result = await runGuard(guestGuard, '/login');
 
+    expect(result instanceof UrlTree).toBe(true);
     expect(router.serializeUrl(result as UrlTree)).toBe('/');
+    expect(auth.restoreSession).toHaveBeenCalledTimes(1);
   });
 
   function runGuard(

@@ -38,11 +38,17 @@ describe('ObjectiveShareComponent', () => {
 
     it('saves the new selection and returns to the objective', () => {
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const share = vi.spyOn(store, 'share');
       element.querySelectorAll<HTMLInputElement>('.people input')[1].click();
       component.toggle('camille');
+      // Toggling only edits the draft selection.
+      expect(share).not.toHaveBeenCalled();
       (element.querySelector('.primary-button') as HTMLButtonElement).click();
 
+      expect(share).toHaveBeenCalledTimes(1);
+      expect(share).toHaveBeenCalledWith('courir-10-km', ['emma', 'sam', 'lea', 'hugo']);
       expect(store.find('courir-10-km')?.sharedWith).toEqual(['emma', 'sam', 'lea', 'hugo']);
+      expect(navigate).toHaveBeenCalledTimes(1);
       expect(navigate).toHaveBeenCalledWith(['/objectives', 'courir-10-km']);
     });
 
@@ -54,6 +60,7 @@ describe('ObjectiveShareComponent', () => {
     });
 
     it('invites a new person and selects them', () => {
+      const addContact = vi.spyOn(store, 'addContact');
       (element.querySelector('.link-button') as HTMLButtonElement).click();
       fixture.detectChanges();
       const input = element.querySelector('.invite input') as HTMLInputElement;
@@ -61,6 +68,8 @@ describe('ObjectiveShareComponent', () => {
       (element.querySelector('.invite') as HTMLFormElement).dispatchEvent(new Event('submit'));
       fixture.detectChanges();
 
+      expect(addContact).toHaveBeenCalledTimes(1);
+      expect(addContact).toHaveBeenCalledWith('Zoé');
       const zoe = store.contacts().find((contact) => contact.name === 'Zoé');
       expect(zoe).toBeDefined();
       expect(component.isSelected(zoe!.id)).toBe(true);
@@ -71,12 +80,15 @@ describe('ObjectiveShareComponent', () => {
       const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
       await component.copyLink();
       fixture.detectChanges();
+      expect(writeText).toHaveBeenCalledTimes(1);
       expect(writeText).toHaveBeenCalledWith('https://plano.app/objectif/courir-10-km-a1b2c3');
       expect(element.querySelector('.link button')?.textContent).toBe('Copié !');
+      expect(element.querySelector('[role="alert"]')).toBeNull();
 
       writeText.mockRejectedValue(new Error('denied'));
       await component.copyLink();
       fixture.detectChanges();
+      expect(writeText).toHaveBeenCalledTimes(2);
       expect(element.querySelector('[role="alert"]')).not.toBeNull();
     });
   });
@@ -88,8 +100,12 @@ describe('ObjectiveShareComponent', () => {
     expect((element.querySelector('.primary-button') as HTMLButtonElement).disabled).toBe(true);
     expect(element.querySelector('.link-button')).toBeNull();
 
+    const share = vi.spyOn(store, 'share');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
     component.toggle('alex');
     component.share();
+    expect(share).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
     expect(store.find('economiser-1000')?.sharedWith).toEqual(['me', 'alex']);
   });
 

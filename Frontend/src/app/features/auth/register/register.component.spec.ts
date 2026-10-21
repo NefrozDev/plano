@@ -128,6 +128,7 @@ describe('RegisterComponent', () => {
 
   it('shows the API conflict without guessing which field is taken', () => {
     // The API names neither field on purpose, so accounts cannot be enumerated.
+    const navigate = vi.spyOn(router, 'navigateByUrl');
     fillValidForm();
     auth.register.mockReturnValue(
       throwError(
@@ -144,10 +145,14 @@ describe('RegisterComponent', () => {
 
     component.submit();
 
+    expect(auth.register).toHaveBeenCalledTimes(1);
     expect(component.submissionError()).toContain('Un compte utilise déjà');
+    expect(component.submitting()).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('maps offline, malformed, validation, and server failures', () => {
+    const navigate = vi.spyOn(router, 'navigateByUrl');
     fillValidForm();
     auth.register
       .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 0 })))
@@ -163,14 +168,20 @@ describe('RegisterComponent', () => {
     expect(component.submissionError()).toContain('informations sont invalides');
     component.submit();
     expect(component.submissionError()).toContain('création du compte a échoué');
+    expect(auth.register).toHaveBeenCalledTimes(4);
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('asks the user to wait when the API rate limits registrations', () => {
+    const navigate = vi.spyOn(router, 'navigateByUrl');
     fillValidForm();
     auth.register.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 429 })));
 
     component.submit();
 
+    expect(auth.register).toHaveBeenCalledTimes(1);
     expect(component.submissionError()).toContain('Trop de tentatives');
+    expect(component.submitting()).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

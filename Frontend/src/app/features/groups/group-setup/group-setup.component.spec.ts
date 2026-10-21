@@ -83,6 +83,7 @@ describe('GroupSetupComponent', () => {
     groups.getMine.mockReturnValue(of(group));
     component.ngOnInit();
 
+    expect(groups.getMine).toHaveBeenCalledTimes(1);
     expect(component.group()).toEqual(group);
     expect(component.renameForm.controls.name.value).toBe('Les Explorateurs');
     expect(component.loading()).toBe(false);
@@ -187,6 +188,8 @@ describe('GroupSetupComponent', () => {
 
     it('rotates the invite code and transfers ownership', async () => {
       await component.rotateInviteCode();
+      expect(groups.rotateInviteCode).toHaveBeenCalledTimes(1);
+      expect(component.group()?.inviteCode).toBe(group.inviteCode);
       expect(component.actionMessage()).toBe('Nouveau code généré.');
 
       await component.transferOwnership(member);
@@ -195,6 +198,8 @@ describe('GroupSetupComponent', () => {
       );
       expect(groups.transferOwnership).toHaveBeenCalledTimes(1);
       expect(groups.transferOwnership).toHaveBeenCalledWith('user-2');
+      // One confirmation per sensitive action.
+      expect(confirm).toHaveBeenCalledTimes(2);
       expect(component.isOwner()).toBe(false);
       expect(component.busyAction()).toBe('');
     });
@@ -221,6 +226,8 @@ describe('GroupSetupComponent', () => {
       );
       await component.removeMember(member);
 
+      expect(groups.removeMember).toHaveBeenCalledTimes(1);
+      expect(groups.removeMember).toHaveBeenCalledWith('user-2');
       // Validation errors arrive as an array of messages.
       expect(component.submissionError()).toBe('Membre inconnu. Réessayez.');
       expect(component.group()?.members.length).toBe(2);
@@ -233,17 +240,23 @@ describe('GroupSetupComponent', () => {
       });
       await component.removeMember(member);
 
+      expect(groups.removeMember).toHaveBeenCalledTimes(1);
       expect(component.group()).toBeNull();
+      expect(component.busyAction()).toBe('');
     });
 
     it('leaves or deletes the group and clears it', () => {
       component.leaveGroup();
+      expect(groups.leave).toHaveBeenCalledTimes(1);
+      expect(groups.delete).not.toHaveBeenCalled();
       expect(component.group()).toBeNull();
       expect(component.actionMessage()).toBe('Vous avez quitté le groupe.');
 
       component.group.set(group);
       component.openDialog('danger');
       component.deleteGroup();
+      expect(groups.delete).toHaveBeenCalledTimes(1);
+      expect(groups.leave).toHaveBeenCalledTimes(1);
       // The modal is the confirmation step: no extra browser prompt.
       expect(confirm).not.toHaveBeenCalled();
       expect(component.dialog()).toBeNull();
@@ -253,6 +266,9 @@ describe('GroupSetupComponent', () => {
     it('uses a generic message for unexpected failures', () => {
       groups.delete.mockReturnValue(throwError(() => new Error('boom')));
       component.deleteGroup();
+
+      expect(groups.delete).toHaveBeenCalledTimes(1);
+      expect(component.actionMessage()).toBe('');
 
       expect(component.submissionError()).toBe(
         'L’action a échoué. Veuillez réessayer.',
@@ -283,10 +299,16 @@ describe('GroupSetupComponent', () => {
     });
 
     it('shows the code when the clipboard is unavailable', async () => {
-      vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
+      const writeText = vi
+        .spyOn(navigator.clipboard, 'writeText')
+        .mockRejectedValue(new Error('denied'));
       component.group.set(group);
 
       await component.copyInviteCode();
+
+      expect(writeText).toHaveBeenCalledTimes(1);
+      expect(writeText).toHaveBeenCalledWith('ABC12345');
+      expect(component.linkCopied()).toBe(false);
 
       expect(component.actionMessage()).toBe('Code d’invitation : ABC12345');
     });
@@ -328,9 +350,13 @@ describe('GroupSetupComponent', () => {
       groups.create.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 500, error: null })),
       );
+      const navigate = vi.spyOn(router, 'navigateByUrl');
       component.form.controls.name.setValue('Valide');
       component.submit();
 
+      expect(groups.create).toHaveBeenCalledTimes(1);
+      expect(groups.create).toHaveBeenCalledWith({ name: 'Valide' });
+      expect(navigate).not.toHaveBeenCalled();
       expect(component.submissionError()).toBe('L’action a échoué. Veuillez réessayer.');
       expect(component.submitting()).toBe(false);
     });
@@ -351,6 +377,7 @@ describe('GroupSetupComponent', () => {
     const fixture = TestBed.createComponent(GroupSetupComponent);
     fixture.detectChanges();
 
+    expect(groups.getMine).toHaveBeenCalledTimes(1);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Les Explorateurs');
     expect(fixture.componentInstance.isOwner()).toBe(true);
   });
@@ -423,6 +450,9 @@ describe('GroupSetupComponent', () => {
       component.rename();
       fixture.detectChanges();
 
+      expect(groups.update).toHaveBeenCalledTimes(1);
+      expect(groups.update).toHaveBeenCalledWith('Les Aventuriers');
+      expect(component.dialog()).toBeNull();
       expect(element.querySelector('app-toast .toast')?.textContent).toContain('Nom modifié.');
       expect(element.querySelector('.success-message')).toBeNull();
       // Projected into the frame's sticky overlay strip, outside the page flow.
@@ -444,6 +474,9 @@ describe('GroupSetupComponent', () => {
       component.rename();
       fixture.detectChanges();
 
+      // The modal starts from the current name, which is what gets submitted.
+      expect(groups.update).toHaveBeenCalledTimes(1);
+      expect(groups.update).toHaveBeenCalledWith('Les Explorateurs');
       expect(component.dialog()).toBe('rename');
       expect(element.querySelector('dialog .form-error')?.textContent).toContain('Nom déjà pris.');
       // The page-level error stays hidden behind an open modal.
@@ -465,6 +498,7 @@ describe('GroupSetupComponent', () => {
 
       (dialog[0].querySelector('.danger-button') as HTMLButtonElement).click();
       expect(groups.leave).toHaveBeenCalledTimes(1);
+      expect(groups.delete).not.toHaveBeenCalled();
       expect(component.group()).toBeNull();
     });
 

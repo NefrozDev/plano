@@ -124,8 +124,13 @@ describe('AgendaStore', () => {
   });
 
   it('persists settings through the data adapter', () => {
-    store.updateSettings({ hourFormat: '12h' });
     const adapter = TestBed.inject(PLANO_DATA_ADAPTER) as MemoryPlanoDataAdapter;
+    const save = vi.spyOn(adapter, 'save');
+    store.updateSettings({ hourFormat: '12h' });
+
+    // One write per change, carrying the whole data set.
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][0].agenda.settings.hourFormat).toBe('12h');
     expect(adapter.load()?.agenda.settings.hourFormat).toBe('12h');
   });
 });

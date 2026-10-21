@@ -31,8 +31,11 @@ describe('ObjectiveDetailLayoutComponent', () => {
   });
 
   it('renders the summary tab and hides the duplicate header title', async () => {
+    const markViewed = vi.spyOn(store, 'markViewed');
     await harness.navigateByUrl('/objectives/courir-10-km');
 
+    expect(markViewed).toHaveBeenCalledTimes(1);
+    expect(markViewed).toHaveBeenCalledWith('courir-10-km');
     expect(tabLabels()).toEqual(['Aperçu', 'Calendrier', 'Statistiques']);
     expect(element().querySelector('h1')?.classList).toContain('visually-hidden');
     expect(element().querySelector('app-objective-summary h2')?.textContent).toContain('Courir 10 km');
@@ -51,8 +54,10 @@ describe('ObjectiveDetailLayoutComponent', () => {
   });
 
   it('explains when an objective does not exist', async () => {
+    const markViewed = vi.spyOn(store, 'markViewed');
     await harness.navigateByUrl('/objectives/inconnu');
 
+    expect(markViewed).not.toHaveBeenCalled();
     expect(element().querySelector('.not-found')?.textContent).toContain('n’existe pas');
     expect(store.recent().map((item) => item.id)).not.toContain('inconnu');
   });
@@ -63,21 +68,38 @@ describe('ObjectiveDetailLayoutComponent', () => {
     harness.detectChanges();
     expect(element().querySelectorAll('.menu button').length).toBe(3);
 
+    const setPaused = vi.spyOn(store, 'setPaused');
+    const update = vi.spyOn(store, 'update');
+    const remove = vi.spyOn(store, 'remove');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
     layout().togglePause();
+    expect(setPaused).toHaveBeenLastCalledWith('courir-10-km', true);
     expect(store.find('courir-10-km')?.status).toBe('paused');
     layout().togglePause();
+    expect(setPaused).toHaveBeenLastCalledWith('courir-10-km', false);
+    expect(setPaused).toHaveBeenCalledTimes(2);
     expect(store.find('courir-10-km')?.status).toBe('active');
 
+    // setPaused() writes through update() itself: only count the archive action.
+    update.mockClear();
     layout().toggleArchive();
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledWith('courir-10-km', { archived: true });
     expect(store.find('courir-10-km')?.archived).toBe(true);
 
     const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
     await layout().remove();
+    // Cancelled: nothing removed, the user stays on the page.
+    expect(remove).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
     expect(store.find('courir-10-km')).toBeDefined();
 
     confirm.mockResolvedValue(true);
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     await layout().remove();
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(remove).toHaveBeenCalledWith('courir-10-km');
     expect(confirm).toHaveBeenCalledWith(
       expect.objectContaining({
         tone: 'danger',
@@ -85,6 +107,7 @@ describe('ObjectiveDetailLayoutComponent', () => {
       }),
     );
     expect(store.find('courir-10-km')).toBeUndefined();
+    expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith('/objectives');
   });
 
@@ -99,11 +122,17 @@ describe('ObjectiveDetailLayoutComponent', () => {
   it('ignores menu actions when the objective is missing', async () => {
     await harness.navigateByUrl('/objectives/inconnu');
     const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
+    const setPaused = vi.spyOn(store, 'setPaused');
+    const update = vi.spyOn(store, 'update');
+    const remove = vi.spyOn(store, 'remove');
     layout().togglePause();
     layout().toggleArchive();
     await layout().remove();
 
     expect(confirm).not.toHaveBeenCalled();
+    expect(setPaused).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
     expect(layout().tabs()).toEqual([]);
   });
 });

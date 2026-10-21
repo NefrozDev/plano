@@ -45,7 +45,10 @@ describe('DashboardComponent', () => {
   });
 
   it('renders the French landing page for the restored user', () => {
+    const loadTasks = vi.spyOn(TestBed.inject(AgendaStore), 'loadTasks');
     const fixture = TestBed.createComponent(DashboardComponent);
+    // The agenda preview needs the dated list tasks: loaded once on creation.
+    expect(loadTasks).toHaveBeenCalledTimes(1);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('h1')?.textContent).toContain('Bonjour Ada');
@@ -68,10 +71,18 @@ describe('DashboardComponent', () => {
   it('updates tasks and the profile menu', () => {
     const component =
       TestBed.createComponent(DashboardComponent).componentInstance;
+    const before = component.tasks().map(({ done }) => done);
     component.toggleTask(0);
     component.toggleProfileMenu();
     expect(component.completedTasks()).toBe(2);
+    // Only the targeted task flips.
+    expect(component.tasks().map(({ done }) => done)).toEqual([!before[0], ...before.slice(1)]);
     expect(component.profileMenuOpen()).toBe(true);
+
+    component.toggleTask(0);
+    component.toggleProfileMenu();
+    expect(component.tasks().map(({ done }) => done)).toEqual(before);
+    expect(component.profileMenuOpen()).toBe(false);
   });
 
   it('previews today from the agenda, list reminders included, linking to each item', async () => {
@@ -130,8 +141,12 @@ describe('DashboardComponent', () => {
     component.logout();
     expect(auth.logout).not.toHaveBeenCalled();
     component.logoutPending.set(false);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
     auth.logout.mockReturnValue(throwError(() => new Error('offline')));
     component.logout();
+    expect(auth.logout).toHaveBeenCalledTimes(1);
+    // Still signed in on the server: stay on the page.
+    expect(navigate).not.toHaveBeenCalled();
     expect(component.logoutError()).toContain('déconnexion a échoué');
     expect(component.logoutPending()).toBe(false);
   });

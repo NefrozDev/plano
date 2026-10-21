@@ -46,7 +46,13 @@ describe('ListEntryRowComponent', () => {
   });
 
   it('slides with a left swipe, clamped, and deletes past the threshold', () => {
-    row.startSwipe(pointer(200));
+    const start = pointer(200);
+    row.startSwipe(start);
+    // Capturing keeps the gesture alive when the finger leaves the row.
+    const capture = (start.currentTarget as unknown as { setPointerCapture: ReturnType<typeof vi.fn> })
+      .setPointerCapture;
+    expect(capture).toHaveBeenCalledTimes(1);
+    expect(capture).toHaveBeenCalledWith(1);
     row.moveSwipe(pointer(190));
     expect(row.offset()).toBe(-10);
     row.moveSwipe(pointer(50));
@@ -73,13 +79,20 @@ describe('ListEntryRowComponent', () => {
   });
 
   it('ignores swipes starting on the handle or the toggle', () => {
-    const handle = document.createElement('button');
-    handle.className = 'drag-handle';
-    row.startSwipe(pointer(100, handle));
-    row.moveSwipe(pointer(10));
-    row.finishSwipe();
+    for (const className of ['drag-handle', 'entry-toggle']) {
+      const origin = document.createElement('button');
+      origin.className = className;
+      const start = pointer(100, origin);
+      row.startSwipe(start);
+      row.moveSwipe(pointer(10));
+      row.finishSwipe();
 
-    expect(row.offset()).toBe(0);
+      expect(row.offset()).toBe(0);
+      expect(
+        (start.currentTarget as unknown as { setPointerCapture: ReturnType<typeof vi.fn> })
+          .setPointerCapture,
+      ).not.toHaveBeenCalled();
+    }
     expect(emitted).toEqual([]);
   });
 
@@ -103,7 +116,9 @@ describe('ListEntryRowComponent', () => {
     const event = pointer(100);
     row.startDrag(event);
 
-    expect(event.stopPropagation).toHaveBeenCalled();
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(event.stopPropagation).toHaveBeenCalledTimes(1);
     expect(emitted).toEqual(['dragStart']);
+    expect(row.offset()).toBe(0);
   });
 });

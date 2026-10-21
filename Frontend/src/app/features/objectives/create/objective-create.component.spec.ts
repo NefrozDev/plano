@@ -10,6 +10,7 @@ describe('ObjectiveCreateComponent', () => {
   let component: ObjectiveCreateComponent;
   let element: HTMLElement;
   let navigate: Mock;
+  let create: Mock;
 
   const submit = (): void => {
     (element.querySelector('.primary-button') as HTMLButtonElement).click();
@@ -26,8 +27,15 @@ describe('ObjectiveCreateComponent', () => {
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    create = vi.spyOn(TestBed.inject(ObjectivesStore), 'create');
     fixture.detectChanges();
   });
+
+  /** Invalid steps never create anything nor leave the wizard. */
+  function expectNothingSaved(): void {
+    expect(create).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
+  }
 
   /** Fills steps 1 and 2 so tests can focus on step 3. */
   function reachTrackingStep(title = 'Courir un semi'): void {
@@ -42,6 +50,7 @@ describe('ObjectiveCreateComponent', () => {
 
     expect(component.step()).toBe(1);
     expect(error()).toBe('Donnez un nom à votre objectif.');
+    expectNothingSaved();
   });
 
   it('selects a category through accessible radio buttons', () => {
@@ -71,12 +80,14 @@ describe('ObjectiveCreateComponent', () => {
     (element.querySelector('.secondary') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(component.step()).toBe(2);
+    expectNothingSaved();
   });
 
   it('creates a metric objective and opens it', () => {
     reachTrackingStep();
     submit();
     expect(error()).toBe('Indiquez une cible positive et une unité.');
+    expectNothingSaved();
 
     component.form.patchValue({ target: 21, unit: ' km ', aggregation: 'max', reminderWeekday: 5 });
     // Use the DOM: an OnPush view only re-renders after template events, not programmatic patches.
@@ -101,6 +112,8 @@ describe('ObjectiveCreateComponent', () => {
       aggregation: 'max',
       sessionsTarget: 0,
     });
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith(['/objectives', 'courir-un-semi'], { replaceUrl: true });
   });
 
@@ -110,6 +123,7 @@ describe('ObjectiveCreateComponent', () => {
     fixture.detectChanges();
     submit();
     expect(error()).toBe('Ajoutez au moins une étape.');
+    expectNothingSaved();
 
     component.addStepField();
     component.form.controls.steps.setValue(['Lire une partition', 'Jouer une gamme']);
@@ -119,8 +133,11 @@ describe('ObjectiveCreateComponent', () => {
     expect(component.form.controls.steps.length).toBe(1);
     submit();
 
+    expect(create).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(ObjectivesStore).find('apprendre-le-piano')?.steps.map((step) => step.label))
       .toEqual(['Lire une partition']);
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith(['/objectives', 'apprendre-le-piano'], { replaceUrl: true });
   });
 
   it('creates a habit objective with a valid number of days', () => {
@@ -129,9 +146,13 @@ describe('ObjectiveCreateComponent', () => {
     fixture.detectChanges();
     submit();
     expect(error()).toBe('Choisissez entre 1 et 366 jours.');
+    expectNothingSaved();
 
     component.form.controls.habitTargetDays.setValue(21);
     submit();
+    expect(create).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(ObjectivesStore).find('marcher')?.habit).toEqual({ targetDays: 21, checkIns: [] });
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith(['/objectives', 'marcher'], { replaceUrl: true });
   });
 });

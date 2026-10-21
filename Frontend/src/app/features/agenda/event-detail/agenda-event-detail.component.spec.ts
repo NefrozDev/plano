@@ -25,8 +25,11 @@ describe('AgendaEventDetailComponent', () => {
   });
 
   it('shows every detail of an event and remembers it was opened', async () => {
+    const markViewed = vi.spyOn(store, 'markViewed');
     await harness.navigateByUrl('/agenda/events/rendez-vous-projet?date=2026-10-15');
 
+    expect(markViewed).toHaveBeenCalledTimes(1);
+    expect(markViewed).toHaveBeenCalledWith('rendez-vous-projet');
     expect(element().querySelector('h2')?.textContent).toContain('Rendez-vous projet');
     expect(facts().slice(0, 3)).toEqual(['Jeudi 15 octobre 2026', '09:00 – 10:30', 'Salle de réunion']);
     expect(facts()[3]).toContain('Avec');
@@ -66,6 +69,7 @@ describe('AgendaEventDetailComponent', () => {
   it('confirms deletion in a modal and returns to the agenda on that day', async () => {
     await harness.navigateByUrl('/agenda/events/sport?date=2026-10-22');
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const remove = vi.spyOn(store, 'remove');
 
     (element().querySelector('.delete') as HTMLButtonElement).click();
     harness.detectChanges();
@@ -73,26 +77,38 @@ describe('AgendaEventDetailComponent', () => {
     const dialog = element().querySelector('dialog') as HTMLDialogElement;
     expect(dialog.open).toBe(true);
     expect(dialog.textContent).toContain('Toutes les occurrences');
+    // Opening the modal is not the deletion.
+    expect(remove).not.toHaveBeenCalled();
 
     (dialog.querySelector('.confirm') as HTMLButtonElement).click();
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(remove).toHaveBeenCalledWith('sport');
     expect(store.event('sport')).toBeUndefined();
+    expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith(['/agenda'], { queryParams: { date: '2026-10-22' }, replaceUrl: true });
   });
 
   it('can cancel the deletion', async () => {
     await harness.navigateByUrl('/agenda/events/courses');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    const remove = vi.spyOn(store, 'remove');
     (element().querySelector('.delete') as HTMLButtonElement).click();
     harness.detectChanges();
     (element().querySelector('dialog .cancel') as HTMLButtonElement).click();
     harness.detectChanges();
 
+    expect(remove).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
     expect(store.event('courses')).toBeDefined();
+    expect((element().querySelector('dialog') as HTMLDialogElement).open).toBe(false);
     expect(element().querySelector('dialog')?.textContent).not.toContain('Toutes les occurrences');
   });
 
   it('explains when the event does not exist', async () => {
+    const markViewed = vi.spyOn(store, 'markViewed');
     await harness.navigateByUrl('/agenda/events/inconnu');
 
+    expect(markViewed).not.toHaveBeenCalled();
     expect(element().querySelector('.missing')?.textContent).toContain('n’existe pas');
     expect(store.recent().map((event) => event.id)).not.toContain('inconnu');
   });

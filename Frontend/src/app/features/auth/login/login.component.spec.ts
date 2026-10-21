@@ -105,7 +105,8 @@ describe('LoginComponent', () => {
 
     returnUrl = '//attacker.example';
     component.submit();
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(navigate).toHaveBeenCalledTimes(2);
+    expect(navigate).toHaveBeenLastCalledWith('/');
   });
 
   it('does not submit twice while a request is pending', () => {
@@ -118,6 +119,7 @@ describe('LoginComponent', () => {
   });
 
   it('shows a useful message for rejected credentials', () => {
+    const navigate = vi.spyOn(router, 'navigateByUrl');
     auth.login.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' })),
     );
@@ -125,11 +127,15 @@ describe('LoginComponent', () => {
 
     component.submit();
 
+    expect(auth.login).toHaveBeenCalledTimes(1);
+    expect(auth.login).toHaveBeenCalledWith({ username: 'ada', password: 'wrong-pass' });
     expect(component.submissionError()).toContain('incorrect');
     expect(component.submitting()).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('maps offline, unexpected, and server failures', () => {
+    const navigate = vi.spyOn(router, 'navigateByUrl');
     fillValidForm();
     auth.login
       .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 0 })))
@@ -142,14 +148,20 @@ describe('LoginComponent', () => {
     expect(component.submissionError()).toContain('inattendue');
     component.submit();
     expect(component.submissionError()).toContain('connexion a échoué');
+    expect(auth.login).toHaveBeenCalledTimes(3);
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('asks the user to wait when the API rate limits login attempts', () => {
+    const navigate = vi.spyOn(router, 'navigateByUrl');
     fillValidForm();
     auth.login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 429 })));
 
     component.submit();
 
+    expect(auth.login).toHaveBeenCalledTimes(1);
     expect(component.submissionError()).toContain('Trop de tentatives');
+    expect(component.submitting()).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

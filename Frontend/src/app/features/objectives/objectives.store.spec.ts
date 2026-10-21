@@ -172,8 +172,11 @@ describe('ObjectivesStore', () => {
 
   it('persists every change through the data adapter', () => {
     const adapter = TestBed.inject(PLANO_DATA_ADAPTER) as MemoryPlanoDataAdapter;
+    const save = vi.spyOn(adapter, 'save');
     store.updateSettings({ defaultView: 'grid' });
 
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][0].objectives.settings.defaultView).toBe('grid');
     expect(adapter.load()?.objectives.settings.defaultView).toBe('grid');
   });
 });

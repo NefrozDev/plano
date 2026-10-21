@@ -116,21 +116,32 @@ describe('ObjectiveCalendarComponent', () => {
     });
 
     it('removes a session', () => {
+      const removeSession = vi.spyOn(store, 'removeSession');
+      const before = store.find('courir-10-km')!.sessions.length;
       component.selectDay('2026-10-14');
       fixture.detectChanges();
       (element.querySelector('.session button') as HTMLButtonElement).click();
 
+      expect(removeSession).toHaveBeenCalledTimes(1);
+      expect(removeSession).toHaveBeenCalledWith('courir-10-km', 'run-11');
       expect(store.find('courir-10-km')!.sessions.some((session) => session.id === 'run-11')).toBe(
         false,
       );
+      // Only that session goes.
+      expect(store.find('courir-10-km')!.sessions.length).toBe(before - 1);
     });
   });
 
   it('ignores actions once the objective has been deleted', () => {
     setUp('courir-10-km');
     store.remove('courir-10-km');
+    const addSession = vi.spyOn(store, 'addSession');
+    const removeSession = vi.spyOn(store, 'removeSession');
     component.addSession('Fantôme', 5, 0, 'done');
     component.removeSession('run-1');
+
+    expect(addSession).not.toHaveBeenCalled();
+    expect(removeSession).not.toHaveBeenCalled();
 
     expect(component.formatValue({ id: 's', date: '2026-10-15', status: 'done', value: 5, label: '' })).toBe('5 ');
     expect(component.dayStatus('2026-10-14')).toBeNull();
