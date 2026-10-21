@@ -171,6 +171,11 @@ describe('AuthService', () => {
         acceptedTerms: true,
       }),
     ).rejects.toBeInstanceOf(ConflictException);
+    // The re-check runs inside the transaction and stops before any write.
+    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+    expect(manager.findOne).toHaveBeenCalledTimes(1);
+    expect(manager.save).not.toHaveBeenCalled();
+    expect(managerCreated).toEqual([]);
   });
 
   it('uses the same unauthorized result for an unknown user', async () => {
@@ -184,7 +189,10 @@ describe('AuthService', () => {
         "Le nom d'utilisateur ou le mot de passe est incorrect.",
       ),
     );
+    // Verifying even without a user keeps the timing of both failures alike.
+    expect(passwords.verify).toHaveBeenCalledTimes(1);
     expect(passwords.verify).toHaveBeenCalledWith('wrong password', undefined);
+    expect(sessions.save).not.toHaveBeenCalled();
   });
 
   it('stores only a digest of a newly issued session token', async () => {
@@ -207,6 +215,18 @@ describe('AuthService', () => {
     expect(authentication.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(storedSession?.tokenHash).toMatch(/^[a-f0-9]{64}$/);
     expect(storedSession?.tokenHash).not.toBe(authentication.token);
+    expect(storedSession?.userId).toBe(user.id);
+    expect(storedSession?.expiresAt).toEqual(authentication.expiresAt);
+    // Usernames are matched case-insensitively.
+    expect(userQuery.where).toHaveBeenCalledWith(
+      'user.normalizedUsername = :normalizedUsername',
+      { normalizedUsername: 'jamie.doe' },
+    );
+    expect(passwords.verify).toHaveBeenCalledWith(
+      'correct password',
+      'stored-password-hash',
+    );
+    expect(sessions.save).toHaveBeenCalledTimes(1);
     expect(sessions.save).toHaveBeenCalledWith(storedSession);
   });
 
@@ -217,6 +237,12 @@ describe('AuthService', () => {
     await expect(
       service.login({ username: 'jamie.doe', password: 'wrong password' }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(passwords.verify).toHaveBeenCalledWith(
+      'wrong password',
+      'stored-password-hash',
+    );
+    expect(sessions.create).not.toHaveBeenCalled();
+    expect(sessions.save).not.toHaveBeenCalled();
   });
 
   it('rejects missing, malformed, and unknown sessions', async () => {
@@ -226,10 +252,14 @@ describe('AuthService', () => {
     await expect(service.getSessionUser('bad-token')).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+    // Malformed tokens never reach the database.
+    expect(sessions.createQueryBuilder).not.toHaveBeenCalled();
     sessionQuery.getOne.mockResolvedValue(null);
     await expect(service.getSessionUser('a'.repeat(43))).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+    expect(sessions.createQueryBuilder).toHaveBeenCalledTimes(1);
+    expect(sessions.delete).not.toHaveBeenCalled();
   });
 
   it('returns the user for a valid unexpired session', async () => {
@@ -248,6 +278,16 @@ describe('AuthService', () => {
       username: user.username,
       email: user.email,
     });
+    // Looked up by digest, never by the raw token.
+    expect(sessionQuery.where).toHaveBeenCalledTimes(1);
+    expect(sessionQuery.where).toHaveBeenCalledWith(
+      'session.tokenHash = :tokenHash',
+      { tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/) as string },
+    );
+    expect(sessionQuery.where).not.toHaveBeenCalledWith(expect.anything(), {
+      tokenHash: 'a'.repeat(43),
+    });
+    expect(sessions.delete).not.toHaveBeenCalled();
   });
 
   it('deletes an expired session before rejecting it', async () => {
@@ -261,6 +301,7 @@ describe('AuthService', () => {
     await expect(service.getSessionUser('a'.repeat(43))).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+    expect(sessions.delete).toHaveBeenCalledTimes(1);
     expect(sessions.delete).toHaveBeenCalledWith({ id: 'expired-session' });
   });
 
@@ -270,6 +311,7 @@ describe('AuthService', () => {
     expect(sessions.delete).not.toHaveBeenCalled();
 
     await service.logout('a'.repeat(43));
+    expect(sessions.delete).toHaveBeenCalledTimes(1);
     expect(sessions.delete).toHaveBeenCalledWith({
       tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/) as string,
     });
@@ -301,6 +343,8 @@ describe('AuthService', () => {
           "Ce nom d'utilisateur ou cette adresse e-mail est déjà utilisé.",
         ),
       );
+      // The user insert failed first: no session was written for it.
+      expect(manager.save).toHaveBeenCalledTimes(1);
     });
 
     it('rethrows other database and runtime errors unchanged', async () => {
@@ -311,6 +355,7 @@ describe('AuthService', () => {
       );
       manager.save.mockRejectedValueOnce(queryError);
       await expect(service.register(details)).rejects.toBe(queryError);
+      expect(manager.save).toHaveBeenCalledTimes(1);
 
       const runtimeError = new Error('connection lost');
       manager.save.mockRejectedValueOnce(runtimeError);

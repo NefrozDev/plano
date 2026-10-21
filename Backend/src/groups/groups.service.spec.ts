@@ -118,6 +118,13 @@ describe('GroupsService', () => {
       inviteCode: 'ABC12345',
       members: [expect.objectContaining({ id: 'user-1', username: 'ada' })],
     });
+    // Members are read from the caller's own group, oldest first.
+    expect(memberships.find).toHaveBeenCalledTimes(1);
+    expect(memberships.find).toHaveBeenCalledWith({
+      where: { groupId: 'group-1' },
+      relations: { user: true },
+      order: { createdAt: 'ASC' },
+    });
   });
 
   it('creates a group and its owner membership atomically', async () => {
@@ -220,6 +227,8 @@ describe('GroupsService', () => {
       await expect(
         service.join('user-2', { inviteCode: 'NOPE0000' }),
       ).rejects.toThrow("Ce code d'invitation est invalide.");
+      expect(manager.create).not.toHaveBeenCalled();
+      expect(manager.save).not.toHaveBeenCalled();
     });
 
     it('reports a missing group if the membership cannot be read back', async () => {
@@ -231,6 +240,11 @@ describe('GroupsService', () => {
       await expect(
         service.join('user-2', { inviteCode: 'ABC12345' }),
       ).rejects.toThrow("Vous n'appartenez à aucun groupe.");
+      expect(manager.save).toHaveBeenCalledTimes(1);
+      expect(memberships.findOne).toHaveBeenCalledWith({
+        where: { userId: 'user-2' },
+        relations: { group: true },
+      });
     });
   });
 
@@ -242,6 +256,7 @@ describe('GroupsService', () => {
 
       await service.update('user-1', { name: 'Les Aventuriers' });
 
+      expect(manager.save).toHaveBeenCalledTimes(1);
       expect(manager.save).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'group-1', name: 'Les Aventuriers' }),
       );
@@ -257,6 +272,7 @@ describe('GroupsService', () => {
 
       expect(owner.group.inviteCode).toHaveLength(8);
       expect(owner.group.inviteCode).not.toBe('ABC12345');
+      expect(manager.save).toHaveBeenCalledTimes(1);
       expect(manager.save).toHaveBeenCalledWith(owner.group);
     });
 
@@ -292,6 +308,9 @@ describe('GroupsService', () => {
       await expect(service.rotateInviteCode('user-9')).rejects.toBeInstanceOf(
         NotFoundException,
       );
+      // Stops at the owner lookup: no collision checks, no write.
+      expect(manager.findOne).toHaveBeenCalledTimes(1);
+      expect(manager.save).not.toHaveBeenCalled();
     });
 
     it('deletes every membership, then the group itself', async () => {
@@ -355,6 +374,7 @@ describe('GroupsService', () => {
 
       await service.removeMember('user-1', 'user-2');
 
+      expect(manager.delete).toHaveBeenCalledTimes(1);
       expect(manager.delete).toHaveBeenCalledWith(GroupMembership, {
         id: 'membership-user-2',
       });
@@ -390,6 +410,7 @@ describe('GroupsService', () => {
 
       await service.leave('user-2');
 
+      expect(manager.delete).toHaveBeenCalledTimes(1);
       expect(manager.delete).toHaveBeenCalledWith(GroupMembership, {
         id: 'membership-user-2',
       });
@@ -413,5 +434,10 @@ describe('GroupsService', () => {
 
     await expect(failing).rejects.toBeInstanceOf(ConflictException);
     await expect(succeeding).resolves.toBeUndefined();
+    // Only the member's leave reached the database.
+    expect(manager.delete).toHaveBeenCalledTimes(1);
+    expect(manager.delete).toHaveBeenCalledWith(GroupMembership, {
+      id: 'membership-user-2',
+    });
   });
 });
