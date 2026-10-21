@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, of, shareReplay, tap } from 'rxjs';
 import { API_BASE_URL } from '../http/api-base-url';
 import {
@@ -19,9 +19,6 @@ export class AuthService {
 
   readonly user = this.userState.asReadonly();
   readonly status = this.statusState.asReadonly();
-  readonly isAuthenticated = computed(
-    () => this.statusState() === 'authenticated',
-  );
 
   login(credentials: LoginRequest): Observable<AuthUser> {
     return this.http
