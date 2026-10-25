@@ -4,12 +4,14 @@ import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
-import { compareDueDates, formatDate } from '../../core/time/dates';
+import { addDays, compareDueDates, formatDate, parseIsoDate, startOfWeek } from '../../core/time/dates';
 import { objectiveProgress, objectiveTint } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaStore } from '../agenda/agenda.store';
 import { formatTime, timePart } from '../agenda/agenda.utils';
 import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.component';
+
+const WEEKDAY_LABELS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
 
 @Component({
   selector: 'app-dashboard',
@@ -25,7 +27,25 @@ export class DashboardComponent {
   private readonly objectivesStore = inject(ObjectivesStore);
   private readonly agendaStore = inject(AgendaStore);
 
-  readonly weekDays = computed(() => this.appData.data().dashboard.weekDays);
+  /** The current week, today highlighted, a dot on days with agenda items. */
+  readonly weekDays = computed(() => {
+    const today = this.agendaStore.today();
+    const first = startOfWeek(today, this.agendaStore.settings().weekStartsOn);
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = addDays(first, index);
+      return {
+        date,
+        label: WEEKDAY_LABELS[parseIsoDate(date).getDay()],
+        day: parseIsoDate(date).getDate(),
+        selected: date === today,
+        hasEvent: this.agendaStore.itemsOn(date).length > 0,
+      };
+    });
+  });
+  readonly weekLabel = computed(() => {
+    const days = this.weekDays();
+    return `Semaine du ${days[0].day} au ${days[6].day}`;
+  });
   readonly tasks = computed(() => this.appData.data().dashboard.tasks);
   readonly completedTasks = computed(
     () => this.tasks().filter((task) => task.done).length,

@@ -6,6 +6,7 @@ import type {
   PlanoData,
 } from './models';
 import { agendaSeed } from './agenda-mock-data';
+import { DEFAULT_OBJECTIVE_SETTINGS } from './initial-data';
 
 /** Consecutive dates from `start`, skipping every `skipEvery`-th day (0 keeps them all). */
 function dailyDates(start: IsoDate, days: number, skipEvery = 0): IsoDate[] {
@@ -195,27 +196,13 @@ const objectives: ObjectivesData = {
       ],
     }),
   ],
-  settings: {
-    defaultView: 'list',
-    showArchived: false,
-    defaultDueReminder: 'day-before',
-    notifications: true,
-    habitReminders: 'scheduled',
-    showPercentage: true,
-    categoryColors: true,
-  },
+  settings: DEFAULT_OBJECTIVE_SETTINGS,
   recentIds: ['courir-10-km', 'apprendre-italien', 'economiser-1000', 'lire-12-livres'],
 };
 
 const seed: PlanoData = {
   version: 1,
   dashboard: {
-    weekDays: [
-      { label: 'lun', date: 17 }, { label: 'mar', date: 18 },
-      { label: 'mer', date: 19 }, { label: 'jeu', date: 20, selected: true },
-      { label: 'ven', date: 21, hasEvent: true }, { label: 'sam', date: 22 },
-      { label: 'dim', date: 23, hasEvent: true },
-    ],
     tasks: [
       { id: 'presentation', label: 'Préparer la présentation', done: false },
       { id: 'running', label: '30 minutes de course à pied', done: true },
