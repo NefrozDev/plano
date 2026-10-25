@@ -1,4 +1,5 @@
 import type { AgendaData, AgendaEvent } from './models';
+import { DEFAULT_AGENDA_CALENDARS, DEFAULT_AGENDA_SETTINGS } from './initial-data';
 
 function event(
   base: Pick<AgendaEvent, 'id' | 'title' | 'calendarId' | 'start' | 'end'> & Partial<AgendaEvent>,
@@ -22,13 +23,7 @@ function event(
 
 /** Seed agenda centred on the week of Monday 12 October 2026. */
 export const agendaSeed: AgendaData = {
-  calendars: [
-    { id: 'personnel', name: 'Personnel', color: '#8b5cf6' },
-    { id: 'travail', name: 'Travail', color: '#3264ed' },
-    { id: 'famille', name: 'Famille', color: '#22a95a' },
-    { id: 'anniversaires', name: 'Anniversaires', color: '#f59e0b' },
-    { id: 'sport', name: 'Sport', color: '#e65591' },
-  ],
+  calendars: DEFAULT_AGENDA_CALENDARS,
   contacts: [
     { id: 'camille', name: 'Camille', initials: 'C', color: '#a76142', frequent: true },
     { id: 'alex', name: 'Alex', initials: 'A', color: '#d07863', frequent: true },
@@ -163,16 +158,7 @@ export const agendaSeed: AgendaData = {
       reminderMinutes: 1440,
     }),
   ],
-  settings: {
-    weekStartsOn: 1,
-    defaultDurationMinutes: 60,
-    timeZone: 'Europe/Brussels',
-    defaultReminderMinutes: 15,
-    eventNotifications: true,
-    invitationNotifications: true,
-    showWeekNumbers: false,
-    hourFormat: '24h',
-  },
+  settings: DEFAULT_AGENDA_SETTINGS,
   filters: {
     hiddenCalendarIds: [],
     showEvents: true,

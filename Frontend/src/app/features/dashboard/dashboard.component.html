@@ -47,11 +47,11 @@
     <p>Voici votre journée</p>
   </section>
 
-  <section class="week-card" aria-label="Semaine du 17 au 23">
-    @for (day of weekDays(); track day.label) {
+  <section class="week-card" [attr.aria-label]="weekLabel()">
+    @for (day of weekDays(); track day.date) {
       <div class="week-day" [class.selected]="day.selected">
         <span>{{ day.label }}</span
-        ><strong>{{ day.date }}</strong>
+        ><strong>{{ day.day }}</strong>
         @if (day.hasEvent) {
           <i aria-label="Un événement prévu"></i>
         }

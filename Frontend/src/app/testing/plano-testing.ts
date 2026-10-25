@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { EnvironmentProviders, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Routes, provideRouter } from '@angular/router';
-import type { ListReminder } from '@plano/common';
+import { createMockPlanoData, type ListReminder } from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../core/data/plano-data.adapter';
 import { APP_CLOCK } from '../core/time/dates';
 
@@ -20,8 +20,13 @@ export function providePlanoTesting(routes: Routes = []): (Provider | Environmen
     provideHttpClient(),
     provideHttpClientTesting(),
     { provide: APP_CLOCK, useValue: () => new Date(TEST_TODAY) },
-    { provide: PLANO_DATA_ADAPTER, useFactory: () => new MemoryPlanoDataAdapter() },
+    provideSeedData(),
   ];
+}
+
+/** Starts the data store from the mock data (new accounts start empty). */
+export function provideSeedData(): Provider {
+  return { provide: PLANO_DATA_ADAPTER, useFactory: () => new MemoryPlanoDataAdapter(createMockPlanoData()) };
 }
 
 /** The list reminder the agenda shows on TEST_TODAY, as the lists API serves it. */

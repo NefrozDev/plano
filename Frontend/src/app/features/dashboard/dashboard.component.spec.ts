@@ -9,7 +9,7 @@ import { AuthUser } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { APP_CLOCK } from '../../core/time/dates';
 import { AgendaStore } from '../agenda/agenda.store';
-import { TEST_TODAY, flushListReminders, settle } from '../../testing/plano-testing';
+import { TEST_TODAY, flushListReminders, provideSeedData, settle } from '../../testing/plano-testing';
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
@@ -40,6 +40,7 @@ describe('DashboardComponent', () => {
         provideHttpClientTesting(),
         { provide: AuthService, useValue: auth },
         { provide: APP_CLOCK, useValue: () => new Date(TEST_TODAY) },
+        provideSeedData(),
       ],
     }).compileComponents();
   });
@@ -54,6 +55,18 @@ describe('DashboardComponent', () => {
       Array.from(element.querySelectorAll('app-bottom-nav a')).map((link) => link.getAttribute('href')),
     ).toEqual(['/', '/agenda', '/lists', '/objectives']);
     expect(element.querySelector('app-bottom-nav a.active')?.textContent).toContain('Accueil');
+  });
+
+  it('shows the current week with today highlighted', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const week = (fixture.nativeElement as HTMLElement).querySelector('.week-card')!;
+
+    expect(week.getAttribute('aria-label')).toBe('Semaine du 12 au 18');
+    expect(Array.from(week.querySelectorAll('.week-day strong')).map((day) => day.textContent)).toEqual(
+      ['12', '13', '14', '15', '16', '17', '18'],
+    );
+    expect(week.querySelector('.week-day.selected')?.textContent).toContain('jeu');
   });
 
   it('falls back to the username and anonymous display value', () => {
