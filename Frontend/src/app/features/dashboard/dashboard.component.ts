@@ -3,8 +3,9 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { AutofocusDirective } from '../../shared/ui/autofocus.directive';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
-import { addDays, compareDueDates, formatDate, parseIsoDate, startOfWeek } from '../../core/time/dates';
+import { addDays, compareDueDates, createId, formatDate, parseIsoDate, startOfWeek } from '../../core/time/dates';
 import { objectiveProgress, objectiveTint } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaStore } from '../agenda/agenda.store';
@@ -15,7 +16,7 @@ const WEEKDAY_LABELS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, BottomNavComponent, ObjectiveIconComponent],
+  imports: [RouterLink, AutofocusDirective, BottomNavComponent, ObjectiveIconComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -77,6 +78,8 @@ export class DashboardComponent {
   readonly displayName = computed(
     () => this.auth.user()?.firstName || this.auth.user()?.username || 'vous',
   );
+  readonly addingTask = signal(false);
+  readonly newTaskValue = signal('');
   readonly profileMenuOpen = signal(false);
   readonly logoutPending = signal(false);
   readonly logoutError = signal('');
@@ -96,6 +99,31 @@ export class DashboardComponent {
         ),
       },
     }));
+  }
+
+  beginAddingTask(): void {
+    this.newTaskValue.set('');
+    this.addingTask.set(true);
+  }
+
+  /** Runs on Enter and on blur; an empty field just closes. */
+  finishAddingTask(): void {
+    if (!this.addingTask()) return;
+    const label = this.newTaskValue().trim();
+    this.cancelAddingTask();
+    if (!label) return;
+    this.appData.update((data) => ({
+      ...data,
+      dashboard: {
+        ...data.dashboard,
+        tasks: [...data.dashboard.tasks, { id: createId('task'), label, done: false }],
+      },
+    }));
+  }
+
+  cancelAddingTask(): void {
+    this.addingTask.set(false);
+    this.newTaskValue.set('');
   }
 
   toggleProfileMenu(): void {
