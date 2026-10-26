@@ -100,6 +100,21 @@ describe('ObjectiveStatsComponent', () => {
     expect(component.activeIndex()).toBe(7);
   });
 
+  it('exposes the chart as a slider that announces the current point', () => {
+    const chart = element.querySelector('.chart') as HTMLElement;
+    const slider = () => ['role', 'aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-valuetext']
+      .map((name) => chart.getAttribute(name));
+
+    // Before any interaction it sits on the latest point.
+    expect(slider()).toEqual(['slider', '0', '7', '7', '6,5 km, le 14 oct. 2026']);
+
+    chart.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home' }));
+    fixture.detectChanges();
+    expect(slider()).toEqual(['slider', '0', '7', '0', '3 km, le 21 sept. 2026']);
+    // The visual tooltip repeats the value, so it stays hidden from screen readers.
+    expect(element.querySelector('.tooltip')?.getAttribute('aria-hidden')).toBe('true');
+  });
+
   it('uses totals for cumulative objectives without durations', () => {
     show('economiser-1000');
 

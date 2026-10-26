@@ -131,6 +131,13 @@ export class ObjectiveStatsComponent {
     };
   });
 
+  /** Point the chart's slider is on: the hovered or focused one, else the latest. */
+  readonly sliderIndex = computed(() => this.activeIndex() ?? (this.chart()?.points.length ?? 1) - 1);
+  readonly sliderText = computed(() => {
+    const point = this.chart()?.points[this.sliderIndex()];
+    return point ? `${formatNumber(point.value)} ${this.unit()}, le ${formatDate(point.date)}` : '';
+  });
+
   trackPointer(event: PointerEvent, svg: Element): void {
     const points = this.chart()?.points;
     if (!points?.length) return;

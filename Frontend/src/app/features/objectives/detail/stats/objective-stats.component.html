@@ -12,12 +12,18 @@
         <h2 id="chart-title">Progression ({{ unit() }})</h2>
         <p><strong>{{ chart.lastLabel }}</strong><span>Actuel</span></p>
       </header>
+      <!-- A slider over the data points: arrows, Home and End move between them, and
+           screen readers announce each point through aria-valuetext. -->
       <div
         class="chart"
         tabindex="0"
-        role="group"
+        role="slider"
         aria-labelledby="chart-title"
         aria-describedby="chart-summary"
+        aria-valuemin="0"
+        [attr.aria-valuemax]="chart.points.length - 1"
+        [attr.aria-valuenow]="sliderIndex()"
+        [attr.aria-valuetext]="sliderText()"
         (focus)="focusChart()"
         (blur)="activeIndex.set(null)"
         (keydown)="navigate($event)"
@@ -48,7 +54,7 @@
           }
         </svg>
         @if (tooltip(); as tooltip) {
-          <div class="tooltip" aria-live="polite" [style.left.%]="tooltip.left" [style.top.%]="tooltip.top">
+          <div class="tooltip" aria-hidden="true" [style.left.%]="tooltip.left" [style.top.%]="tooltip.top">
             <strong>{{ tooltip.value }}</strong><span>{{ tooltip.date }}</span>
           </div>
         }
