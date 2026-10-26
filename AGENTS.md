@@ -117,7 +117,7 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 - On non-Windows systems, use the equivalent local TypeScript executable.
 - Backend tests run with Vitest (`vitest.config.mts`, `vitest.config.e2e.mts`). Vitest compiles TypeScript with esbuild, which drops the decorator metadata Nest's dependency injection needs, so both configs compile through SWC (`unplugin-swc`). The e2e config spreads the unit one: `mergeConfig` would concatenate the `include` arrays and run both suites.
 - Under Vitest the code runs as ES modules: `vi.spyOn` cannot replace a named import such as `scrypt` from `node:crypto`. Use `vi.mock()` with `importOriginal` instead (see `password.service.spec.ts`).
-- Frontend unit tests run with Vitest in browser mode (headless Chromium through Playwright, `@angular/build:unit-test`), not jsdom: specs rely on `<dialog>.showModal()`, `navigator.clipboard` and real layout. Run `npx playwright install chromium` once per machine. Zone's `fakeAsync`/`tick` do not work under Vitest; use `vi.useFakeTimers()` and `vi.advanceTimersByTime()`.
+- Frontend unit tests run with Vitest in browser mode (headless Chromium through Playwright, `@angular/build:unit-test`), not jsdom: specs rely on `<dialog>.showModal()`, `navigator.clipboard` and real layout. Run `npm run test:browser-install` (in `Frontend/`) once per machine. Zone's `fakeAsync`/`tick` do not work under Vitest; use `vi.useFakeTimers()` and `vi.advanceTimersByTime()`.
 - TypeScript 6 no longer loads every installed `@types/*` package: `types` defaults to `[]`. `Backend/tsconfig.json` lists `node` and `vitest/globals`; `tsconfig.build.json` narrows it to `node` so production code cannot use test globals.
 
 ## Completion checklist
