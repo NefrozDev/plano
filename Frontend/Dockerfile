@@ -4,7 +4,8 @@ FROM node:24-alpine AS build
 ENV NG_CLI_ANALYTICS=false
 WORKDIR /app
 COPY Frontend/package.json Frontend/package-lock.json Frontend/
-RUN npm --prefix Frontend ci
+# No dependency install scripts: every package used here ships prebuilt binaries.
+RUN npm --prefix Frontend ci --ignore-scripts
 COPY Common Common
 COPY Frontend Frontend
 RUN npm --prefix Frontend run build

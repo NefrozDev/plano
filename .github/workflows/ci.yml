@@ -25,7 +25,8 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: Backend/package-lock.json
-      - run: npm ci
+      # No dependency install scripts: every package used here ships prebuilt binaries.
+      - run: npm ci --ignore-scripts
       - run: npm run lint:check
       - run: npm run build
       # Unit and end-to-end tests start PostgreSQL with Testcontainers,
@@ -48,7 +49,8 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: Frontend/package-lock.json
-      - run: npm ci
+      # No dependency install scripts: every package used here ships prebuilt binaries.
+      - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm run test:browser-install -- --with-deps
       - run: npm run test:cov
