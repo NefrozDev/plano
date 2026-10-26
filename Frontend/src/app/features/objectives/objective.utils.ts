@@ -130,7 +130,7 @@ export function objectiveReminderLabel(reminder: ObjectiveReminder): string {
 }
 
 export function longestStreak(dates: readonly IsoDate[]): number {
-  const sorted = [...new Set(dates)].sort();
+  const sorted = [...new Set(dates)].sort((first, second) => first.localeCompare(second));
   let best = 0;
   let current = 0;
   sorted.forEach((date, index) => {

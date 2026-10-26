@@ -2,7 +2,8 @@
 FROM node:24-alpine AS build
 WORKDIR /app
 COPY Backend/package.json Backend/package-lock.json Backend/
-RUN npm --prefix Backend ci
+# No dependency install scripts: every package used here ships prebuilt binaries.
+RUN npm --prefix Backend ci --ignore-scripts
 COPY Common Common
 COPY Backend Backend
 RUN npm --prefix Backend run build && npm --prefix Backend prune --omit=dev
