@@ -205,6 +205,7 @@ describe('ListDetailComponent', () => {
       component.startDrag('fresh', 'milk');
       component.endDrag();
 
+      expect(component.dragged()).toBeNull();
       http.expectNone('/api/v1/lists/list-1/sections/fresh/order');
     });
   });
