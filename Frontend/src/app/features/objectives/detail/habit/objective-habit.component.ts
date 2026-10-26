@@ -37,8 +37,9 @@ export class ObjectiveHabitComponent {
     const monthEnd = toIsoDate(new Date(year, month + 1, 0));
     const successes = [...this.checkIns()].filter((date) => date >= monthStart && date <= monthEnd).length;
     // Only days the habit could actually be tracked count towards the rate.
-    const from = [monthStart, objective?.createdOn ?? monthStart].sort()[1];
-    const to = [monthEnd, this.today].sort()[0];
+    const createdOn = objective?.createdOn ?? monthStart;
+    const from = createdOn > monthStart ? createdOn : monthStart;
+    const to = this.today < monthEnd ? this.today : monthEnd;
     const trackedDays = Math.max(0, daysBetween(from, to) + 1);
     return {
       successes,
