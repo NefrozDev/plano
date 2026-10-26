@@ -1,5 +1,4 @@
 # Build context: repository root (the app compiles imports from Common).
-# Node 20 is the newest release supported by Angular 17.
 FROM node:24-alpine AS build
 ENV NG_CLI_ANALYTICS=false
 WORKDIR /app
