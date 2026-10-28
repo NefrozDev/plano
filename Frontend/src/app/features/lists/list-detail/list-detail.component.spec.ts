@@ -87,16 +87,98 @@ describe('ListDetailComponent', () => {
     expect(summary.textContent).toContain('2 / 2');
   });
 
-  it('collapses only the section whose title is clicked, and reopens it', async () => {
+  it('collapses only the section whose chevron is clicked, and reopens it', async () => {
     await create();
 
-    (element.querySelector('.section-title') as HTMLButtonElement).click();
+    (element.querySelector('.collapse') as HTMLButtonElement).click();
     await render();
     expect(element.querySelectorAll('.section-summary').length).toBe(1);
     expect(element.querySelectorAll('.entry').length).toBe(2);
+    expect(element.querySelector('.name-input')).toBeNull();
 
-    component.toggleSection('fresh');
+    (element.querySelector('.section-summary') as HTMLButtonElement).click();
+    await render();
     expect(component.sectionViews()[0].collapsed).toBe(false);
+  });
+
+  describe('section titles', () => {
+    const title = () => element.querySelector('.entry-section .section-title') as HTMLButtonElement;
+    const nameInput = () => element.querySelector('.name-input') as HTMLInputElement | null;
+    const type = async (value: string, key: 'Enter' | 'Escape') => {
+      const input = nameInput()!;
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key }));
+      await render();
+    };
+
+    it('renames a section from its title, trimmed, once', async () => {
+      await create();
+      title().click();
+      await render();
+      expect(nameInput()?.value).toBe('Produits frais');
+      expect(document.activeElement).toBe(nameInput());
+
+      await type('  Frais  ', 'Enter');
+      const request = http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1/sections/fresh' });
+      expect(request.request.body).toEqual({ name: 'Frais' });
+      request.flush(null);
+      await render();
+
+      expect(nameInput()).toBeNull();
+      expect(title().textContent?.trim()).toBe('Frais');
+      expect(component.list()?.sections[0].entries.length).toBe(4);
+    });
+
+    it('sends nothing when the name is cancelled, blank or unchanged', async () => {
+      await create();
+      const rename = vi.spyOn(store, 'renameSection');
+
+      for (const [value, key] of [['Autre', 'Escape'], ['   ', 'Enter'], ['Produits frais', 'Enter']] as const) {
+        title().click();
+        await render();
+        await type(value, key);
+        expect(nameInput()).toBeNull();
+      }
+      nameInput()?.dispatchEvent(new Event('blur'));
+
+      expect(rename).not.toHaveBeenCalled();
+      expect(title().textContent?.trim()).toBe('Produits frais');
+    });
+
+    it('deletes a section with its entries only once confirmed', async () => {
+      await create();
+      const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
+      const fresh = component.list()!.sections[0];
+
+      await component.requestDeleteSection(fresh);
+      expect(confirm).toHaveBeenCalledTimes(1);
+      expect(confirm).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('« Produits frais » et ses 4 éléments'), tone: 'danger' }),
+      );
+      expect(component.list()?.sections.length).toBe(2);
+
+      confirm.mockResolvedValue(true);
+      const deleting = component.requestDeleteSection(fresh);
+      await settle();
+      http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1/sections/fresh' }).flush(null);
+      await deleting;
+      await render();
+
+      expect(component.list()?.sections.map(({ id }) => id)).not.toContain('fresh');
+      expect(component.list()?.total).toBe(2);
+      expect(element.querySelectorAll('.entry').length).toBe(2);
+    });
+
+    it('opens the delete confirmation from the section delete button', async () => {
+      await create();
+      const ask = vi.spyOn(component, 'requestDeleteSection').mockResolvedValue();
+
+      (element.querySelector('.delete-section') as HTMLButtonElement).click();
+
+      expect(ask).toHaveBeenCalledTimes(1);
+      expect(ask).toHaveBeenCalledWith(component.list()!.sections[0]);
+    });
   });
 
   it('opens entry details, offering the list members as assignees', async () => {
@@ -215,6 +297,14 @@ describe('ListDetailComponent', () => {
     expect(element.querySelector('.drag-handle')).toBeNull();
     expect((element.querySelector('.entry-toggle') as HTMLButtonElement).disabled).toBe(true);
     expect(element.querySelector('.members button')).toBeNull();
+    expect(element.querySelector('.delete-section')).toBeNull();
+    expect(element.querySelector('.collapse')).toBeNull();
+
+    // Viewers fold a section with its title instead of renaming it.
+    (element.querySelector('.entry-section .section-title') as HTMLButtonElement).click();
+    await render();
+    expect(element.querySelector('.name-input')).toBeNull();
+    expect(component.sectionViews()[0].collapsed).toBe(true);
   });
 
   it('explains when the list cannot be opened', async () => {

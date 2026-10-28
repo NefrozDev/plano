@@ -16,6 +16,7 @@ import type {
   UpdateEntryRequest,
   UpdateListRequest,
   UpdateListSettingsRequest,
+  UpdateSectionRequest,
 } from '@plano/common';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../core/http/api-base-url';
@@ -53,6 +54,14 @@ export class ListsApiService {
 
   addSection(listId: string, details: CreateSectionRequest): Observable<ListSection> {
     return this.http.post<ListSection>(`${this.lists}/${listId}/sections`, details);
+  }
+
+  renameSection(listId: string, sectionId: string, details: UpdateSectionRequest): Observable<void> {
+    return this.http.patch<void>(`${this.lists}/${listId}/sections/${sectionId}`, details);
+  }
+
+  removeSection(listId: string, sectionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.lists}/${listId}/sections/${sectionId}`);
   }
 
   addEntry(listId: string, sectionId: string, details: CreateEntryRequest): Observable<ListEntry> {

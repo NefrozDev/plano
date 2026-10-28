@@ -110,6 +110,23 @@ export class ListsStore {
     );
   }
 
+  renameSection(sectionId: string, name: string): Promise<boolean> {
+    return this.runOnDetail(
+      (id) => this.api.renameSection(id, sectionId, { name }),
+      (_, detail) => this.mapSection(detail, sectionId, (section) => ({ ...section, name })),
+    );
+  }
+
+  /** The section goes with its entries, reminders included. */
+  async removeSection(sectionId: string): Promise<boolean> {
+    const removed = await this.runOnDetail(
+      (id) => this.api.removeSection(id, sectionId),
+      (_, detail) => ({ ...detail, sections: detail.sections.filter((section) => section.id !== sectionId) }),
+    );
+    if (removed) this.refreshReminders();
+    return removed;
+  }
+
   addEntry(sectionId: string, name: string): Promise<boolean> {
     return this.runOnDetail(
       (id) => this.api.addEntry(id, sectionId, { name }),

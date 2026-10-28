@@ -83,6 +83,47 @@ describe('ListsStore', () => {
     expect(names()).toEqual(['Lait', 'Œufs', 'Tomates', 'Beurre']);
   });
 
+  it('renames and removes sections, refreshing reminders after a removal', async () => {
+    await openList();
+    const loading = store.loadReminders();
+    http.expectOne('/api/v1/lists/reminders').flush([]);
+    await loading;
+
+    const renaming = store.renameSection('fresh', 'Frais');
+    const rename = http.expectOne('/api/v1/lists/list-1/sections/fresh');
+    expect(rename.request.method).toBe('PATCH');
+    expect(rename.request.body).toEqual({ name: 'Frais' });
+    rename.flush(null);
+    expect(await renaming).toBe(true);
+    expect(store.detail()?.sections[0].name).toBe('Frais');
+    http.expectNone('/api/v1/lists/reminders');
+
+    const removing = store.removeSection('fresh');
+    http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1/sections/fresh' }).flush(null);
+    expect(await removing).toBe(true);
+    expect(store.detail()?.sections.map(({ id }) => id)).not.toContain('fresh');
+    expect(store.detail()?.total).toBe(2);
+    http.expectOne('/api/v1/lists/reminders').flush([]);
+  });
+
+  it('keeps a section when the server refuses to rename or remove it', async () => {
+    await openList();
+    const refuse = (method: string) =>
+      http
+        .expectOne({ method, url: '/api/v1/lists/list-1/sections/fresh' })
+        .flush({ message: 'Vous pouvez seulement consulter cette liste.' }, { status: 403, statusText: 'Forbidden' });
+
+    const renaming = store.renameSection('fresh', 'Frais');
+    refuse('PATCH');
+    expect(await renaming).toBe(false);
+    const removing = store.removeSection('fresh');
+    refuse('DELETE');
+    expect(await removing).toBe(false);
+
+    expect(store.detail()?.sections[0]).toEqual(expect.objectContaining({ id: 'fresh', name: 'Produits frais' }));
+    expect(store.error()).toBe('Vous pouvez seulement consulter cette liste.');
+  });
+
   it('keeps the list unchanged when the server refuses a change', async () => {
     await openList();
 

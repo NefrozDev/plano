@@ -70,14 +70,13 @@
           [style.--section-color]="view.section.color"
           [style.--section-progress]="view.progress + '%'"
         >
-          <header>
-            <button
-              class="section-title"
-              type="button"
-              [attr.aria-expanded]="true"
-              (click)="toggleSection(view.section.id)"
-            >{{ view.section.name }}</button>
-          </header>
+          <app-list-section-header
+            [name]="view.section.name"
+            [editable]="canEdit()"
+            (renamed)="renameSection(view.section.id, $event)"
+            (collapse)="toggleSection(view.section.id)"
+            (remove)="requestDeleteSection(view.section)"
+          />
           @for (entry of view.entries; track entry.id) {
             <app-list-entry-row
               [entry]="entry"

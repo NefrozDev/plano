@@ -1,12 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import type { ListEntry } from '@plano/common';
-
-/** Pointer travel (px) under which a press still counts as a tap. */
-const TAP_TOLERANCE = 6;
-/** Left swipe (px) past which releasing the row asks to delete it. */
-const DELETE_THRESHOLD = -32;
-/** Furthest the row slides, uncovering the delete button. */
-const MAX_OFFSET = -58;
+import { SwipeToDelete } from './swipe-to-delete';
 
 /**
  * One list entry: tap to open, circle to toggle, swipe left to delete, and a
@@ -96,45 +90,26 @@ export class ListEntryRowComponent {
   readonly remove = output<void>();
   readonly dragStart = output<void>();
 
-  private readonly gesture = signal<{ startX: number; currentX: number } | null>(null);
-  /** A swipe ends with a click on the row; that click must not open the entry. */
-  private suppressNextClick = false;
-
-  readonly offset = computed(() => {
-    const gesture = this.gesture();
-    return gesture ? Math.max(MAX_OFFSET, Math.min(0, gesture.currentX - gesture.startX)) : 0;
-  });
+  private readonly swipe = new SwipeToDelete(() => this.remove.emit());
+  readonly offset = this.swipe.offset;
 
   startSwipe(event: PointerEvent): void {
     if (this.readonly()) return;
     if ((event.target as HTMLElement).closest('.drag-handle, .entry-toggle')) return;
-    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-    this.gesture.set({ startX: event.clientX, currentX: event.clientX });
+    this.swipe.start(event);
   }
 
   moveSwipe(event: PointerEvent): void {
-    const gesture = this.gesture();
-    if (!gesture) return;
-    if (Math.abs(event.clientX - gesture.startX) > TAP_TOLERANCE) event.preventDefault();
-    this.gesture.set({ ...gesture, currentX: event.clientX });
+    this.swipe.move(event);
   }
 
   finishSwipe(): void {
-    const gesture = this.gesture();
-    if (!gesture) return;
-    this.gesture.set(null);
-    const distance = gesture.currentX - gesture.startX;
-    if (Math.abs(distance) > TAP_TOLERANCE) this.suppressNextClick = true;
-    if (distance < DELETE_THRESHOLD) this.remove.emit();
+    this.swipe.finish();
   }
 
+  /** A click ending a swipe must not open the entry. */
   handleClick(event: MouseEvent): void {
-    if (this.suppressNextClick) {
-      this.suppressNextClick = false;
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
+    if (this.swipe.swallowClick(event)) return;
     this.open.emit();
   }
 

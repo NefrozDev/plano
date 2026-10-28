@@ -14,6 +14,7 @@ import { ListEntryDetailsComponent } from './list-entry-details.component';
 import { ListEntryRowComponent } from './list-entry-row.component';
 import { EntryRef } from './list-options';
 import { ListSectionCreatorComponent, NewSection } from './list-section-creator.component';
+import { ListSectionHeaderComponent } from './list-section-header.component';
 import { ListSharingPanelComponent } from './list-sharing-panel.component';
 
 /** What the template shows for a section, given the display settings. */
@@ -46,6 +47,7 @@ function percent(part: number, whole: number): number {
     ListEntryDetailsComponent,
     ListEntryRowComponent,
     ListSectionCreatorComponent,
+    ListSectionHeaderComponent,
     ListSharingPanelComponent,
     ToastComponent,
   ],
@@ -208,6 +210,23 @@ export class ListDetailComponent {
   updateActiveEntry(changes: UpdateEntryRequest): void {
     const ref = this.selected();
     if (ref) void this.store.updateEntry(ref.entryId, changes);
+  }
+
+  renameSection(sectionId: string, name: string): void {
+    void this.store.renameSection(sectionId, name);
+  }
+
+  /** Always confirmed, whatever the settings: every entry of the section goes with it. */
+  async requestDeleteSection(section: ListSection): Promise<void> {
+    const count = section.entries.length;
+    const contents = count === 0 ? '' : count === 1 ? ' et son élément' : ` et ses ${count} éléments`;
+    const confirmed = await this.confirm.ask({
+      heading: 'Supprimer la section ?',
+      message: `« ${section.name} »${contents} seront supprimés pour tous les membres de la liste.`,
+      confirmLabel: 'Supprimer',
+      tone: 'danger',
+    });
+    if (confirmed) await this.store.removeSection(section.id);
   }
 
   async requestDeleteEntry(entry: ListEntry): Promise<void> {
