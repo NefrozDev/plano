@@ -106,6 +106,10 @@ export interface CreateSectionRequest {
   color: string;
 }
 
+export interface UpdateSectionRequest {
+  name: string;
+}
+
 export interface CreateEntryRequest {
   name: string;
 }

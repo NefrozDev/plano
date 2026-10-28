@@ -40,6 +40,8 @@ describe('ListsController', () => {
     ]);
     content = service([
       'addSection',
+      'renameSection',
+      'removeSection',
       'addEntry',
       'reorderEntries',
       'updateEntry',
@@ -108,6 +110,20 @@ describe('ListsController', () => {
       service: 'content',
       method: 'addSection',
       args: [LIST, USER, { name: 'Frais', color: '#3264ed' }],
+    },
+    {
+      handler: 'renameSection',
+      call: (c) => c.renameSection(USER, LIST, SECTION, { name: 'Surgelés' }),
+      service: 'content',
+      method: 'renameSection',
+      args: [LIST, SECTION, USER, { name: 'Surgelés' }],
+    },
+    {
+      handler: 'removeSection',
+      call: (c) => c.removeSection(USER, LIST, SECTION),
+      service: 'content',
+      method: 'removeSection',
+      args: [LIST, SECTION, USER],
     },
     {
       handler: 'addEntry',

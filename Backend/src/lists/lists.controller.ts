@@ -33,6 +33,7 @@ import {
   CreateSectionDto,
   ReorderEntriesDto,
   UpdateEntryDto,
+  UpdateSectionDto,
 } from './dto/section-entry.dto';
 import { ListContentService } from './list-content.service';
 import { ListsService } from './lists.service';
@@ -99,6 +100,27 @@ export class ListsController {
     @Body() details: CreateSectionDto,
   ): Promise<ListSection> {
     return this.content.addSection(listId, userId, details);
+  }
+
+  @Patch(':listId/sections/:sectionId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  renameSection(
+    @CurrentUser('id') userId: string,
+    @ListId() listId: string,
+    @Param('sectionId', ParseUUIDPipe) sectionId: string,
+    @Body() details: UpdateSectionDto,
+  ): Promise<void> {
+    return this.content.renameSection(listId, sectionId, userId, details);
+  }
+
+  @Delete(':listId/sections/:sectionId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeSection(
+    @CurrentUser('id') userId: string,
+    @ListId() listId: string,
+    @Param('sectionId', ParseUUIDPipe) sectionId: string,
+  ): Promise<void> {
+    return this.content.removeSection(listId, sectionId, userId);
   }
 
   @Post(':listId/sections/:sectionId/entries')

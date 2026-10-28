@@ -204,6 +204,66 @@ describe('Lists API (e2e)', () => {
       .expect(404);
   });
 
+  it('renames and deletes a section with its entries', async () => {
+    const sectionUrl = async (name: string) => {
+      const section = (
+        await http()
+          .post(`/api/v1/lists/${list.id}/sections`)
+          .set('Cookie', ada.cookie)
+          .send({ name, color: '#23c666' })
+          .expect(201)
+      ).body as ListSection;
+      return `/api/v1/lists/${list.id}/sections/${section.id}`;
+    };
+    const fresh = await sectionUrl('Frais');
+    const pantry = await sectionUrl('Épicerie');
+    await http()
+      .post(`${fresh}/entries`)
+      .set('Cookie', ada.cookie)
+      .send({ name: 'Lait' })
+      .expect(201);
+
+    await http()
+      .patch(fresh)
+      .set('Cookie', ada.cookie)
+      .send({ name: '   ' })
+      .expect(400);
+    await http()
+      .patch(fresh)
+      .set('Cookie', ada.cookie)
+      .send({ name: '  Produits frais  ', color: '#000000' })
+      .expect(400);
+    await http()
+      .patch(fresh)
+      .set('Cookie', ada.cookie)
+      .send({ name: '  Produits frais  ' })
+      .expect(204);
+    await http().delete(pantry).set('Cookie', ada.cookie).expect(204);
+    await http().delete(pantry).set('Cookie', ada.cookie).expect(404);
+
+    const detail = (
+      await http()
+        .get(`/api/v1/lists/${list.id}`)
+        .set('Cookie', ada.cookie)
+        .expect(200)
+    ).body as ListDetail;
+    expect(
+      detail.sections.map(({ name, entries }) => ({
+        name,
+        entries: entries.map((entry) => entry.name),
+      })),
+    ).toEqual([{ name: 'Produits frais', entries: ['Lait'] }]);
+
+    await http().delete(fresh).set('Cookie', ada.cookie).expect(204);
+    await http()
+      .get(`/api/v1/lists/${list.id}`)
+      .set('Cookie', ada.cookie)
+      .expect(200)
+      .expect((response) => {
+        expect((response.body as ListDetail).sections).toEqual([]);
+      });
+  });
+
   it('deletes a list for its owner only', async () => {
     await http()
       .delete(`/api/v1/lists/${list.id}`)

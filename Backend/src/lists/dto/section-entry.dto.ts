@@ -3,6 +3,7 @@ import type {
   CreateSectionRequest,
   ReorderEntriesRequest,
   UpdateEntryRequest,
+  UpdateSectionRequest,
 } from '@plano/common';
 import { Transform } from 'class-transformer';
 import {
@@ -27,6 +28,13 @@ export class CreateSectionDto implements CreateSectionRequest {
 
   @Matches(HEX_COLOR)
   color!: string;
+}
+
+export class UpdateSectionDto implements UpdateSectionRequest {
+  @IsString()
+  @Transform(trimString)
+  @Length(1, 80)
+  name!: string;
 }
 
 export class CreateEntryDto implements CreateEntryRequest {

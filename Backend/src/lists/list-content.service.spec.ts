@@ -65,6 +65,73 @@ describe('ListContentService', () => {
     expect(await names()).toEqual(['Lait', 'Œufs']);
   });
 
+  it('renames a section without touching its entries', async () => {
+    await add('Lait');
+
+    await bed.content.renameSection(list.id, sectionId, bed.ada, {
+      name: 'Produits frais',
+    });
+
+    const [section] = (await bed.lists.findOne(list.id, bed.ada)).sections;
+    expect(section.name).toBe('Produits frais');
+    expect(section.color).toBe('#23c666');
+    expect(await names()).toEqual(['Lait']);
+  });
+
+  it('removes a section with its entries and keeps new sections last', async () => {
+    await add('Lait');
+    const other = await bed.content.addSection(list.id, bed.ada, {
+      name: 'Épicerie',
+      color: '#d85a9a',
+    });
+
+    await bed.content.removeSection(list.id, sectionId, bed.ada);
+    await bed.content.addSection(list.id, bed.ada, {
+      name: 'Boissons',
+      color: '#3264ed',
+    });
+
+    const detail = await bed.lists.findOne(list.id, bed.ada);
+    expect(detail.sections.map(({ name }) => name)).toEqual([
+      'Épicerie',
+      'Boissons',
+    ]);
+    expect(detail.sections[0].id).toBe(other.id);
+    expect(detail.sections.flatMap(({ entries }) => entries)).toEqual([]);
+  });
+
+  it('renames or removes only sections of the list, for editors', async () => {
+    const otherList = await bed.lists.create(bed.ada, {
+      name: 'Maison',
+      icon: 'home',
+      color: '#3264ed',
+    });
+    await expect(
+      bed.content.renameSection(otherList.id, sectionId, bed.ada, {
+        name: 'Ailleurs',
+      }),
+    ).rejects.toThrow(NotFoundException);
+    await expect(
+      bed.content.removeSection(otherList.id, sectionId, bed.ada),
+    ).rejects.toThrow(NotFoundException);
+
+    await bed.lists.addMember(list.id, bed.ada, {
+      userId: bed.bob,
+      role: 'viewer',
+    });
+    await expect(
+      bed.content.renameSection(list.id, sectionId, bed.bob, { name: 'Pris' }),
+    ).rejects.toThrow(ForbiddenException);
+    await expect(
+      bed.content.removeSection(list.id, sectionId, bed.bob),
+    ).rejects.toThrow(ForbiddenException);
+
+    const [section] = (await bed.lists.findOne(list.id, bed.ada)).sections;
+    expect(section).toEqual(
+      expect.objectContaining({ id: sectionId, name: 'Frais' }),
+    );
+  });
+
   it('updates only the fields sent, and clears nullable ones with null', async () => {
     const milk = await add('Lait');
 

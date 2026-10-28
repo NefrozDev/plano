@@ -15,6 +15,7 @@ import type {
   CreateSectionDto,
   ReorderEntriesDto,
   UpdateEntryDto,
+  UpdateSectionDto,
 } from './dto/section-entry.dto';
 import { sentFields } from './dto/validation';
 import { ListEntry } from './entities/list-entry.entity';
@@ -49,6 +50,41 @@ export class ListContentService {
         }),
       );
       return toSectionResponse(section, []);
+    });
+  }
+
+  async renameSection(
+    listId: string,
+    sectionId: string,
+    userId: string,
+    { name }: UpdateSectionDto,
+  ): Promise<void> {
+    await this.inTransaction(listId, userId, async (manager) => {
+      const section = await this.requireSection(manager, listId, sectionId);
+      section.name = name;
+      await manager.save(section);
+    });
+  }
+
+  /** Deletes the section and, through the foreign key cascade, its entries. */
+  async removeSection(
+    listId: string,
+    sectionId: string,
+    userId: string,
+  ): Promise<void> {
+    await this.inTransaction(listId, userId, async (manager) => {
+      await this.requireSection(manager, listId, sectionId);
+      await manager.delete(ListSection, { id: sectionId });
+      // New sections take `count` as their position: close the gap so they
+      // never share a position with an existing one.
+      const remaining = await manager.find(ListSection, {
+        where: { listId },
+        order: { position: 'ASC' },
+      });
+      remaining.forEach((section, index) => {
+        section.position = index;
+      });
+      await manager.save(remaining);
     });
   }
 
