@@ -13,8 +13,12 @@ import { Group } from './group.entity';
 export type GroupRole = 'owner' | 'member';
 
 @Entity({ name: 'group_memberships' })
-@Index('UQ_group_memberships_user', ['userId'], { unique: true })
-@Index('IDX_group_memberships_group', ['groupId'])
+// A user joins each group at most once; the composite index also serves
+// lookups by group, its leading column.
+@Index('UQ_group_memberships_group_user', ['groupId', 'userId'], {
+  unique: true,
+})
+@Index('IDX_group_memberships_user', ['userId'])
 export class GroupMembership {
   @PrimaryColumn({ type: 'varchar', length: 36 })
   id!: string;

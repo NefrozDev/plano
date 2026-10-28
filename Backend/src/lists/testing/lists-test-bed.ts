@@ -28,6 +28,8 @@ export interface ListsTestBed {
   cyd: string;
   joinGroup(userId: string): Promise<void>;
   leaveGroup(userId: string): Promise<void>;
+  /** Puts the users together in a new, second group; the first one is the owner. */
+  createOtherGroup(userIds: string[]): Promise<void>;
   /** Closes the connections and drops the database. */
   destroy(): Promise<void>;
 }
@@ -87,6 +89,24 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
     joinGroup,
     leaveGroup: async (userId) => {
       await dataSource.manager.delete(GroupMembership, { userId });
+    },
+    createOtherGroup: async (userIds) => {
+      const otherGroupId = randomUUID();
+      await dataSource.manager.insert(Group, {
+        id: otherGroupId,
+        name: 'Travail',
+        inviteCode: 'WXYZ9876',
+        createdByUserId: userIds[0],
+      });
+      await dataSource.manager.insert(
+        GroupMembership,
+        userIds.map((userId, index) => ({
+          id: randomUUID(),
+          userId,
+          groupId: otherGroupId,
+          role: index === 0 ? ('owner' as const) : ('member' as const),
+        })),
+      );
     },
     destroy: async () => {
       await dataSource.destroy();

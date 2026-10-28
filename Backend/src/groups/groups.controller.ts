@@ -26,9 +26,9 @@ import { GroupsService } from './groups.service';
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
-  @Get('me')
-  getMine(@CurrentUser('id') userId: string): Promise<GroupDetails | null> {
-    return this.groupsService.findForUser(userId);
+  @Get()
+  findAll(@CurrentUser('id') userId: string): Promise<GroupDetails[]> {
+    return this.groupsService.findAllForUser(userId);
   }
 
   @Post()
@@ -47,46 +47,70 @@ export class GroupsController {
     return this.groupsService.join(userId, details);
   }
 
-  @Patch('me')
+  @Get(':groupId')
+  findOne(
+    @CurrentUser('id') userId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+  ): Promise<GroupDetails> {
+    return this.groupsService.findOneForUser(userId, groupId);
+  }
+
+  @Patch(':groupId')
   update(
     @CurrentUser('id') userId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() details: UpdateGroupDto,
   ): Promise<GroupDetails> {
-    return this.groupsService.update(userId, details);
+    return this.groupsService.update(userId, groupId, details);
   }
 
-  @Post('me/invite-code')
+  @Post(':groupId/invite-code')
   @HttpCode(HttpStatus.OK)
-  rotateInviteCode(@CurrentUser('id') userId: string): Promise<GroupDetails> {
-    return this.groupsService.rotateInviteCode(userId);
+  rotateInviteCode(
+    @CurrentUser('id') userId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+  ): Promise<GroupDetails> {
+    return this.groupsService.rotateInviteCode(userId, groupId);
   }
 
-  @Patch('me/owner')
+  @Patch(':groupId/owner')
   transferOwnership(
     @CurrentUser('id') userId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Body() details: TransferOwnershipDto,
   ): Promise<GroupDetails> {
-    return this.groupsService.transferOwnership(userId, details.userId);
+    return this.groupsService.transferOwnership(
+      userId,
+      groupId,
+      details.userId,
+    );
   }
 
-  @Delete('me/members/:userId')
+  @Delete(':groupId/members/:userId')
   @HttpCode(HttpStatus.NO_CONTENT)
   removeMember(
     @CurrentUser('id') userId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
     @Param('userId', ParseUUIDPipe) memberUserId: string,
   ): Promise<void> {
-    return this.groupsService.removeMember(userId, memberUserId);
+    return this.groupsService.removeMember(userId, groupId, memberUserId);
   }
 
-  @Post('me/leave')
+  @Post(':groupId/leave')
   @HttpCode(HttpStatus.NO_CONTENT)
-  leave(@CurrentUser('id') userId: string): Promise<void> {
-    return this.groupsService.leave(userId);
+  leave(
+    @CurrentUser('id') userId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+  ): Promise<void> {
+    return this.groupsService.leave(userId, groupId);
   }
 
-  @Delete('me')
+  @Delete(':groupId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@CurrentUser('id') userId: string): Promise<void> {
-    return this.groupsService.delete(userId);
+  delete(
+    @CurrentUser('id') userId: string,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+  ): Promise<void> {
+    return this.groupsService.delete(userId, groupId);
   }
 }

@@ -124,6 +124,20 @@ describe('ListsService', () => {
   });
 
   describe('members', () => {
+    it('shares with mates from any of the owner’s groups', async () => {
+      const list = await createList();
+      await bed.createOtherGroup([bed.cyd, bed.ada]);
+
+      await bed.lists.addMember(list.id, bed.ada, {
+        userId: bed.cyd,
+        role: 'viewer',
+      });
+
+      expect(
+        (await bed.lists.findAll(bed.cyd)).map((summary) => summary.id),
+      ).toEqual([list.id]);
+    });
+
     it('shares only with group mates, once each', async () => {
       const list = await createList();
 

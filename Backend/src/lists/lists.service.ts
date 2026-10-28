@@ -132,7 +132,7 @@ export class ListsService {
         }
         if (!(await this.groups.areGroupMates(userId, details.userId))) {
           throw new BadRequestException(
-            'Vous ne pouvez partager une liste qu’avec les membres de votre groupe.',
+            'Vous ne pouvez partager une liste qu’avec les membres de vos groupes.',
           );
         }
         if (

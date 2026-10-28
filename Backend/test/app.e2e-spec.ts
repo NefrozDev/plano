@@ -9,6 +9,7 @@ import {
   cookiePair,
   createTestApp,
   readSetCookie,
+  registerUser,
   validRegistration,
 } from './e2e-helpers';
 
@@ -200,42 +201,67 @@ describe('Plano API (e2e)', () => {
     await request(app.getHttpServer()).post('/api/v1/auth/logout').expect(204);
   });
 
-  it('creates and restores a group for the authenticated user', async () => {
+  it('creates several groups for the authenticated user and lists them', async () => {
     const registration = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send(validRegistration)
       .expect(201);
     const cookie = cookiePair(readSetCookie(registration.headers)[0]);
 
-    await request(app.getHttpServer()).get('/api/v1/groups/me').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/groups').expect(401);
+    await request(app.getHttpServer())
+      .get('/api/v1/groups')
+      .set('Cookie', cookie)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toEqual([]);
+      });
 
     const creation = await request(app.getHttpServer())
       .post('/api/v1/groups')
       .set('Cookie', cookie)
-      .send({ name: '  Les Explorateurs  ' })
+      .send({ name: '  Famille proche  ' })
       .expect(201);
-    const group = creation.body as unknown as GroupSummary;
-
-    expect(group).toMatchObject({
+    const family = creation.body as unknown as GroupSummary;
+    expect(family).toMatchObject({
       id: expect.any(String) as string,
-      name: 'Les Explorateurs',
+      name: 'Famille proche',
       role: 'owner',
     });
-    expect(group.inviteCode).toMatch(/^[A-Z0-9_-]{8}$/);
+    expect(family.inviteCode).toMatch(/^[A-Z0-9_-]{8}$/);
+
+    const work = (
+      await request(app.getHttpServer())
+        .post('/api/v1/groups')
+        .set('Cookie', cookie)
+        .send({ name: 'Travail' })
+        .expect(201)
+    ).body as unknown as GroupDetails;
+    expect(work.id).not.toBe(family.id);
 
     await request(app.getHttpServer())
-      .get('/api/v1/groups/me')
+      .get('/api/v1/groups')
       .set('Cookie', cookie)
       .expect(200)
       .expect((response) => {
-        expect(response.body).toMatchObject({ id: group.id, role: 'owner' });
+        const groups = response.body as unknown as GroupDetails[];
+        expect(groups.map(({ name, role }) => ({ name, role }))).toEqual([
+          { name: 'Famille proche', role: 'owner' },
+          { name: 'Travail', role: 'owner' },
+        ]);
+        expect(groups.every((group) => group.members.length === 1)).toBe(true);
       });
-
     await request(app.getHttpServer())
-      .post('/api/v1/groups')
+      .get(`/api/v1/groups/${work.id}`)
       .set('Cookie', cookie)
-      .send({ name: 'Un autre groupe' })
-      .expect(409);
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toMatchObject({ id: work.id, name: 'Travail' });
+      });
+    await request(app.getHttpServer())
+      .get('/api/v1/groups/not-a-uuid')
+      .set('Cookie', cookie)
+      .expect(400);
   });
 
   it('handles joining, group administration, ownership transfer, and departure', async () => {
@@ -273,13 +299,20 @@ describe('Plano API (e2e)', () => {
       readSetCookie(visitorRegistration.headers)[0],
     );
 
-    const creation = await request(app.getHttpServer())
-      .post('/api/v1/groups')
-      .set('Cookie', ownerCookie)
-      .send({ name: 'Les Explorateurs' })
-      .expect(201);
-    const createdGroup = creation.body as unknown as GroupDetails;
+    const createdGroup = (
+      await request(app.getHttpServer())
+        .post('/api/v1/groups')
+        .set('Cookie', ownerCookie)
+        .send({ name: 'Les Explorateurs' })
+        .expect(201)
+    ).body as unknown as GroupDetails;
+    const groupUrl = `/api/v1/groups/${createdGroup.id}`;
 
+    // Someone else's group is invisible until they join it.
+    await request(app.getHttpServer())
+      .get(groupUrl)
+      .set('Cookie', memberCookie)
+      .expect(404);
     await request(app.getHttpServer())
       .post('/api/v1/groups/join')
       .set('Cookie', memberCookie)
@@ -296,15 +329,20 @@ describe('Plano API (e2e)', () => {
         expect(group.role).toBe('member');
         expect(group.members).toHaveLength(2);
       });
+    await request(app.getHttpServer())
+      .post('/api/v1/groups/join')
+      .set('Cookie', memberCookie)
+      .send({ inviteCode: createdGroup.inviteCode })
+      .expect(409);
 
     await request(app.getHttpServer())
-      .patch('/api/v1/groups/me')
+      .patch(groupUrl)
       .set('Cookie', memberCookie)
       .send({ name: 'Nom interdit' })
       .expect(403);
 
     await request(app.getHttpServer())
-      .patch('/api/v1/groups/me')
+      .patch(groupUrl)
       .set('Cookie', ownerCookie)
       .send({ name: '  Nouveau nom  ' })
       .expect(200)
@@ -313,7 +351,7 @@ describe('Plano API (e2e)', () => {
       });
 
     const rotation = await request(app.getHttpServer())
-      .post('/api/v1/groups/me/invite-code')
+      .post(`${groupUrl}/invite-code`)
       .set('Cookie', ownerCookie)
       .expect(200);
     const rotatedGroup = rotation.body as unknown as GroupDetails;
@@ -331,7 +369,7 @@ describe('Plano API (e2e)', () => {
       .expect(201);
 
     await request(app.getHttpServer())
-      .patch('/api/v1/groups/me/owner')
+      .patch(`${groupUrl}/owner`)
       .set('Cookie', ownerCookie)
       .send({ userId: member.id })
       .expect(200)
@@ -340,24 +378,31 @@ describe('Plano API (e2e)', () => {
       });
 
     await request(app.getHttpServer())
-      .delete('/api/v1/groups/me')
+      .delete(groupUrl)
       .set('Cookie', ownerCookie)
       .expect(403);
     await request(app.getHttpServer())
-      .post('/api/v1/groups/me/leave')
+      .post(`${groupUrl}/leave`)
       .set('Cookie', ownerCookie)
       .expect(204);
+    await request(app.getHttpServer())
+      .get('/api/v1/groups')
+      .set('Cookie', ownerCookie)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toEqual([]);
+      });
 
     await request(app.getHttpServer())
-      .delete('/api/v1/groups/me/members/not-a-uuid')
+      .delete(`${groupUrl}/members/not-a-uuid`)
       .set('Cookie', memberCookie)
       .expect(400);
     await request(app.getHttpServer())
-      .delete(`/api/v1/groups/me/members/${visitor.id}`)
+      .delete(`${groupUrl}/members/${visitor.id}`)
       .set('Cookie', memberCookie)
       .expect(204);
     await request(app.getHttpServer())
-      .get('/api/v1/groups/me')
+      .get(groupUrl)
       .set('Cookie', memberCookie)
       .expect(200)
       .expect((response) => {
@@ -367,13 +412,61 @@ describe('Plano API (e2e)', () => {
       });
 
     await request(app.getHttpServer())
-      .delete('/api/v1/groups/me')
+      .delete(groupUrl)
       .set('Cookie', memberCookie)
       .expect(204);
     await request(app.getHttpServer())
-      .get('/api/v1/groups/me')
+      .get(groupUrl)
       .set('Cookie', memberCookie)
-      .expect(200);
+      .expect(404);
+  });
+
+  it('scopes owner actions to the group they target', async () => {
+    const ada = await registerUser(app, 'ada');
+    const bob = await registerUser(app, 'bob');
+    const adaGroup = (
+      await request(app.getHttpServer())
+        .post('/api/v1/groups')
+        .set('Cookie', ada.cookie)
+        .send({ name: 'Famille' })
+        .expect(201)
+    ).body as unknown as GroupDetails;
+    const bobGroup = (
+      await request(app.getHttpServer())
+        .post('/api/v1/groups')
+        .set('Cookie', bob.cookie)
+        .send({ name: 'Travail' })
+        .expect(201)
+    ).body as unknown as GroupDetails;
+    await request(app.getHttpServer())
+      .post('/api/v1/groups/join')
+      .set('Cookie', bob.cookie)
+      .send({ inviteCode: adaGroup.inviteCode })
+      .expect(201);
+
+    // Owning one group gives no rights on another: Bob is only a member of Ada's.
+    await request(app.getHttpServer())
+      .patch(`/api/v1/groups/${adaGroup.id}`)
+      .set('Cookie', bob.cookie)
+      .send({ name: 'Pris' })
+      .expect(403);
+    await request(app.getHttpServer())
+      .patch(`/api/v1/groups/${bobGroup.id}`)
+      .set('Cookie', ada.cookie)
+      .send({ name: 'Pris' })
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/groups')
+      .set('Cookie', bob.cookie)
+      .expect(200)
+      .expect((response) => {
+        const groups = response.body as unknown as GroupDetails[];
+        expect(groups.map(({ name, role }) => ({ name, role }))).toEqual([
+          { name: 'Travail', role: 'owner' },
+          { name: 'Famille', role: 'member' },
+        ]);
+      });
   });
 
   it('keeps a valid user session after the backend restarts', async () => {
