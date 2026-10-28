@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { Friendship } from '../friends/friendship.entity';
 import {
   createListsTestBed,
   type ListsTestBed,
@@ -124,6 +125,25 @@ describe('ListsService', () => {
   });
 
   describe('members', () => {
+    it('shares with friends outside any group, until they stop being friends', async () => {
+      const list = await createList();
+      await bed.befriend(bed.cyd, bed.ada);
+
+      await bed.lists.addMember(list.id, bed.ada, {
+        userId: bed.cyd,
+        role: 'viewer',
+      });
+      expect(
+        (await bed.lists.findAll(bed.cyd)).map((summary) => summary.id),
+      ).toEqual([list.id]);
+
+      await bed.dataSource.manager.delete(Friendship, { requesterId: bed.cyd });
+      expect(await bed.lists.findAll(bed.cyd)).toEqual([]);
+      await expect(bed.lists.findOne(list.id, bed.cyd)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
     it('shares with mates from any of the owner’s groups', async () => {
       const list = await createList();
       await bed.createOtherGroup([bed.cyd, bed.ada]);

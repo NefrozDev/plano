@@ -14,7 +14,7 @@ import type {
 import { randomUUID } from 'node:crypto';
 import { DataSource, EntityManager, In, IsNull, Not } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
-import { GroupsService } from '../groups/groups.service';
+import { ContactsService } from '../friends/contacts.service';
 import { User } from '../users/user.entity';
 import type { CreateListDto, UpdateListDto } from './dto/list.dto';
 import { sentFields } from './dto/validation';
@@ -35,7 +35,7 @@ export class ListsService {
     private readonly dataSource: DataSource,
     private readonly writeLock: DatabaseWriteLockService,
     private readonly access: ListAccessService,
-    private readonly groups: GroupsService,
+    private readonly contacts: ContactsService,
   ) {}
 
   async findAll(userId: string): Promise<ListSummary[]> {
@@ -130,9 +130,9 @@ export class ListsService {
             'Vous êtes déjà propriétaire de la liste.',
           );
         }
-        if (!(await this.groups.areGroupMates(userId, details.userId))) {
+        if (!(await this.contacts.areContacts(userId, details.userId))) {
           throw new BadRequestException(
-            'Vous ne pouvez partager une liste qu’avec les membres de vos groupes.',
+            'Vous ne pouvez partager une liste qu’avec vos amis et les membres de vos groupes.',
           );
         }
         if (

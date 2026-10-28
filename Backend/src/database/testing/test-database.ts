@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
 import { Session } from '../../auth/session.entity';
+import { Friendship } from '../../friends/friendship.entity';
 import { GroupMembership } from '../../groups/group-membership.entity';
 import { Group } from '../../groups/group.entity';
 import { ListEntry } from '../../lists/entities/list-entry.entity';
@@ -16,6 +17,7 @@ export const ENTITIES = [
   Session,
   Group,
   GroupMembership,
+  Friendship,
   List,
   ListMember,
   ListSection,

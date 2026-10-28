@@ -8,6 +8,9 @@ import {
 } from '../../database/testing/test-database';
 import { GroupMembership } from '../../groups/group-membership.entity';
 import { Group } from '../../groups/group.entity';
+import { ContactsService } from '../../friends/contacts.service';
+import { FriendsService } from '../../friends/friends.service';
+import { Friendship } from '../../friends/friendship.entity';
 import { GroupsService } from '../../groups/groups.service';
 import { User } from '../../users/user.entity';
 import { ListAccessService } from '../list-access.service';
@@ -30,6 +33,8 @@ export interface ListsTestBed {
   leaveGroup(userId: string): Promise<void>;
   /** Puts the users together in a new, second group; the first one is the owner. */
   createOtherGroup(userIds: string[]): Promise<void>;
+  /** Makes the two users friends, as an accepted request would. */
+  befriend(userId: string, otherUserId: string): Promise<void>;
   /** Closes the connections and drops the database. */
   destroy(): Promise<void>;
 }
@@ -55,7 +60,11 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
     dataSource,
     writeLock,
   );
-  const access = new ListAccessService(dataSource, groups);
+  const contacts = new ContactsService(
+    groups,
+    new FriendsService(dataSource, writeLock),
+  );
+  const access = new ListAccessService(dataSource, contacts);
 
   const [ada, bob, cyd] = await Promise.all(
     ['Ada', 'Bob', 'Cyd'].map((name) => insertUser(dataSource, name)),
@@ -80,7 +89,7 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
 
   return {
     dataSource,
-    lists: new ListsService(dataSource, writeLock, access, groups),
+    lists: new ListsService(dataSource, writeLock, access, contacts),
     content: new ListContentService(dataSource, writeLock, access),
     settings: new ListSettingsService(dataSource, writeLock),
     ada,
@@ -107,6 +116,15 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
           role: index === 0 ? ('owner' as const) : ('member' as const),
         })),
       );
+    },
+    befriend: async (userId, otherUserId) => {
+      await dataSource.manager.insert(Friendship, {
+        id: randomUUID(),
+        requesterId: userId,
+        addresseeId: otherUserId,
+        status: 'accepted',
+        acceptedAt: new Date(),
+      });
     },
     destroy: async () => {
       await dataSource.destroy();

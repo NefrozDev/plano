@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
+import { FriendsModule } from './friends/friends.module';
 import { HealthModule } from './health/health.module';
 import { GroupsModule } from './groups/groups.module';
 import { ListsModule } from './lists/lists.module';
@@ -17,6 +18,7 @@ import { ListsModule } from './lists/lists.module';
     DatabaseModule,
     AuthModule,
     GroupsModule,
+    FriendsModule,
     ListsModule,
     HealthModule,
   ],

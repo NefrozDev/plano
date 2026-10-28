@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import type { ShareRole } from '@plano/common';
 import { DataSource, EntityManager } from 'typeorm';
-import { GroupsService } from '../groups/groups.service';
+import { ContactsService } from '../friends/contacts.service';
 import { ListMember } from './entities/list-member.entity';
 import { List } from './entities/list.entity';
 
@@ -19,13 +19,14 @@ export interface ListAccess {
 
 /**
  * A list is visible to its owner, and to members it was shared with while they
- * are still in the owner's group: leaving the group revokes access at once.
+ * are still the owner's contacts (friend or group mate): losing both links
+ * revokes access at once.
  */
 @Injectable()
 export class ListAccessService {
   constructor(
     private readonly dataSource: DataSource,
-    private readonly groups: GroupsService,
+    private readonly contacts: ContactsService,
   ) {}
 
   /**
@@ -69,12 +70,12 @@ export class ListAccessService {
       relations: { list: true },
       order: { createdAt: 'ASC' },
     });
-    const groupMates = new Set(await this.groups.findGroupMateIds(userId));
+    const contacts = await this.contacts.contactIds(userId);
 
     return [
       ...owned.map((list): ListAccess => ({ list, role: 'owner' })),
       ...memberships
-        .filter((member) => groupMates.has(member.list.ownerId))
+        .filter((member) => contacts.has(member.list.ownerId))
         .map((member): ListAccess => ({
           list: member.list,
           role: member.role,
@@ -94,7 +95,7 @@ export class ListAccessService {
     const member = await manager.findOne(ListMember, {
       where: { listId, userId },
     });
-    if (!member || !(await this.groups.areGroupMates(userId, list.ownerId))) {
+    if (!member || !(await this.contacts.areContacts(userId, list.ownerId))) {
       return null;
     }
     return { list, role: member.role };

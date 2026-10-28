@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
-import { GroupsModule } from '../groups/groups.module';
+import { FriendsModule } from '../friends/friends.module';
 import { ListEntry } from './entities/list-entry.entity';
 import { ListMember } from './entities/list-member.entity';
 import { ListSection } from './entities/list-section.entity';
@@ -15,12 +15,12 @@ import { ListSettingsService } from './list-settings.service';
 import { ListsController } from './lists.controller';
 import { ListsService } from './lists.service';
 
-/** Shared shopping/todo lists, shareable with members of the owner's group. */
+/** Shared shopping/todo lists, shareable with the owner's friends and group mates. */
 @Module({
   imports: [
     AuthModule,
     DatabaseModule,
-    GroupsModule,
+    FriendsModule,
     TypeOrmModule.forFeature([
       List,
       ListMember,
