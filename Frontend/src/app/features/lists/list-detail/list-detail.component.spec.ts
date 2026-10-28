@@ -197,6 +197,36 @@ describe('ListDetailComponent', () => {
     expect(component.activeEntry()?.entry.notes).toBe('Demi-écrémé');
   });
 
+  it('styles the entry name as a text field while it is being edited', async () => {
+    await create();
+    // These global rules are scoped to the app-list-detail tag, which the test root lacks.
+    const scope = document.body.appendChild(document.createElement('app-list-detail'));
+    scope.appendChild(element);
+    try {
+      (element.querySelector('.entry-name') as HTMLButtonElement).click();
+      await render();
+      const input = element.querySelector('.entry-name-editor input') as HTMLInputElement;
+      const look = () => {
+        const style = getComputedStyle(input);
+        return { border: style.borderTopColor, background: style.backgroundColor, ring: style.boxShadow };
+      };
+      // Transitions would make the computed values lag behind the focus change.
+      input.style.transition = 'none';
+      const resting = look();
+
+      input.focus();
+      const editing = look();
+
+      expect(resting.border).toBe('rgba(0, 0, 0, 0)');
+      expect(resting.ring).toBe('none');
+      expect(editing.border).not.toBe(resting.border);
+      expect(editing.background).not.toBe(resting.background);
+      expect(editing.ring).not.toBe('none');
+    } finally {
+      scope.remove();
+    }
+  });
+
   it('adds an entry from the empty row and ignores blanks and stale blur events', async () => {
     await create();
 

@@ -530,7 +530,10 @@ app-list-detail .details-toggle i {
 
 app-list-detail .details-toggle.done i { border-color: #2EC76F; background: #2EC76F; }
 app-list-detail .details-toggle.done i::after { width: .5rem; height: .28rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.08rem) rotate(-45deg); }
-app-list-detail .entry-name-editor input { width: 100%; border: 0; outline: 0; color: var(--color-text); font: inherit; font-size: 1rem; font-weight: 750; }
+/* Reads as a title at rest, and clearly as a text field while it is being edited. */
+app-list-detail .entry-name-editor input { width: 100%; min-height: 2.5rem; padding: .35rem .6rem; border: 1px solid transparent; border-radius: .6rem; outline: 0; background: transparent; color: var(--color-text); font: inherit; font-size: 1rem; font-weight: 750; transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease; }
+app-list-detail .entry-name-editor input:enabled:hover { border-color: #E2E7EF; }
+app-list-detail .entry-name-editor input:focus { border-color: var(--color-primary); background: #F6F9FF; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent); }
 app-list-detail .detail-fields { margin-top: .75rem; background: white; }
 
 app-list-detail .detail-field {
