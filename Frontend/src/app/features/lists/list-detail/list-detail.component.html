@@ -112,6 +112,7 @@
                   type="text"
                   maxlength="200"
                   placeholder="Nouvel élément..."
+                  aria-label="Nouvel élément"
                   [value]="newEntryValue()"
                   (input)="newEntryValue.set($any($event.target).value)"
                   (keydown.enter)="$event.preventDefault(); finishAdding(view.section.id)"

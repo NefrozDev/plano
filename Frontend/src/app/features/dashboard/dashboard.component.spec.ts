@@ -5,9 +5,10 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AuthUser } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
+import { PLANO_DATA_ADAPTER } from '../../core/data/plano-data.adapter';
 import { APP_CLOCK } from '../../core/time/dates';
 import { AgendaStore } from '../agenda/agenda.store';
-import { TEST_TODAY, flushListReminders, settle } from '../../testing/plano-testing';
+import { TEST_TODAY, flushListReminders, provideSeedData, settle } from '../../testing/plano-testing';
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
@@ -32,6 +33,7 @@ describe('DashboardComponent', () => {
         provideHttpClientTesting(),
         { provide: AuthService, useValue: auth },
         { provide: APP_CLOCK, useValue: () => new Date(TEST_TODAY) },
+        provideSeedData(),
       ],
     }).compileComponents();
   });
@@ -49,6 +51,18 @@ describe('DashboardComponent', () => {
       Array.from(element.querySelectorAll('app-bottom-nav a')).map((link) => link.getAttribute('href')),
     ).toEqual(['/', '/agenda', '/lists', '/objectives']);
     expect(element.querySelector('app-bottom-nav a.active')?.textContent).toContain('Accueil');
+  });
+
+  it('shows the current week with today highlighted', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const week = (fixture.nativeElement as HTMLElement).querySelector('.week-card')!;
+
+    expect(week.getAttribute('aria-label')).toBe('Semaine du 12 au 18');
+    expect(Array.from(week.querySelectorAll('.week-day strong')).map((day) => day.textContent)).toEqual(
+      ['12', '13', '14', '15', '16', '17', '18'],
+    );
+    expect(week.querySelector('.week-day.selected')?.textContent).toContain('jeu');
   });
 
   it('falls back to the username and anonymous display value', () => {
@@ -94,6 +108,78 @@ describe('DashboardComponent', () => {
     fixture.detectChanges();
 
     expect((fixture.nativeElement as HTMLElement).querySelector('.profile-button')).toBeNull();
+  });
+
+  describe('adding a task', () => {
+    const taskLabels = (element: HTMLElement) =>
+      Array.from(element.querySelectorAll('.tasks-card label span')).map((label) => label.textContent);
+
+    function openTaskInput() {
+      const fixture = TestBed.createComponent(DashboardComponent);
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      element.querySelector<HTMLButtonElement>('.tasks-card .card-link')!.click();
+      fixture.detectChanges();
+      return { fixture, element, input: element.querySelector<HTMLInputElement>('.new-task-input')! };
+    }
+
+    function type(input: HTMLInputElement, value: string) {
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+    }
+
+    it('opens a focused field and adds the task on Enter, saving it', async () => {
+      const { fixture, element, input } = openTaskInput();
+      await fixture.whenStable();
+      expect(document.activeElement).toBe(input);
+
+      type(input, '  Appeler le plombier  ');
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      fixture.detectChanges();
+
+      expect(taskLabels(element)).toEqual([
+        'Préparer la présentation', '30 minutes de course à pied', 'Réserver le restaurant', 'Appeler le plombier',
+      ]);
+      expect(element.querySelector('.new-task-input')).toBeNull();
+      expect(element.querySelector('[aria-labelledby="tasks-title"] .section-heading span')?.textContent).toBe('1/4');
+      expect(TestBed.inject(PLANO_DATA_ADAPTER).load()?.dashboard.tasks.at(-1)).toEqual(
+        expect.objectContaining({ label: 'Appeler le plombier', done: false }),
+      );
+    });
+
+    it('also adds on blur, and gives every task its own id', () => {
+      const { fixture, element, input } = openTaskInput();
+      type(input, 'Appeler le plombier');
+      input.dispatchEvent(new Event('blur'));
+      fixture.detectChanges();
+      const component = fixture.componentInstance;
+      component.beginAddingTask();
+      component.newTaskValue.set('Appeler le plombier');
+      component.finishAddingTask();
+      fixture.detectChanges();
+
+      const ids = component.tasks().map((task) => task.id);
+      expect(taskLabels(element).filter((label) => label === 'Appeler le plombier')).toHaveLength(2);
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it('closes without adding on Escape or when left empty', () => {
+      const { fixture, element, input } = openTaskInput();
+      type(input, 'Abandonnée');
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      fixture.detectChanges();
+      expect(element.querySelector('.new-task-input')).toBeNull();
+
+      element.querySelector<HTMLButtonElement>('.tasks-card .card-link')!.click();
+      fixture.detectChanges();
+      const emptyInput = element.querySelector<HTMLInputElement>('.new-task-input')!;
+      type(emptyInput, '   ');
+      emptyInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      fixture.detectChanges();
+
+      expect(taskLabels(element)).toHaveLength(3);
+      expect(element.querySelector('.new-task-input')).toBeNull();
+    });
   });
 
   it('previews today from the agenda, list reminders included, linking to each item', async () => {

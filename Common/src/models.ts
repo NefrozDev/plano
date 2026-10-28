@@ -1,10 +1,3 @@
-export interface DashboardDay {
-  label: string;
-  date: number;
-  selected?: boolean;
-  hasEvent?: boolean;
-}
-
 export interface DashboardTask {
   id: string;
   label: string;
@@ -12,7 +5,6 @@ export interface DashboardTask {
 }
 
 export interface DashboardData {
-  weekDays: DashboardDay[];
   tasks: DashboardTask[];
 }
 

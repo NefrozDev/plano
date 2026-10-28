@@ -22,11 +22,11 @@
     <p>Voici votre journée</p>
   </section>
 
-  <section class="week-card" aria-label="Semaine du 17 au 23">
-    @for (day of weekDays(); track day.label) {
+  <section class="week-card" [attr.aria-label]="weekLabel()">
+    @for (day of weekDays(); track day.date) {
       <div class="week-day" [class.selected]="day.selected">
         <span>{{ day.label }}</span
-        ><strong>{{ day.date }}</strong>
+        ><strong>{{ day.day }}</strong>
         @if (day.hasEvent) {
           <i aria-label="Un événement prévu"></i>
         }
@@ -63,7 +63,7 @@
       <span>{{ completedTasks() }}/{{ tasks().length }}</span>
     </div>
     <div class="tasks-card">
-      @for (task of tasks(); track task.label; let index = $index) {
+      @for (task of tasks(); track task.id; let index = $index) {
         <label [class.completed]="task.done"
           ><input
             type="checkbox"
@@ -73,7 +73,23 @@
           <span>{{ task.label }}</span></label
         >
       }
-      <button class="card-link" type="button">+ Ajouter une tâche</button>
+      @if (addingTask()) {
+        <input
+          appAutofocus
+          class="new-task-input"
+          type="text"
+          maxlength="200"
+          placeholder="Nouvelle tâche..."
+          aria-label="Nouvelle tâche"
+          [value]="newTaskValue()"
+          (input)="newTaskValue.set($any($event.target).value)"
+          (keydown.enter)="$event.preventDefault(); finishAddingTask()"
+          (keydown.escape)="cancelAddingTask()"
+          (blur)="finishAddingTask()"
+        />
+      } @else {
+        <button class="card-link" type="button" (click)="beginAddingTask()">+ Ajouter une tâche</button>
+      }
     </div>
   </section>
 

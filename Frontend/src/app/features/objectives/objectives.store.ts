@@ -217,7 +217,7 @@ export class ObjectivesStore {
       if (!objective.habit) return objective;
       const checkIns = objective.habit.checkIns.includes(date)
         ? objective.habit.checkIns.filter((checkIn) => checkIn !== date)
-        : [...objective.habit.checkIns, date].sort();
+        : [...objective.habit.checkIns, date].sort((first, second) => first.localeCompare(second));
       return { ...objective, habit: { ...objective.habit, checkIns } };
     });
   }

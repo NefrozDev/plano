@@ -385,6 +385,16 @@ describe('GroupDetailComponent', () => {
       expect(dialog.open).toBe(false);
     });
 
+    it('puts focus in the name field when the rename modal opens', async () => {
+      const { fixture, element } = renderGroup('owner');
+
+      (element.querySelector('.group-tools button') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(document.activeElement).toBe(element.querySelector('dialog input[formControlName="name"]'));
+    });
+
     it('confirms a rename with a floating toast instead of an inline message', () => {
       const { fixture, element } = renderGroup('owner');
       component = fixture.componentInstance;

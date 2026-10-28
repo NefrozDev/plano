@@ -49,8 +49,10 @@ describe('Lists API (e2e)', () => {
   afterEach(() => testApp.close());
 
   it('requires a session', async () => {
-    await http().get('/api/v1/lists').expect(401);
-    await http().get('/api/v1/settings/lists').expect(401);
+    for (const path of ['/api/v1/lists', '/api/v1/settings/lists']) {
+      const response = await http().get(path).expect(401);
+      expect(response.body).toMatchObject({ statusCode: 401 });
+    }
   });
 
   it('creates a trimmed list and rejects invalid or unexpected fields', async () => {
@@ -294,10 +296,11 @@ describe('Lists API (e2e)', () => {
       .delete(`/api/v1/lists/${list.id}`)
       .set('Cookie', ada.cookie)
       .expect(204);
-    await http()
+    const deleted = await http()
       .get(`/api/v1/lists/${list.id}`)
       .set('Cookie', ada.cookie)
       .expect(404);
+    expect(deleted.body).toMatchObject({ statusCode: 404 });
   });
 
   it('stores list settings per user', async () => {

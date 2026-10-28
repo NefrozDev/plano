@@ -249,13 +249,15 @@ describe('ListDetailComponent', () => {
     expect(component.addingTo()).toBeNull();
   });
 
-  it('focuses the new entry input when it appears', async () => {
+  it('focuses the new entry input, named for screen readers, when it appears', async () => {
     await create();
 
     component.beginAdding('fresh');
     await render();
 
-    expect(document.activeElement).toBe(element.querySelector('.new-entry-input'));
+    const input = element.querySelector('.new-entry-input');
+    expect(document.activeElement).toBe(input);
+    expect(input?.getAttribute('aria-label')).toBe('Nouvel élément');
   });
 
   it('asks before deleting an entry when the setting says so', async () => {
@@ -315,6 +317,7 @@ describe('ListDetailComponent', () => {
       component.startDrag('fresh', 'milk');
       component.endDrag();
 
+      expect(component.dragged()).toBeNull();
       http.expectNone('/api/v1/lists/list-1/sections/fresh/order');
     });
 

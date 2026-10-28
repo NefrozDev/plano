@@ -166,17 +166,14 @@
               <p class="form-error" role="alert">{{ submissionError() }}</p>
             }
             <form [formGroup]="renameForm" (ngSubmit)="rename()">
-              <!-- In a native <dialog>, autofocus is the standard way to pick the field focused by showModal(). -->
-              <!-- eslint-disable @angular-eslint/template/no-autofocus -->
+              <!-- showModal() focuses the dialog's first focusable element: keep this field first. -->
               <input
                 class="form-control"
                 type="text"
                 maxlength="80"
                 formControlName="name"
                 aria-label="Nouveau nom du groupe"
-                autofocus
               />
-              <!-- eslint-enable @angular-eslint/template/no-autofocus -->
               <div class="dialog-actions">
                 <button
                   class="secondary-button"
