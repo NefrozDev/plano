@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { apiCredentialsInterceptor } from './core/http/api-credentials.interceptor';
+import { provideI18n } from './core/i18n/i18n.providers';
 import {
   BrowserStoragePlanoDataAdapter,
   PLANO_DATA_ADAPTER,
@@ -15,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection(),
     provideHttpClient(withInterceptors([apiCredentialsInterceptor])),
     provideRouter(routes),
+    provideI18n(),
     BrowserStoragePlanoDataAdapter,
     {
       provide: PLANO_DATA_ADAPTER,

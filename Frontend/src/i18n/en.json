@@ -1,0 +1,9 @@
+{
+  "nav": {
+    "label": "Main navigation",
+    "home": "Home",
+    "agenda": "Calendar",
+    "lists": "Lists",
+    "objectives": "Goals"
+  }
+}

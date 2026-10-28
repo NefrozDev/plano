@@ -1,0 +1,9 @@
+{
+  "nav": {
+    "label": "Navigation principale",
+    "home": "Accueil",
+    "agenda": "Agenda",
+    "lists": "Liste",
+    "objectives": "Objectifs"
+  }
+}

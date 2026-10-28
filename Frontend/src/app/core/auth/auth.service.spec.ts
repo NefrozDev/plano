@@ -15,6 +15,8 @@ describe('AuthService', () => {
     lastName: 'Lovelace',
     username: 'ada',
     email: 'ada@example.com',
+    locale: 'fr',
+    avatarVersion: null,
   };
 
   beforeEach(() => {
@@ -95,6 +97,18 @@ describe('AuthService', () => {
     expect(restored).toBeNull();
     expect(service.user()).toBeNull();
     expect(service.status()).toBe('anonymous');
+  });
+
+  it('replaces the signed-in user with a fresher copy, never signs anyone in', () => {
+    service.updateUser({ ...user, locale: 'de' });
+    expect(service.user()).toBeNull();
+
+    service.login({ username: 'ada', password: 'password123' }).subscribe();
+    http.expectOne('/api/v1/auth/login').flush(user);
+    service.updateUser({ ...user, locale: 'de', avatarVersion: 7 });
+
+    expect(service.user()).toEqual({ ...user, locale: 'de', avatarVersion: 7 });
+    expect(service.status()).toBe('authenticated');
   });
 
   it('clears its in-memory session after a successful logout', () => {

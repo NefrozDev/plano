@@ -1,10 +1,12 @@
 import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthUser } from '../../../core/auth/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
+import { LanguageService } from '../../../core/i18n/language.service';
 import { RegisterComponent } from './register.component';
 
 describe('RegisterComponent', () => {
@@ -18,12 +20,16 @@ describe('RegisterComponent', () => {
     lastName: 'Lovelace',
     username: 'ada',
     email: 'ada@example.com',
+    locale: 'fr',
+    avatarVersion: null,
   };
 
   beforeEach(async () => {
     auth = {
       register: vi.fn().mockName('AuthService.register'),
     };
+    // LanguageService follows the signed-in user's language.
+    Object.assign(auth, { user: signal<AuthUser | null>(null) });
     await TestBed.configureTestingModule({
       imports: [RegisterComponent],
       providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
@@ -112,9 +118,28 @@ describe('RegisterComponent', () => {
       email: 'ada@example.com',
       password: 'password123',
       acceptedTerms: true,
+      // The account starts in the language the page was shown in.
+      locale: 'fr',
     });
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith('/groups');
+  });
+
+  it('registers in the language currently shown', async () => {
+    // Keeps the choice out of this browser's storage, which other specs share.
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => undefined);
+    try {
+      await TestBed.inject(LanguageService).use('de');
+      auth.register.mockReturnValue(of(user));
+      vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+      fillValidForm();
+
+      component.submit();
+
+      expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({ locale: 'de' }));
+    } finally {
+      setItem.mockRestore();
+    }
   });
 
   it('does not submit twice while registration is pending', () => {

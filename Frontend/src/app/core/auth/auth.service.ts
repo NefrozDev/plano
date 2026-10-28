@@ -62,6 +62,11 @@ export class AuthService {
       .pipe(tap(() => this.setAnonymous()));
   }
 
+  /** Applies a fresher copy of the signed-in user, e.g. after a profile change. */
+  updateUser(user: AuthUser): void {
+    if (this.userState()) this.userState.set(user);
+  }
+
   private setAuthenticated(user: AuthUser): void {
     this.userState.set(user);
     this.statusState.set('authenticated');

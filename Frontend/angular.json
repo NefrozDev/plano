@@ -109,7 +109,8 @@
             "runner": "vitest",
             "browsers": [
               "chromiumHeadless"
-            ]
+            ],
+            "providersFile": "src/test-providers.ts"
           }
         },
         "lint": {

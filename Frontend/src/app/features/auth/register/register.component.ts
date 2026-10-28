@@ -10,6 +10,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
+import { LanguageService } from '../../../core/i18n/language.service';
 import {
   TOO_MANY_ATTEMPTS_MESSAGE,
   UNEXPECTED_ERROR_MESSAGE,
@@ -49,6 +50,7 @@ export class RegisterComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly language = inject(LanguageService);
 
   readonly form = this.formBuilder.nonNullable.group(
     {
@@ -126,6 +128,7 @@ export class RegisterComponent {
         email: value.email.trim().toLowerCase(),
         password: value.password,
         acceptedTerms: value.acceptedTerms,
+        locale: this.language.active(),
       })
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
