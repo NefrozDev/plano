@@ -42,6 +42,7 @@ describe('ListsController', () => {
       'addSection',
       'renameSection',
       'removeSection',
+      'reorderSections',
       'addEntry',
       'reorderEntries',
       'updateEntry',
@@ -124,6 +125,13 @@ describe('ListsController', () => {
       service: 'content',
       method: 'removeSection',
       args: [LIST, SECTION, USER],
+    },
+    {
+      handler: 'reorderSections',
+      call: (c) => c.reorderSections(USER, LIST, { sectionIds: [SECTION] }),
+      service: 'content',
+      method: 'reorderSections',
+      args: [LIST, USER, { sectionIds: [SECTION] }],
     },
     {
       handler: 'addEntry',

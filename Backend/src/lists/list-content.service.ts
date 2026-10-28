@@ -14,6 +14,7 @@ import type {
   CreateEntryDto,
   CreateSectionDto,
   ReorderEntriesDto,
+  ReorderSectionsDto,
   UpdateEntryDto,
   UpdateSectionDto,
 } from './dto/section-entry.dto';
@@ -24,6 +25,16 @@ import { ListSection } from './entities/list-section.entity';
 import { List } from './entities/list.entity';
 import { ListAccessService } from './list-access.service';
 import { toEntryResponse, toSectionResponse } from './list.mapper';
+
+/** True when `ids` names every row exactly once, in any order. */
+function isPermutation(ids: string[], rows: { id: string }[]): boolean {
+  const current = new Set(rows.map(({ id }) => id));
+  return (
+    ids.length === current.size &&
+    new Set(ids).size === ids.length &&
+    ids.every((id) => current.has(id))
+  );
+}
 
 /** Sections and entries: anyone who can edit the list (owner and editors). */
 @Injectable()
@@ -85,6 +96,26 @@ export class ListContentService {
         section.position = index;
       });
       await manager.save(remaining);
+    });
+  }
+
+  /** Takes every section id of the list exactly once, in the new order. */
+  async reorderSections(
+    listId: string,
+    userId: string,
+    { sectionIds }: ReorderSectionsDto,
+  ): Promise<void> {
+    await this.inTransaction(listId, userId, async (manager) => {
+      const sections = await manager.find(ListSection, { where: { listId } });
+      if (!isPermutation(sectionIds, sections)) {
+        throw new BadRequestException(
+          'L’ordre doit contenir chaque section de la liste une seule fois.',
+        );
+      }
+      for (const section of sections) {
+        section.position = sectionIds.indexOf(section.id);
+      }
+      await manager.save(sections);
     });
   }
 
@@ -152,12 +183,7 @@ export class ListContentService {
     await this.inTransaction(listId, userId, async (manager) => {
       await this.requireSection(manager, listId, sectionId);
       const entries = await manager.find(ListEntry, { where: { sectionId } });
-      const current = new Set(entries.map(({ id }) => id));
-      if (
-        entryIds.length !== current.size ||
-        new Set(entryIds).size !== entryIds.length ||
-        !entryIds.every((id) => current.has(id))
-      ) {
+      if (!isPermutation(entryIds, entries)) {
         throw new BadRequestException(
           'L’ordre doit contenir chaque élément de la section une seule fois.',
         );

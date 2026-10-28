@@ -199,6 +199,47 @@ describe('ListContentService', () => {
     }
   });
 
+  it('reorders the sections of a list from the complete list of their ids', async () => {
+    const pantry = await bed.content.addSection(list.id, bed.ada, {
+      name: 'Épicerie',
+      color: '#d85a9a',
+    });
+    const drinks = await bed.content.addSection(list.id, bed.ada, {
+      name: 'Boissons',
+      color: '#3264ed',
+    });
+    const sectionNames = async () =>
+      (await bed.lists.findOne(list.id, bed.ada)).sections.map(
+        ({ name }) => name,
+      );
+
+    await bed.content.reorderSections(list.id, bed.ada, {
+      sectionIds: [drinks.id, sectionId, pantry.id],
+    });
+    expect(await sectionNames()).toEqual(['Boissons', 'Frais', 'Épicerie']);
+
+    for (const sectionIds of [
+      [drinks.id, sectionId],
+      [drinks.id, sectionId, sectionId],
+      [drinks.id, sectionId, list.id],
+    ]) {
+      await expect(
+        bed.content.reorderSections(list.id, bed.ada, { sectionIds }),
+      ).rejects.toThrow(BadRequestException);
+    }
+    expect(await sectionNames()).toEqual(['Boissons', 'Frais', 'Épicerie']);
+
+    await bed.lists.addMember(list.id, bed.ada, {
+      userId: bed.bob,
+      role: 'viewer',
+    });
+    await expect(
+      bed.content.reorderSections(list.id, bed.bob, {
+        sectionIds: [sectionId, pantry.id, drinks.id],
+      }),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
   it('removes entries, and rejects ids from another list', async () => {
     const milk = await add('Lait');
     const other = await bed.lists.create(bed.ada, {

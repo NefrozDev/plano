@@ -238,6 +238,27 @@ describe('Lists API (e2e)', () => {
       .set('Cookie', ada.cookie)
       .send({ name: '  Produits frais  ' })
       .expect(204);
+    const sectionId = (url: string) => url.split('/').pop() as string;
+    await http()
+      .put(`/api/v1/lists/${list.id}/sections/order`)
+      .set('Cookie', ada.cookie)
+      .send({ sectionIds: [sectionId(pantry), sectionId(fresh)] })
+      .expect(204);
+    await http()
+      .put(`/api/v1/lists/${list.id}/sections/order`)
+      .set('Cookie', ada.cookie)
+      .send({ sectionIds: ['not-a-uuid'] })
+      .expect(400);
+    await http()
+      .get(`/api/v1/lists/${list.id}`)
+      .set('Cookie', ada.cookie)
+      .expect(200)
+      .expect((response) => {
+        expect(
+          (response.body as ListDetail).sections.map(({ name }) => name),
+        ).toEqual(['Épicerie', 'Produits frais']);
+      });
+
     await http().delete(pantry).set('Cookie', ada.cookie).expect(204);
     await http().delete(pantry).set('Cookie', ada.cookie).expect(404);
 

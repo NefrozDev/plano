@@ -2,6 +2,7 @@ import type {
   CreateEntryRequest,
   CreateSectionRequest,
   ReorderEntriesRequest,
+  ReorderSectionsRequest,
   UpdateEntryRequest,
   UpdateSectionRequest,
 } from '@plano/common';
@@ -80,4 +81,11 @@ export class ReorderEntriesDto implements ReorderEntriesRequest {
   @ArrayMaxSize(1000)
   @IsUUID('all', { each: true })
   entryIds!: string[];
+}
+
+export class ReorderSectionsDto implements ReorderSectionsRequest {
+  @IsArray()
+  @ArrayMaxSize(200)
+  @IsUUID('all', { each: true })
+  sectionIds!: string[];
 }

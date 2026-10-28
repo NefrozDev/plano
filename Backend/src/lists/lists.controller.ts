@@ -32,6 +32,7 @@ import {
   CreateEntryDto,
   CreateSectionDto,
   ReorderEntriesDto,
+  ReorderSectionsDto,
   UpdateEntryDto,
   UpdateSectionDto,
 } from './dto/section-entry.dto';
@@ -100,6 +101,16 @@ export class ListsController {
     @Body() details: CreateSectionDto,
   ): Promise<ListSection> {
     return this.content.addSection(listId, userId, details);
+  }
+
+  @Put(':listId/sections/order')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  reorderSections(
+    @CurrentUser('id') userId: string,
+    @ListId() listId: string,
+    @Body() order: ReorderSectionsDto,
+  ): Promise<void> {
+    return this.content.reorderSections(listId, userId, order);
   }
 
   @Patch(':listId/sections/:sectionId')

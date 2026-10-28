@@ -128,6 +128,10 @@ export interface ReorderEntriesRequest {
   entryIds: string[];
 }
 
+export interface ReorderSectionsRequest {
+  sectionIds: string[];
+}
+
 export interface AddListMemberRequest {
   userId: string;
   role: ListMemberRole;
