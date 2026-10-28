@@ -42,6 +42,20 @@ Keep these root commands working when package scripts change.
 - Use a global `ValidationPipe` with `whitelist`, `forbidNonWhitelisted`, and `transform` enabled.
 - Never commit `.env`. Maintain a safe `.env.example` containing names and non-secret defaults.
 
+## Domain rules
+
+- A user can belong to several groups (at most 20); every group route except create and join takes `:groupId`, and a group the caller is not in answers 404.
+- "Contacts" are a user's friends plus the members of all their groups (`ContactsService`, `GET /contacts`). Anything that shares or invites (list members, event participants) must go through contacts, so unfriending or leaving a group revokes access.
+- Friendships are mutual: one `friendships` row per pair (unique index on the unordered pair), accepted by the recipient. User search is a capped username prefix match that never returns e-mails.
+- Profile pictures live in `users.avatar` (bytea, `select: false`). The type is read from the file's first bytes, never from the client. URLs carry `?v=avatarVersion` so they can be cached forever.
+
+## Frontend i18n
+
+- Transloco translates at runtime. `Frontend/src/i18n/fr.json` is the source language; `en`, `nl`, `es`, `de` and `it` must get every new key in the same change (each file is a lazy chunk with a hashed name).
+- Templates use the `transloco` pipe; TypeScript uses `TranslocoService.translate()` at call time. Language names stay in their own language.
+- The language follows the account (`users.locale`); before sign-in it is this browser's last choice, then the browser languages, then French.
+- Every TestBed loads the French texts through the unit-test `providersFile` (`src/test-providers.ts`), so specs assert French strings.
+
 ## Fresh NestJS scaffold checklist
 
 When creating a new backend in an existing repository:
@@ -118,6 +132,9 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 - Backend tests run with Vitest (`vitest.config.mts`, `vitest.config.e2e.mts`). Vitest compiles TypeScript with esbuild, which drops the decorator metadata Nest's dependency injection needs, so both configs compile through SWC (`unplugin-swc`). The e2e config spreads the unit one: `mergeConfig` would concatenate the `include` arrays and run both suites.
 - Under Vitest the code runs as ES modules: `vi.spyOn` cannot replace a named import such as `scrypt` from `node:crypto`. Use `vi.mock()` with `importOriginal` instead (see `password.service.spec.ts`).
 - Frontend unit tests run with Vitest in browser mode (headless Chromium through Playwright, `@angular/build:unit-test`), not jsdom: specs rely on `<dialog>.showModal()`, `navigator.clipboard` and real layout. Run `npx playwright install chromium` once per machine. Zone's `fakeAsync`/`tick` do not work under Vitest; use `vi.useFakeTimers()` and `vi.advanceTimersByTime()`.
+- Global styles scoped under a component tag (e.g. `app-list-detail .entry-name-editor`) do not match in specs: the TestBed root is not that tag. Wrap the rendered element in a temporary element of that tag to test them.
+- `toObservable()` emits from an effect, which runs on change detection: call `fixture.detectChanges()` after changing the signal before waiting on a debounce.
+- ES module exports cannot be spied on in frontend specs either: inject the dependency (e.g. `AVATAR_RESIZER`) so specs can provide a fake.
 - TypeScript 6 no longer loads every installed `@types/*` package: `types` defaults to `[]`. `Backend/tsconfig.json` lists `node` and `vitest/globals`; `tsconfig.build.json` narrows it to `node` so production code cannot use test globals.
 
 ## Completion checklist
