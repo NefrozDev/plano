@@ -1,4 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type {
   CreateListRequest,
   ListDetail,
@@ -8,17 +9,21 @@ import type {
   ListSection,
   ListSettings,
   ListSummary,
+  LiveEvent,
   UpdateEntryRequest,
   UpdateListRequest,
   UpdateListSettingsRequest,
 } from '@plano/common';
 import { Observable, firstValueFrom } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { httpErrorMessage } from '../../core/http/http-error-message';
+import { LiveUpdatesService } from '../../core/live/live-updates.service';
 import { ListsApiService } from './lists-api.service';
 
 export type { ListIcon, ListSettings, ListSummary } from '@plano/common';
 
 const FAILURE_MESSAGE = 'L’action a échoué. Veuillez réessayer.';
+export const REMOVED_MESSAGE = 'Cette liste a été supprimée ou ne vous est plus partagée.';
 
 /** Recomputes the counts of a list from its entries. */
 function withCounts(detail: ListDetail): ListDetail {
@@ -45,6 +50,8 @@ export class ListsStore {
   private readonly settingsState = signal<ListSettings | null>(null);
   private readonly remindersState = signal<readonly ListReminder[]>([]);
   private remindersRequested = false;
+  /** Whether a screen shows the overview, so live changes refresh it. */
+  private listsRequested = false;
 
   readonly lists = this.listsState.asReadonly();
   /** The list currently open in the detail screen. */
@@ -57,7 +64,14 @@ export class ListsStore {
   /** Message of the last failed request, until cleared. */
   readonly error = signal('');
 
+  constructor() {
+    inject(LiveUpdatesService)
+      .events.pipe(takeUntilDestroyed())
+      .subscribe((event) => void this.applyLive(event));
+  }
+
   async loadLists(): Promise<void> {
+    this.listsRequested = true;
     this.loading.set(true);
     await Promise.all([
       this.run(this.api.findAll(), (lists) => this.listsState.set(lists)),
@@ -286,6 +300,42 @@ export class ListsStore {
 
   clearError(): void {
     this.error.set('');
+  }
+
+  /**
+   * Someone (maybe this user on another device) changed a list: reload what is
+   * on screen, quietly. A list that cannot be read any more counts as removed.
+   */
+  private async applyLive(event: LiveEvent): Promise<void> {
+    if (event.type === 'list.removed') {
+      this.forget(event.listId);
+      return;
+    }
+    if (this.detailState()?.id === event.listId) {
+      try {
+        const detail = await firstValueFrom(this.api.findOne(event.listId));
+        if (this.detailState()?.id === event.listId) this.detailState.set(detail);
+      } catch (error) {
+        if (error instanceof HttpErrorResponse && error.status === 404) this.forget(event.listId);
+      }
+    }
+    if (this.listsRequested) {
+      try {
+        this.listsState.set(await firstValueFrom(this.api.findAll()));
+      } catch {
+        // The overview stays as it was; its next load catches up.
+      }
+    }
+    this.refreshReminders();
+  }
+
+  private forget(listId: string): void {
+    this.listsState.update((lists) => lists.filter((list) => list.id !== listId));
+    if (this.detailState()?.id === listId) {
+      this.detailState.set(null);
+      this.error.set(REMOVED_MESSAGE);
+    }
+    this.refreshReminders();
   }
 
   private refreshReminders(): void {

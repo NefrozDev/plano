@@ -1,7 +1,9 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
-import { ListsStore } from './lists.store';
+import { AuthService } from '../../core/auth/auth.service';
+import { FakeEventSource } from '../../testing/fake-event-source';
+import { ListsStore, REMOVED_MESSAGE } from './lists.store';
 import { MEMBER_ID, entry, listDetail, listSettings, listSummary } from './testing/lists-fixtures';
 
 describe('ListsStore', () => {
@@ -310,6 +312,80 @@ describe('ListsStore', () => {
     http.expectOne('/api/v1/lists/reminders').flush([]);
     await settle();
     expect(store.reminders()).toEqual([]);
+  });
+
+  describe('live updates', () => {
+    /** The signed-in app's stream (LiveUpdatesService opens it on sign-in). */
+    async function signedInStream(): Promise<FakeEventSource> {
+      FakeEventSource.created = [];
+      TestBed.inject(AuthService).login({ username: 'ada', password: 'secret' }).subscribe();
+      http.expectOne('/api/v1/auth/login').flush({ id: 'user-1', locale: 'fr', avatarVersion: null });
+      TestBed.tick();
+      return FakeEventSource.latest() as FakeEventSource;
+    }
+
+    it('reloads the open list and the overview when they change elsewhere', async () => {
+      const stream = await signedInStream();
+      const loading = store.loadLists();
+      http.expectOne('/api/v1/lists').flush([listSummary()]);
+      http.expectOne('/api/v1/settings/lists').flush(listSettings());
+      await loading;
+      const opening = store.open('list-1');
+      http.expectOne('/api/v1/lists/list-1').flush(listDetail());
+      await opening;
+
+      stream.emit({ type: 'list.changed', listId: 'list-1' });
+      await settle();
+      http.expectOne('/api/v1/lists/list-1').flush(listDetail({ name: 'Courses du week-end' }));
+      await settle();
+      http.expectOne('/api/v1/lists').flush([listSummary({ name: 'Courses du week-end' })]);
+      await settle();
+
+      expect(store.detail()?.name).toBe('Courses du week-end');
+      expect(store.lists()[0].name).toBe('Courses du week-end');
+      expect(store.error()).toBe('');
+      // Reminders were never loaded: nothing to refresh.
+      http.expectNone('/api/v1/lists/reminders');
+    });
+
+    it('reloads only what is on screen', async () => {
+      const stream = await signedInStream();
+      await openList();
+
+      stream.emit({ type: 'list.changed', listId: 'list-2' });
+      await settle();
+
+      // Another list, and the overview was never shown: no request at all.
+      http.expectNone('/api/v1/lists/list-1');
+      http.expectNone('/api/v1/lists');
+      expect(store.detail()?.id).toBe('list-1');
+    });
+
+    it('leaves a list removed elsewhere, with an explanation', async () => {
+      const stream = await signedInStream();
+      await openList();
+
+      stream.emit({ type: 'list.removed', listId: 'list-1' });
+      await settle();
+
+      expect(store.detail()).toBeNull();
+      expect(store.error()).toBe(REMOVED_MESSAGE);
+    });
+
+    it('treats a changed list it can no longer read as removed', async () => {
+      const stream = await signedInStream();
+      await openList();
+
+      stream.emit({ type: 'list.changed', listId: 'list-1' });
+      await settle();
+      http
+        .expectOne('/api/v1/lists/list-1')
+        .flush({ message: 'Liste introuvable.' }, { status: 404, statusText: 'Not Found' });
+      await settle();
+
+      expect(store.detail()).toBeNull();
+      expect(store.error()).toBe(REMOVED_MESSAGE);
+    });
   });
 
   it('turns network failures into a readable message', async () => {
