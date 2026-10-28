@@ -53,6 +53,49 @@ describe('AgendaEventFormComponent', () => {
       expect(element().querySelector('h1')?.textContent).toBe('Nouvel événement');
     });
 
+    it('picks the calendar from a dialog listing each calendar with its color', async () => {
+      await harness.navigateByUrl('/agenda/new?date=2026-10-20');
+      const row = element().querySelector('.calendar-row') as HTMLButtonElement;
+      const dialog = element().querySelector('dialog') as HTMLDialogElement;
+      expect(row.textContent).toContain('Personnel');
+      expect(dialog.open).toBe(false);
+
+      row.click();
+      harness.detectChanges();
+      expect(dialog.open).toBe(true);
+      const options = Array.from(dialog.querySelectorAll<HTMLElement>('.calendar-option'));
+      // A probe element turns each hex color into the rgb() form computed styles report.
+      const probe = document.body.appendChild(document.createElement('i'));
+      const rgb = (color: string): string => {
+        probe.style.color = color;
+        return getComputedStyle(probe).color;
+      };
+      expect(
+        options.map((option) => ({
+          name: option.textContent?.trim(),
+          dot: getComputedStyle(option.querySelector('.dot') as HTMLElement).backgroundColor,
+        })),
+      ).toEqual(store.calendars().map((calendar) => ({ name: calendar.name, dot: rgb(calendar.color) })));
+      probe.remove();
+
+      options.find((option) => option.textContent?.trim() === 'Travail')!.querySelector('input')!.click();
+      harness.detectChanges();
+      expect(form().form.controls.calendarId.value).toBe('travail');
+      expect(dialog.open).toBe(false);
+      expect(row.textContent).toContain('Travail');
+      expect(row.querySelector('.dot')).not.toBeNull();
+    });
+
+    it('lets free-text fields start on the left while date and time values stay on the right', async () => {
+      await harness.navigateByUrl('/agenda/new?date=2026-10-20');
+      const align = (selector: string): string =>
+        getComputedStyle(element().querySelector(selector) as HTMLElement).textAlign;
+
+      expect(align('input[formcontrolname="location"]')).toBe('left');
+      expect(align('input[formcontrolname="date"]')).toBe('right');
+      expect(align('input[formcontrolname="startTime"]')).toBe('right');
+    });
+
     it('starts at the next full hour today and skips hidden calendars', async () => {
       store.toggleCalendar('personnel');
       await harness.navigateByUrl('/agenda/new');
@@ -212,7 +255,7 @@ describe('AgendaEventFormComponent', () => {
 
     it('picks participants in the overlay', async () => {
       await harness.navigateByUrl('/agenda/new');
-      (element().querySelector('.link-row') as HTMLButtonElement).click();
+      (element().querySelector('.participants-row') as HTMLButtonElement).click();
       harness.detectChanges();
       const picker = element().querySelector('app-agenda-participants-picker') as HTMLElement;
       expect(Array.from(picker.querySelectorAll('h3')).map((title) => title.textContent)).toEqual([
@@ -224,7 +267,7 @@ describe('AgendaEventFormComponent', () => {
       harness.detectChanges();
 
       expect(form().participantIds()).toEqual(['camille']);
-      expect(element().querySelector('.link-row .avatar')?.textContent).toBe('C');
+      expect(element().querySelector('.participants-row .avatar')?.textContent).toBe('C');
     });
   });
 

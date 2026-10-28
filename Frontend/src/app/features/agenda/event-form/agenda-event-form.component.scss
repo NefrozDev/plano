@@ -8,9 +8,19 @@
 .row { display: flex; width: 100%; min-height: 2.9rem; gap: 1rem; align-items: center; justify-content: space-between; padding: 0; border: 0; border-bottom: 1px solid #edf0f5; background: transparent; color: var(--color-text); font: inherit; font-size: .8rem; text-align: left; }
 .row > span:first-child { font-weight: 650; }
 .row input:not(.toggle), .row select { min-width: 0; max-width: 60%; border: 0; outline: 0; background: transparent; color: #687187; font: inherit; font-size: .78rem; text-align: right; }
+// Free-text fields take the rest of the row and read left to right, unlike the short date/time values.
+.row input:is(:not([type]), [type='text'], [type='url']) { flex: 1; max-width: none; text-align: left; }
 .row input:focus-visible, .row select:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-focus) 60%, transparent); border-radius: .3rem; }
 .link-row { cursor: pointer; }
 .value { color: #687187; font-size: .78rem; }
+.calendar-row .value { display: flex; gap: .45rem; align-items: center; }
+.dot { width: .65rem; height: .65rem; flex: none; border-radius: 50%; }
+.calendar-options { display: grid; margin: 0; padding: 0; border: 0; }
+.calendar-option { position: relative; display: grid; min-height: 2.8rem; grid-template-columns: auto 1fr auto; gap: .7rem; align-items: center; padding: 0 .5rem; border-radius: .6rem; cursor: pointer; font-size: .84rem; font-weight: 600; text-align: left; }
+.calendar-option:hover { background: #f4f6fa; }
+.calendar-option input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.calendar-option:has(input:checked)::after { width: .55rem; height: .3rem; border-bottom: 2px solid var(--color-primary); border-left: 2px solid var(--color-primary); content: ''; transform: translateY(-.1rem) rotate(-45deg); }
+.calendar-option:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: -3px; }
 .toggle { position: relative; width: 2.15rem; height: 1.25rem; margin: 0; border-radius: 1rem; background: #dfe4ed; cursor: pointer; appearance: none; transition: background-color 180ms ease; }
 .toggle::after { position: absolute; top: .15rem; left: .15rem; width: .95rem; height: .95rem; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgb(20 30 50 / 22%); content: ''; transition: transform 180ms ease; }
 .toggle:checked { background: #3264ed; }

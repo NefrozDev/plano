@@ -37,14 +37,29 @@
       @if (chronologyError()) {
         <p class="field-error" role="alert">La fin doit être après le début.</p>
       }
-      <label class="row">
+      <button class="row link-row calendar-row" type="button" aria-haspopup="dialog" (click)="calendarPickerOpen.set(true)">
         <span>Calendrier</span>
-        <select formControlName="calendarId">
-          @for (calendar of calendars(); track calendar.id) {<option [value]="calendar.id">● {{ calendar.name }}</option>}
-        </select>
-      </label>
+        <span class="value">
+          @if (selectedCalendar(); as calendar) {
+            <i class="dot" [style.background]="calendar.color" aria-hidden="true"></i>{{ calendar.name }}
+          }
+          ›
+        </span>
+      </button>
+      <app-modal-dialog heading="Calendrier" [open]="calendarPickerOpen()" (closed)="calendarPickerOpen.set(false)">
+        <fieldset class="calendar-options">
+          <legend class="visually-hidden">Calendrier de l’événement</legend>
+          @for (calendar of calendars(); track calendar.id) {
+            <label class="calendar-option">
+              <input type="radio" formControlName="calendarId" [value]="calendar.id" (click)="calendarPickerOpen.set(false)" />
+              <i class="dot" [style.background]="calendar.color" aria-hidden="true"></i>
+              <span>{{ calendar.name }}</span>
+            </label>
+          }
+        </fieldset>
+      </app-modal-dialog>
       <label class="row"><span>Lieu</span><input formControlName="location" maxlength="120" placeholder="Ajouter un lieu" /></label>
-      <button class="row link-row" type="button" (click)="pickerOpen.set(true)">
+      <button class="row link-row participants-row" type="button" (click)="pickerOpen.set(true)">
         <span>Participants</span>
         @if (people().length) {
           <app-avatar-stack [people]="people()" />

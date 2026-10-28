@@ -7,9 +7,10 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import type { AgendaAttachment, AgendaContact, EventRecurrence, IsoDate } from '@plano/common';
+import type { AgendaAttachment, AgendaCalendar, AgendaContact, EventRecurrence, IsoDate } from '@plano/common';
 import { createId, hourTime } from '../../../core/time/dates';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { AgendaEventDraft, AgendaStore } from '../agenda.store';
 import {
@@ -43,7 +44,13 @@ function webUrl(control: AbstractControl<string>): ValidationErrors | null {
 /** Screens 5–6, used both to create (`/agenda/new`) and to edit (`/agenda/events/:id/edit`). */
 @Component({
   selector: 'app-agenda-event-form',
-  imports: [ReactiveFormsModule, PageHeaderComponent, AvatarStackComponent, AgendaParticipantsPickerComponent],
+  imports: [
+    ReactiveFormsModule,
+    PageHeaderComponent,
+    AvatarStackComponent,
+    ModalDialogComponent,
+    AgendaParticipantsPickerComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-event-form.component.html',
   styleUrl: './agenda-event-form.component.scss',
@@ -65,6 +72,7 @@ export class AgendaEventFormComponent {
   readonly colors = EVENT_COLORS;
   readonly step = signal<1 | 2>(1);
   readonly pickerOpen = signal(false);
+  readonly calendarPickerOpen = signal(false);
   readonly advancedOpen = signal(false);
   readonly submitted = signal(false);
   readonly attachmentError = signal('');
@@ -129,6 +137,10 @@ export class AgendaEventFormComponent {
       if (minutesOfDay(end) > minutesOfDay(startTime)) this.form.controls.endTime.setValue(end);
     }
     this.lastStart = startTime;
+  }
+
+  selectedCalendar(): AgendaCalendar | undefined {
+    return this.store.calendar(this.form.controls.calendarId.value);
   }
 
   setParticipants(ids: string[]): void {
