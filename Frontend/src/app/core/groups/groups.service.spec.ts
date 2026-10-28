@@ -22,13 +22,21 @@ describe('GroupsService', () => {
 
   afterEach(() => http.verify());
 
-  it('loads the current user group with credentials', () => {
-    service.getMine().subscribe((group) => expect(group).toBeNull());
+  it('loads every group of the user, or one by id, with credentials', () => {
+    const loaded: unknown[] = [];
+    service.getAll().subscribe((groups) => loaded.push(groups));
+    service.get('group-1').subscribe((group) => loaded.push(group));
 
-    const request = http.expectOne('/api/v1/groups/me');
-    expect(request.request.method).toBe('GET');
-    expect(request.request.withCredentials).toBe(true);
-    request.flush(null);
+    const all = http.expectOne('/api/v1/groups');
+    expect(all.request.method).toBe('GET');
+    expect(all.request.withCredentials).toBe(true);
+    all.flush([]);
+    const one = http.expectOne('/api/v1/groups/group-1');
+    expect(one.request.method).toBe('GET');
+    expect(one.request.withCredentials).toBe(true);
+    one.flush({ id: 'group-1', members: [] });
+
+    expect(loaded).toEqual([[], { id: 'group-1', members: [] }]);
   });
 
   it('creates a group with credentials', () => {
@@ -56,35 +64,35 @@ describe('GroupsService', () => {
     expect(request.request.withCredentials).toBe(true);
     request.flush({ members: [] });
 
-    service.update('Nouveau nom').subscribe();
-    request = http.expectOne('/api/v1/groups/me');
+    service.update('group-1', 'Nouveau nom').subscribe();
+    request = http.expectOne('/api/v1/groups/group-1');
     expect(request.request.method).toBe('PATCH');
     expect(request.request.body).toEqual({ name: 'Nouveau nom' });
     request.flush({ members: [] });
 
-    service.rotateInviteCode().subscribe();
-    request = http.expectOne('/api/v1/groups/me/invite-code');
+    service.rotateInviteCode('group-1').subscribe();
+    request = http.expectOne('/api/v1/groups/group-1/invite-code');
     expect(request.request.method).toBe('POST');
     request.flush({ members: [] });
 
-    service.transferOwnership('user-2').subscribe();
-    request = http.expectOne('/api/v1/groups/me/owner');
+    service.transferOwnership('group-1', 'user-2').subscribe();
+    request = http.expectOne('/api/v1/groups/group-1/owner');
     expect(request.request.method).toBe('PATCH');
     expect(request.request.body).toEqual({ userId: 'user-2' });
     request.flush({ members: [] });
 
-    service.removeMember('user-2').subscribe();
-    request = http.expectOne('/api/v1/groups/me/members/user-2');
+    service.removeMember('group-1', 'user-2').subscribe();
+    request = http.expectOne('/api/v1/groups/group-1/members/user-2');
     expect(request.request.method).toBe('DELETE');
     request.flush(null);
 
-    service.leave().subscribe();
-    request = http.expectOne('/api/v1/groups/me/leave');
+    service.leave('group-1').subscribe();
+    request = http.expectOne('/api/v1/groups/group-1/leave');
     expect(request.request.method).toBe('POST');
     request.flush(null);
 
-    service.delete().subscribe();
-    request = http.expectOne('/api/v1/groups/me');
+    service.delete('group-1').subscribe();
+    request = http.expectOne('/api/v1/groups/group-1');
     expect(request.request.method).toBe('DELETE');
     request.flush(null);
   });

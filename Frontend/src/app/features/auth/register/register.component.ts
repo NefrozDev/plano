@@ -129,7 +129,7 @@ export class RegisterComponent {
       })
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
-        next: () => void this.router.navigateByUrl('/group/setup'),
+        next: () => void this.router.navigateByUrl('/groups'),
         error: (error: unknown) =>
           this.submissionError.set(this.registrationErrorMessage(error)),
       });

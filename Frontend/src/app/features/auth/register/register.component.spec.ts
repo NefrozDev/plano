@@ -114,7 +114,7 @@ describe('RegisterComponent', () => {
       acceptedTerms: true,
     });
     expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith('/group/setup');
+    expect(navigate).toHaveBeenCalledWith('/groups');
   });
 
   it('does not submit twice while registration is pending', () => {

@@ -13,7 +13,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ClipboardService } from '../../../core/browser/clipboard.service';
@@ -26,42 +26,32 @@ import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component'
 import { ToastComponent } from '../../../shared/ui/toast.component';
 import { AuthShellComponent } from '../../auth/auth-shell/auth-shell.component';
 
-type SetupMode = 'choice' | 'create' | 'join';
 type GroupDialog = 'rename' | 'danger';
 
+/** One group (`/groups/:groupId`): invite code, members, and owner or member actions. */
 @Component({
-  selector: 'app-group-setup',
+  selector: 'app-group-detail',
   imports: [
     AuthShellComponent,
     ModalDialogComponent,
     ReactiveFormsModule,
+    RouterLink,
     ToastComponent,
   ],
-  templateUrl: './group-setup.component.html',
-  styleUrl: './group-setup.component.scss',
+  templateUrl: './group-detail.component.html',
+  styleUrl: '../groups.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GroupSetupComponent implements OnInit {
+export class GroupDetailComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly groups = inject(GroupsService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly confirm = inject(ConfirmService);
   private readonly clipboard = inject(ClipboardService);
+  private readonly groupId = inject(ActivatedRoute).snapshot.paramMap.get('groupId') ?? '';
   private copiedTimer?: ReturnType<typeof setTimeout>;
 
-  readonly form = this.formBuilder.nonNullable.group({
-    name: [
-      '',
-      [Validators.required, Validators.minLength(2), Validators.maxLength(80)],
-    ],
-  });
-  readonly joinForm = this.formBuilder.nonNullable.group({
-    inviteCode: [
-      '',
-      [Validators.required, Validators.pattern(/^[A-Za-z0-9_-]{8}$/)],
-    ],
-  });
   readonly renameForm = this.formBuilder.nonNullable.group({
     name: [
       '',
@@ -71,7 +61,6 @@ export class GroupSetupComponent implements OnInit {
 
   readonly group = signal<GroupDetails | null>(null);
   readonly loading = signal(true);
-  readonly mode = signal<SetupMode>('choice');
   /** Open management modal: rename, or delete/leave depending on the role. */
   readonly dialog = signal<GroupDialog | null>(null);
   readonly submissionError = signal('');
@@ -80,11 +69,6 @@ export class GroupSetupComponent implements OnInit {
   readonly linkCopied = signal(false);
   readonly isOwner = computed(() => this.group()?.role === 'owner');
   readonly currentUserId = computed(() => this.auth.user()?.id ?? '');
-  readonly showCreateForm = computed(() => this.mode() === 'create');
-  readonly submitting = computed(() => this.busyAction() === 'create');
-
-  readonly submitted = signal(false);
-  readonly joinSubmitted = signal(false);
 
   constructor() {
     inject(DestroyRef).onDestroy(() => clearTimeout(this.copiedTimer));
@@ -98,33 +82,13 @@ export class GroupSetupComponent implements OnInit {
     this.loading.set(true);
     this.submissionError.set('');
     this.groups
-      .getMine()
+      .get(this.groupId)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (group) => this.setGroup(group),
         error: (error: unknown) =>
           this.submissionError.set(this.errorMessage(error)),
       });
-  }
-
-  openCreateForm(): void {
-    this.clearFeedback();
-    this.mode.set('create');
-  }
-
-  closeCreateForm(): void {
-    this.mode.set('choice');
-    this.submissionError.set('');
-  }
-
-  showJoinInfo(): void {
-    this.clearFeedback();
-    this.mode.set('join');
-  }
-
-  closeJoinForm(): void {
-    this.mode.set('choice');
-    this.submissionError.set('');
   }
 
   openDialog(dialog: GroupDialog): void {
@@ -140,30 +104,8 @@ export class GroupSetupComponent implements OnInit {
     this.submissionError.set('');
   }
 
-  skip(): void {
-    void this.router.navigateByUrl('/');
-  }
-
-  submit(): void {
-    this.submitted.set(true);
-    const name = this.normalizeControl(this.form.controls.name);
-    if (this.form.invalid || this.busyAction()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    this.runAction('create', this.groups.create({ name }), (group) => this.enterGroup(group));
-  }
-
-  join(): void {
-    this.joinSubmitted.set(true);
-    const inviteCode = this.normalizeControl(this.joinForm.controls.inviteCode, (value) =>
-      value.trim().toUpperCase(),
-    );
-    if (this.joinForm.invalid || this.busyAction()) {
-      this.joinForm.markAllAsTouched();
-      return;
-    }
-    this.runAction('join', this.groups.join({ inviteCode }), (group) => this.enterGroup(group));
+  back(): void {
+    void this.router.navigateByUrl('/groups');
   }
 
   rename(): void {
@@ -172,7 +114,12 @@ export class GroupSetupComponent implements OnInit {
       this.renameForm.markAllAsTouched();
       return;
     }
-    this.runAction('rename', this.groups.update(name), (group) => this.setGroup(group), 'Nom modifié.');
+    this.runAction(
+      'rename',
+      this.groups.update(this.groupId, name),
+      (group) => this.setGroup(group),
+      'Nom modifié.',
+    );
   }
 
   async copyInviteCode(): Promise<void> {
@@ -196,7 +143,7 @@ export class GroupSetupComponent implements OnInit {
     if (!confirmed) return;
     this.runAction(
       'rotate',
-      this.groups.rotateInviteCode(),
+      this.groups.rotateInviteCode(this.groupId),
       (group) => this.setGroup(group),
       'Nouveau code généré.',
     );
@@ -211,7 +158,7 @@ export class GroupSetupComponent implements OnInit {
     if (!confirmed) return;
     this.runAction(
       `transfer-${member.id}`,
-      this.groups.transferOwnership(member.id),
+      this.groups.transferOwnership(this.groupId, member.id),
       (group) => this.setGroup(group),
       'Propriété transférée.',
     );
@@ -227,7 +174,7 @@ export class GroupSetupComponent implements OnInit {
     if (!confirmed) return;
     this.runAction(
       `remove-${member.id}`,
-      this.groups.removeMember(member.id),
+      this.groups.removeMember(this.groupId, member.id),
       () =>
         this.group.update((group) =>
           group ? { ...group, members: group.members.filter(({ id }) => id !== member.id) } : null,
@@ -237,11 +184,11 @@ export class GroupSetupComponent implements OnInit {
   }
 
   leaveGroup(): void {
-    this.runAction('leave', this.groups.leave(), () => this.setGroup(null), 'Vous avez quitté le groupe.');
+    this.runAction('leave', this.groups.leave(this.groupId), () => this.back());
   }
 
   deleteGroup(): void {
-    this.runAction('delete', this.groups.delete(), () => this.setGroup(null), 'Le groupe a été supprimé.');
+    this.runAction('delete', this.groups.delete(this.groupId), () => this.back());
   }
 
   memberName(member: GroupMember): string {
@@ -255,18 +202,9 @@ export class GroupSetupComponent implements OnInit {
     );
   }
 
-  private setGroup(group: GroupDetails | null): void {
+  private setGroup(group: GroupDetails): void {
     this.group.set(group);
-    if (group) {
-      this.renameForm.controls.name.setValue(group.name);
-      this.mode.set('choice');
-    }
-  }
-
-  /** Creating or joining a group completes the onboarding step. */
-  private enterGroup(group: GroupDetails): void {
-    this.setGroup(group);
-    void this.router.navigateByUrl('/');
+    this.renameForm.controls.name.setValue(group.name);
   }
 
   /**

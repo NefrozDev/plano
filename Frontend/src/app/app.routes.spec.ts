@@ -41,9 +41,11 @@ describe('app routes', () => {
 
     expect(guardsOf('login')).toEqual([guestGuard]);
     expect(guardsOf('register')).toEqual([guestGuard]);
-    for (const path of ['group/setup', 'agenda', 'objectives']) {
+    for (const path of ['groups', 'groups/:groupId', 'agenda', 'objectives']) {
       expect(guardsOf(path), path).toEqual([authenticatedGuard]);
     }
+    // The former single-group page now lands on the groups overview.
+    expect(routes.find((route) => route.path === 'group/setup')?.redirectTo).toBe('groups');
   });
 
   it('renders the dashboard and lists inside the shared, guarded phone shell', () => {

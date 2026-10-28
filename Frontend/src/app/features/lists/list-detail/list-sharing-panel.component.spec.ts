@@ -42,17 +42,21 @@ describe('ListSharingPanelComponent', () => {
 
   afterEach(() => http.verify());
 
-  it('lets the owner invite group mates who cannot see the list yet', async () => {
+  it('lets the owner invite mates from any group who cannot see the list yet, once each', async () => {
     await create(listDetail());
+    const cyd = { id: 'user-cyd', firstName: 'Cyd', lastName: 'Charisse', username: 'cyd' };
 
     panel.openInviteForm();
-    http.expectOne('/api/v1/groups/me').flush({
-      members: [
-        { id: OWNER_ID, firstName: 'Ada', lastName: 'Lovelace', username: 'ada' },
-        { id: MEMBER_ID, firstName: 'Bob', lastName: 'Martin', username: 'bob' },
-        { id: 'user-cyd', firstName: 'Cyd', lastName: 'Charisse', username: 'cyd' },
-      ],
-    });
+    http.expectOne('/api/v1/groups').flush([
+      {
+        members: [
+          { id: OWNER_ID, firstName: 'Ada', lastName: 'Lovelace', username: 'ada' },
+          { id: MEMBER_ID, firstName: 'Bob', lastName: 'Martin', username: 'bob' },
+          cyd,
+        ],
+      },
+      { members: [{ id: OWNER_ID, firstName: 'Ada', lastName: 'Lovelace', username: 'ada' }, cyd] },
+    ]);
     fixture.detectChanges();
 
     expect(panel.candidates().map(({ id }) => id)).toEqual(['user-cyd']);
@@ -73,7 +77,7 @@ describe('ListSharingPanelComponent', () => {
     await create(listDetail());
 
     panel.openInviteForm();
-    http.expectOne('/api/v1/groups/me').flush({ members: [{ id: MEMBER_ID }] });
+    http.expectOne('/api/v1/groups').flush([{ members: [{ id: MEMBER_ID }] }]);
     fixture.detectChanges();
 
     expect(element.querySelector('.sharing-hint')?.textContent).toContain('déjà accès');
@@ -85,13 +89,13 @@ describe('ListSharingPanelComponent', () => {
     const addMember = vi.spyOn(store, 'addMember');
 
     panel.openInviteForm();
-    http.expectOne('/api/v1/groups/me').flush(null);
+    http.expectOne('/api/v1/groups').flush([]);
     expect(panel.candidates()).toEqual([]);
     expect(panel.inviteUserId()).toBe('');
 
     panel.openInviteForm();
     http
-      .expectOne('/api/v1/groups/me')
+      .expectOne('/api/v1/groups')
       .flush({ message: 'Erreur' }, { status: 500, statusText: 'Server Error' });
     fixture.detectChanges();
     expect(panel.candidates()).toEqual([]);

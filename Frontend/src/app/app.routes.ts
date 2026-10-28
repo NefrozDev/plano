@@ -21,14 +21,25 @@ export const routes: Routes = [
       ),
     title: 'Créer un compte | Plano',
   },
+  // Former single-group page, still reached from older links.
+  { path: 'group/setup', redirectTo: 'groups' },
   {
-    path: 'group/setup',
+    path: 'groups',
     canActivate: [authenticatedGuard],
     loadComponent: () =>
-      import('./features/groups/group-setup/group-setup.component').then(
-        (component) => component.GroupSetupComponent,
+      import('./features/groups/groups-overview/groups-overview.component').then(
+        (component) => component.GroupsOverviewComponent,
       ),
-    title: 'Mon groupe | Plano',
+    title: 'Mes groupes | Plano',
+  },
+  {
+    path: 'groups/:groupId',
+    canActivate: [authenticatedGuard],
+    loadComponent: () =>
+      import('./features/groups/group-detail/group-detail.component').then(
+        (component) => component.GroupDetailComponent,
+      ),
+    title: 'Groupe | Plano',
   },
   {
     path: 'agenda',

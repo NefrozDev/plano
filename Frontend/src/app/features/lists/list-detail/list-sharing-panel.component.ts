@@ -36,7 +36,7 @@ export class ListSharingPanelComponent {
   );
   readonly inviteFormOpen = signal(false);
   readonly groupMembers = signal<readonly GroupMember[] | null>(null);
-  /** Group mates who cannot see the list yet. */
+  /** Mates from any of the user's groups who cannot see the list yet. */
   readonly candidates = computed(() =>
     (this.groupMembers() ?? []).filter(
       (member) => !this.list().members.some(({ id }) => id === member.id),
@@ -47,9 +47,11 @@ export class ListSharingPanelComponent {
 
   openInviteForm(): void {
     this.inviteFormOpen.set(true);
-    this.groups.getMine().subscribe({
-      next: (group) => {
-        this.groupMembers.set(group?.members ?? []);
+    this.groups.getAll().subscribe({
+      next: (groups) => {
+        // Someone sharing several groups with the user is offered once.
+        const mates = new Map(groups.flatMap(({ members }) => members).map((member) => [member.id, member]));
+        this.groupMembers.set([...mates.values()]);
         this.inviteUserId.set(this.candidates()[0]?.id ?? '');
       },
       error: () => this.groupMembers.set([]),
