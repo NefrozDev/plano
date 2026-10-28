@@ -1,8 +1,11 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import type { AgendaEvent } from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../../core/data/plano-data.adapter';
+import { personColor } from '../../core/people/people';
+import { CONTACTS, contact } from '../../testing/contacts';
 import { flushListReminders, providePlanoTesting, settle } from '../../testing/plano-testing';
-import { AgendaEventDraft, AgendaStore } from './agenda.store';
+import { AgendaEventDraft, AgendaStore, toAgendaContact } from './agenda.store';
 
 describe('AgendaStore', () => {
   let store: AgendaStore;
@@ -136,6 +139,42 @@ describe('AgendaStore', () => {
       store.update(created.id, draft({ participantIds: ['unknown', 'jules'] }));
       expect(store.event(created.id)?.participantIds).toEqual(['jules']);
       expect(store.contacts()).toEqual(contactsBefore);
+    });
+  });
+
+  describe('contacts', () => {
+    it('loads the invitable contacts and resolves participants from them first', async () => {
+      const http = TestBed.inject(HttpTestingController);
+      const loading = store.loadContacts();
+      http.expectOne('/api/v1/contacts').flush(CONTACTS);
+
+      await expect(loading).resolves.toBe(true);
+      expect(store.invitable()).toEqual(CONTACTS);
+      expect(store.contact('user-bob')).toEqual({
+        id: 'user-bob',
+        name: 'Bob Test',
+        initials: 'BT',
+        color: personColor('user-bob'),
+        frequent: true,
+      });
+      // Seed contacts of the demo events still resolve.
+      expect(store.contact('camille')?.name).toBe('Camille');
+      expect(store.create(draft({ participantIds: ['user-dan', 'nobody'] })).participantIds).toEqual(['user-dan']);
+    });
+
+    it('keeps the previous contacts when the API fails', async () => {
+      const http = TestBed.inject(HttpTestingController);
+      const loading = store.loadContacts();
+      http.expectOne('/api/v1/contacts').flush({ message: 'Erreur' }, { status: 500, statusText: 'Server Error' });
+
+      await expect(loading).resolves.toBe(false);
+      expect(store.invitable()).toEqual([]);
+    });
+
+    it('names a contact without a name after their username', () => {
+      expect(toAgendaContact(contact('user-x', '', { lastName: '', username: 'xavier' }))).toEqual(
+        expect.objectContaining({ name: 'xavier', initials: 'XA', frequent: false }),
+      );
     });
   });
 

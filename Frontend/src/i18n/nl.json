@@ -63,5 +63,17 @@
       "search": "Zoeken is mislukt. Probeer het opnieuw.",
       "action": "Dat is mislukt. Probeer het opnieuw."
     }
+  },
+  "participants": {
+    "title": "Deelnemers",
+    "cancel": "Annuleren",
+    "confirm": "Deelnemers bevestigen",
+    "search": "Contacten zoeken",
+    "friends": "Vrienden",
+    "results": "Resultaten",
+    "loading": "Je contacten worden geladen…",
+    "loadFailed": "Je contacten konden niet worden geladen.",
+    "noMatch": "Geen contact gevonden.",
+    "none": "Je hebt nog geen contacten: voeg vrienden toe in Instellingen of word lid van een groep."
   }
 }

@@ -8,41 +8,66 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
+import type { Contact } from '@plano/common';
 import { normalizeText } from '../../../core/time/dates';
 import { SearchFieldComponent } from '../../../shared/ui/search-field.component';
+import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
 import { AgendaStore } from '../agenda.store';
 
-/** Screen 7: full-screen panel over the event form; edits a copy until confirmed. */
+/** A titled section: `title` is a translation key, unless `literal` (a group name). */
+interface ContactGroup {
+  id: string;
+  title: string;
+  literal: boolean;
+  people: Contact[];
+}
+
+/**
+ * Screen 7: full-screen panel over the event form; edits a copy until confirmed.
+ * Only the user's contacts can be invited: friends first, then each group.
+ */
 @Component({
   selector: 'app-agenda-participants-picker',
-  imports: [SearchFieldComponent],
+  imports: [SearchFieldComponent, TranslocoPipe, UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section role="dialog" aria-modal="true" aria-labelledby="participants-title">
       <header>
-        <button type="button" aria-label="Annuler" (click)="cancelled.emit()">
+        <button type="button" [attr.aria-label]="'participants.cancel' | transloco" (click)="cancelled.emit()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
         </button>
-        <h2 id="participants-title">Participants</h2>
-        <button class="confirm" type="button" aria-label="Valider les participants" (click)="confirm.emit(picked())">
+        <h2 id="participants-title">{{ 'participants.title' | transloco }}</h2>
+        <button class="confirm" type="button" [attr.aria-label]="'participants.confirm' | transloco" (click)="confirm.emit(picked())">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
         </button>
       </header>
 
-      <app-search-field label="Rechercher un contact" placeholder="Rechercher un contact" [maxLength]="60" [(value)]="query" />
+      <app-search-field
+        [label]="'participants.search' | transloco"
+        [placeholder]="'participants.search' | transloco"
+        [maxLength]="60"
+        [(value)]="query"
+      />
 
       <div class="lists">
-        @for (group of groups(); track group.title) {
-          <h3>{{ group.title }}</h3>
-          @for (person of group.people; track person.id) {
-            <label class="person">
-              <span class="avatar" [style.background]="person.color" aria-hidden="true">{{ person.initials }}</span>
-              <span class="name">{{ person.name }}</span>
-              <input type="checkbox" [checked]="picked().includes(person.id)" (change)="toggle(person.id)" />
-              <i aria-hidden="true"></i>
-            </label>
+        @if (loading()) {
+          <p class="empty" role="status">{{ 'participants.loading' | transloco }}</p>
+        } @else if (loadFailed()) {
+          <p class="empty" role="alert">{{ 'participants.loadFailed' | transloco }}</p>
+        } @else {
+          @for (group of groups(); track group.id) {
+            <h3>{{ group.literal ? group.title : (group.title | transloco) }}</h3>
+            @for (person of group.people; track person.id) {
+              <label class="person">
+                <app-user-avatar [user]="person" [size]="30" />
+                <span class="name">{{ name(person) }}</span>
+                <input type="checkbox" [checked]="picked().includes(person.id)" (change)="toggle(person.id)" />
+                <i aria-hidden="true"></i>
+              </label>
+            }
           } @empty {
-            <p class="empty">Aucun contact trouvé.</p>
+            <p class="empty">{{ (query().trim() ? 'participants.noMatch' : 'participants.none') | transloco }}</p>
           }
         }
       </div>
@@ -59,7 +84,6 @@ import { AgendaStore } from '../agenda.store';
     .lists { flex: 1; min-height: 0; padding: 0 1.25rem 2rem; overflow-y: auto; }
     h3 { margin: 1rem 0 .3rem; color: #586174; font-size: .72rem; }
     .person { position: relative; display: grid; min-height: 2.8rem; grid-template-columns: auto 1fr auto; gap: .7rem; align-items: center; cursor: pointer; }
-    .avatar { display: grid; width: 1.9rem; height: 1.9rem; place-items: center; border-radius: 50%; color: white; font-size: .66rem; font-weight: 750; }
     .name { font-size: .82rem; font-weight: 600; }
     input[type='checkbox'] { position: absolute; right: 0; width: 1.35rem; height: 1.35rem; margin: 0; opacity: 0; cursor: pointer; }
     i { display: grid; width: 1.35rem; height: 1.35rem; place-items: center; border: 2px solid #c2c8d3; border-radius: 50%; }
@@ -78,21 +102,45 @@ export class AgendaParticipantsPickerComponent implements OnInit {
 
   readonly query = signal('');
   readonly picked = signal<string[]>([]);
+  readonly loading = signal(true);
+  readonly loadFailed = signal(false);
 
-  readonly groups = computed(() => {
+  /** Each person once: in "Friends" if they are one, else in the first group they share. */
+  readonly groups = computed((): ContactGroup[] => {
     const needle = normalizeText(this.query());
-    const contacts = this.store.contacts();
+    const contacts = this.store.invitable();
     if (needle) {
-      return [{ title: 'Résultats', people: contacts.filter((person) => normalizeText(person.name).includes(needle)) }];
+      const people = contacts.filter((person) =>
+        [this.name(person), person.username].some((text) => normalizeText(text).includes(needle)),
+      );
+      return people.length ? [{ id: 'results', title: 'participants.results', literal: false, people }] : [];
     }
-    return [
-      { title: 'Fréquemment contactés', people: contacts.filter((person) => person.frequent) },
-      { title: 'Tous les contacts', people: contacts.filter((person) => !person.frequent) },
-    ].filter((group) => group.people.length);
+    const sections: ContactGroup[] = [
+      { id: 'friends', title: 'participants.friends', literal: false, people: contacts.filter(({ friend }) => friend) },
+    ];
+    for (const person of contacts.filter(({ friend }) => !friend)) {
+      const [first] = person.groups;
+      if (!first) continue;
+      let section = sections.find(({ id }) => id === first.id);
+      if (!section) {
+        section = { id: first.id, title: first.name, literal: true, people: [] };
+        sections.push(section);
+      }
+      section.people.push(person);
+    }
+    return sections.filter(({ people }) => people.length);
   });
 
   ngOnInit(): void {
     this.picked.set([...this.selected()]);
+    void this.store.loadContacts().then((loaded) => {
+      this.loadFailed.set(!loaded);
+      this.loading.set(false);
+    });
+  }
+
+  name(person: Contact): string {
+    return `${person.firstName} ${person.lastName}`.trim() || person.username;
   }
 
   toggle(id: string): void {

@@ -1,6 +1,7 @@
-import { Injectable, computed, inject } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import type {
   AgendaContact,
+  Contact,
   AgendaData,
   AgendaEvent,
   AgendaFilters,
@@ -8,7 +9,10 @@ import type {
   IsoDate,
   LocalDateTime,
 } from '@plano/common';
+import { firstValueFrom } from 'rxjs';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { FriendsService } from '../../core/friends/friends.service';
+import { initialsOf, personColor } from '../../core/people/people';
 import { APP_CLOCK, createId, normalizeText, toIsoDate, toTimeOfDay } from '../../core/time/dates';
 import { ListsStore } from '../lists/lists.store';
 import { categoryMeta } from '../objectives/objective.utils';
@@ -27,6 +31,17 @@ import {
 
 export type AgendaEventDraft = Omit<AgendaEvent, 'id'>;
 
+/** An invitable user as the agenda screens show participants. */
+export function toAgendaContact(contact: Contact): AgendaContact {
+  return {
+    id: contact.id,
+    name: `${contact.firstName} ${contact.lastName}`.trim() || contact.username,
+    initials: initialsOf(contact.firstName, contact.lastName) || contact.username.slice(0, 2).toUpperCase(),
+    color: personColor(contact.id),
+    frequent: contact.friend,
+  };
+}
+
 export const DEFAULT_AGENDA_FILTERS: AgendaFilters = {
   hiddenCalendarIds: [],
   showEvents: true,
@@ -41,10 +56,15 @@ export class AgendaStore {
   private readonly appData = inject(PlanoDataStore);
   private readonly clock = inject(APP_CLOCK);
   private readonly lists = inject(ListsStore);
+  private readonly friends = inject(FriendsService);
   private readonly data = computed(() => this.appData.data().agenda);
+  private readonly invitableState = signal<readonly Contact[]>([]);
 
   readonly calendars = computed(() => this.data().calendars);
+  /** Contacts of the seed data, still shown on the events that mention them. */
   readonly contacts = computed(() => this.data().contacts);
+  /** Who can be invited: the user's friends and group mates, from the API (see loadContacts). */
+  readonly invitable = this.invitableState.asReadonly();
   readonly events = computed(() => this.data().events);
   readonly settings = computed(() => this.data().settings);
   readonly filters = computed(() => this.data().filters);
@@ -86,7 +106,18 @@ export class AgendaStore {
   }
 
   contact(id: string): AgendaContact | undefined {
-    return this.contacts().find((contact) => contact.id === id);
+    const invitable = this.invitableState().find((contact) => contact.id === id);
+    return invitable ? toAgendaContact(invitable) : this.contacts().find((contact) => contact.id === id);
+  }
+
+  /** Refreshes who can be invited; false when the API could not answer. */
+  async loadContacts(): Promise<boolean> {
+    try {
+      this.invitableState.set(await firstValueFrom(this.friends.contacts()));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   colorOf(event: AgendaEvent): string {

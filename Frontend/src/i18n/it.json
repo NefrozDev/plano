@@ -63,5 +63,17 @@
       "search": "Ricerca non riuscita. Riprova.",
       "action": "Operazione non riuscita. Riprova."
     }
+  },
+  "participants": {
+    "title": "Partecipanti",
+    "cancel": "Annulla",
+    "confirm": "Conferma i partecipanti",
+    "search": "Cerca un contatto",
+    "friends": "Amici",
+    "results": "Risultati",
+    "loading": "Caricamento dei contatti…",
+    "loadFailed": "Impossibile caricare i tuoi contatti.",
+    "noMatch": "Nessun contatto trovato.",
+    "none": "Non hai ancora contatti: aggiungi amici nelle Impostazioni o unisciti a un gruppo."
   }
 }

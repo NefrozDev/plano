@@ -63,5 +63,17 @@
       "search": "Search failed. Please try again.",
       "action": "That didn’t work. Please try again."
     }
+  },
+  "participants": {
+    "title": "Participants",
+    "cancel": "Cancel",
+    "confirm": "Confirm participants",
+    "search": "Search contacts",
+    "friends": "Friends",
+    "results": "Results",
+    "loading": "Loading your contacts…",
+    "loadFailed": "Your contacts couldn’t be loaded.",
+    "noMatch": "No contact found.",
+    "none": "You have no contacts yet: add friends in Settings or join a group."
   }
 }

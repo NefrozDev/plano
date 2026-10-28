@@ -63,5 +63,17 @@
       "search": "La recherche a échoué. Réessayez.",
       "action": "L’action a échoué. Réessayez."
     }
+  },
+  "participants": {
+    "title": "Participants",
+    "cancel": "Annuler",
+    "confirm": "Valider les participants",
+    "search": "Rechercher un contact",
+    "friends": "Amis",
+    "results": "Résultats",
+    "loading": "Chargement de vos contacts…",
+    "loadFailed": "Impossible de charger vos contacts.",
+    "noMatch": "Aucun contact trouvé.",
+    "none": "Vous n’avez encore aucun contact : ajoutez des amis dans les paramètres ou rejoignez un groupe."
   }
 }

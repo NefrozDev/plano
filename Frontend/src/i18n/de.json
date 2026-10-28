@@ -63,5 +63,17 @@
       "search": "Die Suche ist fehlgeschlagen. Bitte versuche es erneut.",
       "action": "Das hat nicht geklappt. Bitte versuche es erneut."
     }
+  },
+  "participants": {
+    "title": "Teilnehmende",
+    "cancel": "Abbrechen",
+    "confirm": "Teilnehmende bestätigen",
+    "search": "Kontakte suchen",
+    "friends": "Freunde",
+    "results": "Ergebnisse",
+    "loading": "Deine Kontakte werden geladen…",
+    "loadFailed": "Deine Kontakte konnten nicht geladen werden.",
+    "noMatch": "Kein Kontakt gefunden.",
+    "none": "Du hast noch keine Kontakte: Füge in den Einstellungen Freunde hinzu oder tritt einer Gruppe bei."
   }
 }

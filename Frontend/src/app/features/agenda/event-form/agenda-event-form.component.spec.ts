@@ -1,11 +1,13 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { providePlanoTesting } from '../../../testing/plano-testing';
+import { providePlanoTesting, settle } from '../../../testing/plano-testing';
 import { AGENDA_ROUTES } from '../agenda.routes';
 import { AgendaStore } from '../agenda.store';
 import { AgendaEventFormComponent } from './agenda-event-form.component';
+import { CONTACTS } from '../../../testing/contacts';
 
 describe('AgendaEventFormComponent', () => {
   let harness: RouterTestingHarness;
@@ -286,21 +288,24 @@ describe('AgendaEventFormComponent', () => {
       expect(component.fileSize(2048)).toBe('2 Ko');
     });
 
-    it('picks participants in the overlay', async () => {
+    it('picks participants among the contacts in the overlay', async () => {
       await harness.navigateByUrl('/agenda/new');
       (element().querySelector('.participants-row') as HTMLButtonElement).click();
       harness.detectChanges();
+      TestBed.inject(HttpTestingController).expectOne('/api/v1/contacts').flush(CONTACTS);
+      await settle();
+      harness.detectChanges();
       const picker = element().querySelector('app-agenda-participants-picker') as HTMLElement;
       expect(Array.from(picker.querySelectorAll('h3')).map((title) => title.textContent)).toEqual([
-        'Fréquemment contactés', 'Tous les contacts',
+        'Amis', 'Famille proche', 'Travail',
       ]);
 
       (picker.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')[0]).click();
       (picker.querySelector('.confirm') as HTMLButtonElement).click();
       harness.detectChanges();
 
-      expect(form().participantIds()).toEqual(['camille']);
-      expect(element().querySelector('.participants-row .avatar')?.textContent).toBe('C');
+      expect(form().participantIds()).toEqual(['user-bob']);
+      expect(element().querySelector('.participants-row .avatar')?.textContent).toBe('BT');
     });
   });
 

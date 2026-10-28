@@ -63,5 +63,17 @@
       "search": "La búsqueda falló. Inténtalo de nuevo.",
       "action": "No se pudo completar. Inténtalo de nuevo."
     }
+  },
+  "participants": {
+    "title": "Participantes",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar participantes",
+    "search": "Buscar un contacto",
+    "friends": "Amigos",
+    "results": "Resultados",
+    "loading": "Cargando tus contactos…",
+    "loadFailed": "No se pudieron cargar tus contactos.",
+    "noMatch": "No se encontró ningún contacto.",
+    "none": "Aún no tienes contactos: añade amigos en Ajustes o únete a un grupo."
   }
 }
