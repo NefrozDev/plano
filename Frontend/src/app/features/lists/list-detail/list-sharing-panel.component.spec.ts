@@ -7,6 +7,7 @@ import type { AuthUser } from '../../../core/auth/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { providePlanoTesting, settle } from '../../../testing/plano-testing';
+import { contact } from '../../../testing/contacts';
 import { ListsStore } from '../lists.store';
 import { MEMBER_ID, OWNER_ID, listDetail, listSettings } from '../testing/lists-fixtures';
 import { ListSharingPanelComponent } from './list-sharing-panel.component';
@@ -42,20 +43,14 @@ describe('ListSharingPanelComponent', () => {
 
   afterEach(() => http.verify());
 
-  it('lets the owner invite mates from any group who cannot see the list yet, once each', async () => {
+  it('lets the owner invite friends and group mates who cannot see the list yet', async () => {
     await create(listDetail());
-    const cyd = { id: 'user-cyd', firstName: 'Cyd', lastName: 'Charisse', username: 'cyd' };
 
     panel.openInviteForm();
-    http.expectOne('/api/v1/groups').flush([
-      {
-        members: [
-          { id: OWNER_ID, firstName: 'Ada', lastName: 'Lovelace', username: 'ada' },
-          { id: MEMBER_ID, firstName: 'Bob', lastName: 'Martin', username: 'bob' },
-          cyd,
-        ],
-      },
-      { members: [{ id: OWNER_ID, firstName: 'Ada', lastName: 'Lovelace', username: 'ada' }, cyd] },
+    // Contacts never include the user; Bob is already a member of the list.
+    http.expectOne('/api/v1/contacts').flush([
+      contact(MEMBER_ID, 'Bob', { lastName: 'Martin', groups: [{ id: 'group-1', name: 'Famille' }] }),
+      contact('user-cyd', 'Cyd', { lastName: 'Charisse', friend: true }),
     ]);
     fixture.detectChanges();
 
@@ -73,29 +68,29 @@ describe('ListSharingPanelComponent', () => {
     expect(store.detail()?.members.length).toBe(3);
   });
 
-  it('explains when every group mate already has access', async () => {
+  it('explains when every contact already has access', async () => {
     await create(listDetail());
 
     panel.openInviteForm();
-    http.expectOne('/api/v1/groups').flush([{ members: [{ id: MEMBER_ID }] }]);
+    http.expectOne('/api/v1/contacts').flush([contact(MEMBER_ID, 'Bob')]);
     fixture.detectChanges();
 
     expect(element.querySelector('.sharing-hint')?.textContent).toContain('déjà accès');
     expect(panel.inviteUserId()).toBe('');
   });
 
-  it('offers nobody to invite without a group or when the group cannot be loaded', async () => {
+  it('offers nobody to invite without contacts or when they cannot be loaded', async () => {
     await create(listDetail());
     const addMember = vi.spyOn(store, 'addMember');
 
     panel.openInviteForm();
-    http.expectOne('/api/v1/groups').flush([]);
+    http.expectOne('/api/v1/contacts').flush([]);
     expect(panel.candidates()).toEqual([]);
     expect(panel.inviteUserId()).toBe('');
 
     panel.openInviteForm();
     http
-      .expectOne('/api/v1/groups')
+      .expectOne('/api/v1/contacts')
       .flush({ message: 'Erreur' }, { status: 500, statusText: 'Server Error' });
     fixture.detectChanges();
     expect(panel.candidates()).toEqual([]);

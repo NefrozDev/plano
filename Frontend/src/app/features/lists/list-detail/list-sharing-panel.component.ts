@@ -2,15 +2,15 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import { Router } from '@angular/router';
 import type { ListDetail, ListMemberRole } from '@plano/common';
 import { AuthService } from '../../../core/auth/auth.service';
-import type { GroupMember } from '../../../core/groups/group.models';
-import { GroupsService } from '../../../core/groups/groups.service';
+import type { Contact } from '@plano/common';
+import { FriendsService } from '../../../core/friends/friends.service';
 import { toPerson } from '../../../core/people/people';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { ListsStore } from '../lists.store';
 import { ROLE_LABELS } from './list-options';
 
 /**
- * Who can see the list. The owner shares it with members of their group and
+ * Who can see the list. The owner shares it with their friends and group mates and
  * manages roles; anyone else sees the members and can leave the list.
  */
 @Component({
@@ -21,7 +21,7 @@ import { ROLE_LABELS } from './list-options';
 })
 export class ListSharingPanelComponent {
   private readonly store = inject(ListsStore);
-  private readonly groups = inject(GroupsService);
+  private readonly friends = inject(FriendsService);
   private readonly confirm = inject(ConfirmService);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
@@ -35,10 +35,11 @@ export class ListSharingPanelComponent {
     this.list().members.map((member) => ({ ...member, avatar: toPerson(member) })),
   );
   readonly inviteFormOpen = signal(false);
-  readonly groupMembers = signal<readonly GroupMember[] | null>(null);
-  /** Mates from any of the user's groups who cannot see the list yet. */
+  /** The owner's contacts (friends and group mates); null while loading. */
+  readonly contacts = signal<readonly Contact[] | null>(null);
+  /** Contacts who cannot see the list yet. */
   readonly candidates = computed(() =>
-    (this.groupMembers() ?? []).filter(
+    (this.contacts() ?? []).filter(
       (member) => !this.list().members.some(({ id }) => id === member.id),
     ),
   );
@@ -47,18 +48,16 @@ export class ListSharingPanelComponent {
 
   openInviteForm(): void {
     this.inviteFormOpen.set(true);
-    this.groups.getAll().subscribe({
-      next: (groups) => {
-        // Someone sharing several groups with the user is offered once.
-        const mates = new Map(groups.flatMap(({ members }) => members).map((member) => [member.id, member]));
-        this.groupMembers.set([...mates.values()]);
+    this.friends.contacts().subscribe({
+      next: (contacts) => {
+        this.contacts.set(contacts);
         this.inviteUserId.set(this.candidates()[0]?.id ?? '');
       },
-      error: () => this.groupMembers.set([]),
+      error: () => this.contacts.set([]),
     });
   }
 
-  memberName(member: GroupMember): string {
+  memberName(member: Contact): string {
     return `${member.firstName} ${member.lastName}`.trim() || member.username;
   }
 

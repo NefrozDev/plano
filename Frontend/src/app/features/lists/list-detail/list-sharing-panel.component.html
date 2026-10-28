@@ -34,8 +34,8 @@
 
       @if (isOwner()) {
         @if (inviteFormOpen()) {
-          @if (groupMembers() === null) {
-            <p class="sharing-hint">Chargement des membres du groupe…</p>
+          @if (contacts() === null) {
+            <p class="sharing-hint">Chargement de vos contacts…</p>
           } @else if (candidates().length) {
             <div class="invite-form">
               <select aria-label="Personne à inviter" [value]="inviteUserId()" (change)="inviteUserId.set($any($event.target).value)">
@@ -50,10 +50,10 @@
               <button type="button" [disabled]="!inviteUserId()" (click)="invite()">Inviter</button>
             </div>
           } @else {
-            <p class="sharing-hint">Tous les membres de votre groupe ont déjà accès. Invitez d’autres personnes dans votre groupe pour partager avec elles.</p>
+            <p class="sharing-hint">Tous vos amis et membres de vos groupes ont déjà accès. Ajoutez des amis dans les paramètres pour partager avec d’autres personnes.</p>
           }
         } @else {
-          <button class="invite-people" type="button" (click)="openInviteForm()"><span aria-hidden="true">＋</span> Inviter des membres du groupe</button>
+          <button class="invite-people" type="button" (click)="openInviteForm()"><span aria-hidden="true">＋</span> Inviter des amis ou membres de groupe</button>
         }
       }
     </section>
