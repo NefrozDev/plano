@@ -106,7 +106,9 @@
     class="dashboard-section goals-section"
     aria-labelledby="goals-title"
   >
-    <h2 id="goals-title">Mes objectifs</h2>
+    <div class="section-heading">
+      <h2 id="goals-title">Mes objectifs</h2>
+    </div>
     <div class="goals-card">
       @for (goal of goals(); track goal.id) {
         <a class="goal" [routerLink]="['/objectives', goal.id]">

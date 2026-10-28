@@ -114,6 +114,21 @@ describe('DashboardComponent', () => {
     expect(element.querySelector('.agenda-card .card-link')?.getAttribute('href')).toBe('/agenda/new');
   });
 
+  it('spaces the three home cards and their headings the same way', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const style = (selector: string) => getComputedStyle(element.querySelector(selector) as HTMLElement);
+    const cards = ['.agenda-card', '.tasks-card', '.goals-card'].map((selector) => style(selector).padding);
+    const headings = Array.from(element.querySelectorAll<HTMLElement>('.dashboard-section .section-heading'))
+      .map((heading) => getComputedStyle(heading).marginBottom);
+
+    expect(new Set(cards).size).toBe(1);
+    expect(cards[0]).not.toBe('0px');
+    expect(headings.length).toBe(3);
+    expect(new Set(headings).size).toBe(1);
+  });
+
   it('shows the two active objectives due first, linked to their pages', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();

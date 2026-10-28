@@ -146,8 +146,7 @@
   justify-content: space-between;
   margin-bottom: 0.45rem;
 }
-.section-heading h2,
-.goals-section > h2 {
+.section-heading h2 {
   margin: 0;
   font-size: 1.15rem;
   letter-spacing: -0.03em;
@@ -166,7 +165,7 @@
   display: flex;
   gap: 0.75rem;
   align-items: center;
-  padding: 0.55rem;
+  padding: 0.55rem 0;
   border-bottom: 1px solid var(--color-border);
 }
 .agenda-card strong {
@@ -214,7 +213,10 @@
   font-size: 0.75rem;
   font-weight: 650;
 }
-.tasks-card {
+/* Same inner spacing for every card, so empty states line up too. */
+.agenda-card,
+.tasks-card,
+.goals-card {
   padding: 0.55rem 0.85rem;
 }
 .tasks-card label {
@@ -234,9 +236,6 @@
   color: var(--color-text-muted);
   text-decoration: line-through;
 }
-.goals-section > h2 {
-  margin-bottom: 0.55rem;
-}
 .goals-card .goal {
   color: inherit;
   text-decoration: none;
@@ -244,7 +243,7 @@
   grid-template-columns: 2.5rem 1fr auto;
   gap: 0.55rem;
   align-items: center;
-  padding: 0.55rem;
+  padding: 0.55rem 0;
   border-bottom: 1px solid var(--color-border);
 }
 .goals-card .goal:last-child {
