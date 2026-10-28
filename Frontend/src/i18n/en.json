@@ -33,5 +33,35 @@
   },
   "dashboard": {
     "openSettings": "Open settings"
+  },
+  "friends": {
+    "heading": "Friends",
+    "incoming": "Requests received",
+    "outgoing": "Requests sent",
+    "mine": "My friends ({{count}})",
+    "none": "No friends yet: search for someone by their username.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "cancel": "Cancel",
+    "add": "Add",
+    "sent": "Request sent",
+    "alreadyFriend": "Friend",
+    "removeShort": "Remove",
+    "remove": {
+      "heading": "Remove this friend?",
+      "message": "{{name}} will no longer be your friend and will lose access to what you share only as friends.",
+      "confirm": "Remove"
+    },
+    "search": {
+      "label": "Search for a user",
+      "placeholder": "Username",
+      "results": "Search results",
+      "empty": "No user found."
+    },
+    "errors": {
+      "load": "Your friends couldn’t be loaded.",
+      "search": "Search failed. Please try again.",
+      "action": "That didn’t work. Please try again."
+    }
   }
 }

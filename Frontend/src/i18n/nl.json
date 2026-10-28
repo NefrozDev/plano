@@ -33,5 +33,35 @@
   },
   "dashboard": {
     "openSettings": "Instellingen openen"
+  },
+  "friends": {
+    "heading": "Vrienden",
+    "incoming": "Ontvangen verzoeken",
+    "outgoing": "Verzonden verzoeken",
+    "mine": "Mijn vrienden ({{count}})",
+    "none": "Nog geen vrienden: zoek iemand op gebruikersnaam.",
+    "accept": "Accepteren",
+    "decline": "Weigeren",
+    "cancel": "Annuleren",
+    "add": "Toevoegen",
+    "sent": "Verzoek verzonden",
+    "alreadyFriend": "Vriend",
+    "removeShort": "Verwijderen",
+    "remove": {
+      "heading": "Deze vriend verwijderen?",
+      "message": "{{name}} is dan geen vriend meer en verliest de toegang tot wat je alleen als vrienden deelt.",
+      "confirm": "Verwijderen"
+    },
+    "search": {
+      "label": "Een gebruiker zoeken",
+      "placeholder": "Gebruikersnaam",
+      "results": "Zoekresultaten",
+      "empty": "Geen gebruiker gevonden."
+    },
+    "errors": {
+      "load": "Je vrienden konden niet worden geladen.",
+      "search": "Zoeken is mislukt. Probeer het opnieuw.",
+      "action": "Dat is mislukt. Probeer het opnieuw."
+    }
   }
 }

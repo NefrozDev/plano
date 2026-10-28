@@ -33,5 +33,35 @@
   },
   "dashboard": {
     "openSettings": "Abrir ajustes"
+  },
+  "friends": {
+    "heading": "Amigos",
+    "incoming": "Solicitudes recibidas",
+    "outgoing": "Solicitudes enviadas",
+    "mine": "Mis amigos ({{count}})",
+    "none": "Aún no tienes amigos: busca a alguien por su nombre de usuario.",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "cancel": "Cancelar",
+    "add": "Añadir",
+    "sent": "Solicitud enviada",
+    "alreadyFriend": "Amigo",
+    "removeShort": "Quitar",
+    "remove": {
+      "heading": "¿Quitar a este amigo?",
+      "message": "{{name}} dejará de ser tu amigo y perderá el acceso a lo que solo compartís como amigos.",
+      "confirm": "Quitar"
+    },
+    "search": {
+      "label": "Buscar un usuario",
+      "placeholder": "Nombre de usuario",
+      "results": "Resultados de la búsqueda",
+      "empty": "No se encontró ningún usuario."
+    },
+    "errors": {
+      "load": "No se pudieron cargar tus amigos.",
+      "search": "La búsqueda falló. Inténtalo de nuevo.",
+      "action": "No se pudo completar. Inténtalo de nuevo."
+    }
   }
 }

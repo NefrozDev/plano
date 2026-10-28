@@ -33,5 +33,35 @@
   },
   "dashboard": {
     "openSettings": "Apri impostazioni"
+  },
+  "friends": {
+    "heading": "Amici",
+    "incoming": "Richieste ricevute",
+    "outgoing": "Richieste inviate",
+    "mine": "I miei amici ({{count}})",
+    "none": "Ancora nessun amico: cerca qualcuno con il suo nome utente.",
+    "accept": "Accetta",
+    "decline": "Rifiuta",
+    "cancel": "Annulla",
+    "add": "Aggiungi",
+    "sent": "Richiesta inviata",
+    "alreadyFriend": "Amico",
+    "removeShort": "Rimuovi",
+    "remove": {
+      "heading": "Rimuovere questo amico?",
+      "message": "{{name}} non sarà più tuo amico e perderà l’accesso a ciò che condividete solo come amici.",
+      "confirm": "Rimuovi"
+    },
+    "search": {
+      "label": "Cerca un utente",
+      "placeholder": "Nome utente",
+      "results": "Risultati della ricerca",
+      "empty": "Nessun utente trovato."
+    },
+    "errors": {
+      "load": "Impossibile caricare i tuoi amici.",
+      "search": "Ricerca non riuscita. Riprova.",
+      "action": "Operazione non riuscita. Riprova."
+    }
   }
 }

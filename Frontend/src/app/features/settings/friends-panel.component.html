@@ -1,0 +1,98 @@
+<h2 id="friends-heading">{{ 'friends.heading' | transloco }}</h2>
+
+@if (error()) {
+  <p class="field-error" role="alert">{{ error() | transloco }}</p>
+}
+
+@if (requests().incoming.length) {
+  <h3>{{ 'friends.incoming' | transloco }}</h3>
+  <ul class="people">
+    @for (request of requests().incoming; track request.id) {
+      <li class="person">
+        <app-user-avatar [user]="request.user" [size]="36" />
+        <span class="identity"><strong>{{ name(request.user) }}</strong><small>{{ '@' + request.user.username }}</small></span>
+        <span class="actions">
+          <button class="action primary" type="button" [disabled]="!!busy()" (click)="accept(request.user)">
+            {{ 'friends.accept' | transloco }}
+          </button>
+          <button class="action" type="button" [disabled]="!!busy()" (click)="decline(request.user)">
+            {{ 'friends.decline' | transloco }}
+          </button>
+        </span>
+      </li>
+    }
+  </ul>
+}
+
+<app-search-field
+  [label]="'friends.search.label' | transloco"
+  [placeholder]="'friends.search.placeholder' | transloco"
+  [maxLength]="30"
+  [(value)]="query"
+/>
+@if (results(); as found) {
+  <ul class="people results" [attr.aria-label]="'friends.search.results' | transloco">
+    @for (user of found; track user.id) {
+      <li class="person">
+        <app-user-avatar [user]="user" [size]="36" />
+        <span class="identity"><strong>{{ name(user) }}</strong><small>{{ '@' + user.username }}</small></span>
+        <span class="actions">
+          @switch (user.relation) {
+            @case ('none') {
+              <button class="action primary" type="button" [disabled]="!!busy()" (click)="add(user)">
+                {{ 'friends.add' | transloco }}
+              </button>
+            }
+            @case ('incoming') {
+              <button class="action primary" type="button" [disabled]="!!busy()" (click)="accept(user)">
+                {{ 'friends.accept' | transloco }}
+              </button>
+            }
+            @case ('outgoing') {
+              <span class="status">{{ 'friends.sent' | transloco }}</span>
+            }
+            @case ('friend') {
+              <span class="status">{{ 'friends.alreadyFriend' | transloco }}</span>
+            }
+          }
+        </span>
+      </li>
+    } @empty {
+      <li class="empty">{{ 'friends.search.empty' | transloco }}</li>
+    }
+  </ul>
+}
+
+@if (requests().outgoing.length) {
+  <h3>{{ 'friends.outgoing' | transloco }}</h3>
+  <ul class="people">
+    @for (request of requests().outgoing; track request.id) {
+      <li class="person">
+        <app-user-avatar [user]="request.user" [size]="36" />
+        <span class="identity"><strong>{{ name(request.user) }}</strong><small>{{ '@' + request.user.username }}</small></span>
+        <span class="actions">
+          <button class="action" type="button" [disabled]="!!busy()" (click)="cancel(request.user)">
+            {{ 'friends.cancel' | transloco }}
+          </button>
+        </span>
+      </li>
+    }
+  </ul>
+}
+
+<h3>{{ 'friends.mine' | transloco: { count: friends().length } }}</h3>
+<ul class="people">
+  @for (friend of friends(); track friend.id) {
+    <li class="person">
+      <app-user-avatar [user]="friend" [size]="36" />
+      <span class="identity"><strong>{{ name(friend) }}</strong><small>{{ '@' + friend.username }}</small></span>
+      <span class="actions">
+        <button class="action danger" type="button" [disabled]="!!busy()" (click)="remove(friend)">
+          {{ 'friends.removeShort' | transloco }}
+        </button>
+      </span>
+    </li>
+  } @empty {
+    <li class="empty">{{ 'friends.none' | transloco }}</li>
+  }
+</ul>

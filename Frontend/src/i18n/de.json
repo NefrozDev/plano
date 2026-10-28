@@ -33,5 +33,35 @@
   },
   "dashboard": {
     "openSettings": "Einstellungen öffnen"
+  },
+  "friends": {
+    "heading": "Freunde",
+    "incoming": "Erhaltene Anfragen",
+    "outgoing": "Gesendete Anfragen",
+    "mine": "Meine Freunde ({{count}})",
+    "none": "Noch keine Freunde: Suche jemanden über den Benutzernamen.",
+    "accept": "Annehmen",
+    "decline": "Ablehnen",
+    "cancel": "Zurückziehen",
+    "add": "Hinzufügen",
+    "sent": "Anfrage gesendet",
+    "alreadyFriend": "Befreundet",
+    "removeShort": "Entfernen",
+    "remove": {
+      "heading": "Diesen Freund entfernen?",
+      "message": "{{name}} ist dann nicht mehr dein Freund und verliert den Zugriff auf alles, was ihr nur als Freunde teilt.",
+      "confirm": "Entfernen"
+    },
+    "search": {
+      "label": "Nutzer suchen",
+      "placeholder": "Benutzername",
+      "results": "Suchergebnisse",
+      "empty": "Kein Nutzer gefunden."
+    },
+    "errors": {
+      "load": "Deine Freunde konnten nicht geladen werden.",
+      "search": "Die Suche ist fehlgeschlagen. Bitte versuche es erneut.",
+      "action": "Das hat nicht geklappt. Bitte versuche es erneut."
+    }
   }
 }

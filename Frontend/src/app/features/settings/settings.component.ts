@@ -9,6 +9,7 @@ import { ProfileService } from '../../core/users/profile.service';
 import { AVATAR_RESIZER, MAX_SOURCE_BYTES, UnreadableImageError } from '../../core/users/resize-avatar';
 import { PageHeaderComponent } from '../../shared/ui/page-header.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
+import { FriendsPanelComponent } from './friends-panel.component';
 
 /** Each language under its own name, so anyone finds theirs whatever is shown. */
 export const LANGUAGE_NAMES: Record<Locale, string> = {
@@ -20,10 +21,10 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
   it: 'Italiano',
 };
 
-/** `/settings`, opened from the profile picture: photo, language, groups and sign-out. */
+/** `/settings`, opened from the profile picture: photo, language, friends, groups and sign-out. */
 @Component({
   selector: 'app-settings',
-  imports: [PageHeaderComponent, RouterLink, TranslocoPipe, UserAvatarComponent],
+  imports: [FriendsPanelComponent, PageHeaderComponent, RouterLink, TranslocoPipe, UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',

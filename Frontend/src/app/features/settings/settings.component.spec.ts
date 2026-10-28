@@ -59,6 +59,10 @@ describe('SettingsComponent', () => {
     fixture = TestBed.createComponent(SettingsComponent);
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
+    fixture.detectChanges();
+    // The friends panel loads its lists (covered by its own spec).
+    http.expectOne('/api/v1/friends').flush([]);
+    http.expectOne('/api/v1/friends/requests').flush({ incoming: [], outgoing: [] });
     await render();
   });
 

@@ -33,5 +33,35 @@
   },
   "dashboard": {
     "openSettings": "Ouvrir les paramètres"
+  },
+  "friends": {
+    "heading": "Amis",
+    "incoming": "Demandes reçues",
+    "outgoing": "Demandes envoyées",
+    "mine": "Mes amis ({{count}})",
+    "none": "Pas encore d’amis : recherchez quelqu’un par son nom d’utilisateur.",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "cancel": "Annuler",
+    "add": "Ajouter",
+    "sent": "Demande envoyée",
+    "alreadyFriend": "Ami",
+    "removeShort": "Retirer",
+    "remove": {
+      "heading": "Retirer cet ami ?",
+      "message": "{{name}} ne fera plus partie de vos amis et perdra l’accès à ce que vous partagez seulement entre amis.",
+      "confirm": "Retirer"
+    },
+    "search": {
+      "label": "Rechercher un utilisateur",
+      "placeholder": "Nom d’utilisateur",
+      "results": "Résultats de la recherche",
+      "empty": "Aucun utilisateur trouvé."
+    },
+    "errors": {
+      "load": "Impossible de charger vos amis.",
+      "search": "La recherche a échoué. Réessayez.",
+      "action": "L’action a échoué. Réessayez."
+    }
   }
 }
