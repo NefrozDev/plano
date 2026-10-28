@@ -5,5 +5,33 @@
     "agenda": "Agenda",
     "lists": "Liste",
     "objectives": "Obiettivi"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "back": "Torna alla home",
+    "profile": {
+      "heading": "Profilo",
+      "add": "Aggiungi una foto",
+      "change": "Cambia foto",
+      "remove": "Rimuovi foto",
+      "saving": "Salvataggio…",
+      "tooLarge": "Questa immagine è troppo grande (massimo 20 MB).",
+      "unreadable": "Impossibile leggere questa immagine. Scegli una foto JPEG, PNG o WebP.",
+      "failed": "Impossibile salvare la foto. Riprova."
+    },
+    "language": {
+      "heading": "Lingua",
+      "failed": "La lingua è applicata su questo dispositivo, ma non è stato possibile salvarla nel tuo account."
+    },
+    "groups": {
+      "heading": "Gruppi",
+      "link": "Gestisci i miei gruppi"
+    },
+    "logout": "Esci",
+    "loggingOut": "Uscita…",
+    "logoutFailed": "Uscita non riuscita. Riprova."
+  },
+  "dashboard": {
+    "openSettings": "Apri impostazioni"
   }
 }

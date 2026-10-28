@@ -5,5 +5,33 @@
     "agenda": "Agenda",
     "lists": "Liste",
     "objectives": "Objectifs"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "back": "Retour à l’accueil",
+    "profile": {
+      "heading": "Profil",
+      "add": "Ajouter une photo",
+      "change": "Changer la photo",
+      "remove": "Retirer la photo",
+      "saving": "Enregistrement…",
+      "tooLarge": "Cette image est trop lourde (20 Mo maximum).",
+      "unreadable": "Cette image ne peut pas être lue. Choisissez une photo JPEG, PNG ou WebP.",
+      "failed": "La photo n’a pas pu être enregistrée. Réessayez."
+    },
+    "language": {
+      "heading": "Langue",
+      "failed": "La langue est appliquée sur cet appareil, mais n’a pas pu être enregistrée sur votre compte."
+    },
+    "groups": {
+      "heading": "Groupes",
+      "link": "Gérer mes groupes"
+    },
+    "logout": "Se déconnecter",
+    "loggingOut": "Déconnexion…",
+    "logoutFailed": "La déconnexion a échoué. Veuillez réessayer."
+  },
+  "dashboard": {
+    "openSettings": "Ouvrir les paramètres"
   }
 }

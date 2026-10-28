@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
+import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
 import { compareDueDates, formatDate } from '../../core/time/dates';
 import { objectiveProgress, objectiveTint } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
@@ -13,14 +14,13 @@ import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.componen
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, BottomNavComponent, ObjectiveIconComponent],
+  imports: [RouterLink, TranslocoPipe, BottomNavComponent, ObjectiveIconComponent, UserAvatarComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent {
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
   private readonly appData = inject(PlanoDataStore);
   private readonly objectivesStore = inject(ObjectivesStore);
   private readonly agendaStore = inject(AgendaStore);
@@ -57,9 +57,7 @@ export class DashboardComponent {
   readonly displayName = computed(
     () => this.auth.user()?.firstName || this.auth.user()?.username || 'vous',
   );
-  readonly profileMenuOpen = signal(false);
-  readonly logoutPending = signal(false);
-  readonly logoutError = signal('');
+  readonly user = this.auth.user;
 
   constructor() {
     // Today's agenda preview includes list reminders served by the API.
@@ -76,23 +74,5 @@ export class DashboardComponent {
         ),
       },
     }));
-  }
-
-  toggleProfileMenu(): void {
-    this.profileMenuOpen.update((open) => !open);
-  }
-
-  logout(): void {
-    if (this.logoutPending()) return;
-    this.logoutError.set('');
-    this.logoutPending.set(true);
-    this.auth
-      .logout()
-      .pipe(finalize(() => this.logoutPending.set(false)))
-      .subscribe({
-        next: () => void this.router.navigateByUrl('/login'),
-        error: () =>
-          this.logoutError.set('La déconnexion a échoué. Veuillez réessayer.'),
-      });
   }
 }

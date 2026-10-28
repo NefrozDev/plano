@@ -1,0 +1,23 @@
+:host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+.content { flex: 1; min-height: 0; padding: 0 1.25rem 2rem; overflow-y: auto; }
+section { padding: 1.1rem 0; border-bottom: 1px solid #edf0f5; }
+section:last-child { border-bottom: 0; }
+h2 { margin: 0 0 .7rem; color: #586174; font-size: .72rem; font-weight: 750; }
+.identity { display: flex; gap: .9rem; align-items: center; }
+.identity strong, .identity small { display: block; }
+.identity strong { font-size: .95rem; }
+.identity small { margin-top: .15rem; color: var(--color-text-muted); font-size: .78rem; }
+.photo-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
+.button { display: inline-flex; min-height: 2.4rem; padding: 0 .95rem; align-items: center; border: 0; border-radius: .7rem; background: var(--color-primary); color: white; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 700; }
+.button.secondary { background: #f2f4f8; color: #394254; }
+.button.disabled, .button:disabled { opacity: .55; cursor: default; }
+.button:focus-within, .button:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 2px; }
+.languages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.language { position: relative; display: flex; min-height: 2.7rem; gap: .55rem; align-items: center; padding: 0 .75rem; border: 1px solid #e4e8f0; border-radius: .7rem; cursor: pointer; font-size: .82rem; font-weight: 650; }
+.language:has(input:checked) { border-color: var(--color-primary); background: #f1f5ff; color: var(--color-primary); }
+.language:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 2px; }
+.language input { margin: 0; accent-color: var(--color-primary); }
+.row-link { display: flex; min-height: 2.6rem; align-items: center; justify-content: space-between; color: var(--color-text); font-size: .85rem; font-weight: 650; text-decoration: none; }
+.logout { width: 100%; min-height: 2.8rem; border: 0; border-radius: .8rem; background: var(--color-danger-surface); color: var(--color-danger); cursor: pointer; font: inherit; font-size: .85rem; font-weight: 750; }
+.logout:disabled { opacity: .6; cursor: default; }
+.field-error { margin: .6rem 0 0; }

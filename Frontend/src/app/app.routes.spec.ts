@@ -41,7 +41,7 @@ describe('app routes', () => {
 
     expect(guardsOf('login')).toEqual([guestGuard]);
     expect(guardsOf('register')).toEqual([guestGuard]);
-    for (const path of ['groups', 'groups/:groupId', 'agenda', 'objectives']) {
+    for (const path of ['settings', 'groups', 'groups/:groupId', 'agenda', 'objectives']) {
       expect(guardsOf(path), path).toEqual([authenticatedGuard]);
     }
     // The former single-group page now lands on the groups overview.

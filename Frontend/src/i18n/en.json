@@ -5,5 +5,33 @@
     "agenda": "Calendar",
     "lists": "Lists",
     "objectives": "Goals"
+  },
+  "settings": {
+    "title": "Settings",
+    "back": "Back to home",
+    "profile": {
+      "heading": "Profile",
+      "add": "Add a photo",
+      "change": "Change photo",
+      "remove": "Remove photo",
+      "saving": "Saving…",
+      "tooLarge": "This image is too large (20 MB maximum).",
+      "unreadable": "This image can’t be read. Choose a JPEG, PNG or WebP photo.",
+      "failed": "The photo couldn’t be saved. Please try again."
+    },
+    "language": {
+      "heading": "Language",
+      "failed": "The language applies on this device, but couldn’t be saved to your account."
+    },
+    "groups": {
+      "heading": "Groups",
+      "link": "Manage my groups"
+    },
+    "logout": "Sign out",
+    "loggingOut": "Signing out…",
+    "logoutFailed": "Signing out failed. Please try again."
+  },
+  "dashboard": {
+    "openSettings": "Open settings"
   }
 }

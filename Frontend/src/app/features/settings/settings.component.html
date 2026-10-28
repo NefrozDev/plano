@@ -1,0 +1,76 @@
+<app-page-header
+  [heading]="'settings.title' | transloco"
+  backLink="/"
+  [backLabel]="'settings.back' | transloco"
+/>
+
+<div class="content">
+  @if (auth.user(); as user) {
+    <section class="profile" aria-labelledby="profile-heading">
+      <h2 id="profile-heading">{{ 'settings.profile.heading' | transloco }}</h2>
+      <div class="identity">
+        <app-user-avatar [user]="user" [size]="72" />
+        <div>
+          <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+          <small>{{ '@' + user.username }}</small>
+        </div>
+      </div>
+      <div class="photo-actions">
+        <label class="button" [class.disabled]="photoBusy()">
+          {{ (photoBusy() ? 'settings.profile.saving' : user.avatarVersion === null ? 'settings.profile.add' : 'settings.profile.change') | transloco }}
+          <input
+            #photo
+            class="visually-hidden"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            [disabled]="photoBusy()"
+            (change)="changePhoto(photo)"
+          />
+        </label>
+        @if (user.avatarVersion !== null) {
+          <button class="button secondary" type="button" [disabled]="photoBusy()" (click)="removePhoto()">
+            {{ 'settings.profile.remove' | transloco }}
+          </button>
+        }
+      </div>
+      @if (photoError()) {
+        <p class="field-error" role="alert">{{ photoError() | transloco }}</p>
+      }
+    </section>
+  }
+
+  <section aria-labelledby="language-heading">
+    <h2 id="language-heading">{{ 'settings.language.heading' | transloco }}</h2>
+    <div class="languages" role="radiogroup" aria-labelledby="language-heading">
+      @for (locale of locales; track locale) {
+        <label class="language" [attr.lang]="locale">
+          <input
+            type="radio"
+            name="language"
+            [value]="locale"
+            [checked]="language.active() === locale"
+            (change)="chooseLanguage(locale)"
+          />
+          <span>{{ languageNames[locale] }}</span>
+        </label>
+      }
+    </div>
+    @if (languageError()) {
+      <p class="field-error" role="alert">{{ 'settings.language.failed' | transloco }}</p>
+    }
+  </section>
+
+  <section aria-labelledby="groups-heading">
+    <h2 id="groups-heading">{{ 'settings.groups.heading' | transloco }}</h2>
+    <a class="row-link" routerLink="/groups">{{ 'settings.groups.link' | transloco }} <span aria-hidden="true">›</span></a>
+  </section>
+
+  <section>
+    <button class="logout" type="button" [disabled]="logoutPending()" (click)="logout()">
+      {{ (logoutPending() ? 'settings.loggingOut' : 'settings.logout') | transloco }}
+    </button>
+    @if (logoutError()) {
+      <p class="field-error" role="alert">{{ 'settings.logoutFailed' | transloco }}</p>
+    }
+  </section>
+</div>

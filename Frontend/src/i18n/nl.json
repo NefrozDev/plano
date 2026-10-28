@@ -5,5 +5,33 @@
     "agenda": "Agenda",
     "lists": "Lijsten",
     "objectives": "Doelen"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "back": "Terug naar start",
+    "profile": {
+      "heading": "Profiel",
+      "add": "Foto toevoegen",
+      "change": "Foto wijzigen",
+      "remove": "Foto verwijderen",
+      "saving": "Opslaan…",
+      "tooLarge": "Deze afbeelding is te groot (maximaal 20 MB).",
+      "unreadable": "Deze afbeelding kan niet worden gelezen. Kies een JPEG-, PNG- of WebP-foto.",
+      "failed": "De foto kon niet worden opgeslagen. Probeer het opnieuw."
+    },
+    "language": {
+      "heading": "Taal",
+      "failed": "De taal geldt op dit apparaat, maar kon niet in je account worden opgeslagen."
+    },
+    "groups": {
+      "heading": "Groepen",
+      "link": "Mijn groepen beheren"
+    },
+    "logout": "Afmelden",
+    "loggingOut": "Afmelden…",
+    "logoutFailed": "Afmelden is mislukt. Probeer het opnieuw."
+  },
+  "dashboard": {
+    "openSettings": "Instellingen openen"
   }
 }

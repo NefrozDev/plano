@@ -5,5 +5,33 @@
     "agenda": "Kalender",
     "lists": "Listen",
     "objectives": "Ziele"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "back": "Zurück zur Startseite",
+    "profile": {
+      "heading": "Profil",
+      "add": "Foto hinzufügen",
+      "change": "Foto ändern",
+      "remove": "Foto entfernen",
+      "saving": "Wird gespeichert…",
+      "tooLarge": "Dieses Bild ist zu groß (maximal 20 MB).",
+      "unreadable": "Dieses Bild kann nicht gelesen werden. Wähle ein JPEG-, PNG- oder WebP-Foto.",
+      "failed": "Das Foto konnte nicht gespeichert werden. Bitte versuche es erneut."
+    },
+    "language": {
+      "heading": "Sprache",
+      "failed": "Die Sprache gilt auf diesem Gerät, konnte aber nicht in deinem Konto gespeichert werden."
+    },
+    "groups": {
+      "heading": "Gruppen",
+      "link": "Meine Gruppen verwalten"
+    },
+    "logout": "Abmelden",
+    "loggingOut": "Abmeldung…",
+    "logoutFailed": "Abmelden fehlgeschlagen. Bitte versuche es erneut."
+  },
+  "dashboard": {
+    "openSettings": "Einstellungen öffnen"
   }
 }

@@ -1,10 +1,8 @@
-import type { MockedObject } from 'vitest';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { provideRouter } from '@angular/router';
 import { AuthUser } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { APP_CLOCK } from '../../core/time/dates';
@@ -13,9 +11,7 @@ import { TEST_TODAY, flushListReminders, settle } from '../../testing/plano-test
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
-  let auth: MockedObject<Pick<AuthService, 'logout'>> & {
-    user: ReturnType<typeof signal<AuthUser | null>>;
-  };
+  let auth: { user: ReturnType<typeof signal<AuthUser | null>> };
   const user: AuthUser = {
     id: 'user-1',
     firstName: 'Ada',
@@ -27,13 +23,7 @@ describe('DashboardComponent', () => {
   };
 
   beforeEach(async () => {
-    auth = Object.assign(
-      {
-        logout: vi.fn().mockName('AuthService.logout'),
-      },
-      { user: signal<AuthUser | null>(user) },
-    );
-    auth.logout.mockReturnValue(of(void 0));
+    auth = { user: signal<AuthUser | null>(user) };
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
@@ -70,21 +60,40 @@ describe('DashboardComponent', () => {
     expect(component.displayName()).toBe('vous');
   });
 
-  it('updates tasks and the profile menu', () => {
+  it('updates tasks, flipping only the targeted one', () => {
     const component =
       TestBed.createComponent(DashboardComponent).componentInstance;
     const before = component.tasks().map(({ done }) => done);
     component.toggleTask(0);
-    component.toggleProfileMenu();
     expect(component.completedTasks()).toBe(2);
-    // Only the targeted task flips.
     expect(component.tasks().map(({ done }) => done)).toEqual([!before[0], ...before.slice(1)]);
-    expect(component.profileMenuOpen()).toBe(true);
 
     component.toggleTask(0);
-    component.toggleProfileMenu();
     expect(component.tasks().map(({ done }) => done)).toEqual(before);
-    expect(component.profileMenuOpen()).toBe(false);
+  });
+
+  it('opens Settings from the profile picture, or the initials without one', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const link = element.querySelector('.profile-button') as HTMLAnchorElement;
+
+    expect(link.getAttribute('href')).toBe('/settings');
+    expect(link.getAttribute('aria-label')).toBe('Ouvrir les paramètres');
+    expect(link.querySelector('app-user-avatar')?.textContent?.trim()).toBe('AL');
+    expect(link.querySelector('img')).toBeNull();
+
+    auth.user.set({ ...user, avatarVersion: 42 });
+    fixture.detectChanges();
+    expect(link.querySelector('img')?.getAttribute('src')).toBe('/api/v1/users/user-1/avatar?v=42');
+  });
+
+  it('shows no profile link while nobody is signed in', () => {
+    auth.user.set(null);
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.profile-button')).toBeNull();
   });
 
   it('previews today from the agenda, list reminders included, linking to each item', async () => {
@@ -140,31 +149,5 @@ describe('DashboardComponent', () => {
     expect(goals[0].textContent).toContain('Méditer 30 min par jour');
     expect(goals[1].getAttribute('href')).toBe('/objectives/courir-10-km');
     expect(goals[1].textContent).toContain('65%');
-  });
-
-  it('logs out and returns to login', () => {
-    const component = TestBed.createComponent(DashboardComponent).componentInstance;
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
-    component.logout();
-    expect(auth.logout).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith('/login');
-  });
-
-  it('ignores duplicate logout clicks and reports failures', () => {
-    const component =
-      TestBed.createComponent(DashboardComponent).componentInstance;
-    component.logoutPending.set(true);
-    component.logout();
-    expect(auth.logout).not.toHaveBeenCalled();
-    component.logoutPending.set(false);
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
-    auth.logout.mockReturnValue(throwError(() => new Error('offline')));
-    component.logout();
-    expect(auth.logout).toHaveBeenCalledTimes(1);
-    // Still signed in on the server: stay on the page.
-    expect(navigate).not.toHaveBeenCalled();
-    expect(component.logoutError()).toContain('déconnexion a échoué');
-    expect(component.logoutPending()).toBe(false);
   });
 });

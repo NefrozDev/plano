@@ -21,6 +21,15 @@ export const routes: Routes = [
       ),
     title: 'Créer un compte | Plano',
   },
+  {
+    path: 'settings',
+    canActivate: [authenticatedGuard],
+    loadComponent: () =>
+      import('./features/settings/settings.component').then(
+        (component) => component.SettingsComponent,
+      ),
+    title: 'Paramètres | Plano',
+  },
   // Former single-group page, still reached from older links.
   { path: 'group/setup', redirectTo: 'groups' },
   {

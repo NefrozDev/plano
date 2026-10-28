@@ -25,56 +25,16 @@
   width: 100%;
   height: 100%;
 }
-.profile-area {
-  position: relative;
-}
 .profile-button {
+  display: grid;
   width: 2.8rem;
   height: 2.8rem;
-  padding: 0.25rem;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
+  place-items: center;
+  border-radius: 50%;
 }
-.profile-button svg {
-  fill: none;
-  stroke: var(--color-text);
-  stroke-width: 2.7;
-}
-.profile-menu {
-  position: absolute;
-  z-index: 3;
-  top: 3rem;
-  right: 0;
-  display: grid;
-  width: 12.5rem;
-  padding: 0.35rem;
-  border-radius: 0.8rem;
-  background: white;
-  box-shadow: var(--shadow-card);
-}
-.profile-menu a,
-.profile-menu button {
-  padding: 0.75rem;
-  border: 0;
-  border-radius: 0.55rem;
-  background: transparent;
-  color: var(--color-text);
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-}
-.profile-menu a:hover,
-.profile-menu button:hover {
-  background: var(--color-surface);
-}
-.logout-error {
-  margin: 0.3rem 1.25rem;
-  padding: 0.55rem;
-  border-radius: 0.5rem;
-  background: var(--color-danger-surface);
-  color: var(--color-danger);
-  font-size: 0.75rem;
+.profile-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent);
+  outline-offset: 2px;
 }
 .screen-content {
   flex: 1;
