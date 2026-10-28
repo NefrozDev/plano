@@ -13,7 +13,9 @@ import { FriendsService } from '../../friends/friends.service';
 import { Friendship } from '../../friends/friendship.entity';
 import { GroupsService } from '../../groups/groups.service';
 import { User } from '../../users/user.entity';
+import { LiveEventsService } from '../../live/live-events.service';
 import { ListAccessService } from '../list-access.service';
+import { ListChangesService } from '../list-changes.service';
 import { ListContentService } from '../list-content.service';
 import { ListSettingsService } from '../list-settings.service';
 import { ListsService } from '../lists.service';
@@ -23,6 +25,8 @@ export interface ListsTestBed {
   lists: ListsService;
   content: ListContentService;
   settings: ListSettingsService;
+  /** Receives the live events the services publish; spy on `publish`. */
+  live: LiveEventsService;
   /** Owner of the group. */
   ada: string;
   /** In Ada's group. */
@@ -65,6 +69,8 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
     new FriendsService(dataSource, writeLock),
   );
   const access = new ListAccessService(dataSource, contacts);
+  const live = new LiveEventsService();
+  const changes = new ListChangesService(dataSource, live);
 
   const [ada, bob, cyd] = await Promise.all(
     ['Ada', 'Bob', 'Cyd'].map((name) => insertUser(dataSource, name)),
@@ -89,8 +95,9 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
 
   return {
     dataSource,
-    lists: new ListsService(dataSource, writeLock, access, contacts),
-    content: new ListContentService(dataSource, writeLock, access),
+    lists: new ListsService(dataSource, writeLock, access, contacts, changes),
+    content: new ListContentService(dataSource, writeLock, access, changes),
+    live,
     settings: new ListSettingsService(dataSource, writeLock),
     ada,
     bob,
@@ -127,6 +134,7 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
       });
     },
     destroy: async () => {
+      live.onApplicationShutdown();
       await dataSource.destroy();
       await database.drop();
     },

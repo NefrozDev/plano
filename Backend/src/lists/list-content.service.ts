@@ -24,6 +24,7 @@ import { ListMember } from './entities/list-member.entity';
 import { ListSection } from './entities/list-section.entity';
 import { List } from './entities/list.entity';
 import { ListAccessService } from './list-access.service';
+import { ListChangesService } from './list-changes.service';
 import { toEntryResponse, toSectionResponse } from './list.mapper';
 
 /** True when `ids` names every row exactly once, in any order. */
@@ -43,6 +44,7 @@ export class ListContentService {
     private readonly dataSource: DataSource,
     private readonly writeLock: DatabaseWriteLockService,
     private readonly access: ListAccessService,
+    private readonly changes: ListChangesService,
   ) {}
 
   async addSection(
@@ -195,12 +197,12 @@ export class ListContentService {
     });
   }
 
-  private inTransaction<T>(
+  private async inTransaction<T>(
     listId: string,
     userId: string,
     operation: (manager: EntityManager, list: List) => Promise<T>,
   ): Promise<T> {
-    return this.writeLock.runExclusive(() =>
+    const result = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
         const { list } = await this.access.require(
           listId,
@@ -211,6 +213,8 @@ export class ListContentService {
         return operation(manager, list);
       }),
     );
+    await this.changes.changed(listId);
+    return result;
   }
 
   private async requireSection(

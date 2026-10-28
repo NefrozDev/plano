@@ -3,12 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { FriendsModule } from '../friends/friends.module';
+import { LiveModule } from '../live/live.module';
 import { ListEntry } from './entities/list-entry.entity';
 import { ListMember } from './entities/list-member.entity';
 import { ListSection } from './entities/list-section.entity';
 import { ListSettings } from './entities/list-settings.entity';
 import { List } from './entities/list.entity';
 import { ListAccessService } from './list-access.service';
+import { ListChangesService } from './list-changes.service';
 import { ListContentService } from './list-content.service';
 import { ListSettingsController } from './list-settings.controller';
 import { ListSettingsService } from './list-settings.service';
@@ -21,6 +23,7 @@ import { ListsService } from './lists.service';
     AuthModule,
     DatabaseModule,
     FriendsModule,
+    LiveModule,
     TypeOrmModule.forFeature([
       List,
       ListMember,
@@ -32,6 +35,7 @@ import { ListsService } from './lists.service';
   controllers: [ListsController, ListSettingsController],
   providers: [
     ListAccessService,
+    ListChangesService,
     ListsService,
     ListContentService,
     ListSettingsService,

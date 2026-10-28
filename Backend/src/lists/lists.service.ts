@@ -27,6 +27,7 @@ import { ListMember } from './entities/list-member.entity';
 import { ListSection } from './entities/list-section.entity';
 import { List } from './entities/list.entity';
 import { ListAccess, ListAccessService } from './list-access.service';
+import { ListChangesService } from './list-changes.service';
 import { displayName, toSectionResponse } from './list.mapper';
 
 @Injectable()
@@ -36,6 +37,7 @@ export class ListsService {
     private readonly writeLock: DatabaseWriteLockService,
     private readonly access: ListAccessService,
     private readonly contacts: ContactsService,
+    private readonly changes: ListChangesService,
   ) {}
 
   async findAll(userId: string): Promise<ListSummary[]> {
@@ -87,6 +89,7 @@ export class ListsService {
         }),
       ),
     );
+    await this.changes.changed(list.id);
     return this.toDetail({ list, role: 'owner' }, userId);
   }
 
@@ -101,28 +104,32 @@ export class ListsService {
       await this.dataSource.manager.save(access.list);
       return access;
     });
+    await this.changes.changed(listId);
     return this.toDetail(access, userId);
   }
 
   async remove(listId: string, userId: string): Promise<void> {
-    await this.writeLock.runExclusive(() =>
+    const audience = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
         await this.access.require(listId, userId, 'own', manager);
+        const audience = await this.changes.audience(listId, manager);
         await manager.delete(ListEntry, { listId });
         await manager.delete(ListSection, { listId });
         await manager.delete(ListMember, { listId });
         await manager.delete(List, { id: listId });
+        return audience;
       }),
     );
+    this.changes.removed(listId, audience);
   }
 
-  /** Shares the list with someone from the owner's group. */
+  /** Shares the list with one of the owner's contacts. */
   async addMember(
     listId: string,
     userId: string,
     details: AddListMemberDto,
   ): Promise<ListMemberResponse> {
-    return this.writeLock.runExclusive(() =>
+    const member = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
         await this.access.require(listId, userId, 'own', manager);
         if (details.userId === userId) {
@@ -156,6 +163,8 @@ export class ListsService {
         return this.toMemberResponse(manager, member);
       }),
     );
+    await this.changes.changed(listId);
+    return member;
   }
 
   async updateMember(
@@ -164,7 +173,7 @@ export class ListsService {
     userId: string,
     changes: UpdateListMemberDto,
   ): Promise<ListMemberResponse> {
-    return this.writeLock.runExclusive(() =>
+    const member = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
         await this.access.require(listId, userId, 'own', manager);
         const member = await this.requireMember(manager, listId, memberUserId);
@@ -173,6 +182,8 @@ export class ListsService {
         return this.toMemberResponse(manager, member);
       }),
     );
+    await this.changes.changed(listId);
+    return member;
   }
 
   /** The owner removes anyone; a member can remove themself to leave the list. */
@@ -198,16 +209,22 @@ export class ListsService {
         await manager.delete(ListMember, { id: member.id });
       }),
     );
+    this.changes.removed(listId, [memberUserId]);
+    await this.changes.changed(listId);
   }
 
   /** Stops sharing: everyone but the owner loses access. */
   async removeAllMembers(listId: string, userId: string): Promise<void> {
-    await this.writeLock.runExclusive(() =>
+    const formerMembers = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
         await this.access.require(listId, userId, 'own', manager);
+        const members = await manager.find(ListMember, { where: { listId } });
         await manager.delete(ListMember, { listId });
+        return members.map((member) => member.userId);
       }),
     );
+    this.changes.removed(listId, formerMembers);
+    await this.changes.changed(listId);
   }
 
   /** Entries with a reminder, across every list the user can see. */

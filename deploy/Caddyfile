@@ -8,7 +8,9 @@
 }
 
 :80 {
-	encode zstd gzip
+	# Compression would hold Server-Sent Events back until a buffer fills.
+	@compressible not path /api/v1/live/*
+	encode @compressible zstd gzip
 
 	header {
 		Strict-Transport-Security "max-age=31536000"
