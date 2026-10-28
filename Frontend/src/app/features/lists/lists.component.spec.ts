@@ -37,6 +37,8 @@ describe('ListsComponent', () => {
     expect(captions).toEqual(['Partagée avec 1 personne', 'Privée', 'Partagée avec vous']);
     expect(element.querySelector('.list-progress b')?.textContent).toBe('2 / 6');
     expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
+    // No notification feed exists yet: the bell must not claim an unread one.
+    expect(element.querySelector('[aria-label="Notifications"] i')).toBeNull();
   });
 
   it('filters personal, shared and archived lists', () => {

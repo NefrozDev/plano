@@ -6,7 +6,6 @@
 .icon-button svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .icon-button .grid-icon { fill: currentColor; stroke: none; }
 .more-button svg { fill: currentColor; stroke: none; }
-.notification-button i { position: absolute; top: .15rem; right: .15rem; width: .45rem; height: .45rem; border: 2px solid white; border-radius: 50%; background: #325be2; }
 .list-filters { display: grid; grid-template-columns: repeat(4, 1fr); padding: 0 .95rem; border-bottom: 1px solid #edf0f5; }
 .list-filters button { position: relative; min-height: 3.4rem; padding: .45rem .2rem; border: 0; background: transparent; color: #747b8e; cursor: pointer; font-size: .78rem; font-weight: 650; }
 .list-filters button.active { color: #3264ed; }
