@@ -35,7 +35,7 @@
               <label class="choice" [class.selected]="form.controls.category.value === category.value">
                 <input type="radio" formControlName="category" [value]="category.value" />
                 <app-objective-icon [category]="category.value" [color]="category.color" />
-                <span>{{ category.label }}</span>
+                <span [attr.title]="category.label">{{ category.label }}</span>
               </label>
             }
           </div>

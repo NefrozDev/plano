@@ -18,6 +18,9 @@ legend { margin-bottom: .6rem; padding: 0; color: #394254; font-size: .82rem; fo
 .categories { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .4rem; }
 .choice, .tracking-option { position: relative; cursor: pointer; }
 .choice { display: grid; gap: .4rem; justify-items: center; padding: .7rem .2rem; border: 1px solid #e4e8f0; border-radius: .75rem; color: #5b6476; font-size: .6rem; font-weight: 650; text-align: center; }
+/* Long labels wrap, breaking a word that cannot fit, on two lines at most, then end with "…".
+   No `hyphens: auto`: Chromium lets the added hyphen overflow the chip. */
+.choice span { display: -webkit-box; width: 100%; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.25; overflow-wrap: anywhere; }
 .choice.selected, .tracking-option.selected { border-color: var(--color-primary); background: #f1f5ff; color: var(--color-primary); }
 .choice input, .tracking-option input { position: absolute; opacity: 0; pointer-events: none; }
 .choice:focus-within, .tracking-option:focus-within { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 2px; }

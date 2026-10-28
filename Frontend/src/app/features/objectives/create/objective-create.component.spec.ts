@@ -62,6 +62,27 @@ describe('ObjectiveCreateComponent', () => {
     expect(finance.closest('label')?.classList).toContain('selected');
   });
 
+  it('keeps category labels inside their chip, on two lines at most', () => {
+    const labels = Array.from(element.querySelectorAll<HTMLElement>('.categories .choice span'));
+    const fitsInChip = (label: HTMLElement): boolean => {
+      const chip = label.closest('label')!.getBoundingClientRect();
+      const box = label.getBoundingClientRect();
+      return box.left >= chip.left && box.right <= chip.right && label.scrollWidth <= label.clientWidth;
+    };
+    const lineHeight = (label: HTMLElement): number => parseFloat(getComputedStyle(label).lineHeight);
+
+    expect(labels.map((label) => label.title)).toEqual(component.categories.map((category) => category.label));
+    expect(labels.every(fitsInChip)).toBe(true);
+
+    // A label far too long for two lines is cut with an ellipsis rather than overflowing.
+    const label = labels[3];
+    label.textContent = 'Développement personnel et professionnel continu';
+    expect(fitsInChip(label)).toBe(true);
+    expect(label.getBoundingClientRect().height).toBeLessThanOrEqual(2 * lineHeight(label) + 1);
+    expect(label.scrollHeight).toBeGreaterThan(label.clientHeight);
+    expect(getComputedStyle(label).webkitLineClamp).toBe('2');
+  });
+
   it('rejects a due date in the past and counts description characters', () => {
     component.form.controls.title.setValue('Lire');
     submit();
