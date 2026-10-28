@@ -317,6 +317,69 @@ describe('ListDetailComponent', () => {
 
       http.expectNone('/api/v1/lists/list-1/sections/fresh/order');
     });
+
+    /** A detached section block, as `elementFromPoint` would find under the pointer. */
+    function block(sectionId: string): HTMLElement {
+      const target = document.createElement('div');
+      target.className = 'section-block';
+      target.dataset['sectionId'] = sectionId;
+      return target;
+    }
+    const sectionIds = () => component.list()!.sections.map(({ id }) => id);
+
+    it('moves a section over another one and saves the section order once on drop', async () => {
+      await create();
+      const pointFinder = vi.spyOn(document, 'elementFromPoint').mockReturnValue(block('grocery'));
+
+      component.startSectionDrag('fresh');
+      component.moveDrag(pointer());
+      fixture.detectChanges();
+      expect(sectionIds()).toEqual(['grocery', 'fresh']);
+      expect(element.querySelector('.section-block.dragging')?.getAttribute('data-section-id')).toBe('fresh');
+      // Hovering the dragged section itself changes nothing.
+      pointFinder.mockReturnValue(block('fresh'));
+      component.moveDrag(pointer());
+      expect(sectionIds()).toEqual(['grocery', 'fresh']);
+
+      component.endDrag();
+      const order = http.expectOne({ method: 'PUT', url: '/api/v1/lists/list-1/sections/order' });
+      expect(order.request.body).toEqual({ sectionIds: ['grocery', 'fresh'] });
+      order.flush(null);
+      expect(component.draggedSection()).toBeNull();
+      // A section drag never reorders entries.
+      http.expectNone('/api/v1/lists/list-1/sections/fresh/order');
+    });
+
+    it('saves no section order when the drag moved nothing', async () => {
+      await create();
+
+      component.startSectionDrag('fresh');
+      component.endDrag();
+
+      http.expectNone('/api/v1/lists/list-1/sections/order');
+      expect(component.draggedSection()).toBeNull();
+    });
+
+    it('drags a collapsed section from its own handle', async () => {
+      await create();
+      component.toggleSection('fresh');
+      await render();
+      const handle = element.querySelector('.section-handle') as HTMLButtonElement;
+      expect(handle.getAttribute('aria-label')).toBe('Déplacer la section Produits frais');
+      const setPointerCapture = vi.fn();
+      const start = {
+        pointerId: 3,
+        currentTarget: { setPointerCapture },
+        preventDefault: vi.fn(),
+      } as unknown as PointerEvent;
+
+      component.startSectionDrag('fresh', start);
+
+      expect(setPointerCapture).toHaveBeenCalledTimes(1);
+      expect(setPointerCapture).toHaveBeenCalledWith(3);
+      expect(component.draggedSection()).toBe('fresh');
+      component.endDrag();
+    });
   });
 
   it('lets viewers read the list without editing controls', async () => {
@@ -335,6 +398,7 @@ describe('ListDetailComponent', () => {
     await render();
     expect(element.querySelector('.name-input')).toBeNull();
     expect(component.sectionViews()[0].collapsed).toBe(true);
+    expect(element.querySelector('.section-handle')).toBeNull();
   });
 
   it('explains when the list cannot be opened', async () => {

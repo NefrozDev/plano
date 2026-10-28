@@ -15,6 +15,7 @@ describe('ListSectionHeaderComponent', () => {
       target,
       currentTarget: { setPointerCapture: vi.fn().mockName('setPointerCapture') },
       preventDefault: vi.fn().mockName('preventDefault'),
+      stopPropagation: vi.fn().mockName('stopPropagation'),
     } as unknown as PointerEvent;
   }
 
@@ -28,6 +29,7 @@ describe('ListSectionHeaderComponent', () => {
     header.renamed.subscribe((name) => emitted.push(`renamed:${name}`));
     header.collapse.subscribe(() => emitted.push('collapse'));
     header.remove.subscribe(() => emitted.push('remove'));
+    header.dragStart.subscribe(() => emitted.push('drag'));
     fixture.detectChanges();
   }
 
@@ -78,6 +80,28 @@ describe('ListSectionHeaderComponent', () => {
       .not.toHaveBeenCalled();
   });
 
+  it('starts a drag from its handle, which neither swipes nor renames', () => {
+    render(true);
+    const handle = element.querySelector('.drag-handle') as HTMLButtonElement;
+    expect(handle.getAttribute('aria-label')).toBe('Déplacer la section Frais');
+    const swipeStart = pointer(200, handle);
+    header.startSwipe(swipeStart);
+    header.swipe.move(pointer(50));
+    header.swipe.finish();
+
+    const dragStart = pointer(200, handle);
+    header.startDrag(dragStart);
+    handle.click();
+    fixture.detectChanges();
+
+    expect(emitted).toEqual(['drag']);
+    expect((swipeStart.currentTarget as unknown as { setPointerCapture: ReturnType<typeof vi.fn> }).setPointerCapture)
+      .not.toHaveBeenCalled();
+    expect((dragStart.currentTarget as unknown as { setPointerCapture: ReturnType<typeof vi.fn> }).setPointerCapture)
+      .toHaveBeenCalledWith(1);
+    expect(element.querySelector('.name-input')).toBeNull();
+  });
+
   it('renames once when Enter is followed by blur', () => {
     render(true);
     header.beginEditing();
@@ -101,6 +125,7 @@ describe('ListSectionHeaderComponent', () => {
     expect(emitted).toEqual(['collapse']);
     expect(element.querySelector('.delete-section')).toBeNull();
     expect(element.querySelector('.collapse')).toBeNull();
+    expect(element.querySelector('.drag-handle')).toBeNull();
     expect(element.querySelector('.name-input')).toBeNull();
     expect((start.currentTarget as unknown as { setPointerCapture: ReturnType<typeof vi.fn> }).setPointerCapture)
       .not.toHaveBeenCalled();

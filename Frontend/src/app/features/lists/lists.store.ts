@@ -183,6 +183,30 @@ export class ListsStore {
     );
   }
 
+  /** Moves a section onto another one's position, locally: call saveSectionOrder() on drop. */
+  moveSection(sectionId: string, targetSectionId: string): void {
+    const detail = this.detailState();
+    if (!detail) return;
+    const from = detail.sections.findIndex(({ id }) => id === sectionId);
+    const to = detail.sections.findIndex(({ id }) => id === targetSectionId);
+    if (from < 0 || to < 0 || from === to) return;
+    const sections = [...detail.sections];
+    const [moved] = sections.splice(from, 1);
+    sections.splice(to, 0, moved);
+    this.detailState.set({ ...detail, sections });
+  }
+
+  /** Saves the section order; on failure the list is reloaded to the server's order. */
+  async saveSectionOrder(): Promise<void> {
+    const detail = this.detailState();
+    if (!detail) return;
+    const saved = await this.run(
+      this.api.reorderSections(detail.id, detail.sections.map(({ id }) => id)),
+      () => undefined,
+    );
+    if (!saved) await this.open(detail.id);
+  }
+
   /** Saves a section's order; on failure the list is reloaded to the server's order. */
   async saveOrder(sectionId: string): Promise<void> {
     const detail = this.detailState();

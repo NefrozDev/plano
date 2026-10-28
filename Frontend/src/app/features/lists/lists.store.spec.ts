@@ -124,6 +124,40 @@ describe('ListsStore', () => {
     expect(store.error()).toBe('Vous pouvez seulement consulter cette liste.');
   });
 
+  it('moves sections locally and saves their order once', async () => {
+    await openList();
+    const sectionIds = () => store.detail()?.sections.map(({ id }) => id);
+
+    store.moveSection('fresh', 'grocery');
+    store.moveSection('fresh', 'unknown');
+    expect(sectionIds()).toEqual(['grocery', 'fresh']);
+    http.expectNone('/api/v1/lists/list-1/sections/order');
+
+    const saving = store.saveSectionOrder();
+    const order = http.expectOne('/api/v1/lists/list-1/sections/order');
+    expect(order.request.method).toBe('PUT');
+    expect(order.request.body).toEqual({ sectionIds: ['grocery', 'fresh'] });
+    order.flush(null);
+    await saving;
+    expect(sectionIds()).toEqual(['grocery', 'fresh']);
+  });
+
+  it('reloads the server section order when saving it fails', async () => {
+    await openList();
+    store.moveSection('fresh', 'grocery');
+
+    const saving = store.saveSectionOrder();
+    http
+      .expectOne('/api/v1/lists/list-1/sections/order')
+      .flush({ message: 'Ordre invalide.' }, { status: 400, statusText: 'Bad Request' });
+    await settle();
+    http.expectOne('/api/v1/lists/list-1').flush(listDetail());
+    await saving;
+
+    expect(store.detail()?.sections.map(({ id }) => id)).toEqual(['fresh', 'grocery']);
+    expect(store.error()).toBe('Ordre invalide.');
+  });
+
   it('keeps the list unchanged when the server refuses a change', async () => {
     await openList();
 

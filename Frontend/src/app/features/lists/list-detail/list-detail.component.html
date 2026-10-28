@@ -50,69 +50,85 @@
 
   <section class="detail-content">
     @for (view of sectionViews(); track view.section.id) {
-      @if (view.collapsed) {
-        <button
-          class="section-summary"
-          type="button"
-          [style.--section-color]="view.section.color"
-          [style.--section-progress]="view.progress + '%'"
-          [attr.aria-expanded]="false"
-          (click)="toggleSection(view.section.id)"
-        >
-          <i [style.background]="view.section.color" aria-hidden="true"></i>
-          <strong>{{ view.section.name }}</strong>
-          <span>{{ view.completed }} / {{ view.section.entries.length }}</span>
-          <b aria-hidden="true">›</b>
-        </button>
-      } @else {
-        <section
-          class="entry-section"
-          [style.--section-color]="view.section.color"
-          [style.--section-progress]="view.progress + '%'"
-        >
-          <app-list-section-header
-            [name]="view.section.name"
-            [editable]="canEdit()"
-            (renamed)="renameSection(view.section.id, $event)"
-            (collapse)="toggleSection(view.section.id)"
-            (remove)="requestDeleteSection(view.section)"
-          />
-          @for (entry of view.entries; track entry.id) {
-            <app-list-entry-row
-              [entry]="entry"
-              [sectionId]="view.section.id"
-              [readonly]="!canEdit()"
-              [dragging]="dragged()?.entryId === entry.id"
-              (toggled)="toggleEntry(view.section.id, entry)"
-              (open)="openEntry(view.section.id, entry.id)"
-              (remove)="requestDeleteEntry(entry)"
-              (dragStart)="startDrag(view.section.id, entry.id)"
-            />
-          }
+      <div
+        class="section-block"
+        [attr.data-section-id]="view.section.id"
+        [class.dragging]="draggedSection() === view.section.id"
+      >
+        @if (view.collapsed) {
+          <button
+            class="section-summary"
+            type="button"
+            [style.--section-color]="view.section.color"
+            [style.--section-progress]="view.progress + '%'"
+            [attr.aria-expanded]="false"
+            (click)="toggleSection(view.section.id)"
+          >
+            <i [style.background]="view.section.color" aria-hidden="true"></i>
+            <strong>{{ view.section.name }}</strong>
+            <span>{{ view.completed }} / {{ view.section.entries.length }}</span>
+            <b aria-hidden="true">›</b>
+          </button>
           @if (canEdit()) {
-            @if (addingTo() === view.section.id) {
-              <input
-                appAutofocus
-                class="new-entry-input"
-                type="text"
-                maxlength="200"
-                placeholder="Nouvel élément..."
-                [value]="newEntryValue()"
-                (input)="newEntryValue.set($any($event.target).value)"
-                (keydown.enter)="$event.preventDefault(); finishAdding(view.section.id)"
-                (keydown.escape)="cancelAdding()"
-                (blur)="finishAdding(view.section.id)"
-              />
-            } @else {
-              <button
-                class="empty-entry"
-                type="button"
-                (click)="beginAdding(view.section.id)"
-              ><span aria-hidden="true">＋</span> Ajouter un élément</button>
-            }
+            <button
+              class="drag-handle section-handle"
+              type="button"
+              [attr.aria-label]="'Déplacer la section ' + view.section.name"
+              (click)="$event.preventDefault()"
+              (pointerdown)="startSectionDrag(view.section.id, $event)"
+            >⠿</button>
           }
-        </section>
-      }
+        } @else {
+          <section
+            class="entry-section"
+            [style.--section-color]="view.section.color"
+            [style.--section-progress]="view.progress + '%'"
+          >
+            <app-list-section-header
+              [name]="view.section.name"
+              [editable]="canEdit()"
+              (renamed)="renameSection(view.section.id, $event)"
+              (collapse)="toggleSection(view.section.id)"
+              (remove)="requestDeleteSection(view.section)"
+              (dragStart)="startSectionDrag(view.section.id)"
+            />
+            @for (entry of view.entries; track entry.id) {
+              <app-list-entry-row
+                [entry]="entry"
+                [sectionId]="view.section.id"
+                [readonly]="!canEdit()"
+                [dragging]="dragged()?.entryId === entry.id"
+                (toggled)="toggleEntry(view.section.id, entry)"
+                (open)="openEntry(view.section.id, entry.id)"
+                (remove)="requestDeleteEntry(entry)"
+                (dragStart)="startDrag(view.section.id, entry.id)"
+              />
+            }
+            @if (canEdit()) {
+              @if (addingTo() === view.section.id) {
+                <input
+                  appAutofocus
+                  class="new-entry-input"
+                  type="text"
+                  maxlength="200"
+                  placeholder="Nouvel élément..."
+                  [value]="newEntryValue()"
+                  (input)="newEntryValue.set($any($event.target).value)"
+                  (keydown.enter)="$event.preventDefault(); finishAdding(view.section.id)"
+                  (keydown.escape)="cancelAdding()"
+                  (blur)="finishAdding(view.section.id)"
+                />
+              } @else {
+                <button
+                  class="empty-entry"
+                  type="button"
+                  (click)="beginAdding(view.section.id)"
+                ><span aria-hidden="true">＋</span> Ajouter un élément</button>
+              }
+            }
+          </section>
+        }
+      </div>
     } @empty {
       @if (canEdit()) {
         <button class="empty-entry" type="button" (click)="openSectionCreator()">

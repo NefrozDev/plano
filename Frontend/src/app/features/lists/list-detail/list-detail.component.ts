@@ -109,6 +109,7 @@ export class ListDetailComponent {
   readonly newEntryValue = signal('');
   readonly selected = signal<EntryRef | null>(null);
   readonly dragged = signal<EntryRef | null>(null);
+  readonly draggedSection = signal<string | null>(null);
   /** Whether the current drag reordered anything, i.e. needs saving. */
   private dragMoved = false;
   readonly activeEntry = computed(() => {
@@ -247,8 +248,22 @@ export class ListDetailComponent {
     this.dragged.set({ sectionId, entryId });
   }
 
+  /** Starts dragging a section; a pointer event comes from a collapsed section's own handle. */
+  startSectionDrag(sectionId: string, event?: PointerEvent): void {
+    if (event) {
+      event.preventDefault();
+      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    }
+    this.dragMoved = false;
+    this.draggedSection.set(sectionId);
+  }
+
   /** Moves the dragged entry onto the row under the pointer, within its own section. */
   moveDrag(event: PointerEvent): void {
+    if (this.draggedSection()) {
+      this.moveSectionDrag(event);
+      return;
+    }
     const source = this.dragged();
     if (!source) return;
     event.preventDefault();
@@ -269,9 +284,26 @@ export class ListDetailComponent {
 
   /** Saves the new order once, on drop. */
   endDrag(): void {
+    if (this.draggedSection()) {
+      this.draggedSection.set(null);
+      if (this.dragMoved) void this.store.saveSectionOrder();
+      return;
+    }
     const source = this.dragged();
     if (!source) return;
     this.dragged.set(null);
     if (this.dragMoved) void this.store.saveOrder(source.sectionId);
+  }
+
+  /** Moves the dragged section onto the section under the pointer, collapsed or open. */
+  private moveSectionDrag(event: PointerEvent): void {
+    event.preventDefault();
+    const sourceId = this.draggedSection();
+    const targetId = this.document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>('.section-block')?.dataset['sectionId'];
+    if (!sourceId || !targetId || targetId === sourceId) return;
+    this.store.moveSection(sourceId, targetId);
+    this.dragMoved = true;
   }
 }

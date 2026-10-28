@@ -51,6 +51,13 @@ import { SwipeToDelete } from './swipe-to-delete';
           <button class="collapse" type="button" [attr.aria-expanded]="true" [attr.aria-label]="'Replier la section ' + name()">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
           </button>
+          <button
+            class="drag-handle"
+            type="button"
+            [attr.aria-label]="'Déplacer la section ' + name()"
+            (click)="$event.preventDefault()"
+            (pointerdown)="startDrag($event)"
+          >⠿</button>
         } @else {
           <button class="section-title" type="button" [attr.aria-expanded]="true">{{ name() }}</button>
         }
@@ -78,6 +85,7 @@ export class ListSectionHeaderComponent {
   readonly renamed = output<string>();
   readonly collapse = output<void>();
   readonly remove = output<void>();
+  readonly dragStart = output<void>();
 
   readonly editing = signal(false);
   readonly draft = signal('');
@@ -85,8 +93,16 @@ export class ListSectionHeaderComponent {
 
   startSwipe(event: PointerEvent): void {
     if (!this.editable() || this.editing()) return;
-    if ((event.target as HTMLElement).closest('.collapse')) return;
+    if ((event.target as HTMLElement).closest('.collapse, .drag-handle')) return;
     this.swipe.start(event);
+  }
+
+  /** The parent tracks the drag across sections, like entry drags. */
+  startDrag(event: PointerEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    this.dragStart.emit();
   }
 
   handleClick(event: MouseEvent): void {

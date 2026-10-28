@@ -13,6 +13,7 @@ import type {
   ListSection,
   ListSettings,
   ListSummary,
+  ReorderSectionsRequest,
   UpdateEntryRequest,
   UpdateListRequest,
   UpdateListSettingsRequest,
@@ -54,6 +55,10 @@ export class ListsApiService {
 
   addSection(listId: string, details: CreateSectionRequest): Observable<ListSection> {
     return this.http.post<ListSection>(`${this.lists}/${listId}/sections`, details);
+  }
+
+  reorderSections(listId: string, sectionIds: ReorderSectionsRequest['sectionIds']): Observable<void> {
+    return this.http.put<void>(`${this.lists}/${listId}/sections/order`, { sectionIds });
   }
 
   renameSection(listId: string, sectionId: string, details: UpdateSectionRequest): Observable<void> {
