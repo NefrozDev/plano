@@ -46,6 +46,9 @@ describe('AgendaCalendarComponent', () => {
     expect(element().querySelectorAll('.strip button').length).toBe(7);
     expect(element().querySelector('.strip .selected .dots em')).not.toBeNull();
     expect(element().querySelector('app-bottom-nav .active')?.textContent).toContain('Agenda');
+    // The agenda tab draws a calendar icon instead of a text glyph.
+    expect(element().querySelector('app-bottom-nav .active svg path')?.getAttribute('d')).toContain('M4 10h16');
+    expect(element().querySelector('app-bottom-nav .active span')).toBeNull();
   });
 
   it('moves between days and back to today, keeping it in the URL', async () => {
