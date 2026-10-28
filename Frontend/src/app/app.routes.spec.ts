@@ -41,18 +41,20 @@ describe('app routes', () => {
 
     expect(guardsOf('login')).toEqual([guestGuard]);
     expect(guardsOf('register')).toEqual([guestGuard]);
-    for (const path of ['settings', 'groups', 'groups/:groupId', 'agenda', 'objectives']) {
+    for (const path of ['groups', 'groups/:groupId', 'agenda', 'objectives']) {
       expect(guardsOf(path), path).toEqual([authenticatedGuard]);
     }
     // The former single-group page now lands on the groups overview.
     expect(routes.find((route) => route.path === 'group/setup')?.redirectTo).toBe('groups');
   });
 
-  it('renders the dashboard and lists inside the shared, guarded phone shell', () => {
+  it('renders the dashboard, lists and settings inside the shared, guarded phone shell', () => {
     const shell = routes.find((route) => route.component === MobileShellLayoutComponent);
 
     expect(shell?.canActivate).toEqual([authenticatedGuard]);
-    expect(shell?.children?.map((child) => child.path)).toEqual(['', 'lists', 'lists/:listId']);
+    expect(shell?.children?.map((child) => child.path)).toEqual(['', 'lists', 'lists/:listId', 'settings']);
+    // A top-level route would win over the shell child and drop the frame on desktop.
+    expect(routes.some((route) => route.path === 'settings')).toBe(false);
   });
 
   it('keeps the catch-all redirect last so the shell does not swallow feature routes', () => {
