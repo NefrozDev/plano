@@ -73,6 +73,8 @@ export class AgendaEventFormComponent {
   readonly step = signal<1 | 2>(1);
   readonly pickerOpen = signal(false);
   readonly calendarPickerOpen = signal(false);
+  /** Calendar whose color swatches are unfolded in the calendar dialog. */
+  readonly recoloringId = signal<string | null>(null);
   readonly advancedOpen = signal(false);
   readonly submitted = signal(false);
   readonly attachmentError = signal('');
@@ -141,6 +143,11 @@ export class AgendaEventFormComponent {
 
   selectedCalendar(): AgendaCalendar | undefined {
     return this.store.calendar(this.form.controls.calendarId.value);
+  }
+
+  closeCalendarPicker(): void {
+    this.calendarPickerOpen.set(false);
+    this.recoloringId.set(null);
   }
 
   setParticipants(ids: string[]): void {

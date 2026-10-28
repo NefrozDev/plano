@@ -109,6 +109,25 @@ describe('AgendaStore', () => {
       ]);
     });
 
+    it('recolors a calendar for its events that have no color of their own', () => {
+      store.setCalendarColor('personnel', '#22a95a');
+
+      expect(store.calendar('personnel')?.color).toBe('#22a95a');
+      expect(store.colorOf(store.event('dejeuner')!)).toBe('#22a95a');
+      // "Restaurant" carries its own color: it keeps it.
+      expect(store.colorOf(store.event('restaurant')!)).toBe('#e65591');
+      expect(store.calendar('travail')?.color).toBe('#3264ed');
+    });
+
+    it('ignores colors outside the palette and unknown calendars', () => {
+      const calendars = store.calendars();
+
+      store.setCalendarColor('personnel', 'red; background: url(https://evil.test)');
+      store.setCalendarColor('missing', '#22a95a');
+
+      expect(store.calendars()).toBe(calendars);
+    });
+
     it('keeps only participants from the contact list', () => {
       const contactsBefore = store.contacts();
       const created = store.create(draft({ participantIds: ['camille', 'stranger', 'alex'] }));

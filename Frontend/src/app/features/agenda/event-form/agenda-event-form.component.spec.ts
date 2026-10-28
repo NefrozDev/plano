@@ -86,6 +86,39 @@ describe('AgendaEventFormComponent', () => {
       expect(row.querySelector('.dot')).not.toBeNull();
     });
 
+    it('recolors a calendar from the dialog without picking it or closing the dialog', async () => {
+      const setCalendarColor = vi.spyOn(store, 'setCalendarColor');
+      await harness.navigateByUrl('/agenda/new?date=2026-10-20');
+      (element().querySelector('.calendar-row') as HTMLButtonElement).click();
+      harness.detectChanges();
+      const dialog = element().querySelector('dialog') as HTMLDialogElement;
+      const recolor = dialog.querySelector('[aria-label="Changer la couleur de Travail"]') as HTMLButtonElement;
+      expect(dialog.querySelector('.calendar-colors')).toBeNull();
+
+      recolor.click();
+      harness.detectChanges();
+      expect(recolor.getAttribute('aria-expanded')).toBe('true');
+      expect(dialog.querySelectorAll('[aria-label="Couleur de Travail"] .swatch').length).toBe(7);
+      expect(dialog.querySelector('[aria-label="Couleur de Travail"] [aria-pressed="true"]')?.getAttribute('aria-label'))
+        .toBe('Couleur #3264ed');
+
+      (dialog.querySelector('[aria-label="Couleur #22a95a"]') as HTMLButtonElement).click();
+      harness.detectChanges();
+      expect(setCalendarColor).toHaveBeenCalledTimes(1);
+      expect(setCalendarColor).toHaveBeenCalledWith('travail', '#22a95a');
+      expect(store.calendar('travail')?.color).toBe('#22a95a');
+      expect(dialog.querySelector('[aria-label="Couleur #22a95a"]')?.getAttribute('aria-pressed')).toBe('true');
+      expect(form().form.controls.calendarId.value).toBe('personnel');
+      expect(dialog.open).toBe(true);
+
+      const closing = new Promise((resolve) => dialog.addEventListener('close', resolve, { once: true }));
+      dialog.close();
+      await closing;
+      harness.detectChanges();
+      expect(form().recoloringId()).toBeNull();
+      expect(form().calendarPickerOpen()).toBe(false);
+    });
+
     it('lets free-text fields start on the left while date and time values stay on the right', async () => {
       await harness.navigateByUrl('/agenda/new?date=2026-10-20');
       const align = (selector: string): string =>

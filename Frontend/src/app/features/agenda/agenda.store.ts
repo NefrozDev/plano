@@ -14,6 +14,7 @@ import { ListsStore } from '../lists/lists.store';
 import { categoryMeta } from '../objectives/objective.utils';
 import {
   AgendaItem,
+  EVENT_COLORS,
   addMinutes,
   coveredDates,
   datePart,
@@ -175,6 +176,15 @@ export class AgendaStore {
     this.updateFilters({
       hiddenCalendarIds: hidden.includes(id) ? hidden.filter((other) => other !== id) : [...hidden, id],
     });
+  }
+
+  /** Recolors a calendar: its events follow, except those with a color of their own. */
+  setCalendarColor(id: string, color: string): void {
+    if (!EVENT_COLORS.includes(color) || !this.calendar(id)) return;
+    this.updateData((data) => ({
+      ...data,
+      calendars: data.calendars.map((calendar) => (calendar.id === id ? { ...calendar, color } : calendar)),
+    }));
   }
 
   resetFilters(): void {
