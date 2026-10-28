@@ -9,7 +9,6 @@ import type {
   LocalDateTime,
 } from '@plano/common';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
-import { createPerson } from '../../core/people/people';
 import { APP_CLOCK, createId, normalizeText, toIsoDate, toTimeOfDay } from '../../core/time/dates';
 import { ListsStore } from '../lists/lists.store';
 import { categoryMeta } from '../objectives/objective.utils';
@@ -155,14 +154,6 @@ export class AgendaStore {
     }));
   }
 
-  addContact(name: string): AgendaContact | null {
-    const person = createPerson(name);
-    if (!person) return null;
-    const contact: AgendaContact = { ...person, frequent: false };
-    this.updateData((data) => ({ ...data, contacts: [...data.contacts, contact] }));
-    return contact;
-  }
-
   markViewed(id: string): void {
     if (this.data().recentIds[0] === id) return;
     this.updateData((data) => ({
@@ -191,7 +182,9 @@ export class AgendaStore {
   }
 
   /** Guarantees a positive duration; all-day events cover whole days. */
-  private normalized(event: AgendaEvent): AgendaEvent {
+  private normalized(draft: AgendaEvent): AgendaEvent {
+    // Only people from the contact list can be invited.
+    const event = { ...draft, participantIds: draft.participantIds.filter((id) => this.contact(id)) };
     const title = event.title.trim();
     if (event.allDay) {
       const lastDay = datePart(event.end) < datePart(event.start) ? datePart(event.start) : datePart(event.end);

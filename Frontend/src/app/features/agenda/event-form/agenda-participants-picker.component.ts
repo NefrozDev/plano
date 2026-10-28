@@ -8,7 +8,6 @@ import {
   output,
   signal,
 } from '@angular/core';
-import type { AgendaContact } from '@plano/common';
 import { normalizeText } from '../../../core/time/dates';
 import { SearchFieldComponent } from '../../../shared/ui/search-field.component';
 import { AgendaStore } from '../agenda.store';
@@ -46,9 +45,6 @@ import { AgendaStore } from '../agenda.store';
             <p class="empty">Aucun contact trouvé.</p>
           }
         }
-        @if (canAdd()) {
-          <button class="add" type="button" (click)="addContact()">＋ Ajouter « {{ query().trim() }} »</button>
-        }
       </div>
     </section>
   `,
@@ -71,7 +67,6 @@ import { AgendaStore } from '../agenda.store';
     input:checked + i::after { width: .45rem; height: .25rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.06rem) rotate(-45deg); }
     input:focus-visible + i { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 2px; }
     .empty { color: var(--color-text-muted); font-size: .78rem; }
-    .add { margin-top: .6rem; padding: .5rem 0; border: 0; background: transparent; color: var(--color-primary); cursor: pointer; font-size: .82rem; font-weight: 700; }
   `,
 })
 export class AgendaParticipantsPickerComponent implements OnInit {
@@ -95,11 +90,6 @@ export class AgendaParticipantsPickerComponent implements OnInit {
       { title: 'Tous les contacts', people: contacts.filter((person) => !person.frequent) },
     ].filter((group) => group.people.length);
   });
-  /** Offer to create a contact when the typed name matches nobody exactly. */
-  readonly canAdd = computed(() => {
-    const needle = normalizeText(this.query());
-    return !!needle && !this.store.contacts().some((person: AgendaContact) => normalizeText(person.name) === needle);
-  });
 
   ngOnInit(): void {
     this.picked.set([...this.selected()]);
@@ -107,12 +97,5 @@ export class AgendaParticipantsPickerComponent implements OnInit {
 
   toggle(id: string): void {
     this.picked.update((ids) => (ids.includes(id) ? ids.filter((other) => other !== id) : [...ids, id]));
-  }
-
-  addContact(): void {
-    const contact = this.store.addContact(this.query());
-    if (!contact) return;
-    this.picked.update((ids) => [...ids, contact.id]);
-    this.query.set('');
   }
 }

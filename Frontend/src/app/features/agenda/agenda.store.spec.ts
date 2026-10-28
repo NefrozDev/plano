@@ -109,11 +109,14 @@ describe('AgendaStore', () => {
       ]);
     });
 
-    it('adds contacts, ignoring blank names', () => {
-      expect(store.addContact('   ')).toBeNull();
-      expect(store.addContact('zoé')).toEqual(
-        expect.objectContaining({ name: 'zoé', initials: 'Z', frequent: false }),
-      );
+    it('keeps only participants from the contact list', () => {
+      const contactsBefore = store.contacts();
+      const created = store.create(draft({ participantIds: ['camille', 'stranger', 'alex'] }));
+      expect(created.participantIds).toEqual(['camille', 'alex']);
+
+      store.update(created.id, draft({ participantIds: ['unknown', 'jules'] }));
+      expect(store.event(created.id)?.participantIds).toEqual(['jules']);
+      expect(store.contacts()).toEqual(contactsBefore);
     });
   });
 

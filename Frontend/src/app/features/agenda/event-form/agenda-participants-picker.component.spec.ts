@@ -63,44 +63,17 @@ describe('AgendaParticipantsPickerComponent', () => {
     expect(confirmed.length).toBe(1);
   });
 
-  it('searches without accents and offers to add only a name nobody has', () => {
+  it('searches without accents and never offers to invite someone outside the contacts', () => {
+    const contactsBefore = store.contacts();
     search('chloe');
     expect(headings()).toEqual(['Résultats']);
     expect(names()).toEqual(['Chloé']);
-    // "Chloé" exists exactly once typed with its accent: nothing to add.
-    search('Chloé');
-    expect(element.querySelector('.add')).toBeNull();
 
     search('Zoé');
     expect(names()).toEqual([]);
     expect(element.querySelector('.empty')?.textContent).toBe('Aucun contact trouvé.');
-    expect(element.querySelector('.add')?.textContent).toContain('Ajouter « Zoé »');
-  });
-
-  it('adds a typed contact, picks them and clears the search', () => {
-    const addContact = vi.spyOn(store, 'addContact');
-    search('  Zoé ');
-    (element.querySelector('.add') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    expect(addContact).toHaveBeenCalledTimes(1);
-    expect(addContact).toHaveBeenCalledWith('  Zoé ');
-    const zoe = store.contacts().find(({ name }) => name === 'Zoé');
-    expect(zoe).toBeDefined();
-    expect(picker.picked()).toEqual(['alex', zoe!.id]);
-    expect(picker.query()).toBe('');
-  });
-
-  it('picks nobody when the store refuses the name', () => {
-    const addContact = vi.spyOn(store, 'addContact');
-    const contactsBefore = store.contacts().length;
-    picker.query.set('   ');
-
-    picker.addContact();
-
-    expect(addContact).toHaveBeenCalledTimes(1);
-    expect(store.contacts().length).toBe(contactsBefore);
-    expect(picker.picked()).toEqual(['alex']);
-    expect(picker.query()).toBe('   ');
+    expect(element.textContent).not.toContain('Ajouter');
+    expect(element.querySelectorAll('.lists button').length).toBe(0);
+    expect(store.contacts()).toEqual(contactsBefore);
   });
 });
