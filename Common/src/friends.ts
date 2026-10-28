@@ -4,6 +4,8 @@ export interface PublicUser {
   username: string;
   firstName: string;
   lastName: string;
+  /** Changes with each new profile picture, null without one: see GET /users/:id/avatar?v=. */
+  avatarVersion: number | null;
 }
 
 /** Where the viewer stands with a user: `outgoing` = the viewer asked, `incoming` = the user asked. */

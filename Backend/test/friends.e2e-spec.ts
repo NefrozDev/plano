@@ -50,6 +50,7 @@ describe('Friends and contacts (e2e)', () => {
       username: 'bob',
       firstName: 'Bob',
       lastName: 'Doe',
+      avatarVersion: null,
       relation: 'none',
     });
 

@@ -16,6 +16,8 @@ describe('AuthController', () => {
     lastName: 'Lovelace',
     username: 'ada',
     email: 'ada@example.com',
+    locale: 'fr',
+    avatarVersion: null,
   };
   const authentication: IssuedAuthentication = {
     user,

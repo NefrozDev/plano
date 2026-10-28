@@ -8,6 +8,7 @@ import { FriendsModule } from './friends/friends.module';
 import { HealthModule } from './health/health.module';
 import { GroupsModule } from './groups/groups.module';
 import { ListsModule } from './lists/lists.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ListsModule } from './lists/lists.module';
     GroupsModule,
     FriendsModule,
     ListsModule,
+    UsersModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -14,6 +14,7 @@ import type { JoinGroupDto } from './dto/join-group.dto';
 import type { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupMembership } from './group-membership.entity';
 import { Group } from './group.entity';
+import { avatarVersion } from '../users/user.mapper';
 import type { GroupDetails, GroupMemberSummary } from './group.types';
 
 const GROUP_NOT_FOUND = 'Ce groupe est introuvable.';
@@ -343,6 +344,7 @@ export class GroupsService {
       lastName: membership.user.lastName,
       username: membership.user.username,
       email: membership.user.email,
+      avatarVersion: avatarVersion(membership.user),
       role: membership.role,
       joinedAt: membership.createdAt,
     };

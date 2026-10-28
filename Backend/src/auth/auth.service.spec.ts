@@ -16,6 +16,8 @@ describe('AuthService', () => {
     username: 'jamie.doe',
     email: 'jamie@example.com',
     passwordHash: 'stored-password-hash',
+    locale: 'fr',
+    avatarUpdatedAt: null,
   });
   let users: {
     findOne: Mock;
@@ -130,6 +132,8 @@ describe('AuthService', () => {
       email: 'ada@example.com',
       normalizedEmail: 'ada@example.com',
       passwordHash: 'new-password-hash',
+      // Without a language from the client, the account starts in French.
+      locale: 'fr',
     });
     expect(createdSession.userId).toBe(createdUser.id);
     expect(createdSession.tokenHash).toMatch(/^[a-f0-9]{64}$/);
@@ -139,6 +143,20 @@ describe('AuthService', () => {
     });
     expect(authentication.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(manager.delete).toHaveBeenCalled();
+  });
+
+  it('keeps the language the user registered in', async () => {
+    await service.register({
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      username: 'ada',
+      email: 'ada@example.com',
+      password: 'password123',
+      acceptedTerms: true,
+      locale: 'de',
+    });
+
+    expect(managerCreated[0]).toMatchObject({ username: 'ada', locale: 'de' });
   });
 
   it('rejects an existing username or email before hashing', async () => {
@@ -211,6 +229,8 @@ describe('AuthService', () => {
       lastName: 'Doe',
       username: 'jamie.doe',
       email: 'jamie@example.com',
+      locale: 'fr',
+      avatarVersion: null,
     });
     expect(authentication.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(storedSession?.tokenHash).toMatch(/^[a-f0-9]{64}$/);
@@ -277,6 +297,8 @@ describe('AuthService', () => {
       lastName: user.lastName,
       username: user.username,
       email: user.email,
+      locale: 'fr',
+      avatarVersion: null,
     });
     // Looked up by digest, never by the raw token.
     expect(sessionQuery.where).toHaveBeenCalledTimes(1);

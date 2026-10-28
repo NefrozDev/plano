@@ -9,6 +9,8 @@ describe('CurrentUser', () => {
     lastName: 'Lovelace',
     username: 'ada',
     email: 'ada@example.com',
+    locale: 'fr',
+    avatarVersion: null,
   };
   const contextFor = (request: Partial<AuthenticatedRequest>) =>
     ({

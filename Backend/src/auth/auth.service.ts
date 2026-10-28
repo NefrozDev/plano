@@ -13,6 +13,7 @@ import {
 } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
 import { User } from '../users/user.entity';
+import { toAuthUser } from '../users/user.mapper';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterDto } from './dto/register.dto';
 import { PasswordService } from './password.service';
@@ -28,16 +29,6 @@ const SESSION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
 function normalize(value: string): string {
   return value.trim().toLocaleLowerCase('en-US');
-}
-
-function toAuthUser(user: User): AuthUser {
-  return {
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    username: user.username,
-    email: user.email,
-  };
 }
 
 function hashSessionToken(token: string): string {
@@ -106,6 +97,7 @@ export class AuthService {
             normalizedEmail,
             passwordHash,
             termsAcceptedAt: new Date(),
+            locale: details.locale ?? 'fr',
           });
           const savedUser = await manager.save(createdUser);
 

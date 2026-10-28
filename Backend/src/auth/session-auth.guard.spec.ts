@@ -11,6 +11,8 @@ describe('SessionAuthGuard', () => {
       lastName: 'Lovelace',
       username: 'ada',
       email: 'ada@example.com',
+      locale: 'fr',
+      avatarVersion: null,
     };
     const getSessionUser = vi.fn().mockResolvedValue(user);
     const guard = new SessionAuthGuard({

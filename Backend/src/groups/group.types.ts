@@ -14,6 +14,7 @@ export interface GroupMemberSummary {
   lastName: string;
   username: string;
   email: string;
+  avatarVersion: number | null;
   role: GroupRole;
   joinedAt: Date;
 }

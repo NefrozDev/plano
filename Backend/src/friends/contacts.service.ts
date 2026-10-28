@@ -28,6 +28,7 @@ export class ContactsService {
           username: member.username,
           firstName: member.firstName,
           lastName: member.lastName,
+          avatarVersion: member.avatarVersion,
           friend: false,
           groups: [],
         };
@@ -35,13 +36,14 @@ export class ContactsService {
         contacts.set(member.id, contact);
       }
     }
-    for (const { id, username, firstName, lastName } of friends) {
-      contacts.set(id, {
-        ...(contacts.get(id) ?? {
-          id,
-          username,
-          firstName,
-          lastName,
+    for (const friend of friends) {
+      contacts.set(friend.id, {
+        ...(contacts.get(friend.id) ?? {
+          id: friend.id,
+          username: friend.username,
+          firstName: friend.firstName,
+          lastName: friend.lastName,
+          avatarVersion: friend.avatarVersion,
           groups: [],
         }),
         friend: true,

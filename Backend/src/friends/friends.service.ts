@@ -17,20 +17,12 @@ import { randomUUID } from 'node:crypto';
 import { DataSource, In } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
 import { User } from '../users/user.entity';
+import { toPublicUser } from '../users/user.mapper';
 import { Friendship } from './friendship.entity';
 
 /** Pending requests a user may have sent at once: keeps request spam bounded. */
 export const MAX_PENDING_REQUESTS = 50;
 export const SEARCH_LIMIT = 10;
-
-export function toPublicUser(user: User): PublicUser {
-  return {
-    id: user.id,
-    username: user.username,
-    firstName: user.firstName,
-    lastName: user.lastName,
-  };
-}
 
 function byName(a: PublicUser, b: PublicUser): number {
   return `${a.firstName} ${a.lastName} ${a.username}`.localeCompare(

@@ -6,6 +6,7 @@ import {
   OneToMany,
   PrimaryColumn,
 } from 'typeorm';
+import type { AvatarType, Locale } from '@plano/common';
 import { Session } from '../auth/session.entity';
 
 @Entity({ name: 'users' })
@@ -41,6 +42,20 @@ export class User {
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
+
+  @Column({ type: 'varchar', length: 8, default: 'fr' })
+  locale!: Locale;
+
+  /** Small square picture resized by the browser; only the avatar route reads it. */
+  @Column({ type: 'bytea', nullable: true, select: false })
+  avatar!: Buffer | null;
+
+  @Column({ type: 'varchar', length: 16, nullable: true })
+  avatarType!: AvatarType | null;
+
+  /** Versions the avatar URL, so browsers can cache each picture for good. */
+  @Column({ type: 'timestamptz', nullable: true })
+  avatarUpdatedAt!: Date | null;
 
   @OneToMany(() => Session, (session) => session.user)
   sessions!: Session[];

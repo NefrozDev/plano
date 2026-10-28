@@ -3,6 +3,7 @@ import { CreateGroupTables1787020000000 } from './1787020000000-create-group-tab
 import { CreateListTables1787100000000 } from './1787100000000-create-list-tables';
 import { AllowSeveralGroups1787180000000 } from './1787180000000-allow-several-groups';
 import { CreateFriendships1787260000000 } from './1787260000000-create-friendships';
+import { AddUserLocaleAndAvatar1787340000000 } from './1787340000000-add-user-locale-and-avatar';
 
 /** Every migration, oldest first; shared by the app and the in-memory test database. */
 export const MIGRATIONS = [
@@ -11,4 +12,5 @@ export const MIGRATIONS = [
   CreateListTables1787100000000,
   AllowSeveralGroups1787180000000,
   CreateFriendships1787260000000,
+  AddUserLocaleAndAvatar1787340000000,
 ];

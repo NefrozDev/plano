@@ -54,6 +54,8 @@ describe('Plano API (e2e)', () => {
       lastName: 'Doe',
       username: 'jamie.doe',
       email: 'jamie@example.com',
+      locale: 'fr',
+      avatarVersion: null,
     });
     expect(registration.body).not.toHaveProperty('password');
     expect(registration.body).not.toHaveProperty('passwordHash');

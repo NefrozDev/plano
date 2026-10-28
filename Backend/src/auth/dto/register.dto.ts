@@ -1,12 +1,16 @@
 import { Transform } from 'class-transformer';
 import {
   Equals,
+  IsIn,
+  IsOptional,
   IsBoolean,
   IsEmail,
   IsString,
   Length,
   Matches,
 } from 'class-validator';
+import type { Locale } from '@plano/common';
+import { SUPPORTED_LOCALES } from '../../users/user.mapper';
 import { trimString } from './trim-string.transform';
 
 export class RegisterDto {
@@ -42,4 +46,9 @@ export class RegisterDto {
   @IsBoolean()
   @Equals(true, { message: 'acceptedTerms must be true' })
   acceptedTerms!: boolean;
+
+  /** The language the interface was in while registering. */
+  @IsOptional()
+  @IsIn(SUPPORTED_LOCALES)
+  locale?: Locale;
 }

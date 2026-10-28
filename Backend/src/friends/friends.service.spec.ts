@@ -124,6 +124,7 @@ describe('FriendsService and ContactsService', () => {
         username: 'bob',
         firstName: 'Bob',
         lastName: 'Test',
+        avatarVersion: null,
         relation: 'none',
       });
       // Never the e-mail address.
@@ -177,6 +178,7 @@ describe('FriendsService and ContactsService', () => {
             username: 'ada',
             firstName: 'Ada',
             lastName: 'Test',
+            avatarVersion: null,
           },
           createdAt: expect.any(String) as string,
         },
@@ -320,6 +322,7 @@ describe('FriendsService and ContactsService', () => {
           username: 'bob',
           firstName: 'Bob',
           lastName: 'Test',
+          avatarVersion: null,
           friend: true,
           groups: [
             { id: family, name: 'Famille' },
