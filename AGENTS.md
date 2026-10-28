@@ -56,6 +56,10 @@ Keep these root commands working when package scripts change.
 - The language follows the account (`users.locale`); before sign-in it is this browser's last choice, then the browser languages, then French.
 - Every TestBed loads the French texts through the unit-test `providersFile` (`src/test-providers.ts`), so specs assert French strings.
 
+## Frontend layout
+
+- On wide screens the app is drawn inside a phone frame by `MobileShellLayoutComponent`. Every signed-in screen must be routed as a child of a shell route (`app.routes.ts`, `agenda.routes.ts`, `objectives.routes.ts`) or wrap itself in `app-auth-shell` (groups pages); a top-level route stretches across the whole window. `app.routes.spec.ts` pins the shell's children.
+
 ## Fresh NestJS scaffold checklist
 
 When creating a new backend in an existing repository:
