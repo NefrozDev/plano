@@ -12,6 +12,7 @@ import { PageHeaderComponent } from '../../shared/ui/page-header.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
 import { AvatarCropperComponent } from './avatar-cropper.component';
 import { FriendsPanelComponent } from './friends-panel.component';
+import { UsernameEditorComponent } from './username-editor.component';
 
 /** Each language under its own name, so anyone finds theirs whatever is shown. */
 export const LANGUAGE_NAMES: Record<Locale, string> = {
@@ -34,6 +35,7 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
     RouterLink,
     TranslocoPipe,
     UserAvatarComponent,
+    UsernameEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings.component.html',

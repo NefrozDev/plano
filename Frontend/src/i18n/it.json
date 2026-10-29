@@ -18,6 +18,19 @@
       "tooLarge": "Questa immagine è troppo grande (massimo 20 MB).",
       "unreadable": "Impossibile leggere questa immagine. Scegli una foto JPEG, PNG o WebP.",
       "failed": "Impossibile salvare la foto. Riprova.",
+      "username": {
+        "label": "Nome utente",
+        "edit": "Modifica il nome utente @{{username}}",
+        "unchanged": "È il tuo nome utente attuale.",
+        "invalid": "Da 3 a 30 lettere, numeri, punti, trattini o trattini bassi.",
+        "checking": "Verifica in corso…",
+        "available": "Questo nome è disponibile.",
+        "taken": "Questo nome utente è già in uso.",
+        "unknown": "Disponibilità sconosciuta: verrà verificata al salvataggio.",
+        "cancel": "Annulla",
+        "save": "Salva",
+        "failed": "Non è stato possibile modificare il nome utente. Riprova."
+      },
       "crop": {
         "heading": "Ritaglia la foto",
         "area": "Area della foto",

@@ -63,4 +63,39 @@ describe('ProfileService', () => {
 
     expect(auth.user()?.avatarVersion).toBeNull();
   });
+
+  it('renames and keeps the returned user', () => {
+    let answered: AuthUser | undefined;
+    profile.changeUsername('lovelace').subscribe((renamed) => (answered = renamed));
+
+    const request = http.expectOne('/api/v1/users/me');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ username: 'lovelace' });
+    request.flush({ ...user, username: 'lovelace' });
+
+    expect(answered?.username).toBe('lovelace');
+    expect(auth.user()?.username).toBe('lovelace');
+  });
+
+  it('leaves the user unchanged when the name is taken', () => {
+    let failed = false;
+    profile.changeUsername('bob').subscribe({ error: () => (failed = true) });
+
+    http.expectOne('/api/v1/users/me').flush({ message: 'pris' }, { status: 409, statusText: 'Conflict' });
+
+    expect(failed).toBe(true);
+    expect(auth.user()?.username).toBe('ada');
+  });
+
+  it('asks whether a name is free', () => {
+    let available: boolean | undefined;
+    profile.isUsernameAvailable('bo b').subscribe((answer) => (available = answer));
+
+    const request = http.expectOne((candidate) => candidate.url === '/api/v1/users/username-availability');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('username')).toBe('bo b');
+    request.flush({ available: false });
+
+    expect(available).toBe(false);
+  });
 });

@@ -1,0 +1,18 @@
+:host { display: block; margin-top: .15rem; }
+.username { display: inline-flex; gap: .3rem; align-items: center; padding: .1rem .3rem; margin-left: -.3rem; border: 0; border-radius: .4rem; background: transparent; color: var(--color-text-muted); cursor: pointer; font: inherit; font-size: .78rem; }
+.username:hover { background: #f2f4f8; color: var(--color-text); }
+.username:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); }
+.username svg { width: .8rem; height: .8rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.2; }
+.editor { display: grid; gap: .35rem; }
+.field { display: flex; align-items: center; gap: .2rem; padding: 0 .55rem; border: 1px solid #d5dbe6; border-radius: .6rem; background: #fff; color: var(--color-text-muted); font-size: .82rem; }
+.field:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 .15rem rgb(50 91 226 / 12%); }
+.field.error { border-color: var(--color-danger); }
+.field input { width: 100%; min-width: 0; height: 2.1rem; padding: 0; border: 0; outline: 0; background: transparent; color: var(--color-text); font: inherit; }
+.status { min-height: 1rem; margin: 0; color: var(--color-text-muted); font-size: .7rem; }
+.status.error { color: var(--color-danger); }
+.status.ok { color: #18794e; }
+.actions { display: flex; gap: .4rem; }
+.actions button { min-height: 2rem; padding: 0 .75rem; border-radius: .55rem; cursor: pointer; font: inherit; font-size: .75rem; font-weight: 700; }
+.secondary { border: 1px solid #dfe4ec; background: #fff; color: #394254; }
+.save { border: 0; background: var(--color-primary); color: #fff; }
+.save:disabled { opacity: .55; cursor: default; }

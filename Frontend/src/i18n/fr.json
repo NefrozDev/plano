@@ -18,6 +18,19 @@
       "tooLarge": "Cette image est trop lourde (20 Mo maximum).",
       "unreadable": "Cette image ne peut pas être lue. Choisissez une photo JPEG, PNG ou WebP.",
       "failed": "La photo n’a pas pu être enregistrée. Réessayez.",
+      "username": {
+        "label": "Nom d’utilisateur",
+        "edit": "Modifier le nom d’utilisateur @{{username}}",
+        "unchanged": "C’est votre nom d’utilisateur actuel.",
+        "invalid": "De 3 à 30 lettres, chiffres, points, tirets ou tirets bas.",
+        "checking": "Vérification…",
+        "available": "Ce nom est disponible.",
+        "taken": "Ce nom d’utilisateur est déjà pris.",
+        "unknown": "Disponibilité inconnue : il sera vérifié à l’enregistrement.",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "failed": "Le nom d’utilisateur n’a pas pu être modifié. Réessayez."
+      },
       "crop": {
         "heading": "Recadrer la photo",
         "area": "Zone de la photo",

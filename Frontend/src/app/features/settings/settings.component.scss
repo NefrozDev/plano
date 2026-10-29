@@ -4,7 +4,8 @@ section { padding: 1.1rem 0; border-bottom: 1px solid #edf0f5; }
 section:last-child { border-bottom: 0; }
 h2 { margin: 0 0 .7rem; color: #586174; font-size: .72rem; font-weight: 750; }
 .identity { display: flex; gap: .9rem; align-items: center; }
-.identity strong, .identity small { display: block; }
+.identity > div { min-width: 0; flex: 1; }
+.identity strong { display: block; }
 .identity strong { font-size: .95rem; }
 .identity small { margin-top: .15rem; color: var(--color-text-muted); font-size: .78rem; }
 .photo-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }

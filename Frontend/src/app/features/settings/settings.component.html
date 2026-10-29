@@ -12,7 +12,7 @@
         <app-user-avatar [user]="user" [size]="72" />
         <div>
           <strong>{{ user.firstName }} {{ user.lastName }}</strong>
-          <small>{{ '@' + user.username }}</small>
+          <app-username-editor [username]="user.username" />
         </div>
       </div>
       <div class="photo-actions">
