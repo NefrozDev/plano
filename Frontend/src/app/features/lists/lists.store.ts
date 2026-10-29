@@ -111,14 +111,17 @@ export class ListsStore {
     return this.runOnDetail((id) => this.api.update(id, changes), (detail) => detail);
   }
 
-  async deleteList(): Promise<boolean> {
-    const id = this.detailState()?.id;
+  /** Deletes the open list, or the one given (from the overview). */
+  async deleteList(id = this.detailState()?.id): Promise<boolean> {
     if (!id) return false;
     const deleted = await this.run(this.api.remove(id), () => {
-      this.detailState.set(null);
+      if (this.detailState()?.id === id) this.detailState.set(null);
       this.listsState.update((lists) => lists.filter((list) => list.id !== id));
     });
-    if (deleted) this.refreshReminders();
+    if (deleted) {
+      this.refreshReminders();
+      this.refreshHome();
+    }
     return deleted;
   }
 

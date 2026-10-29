@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
@@ -5,6 +6,7 @@ import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { ListsComponent } from './lists.component';
 import { ListsStore } from './lists.store';
+import { ConfirmService } from '../../shared/ui/confirm.service';
 import { listDetail, listSettings, listSummary } from './testing/lists-fixtures';
 
 describe('ListsComponent', () => {
@@ -247,6 +249,90 @@ describe('ListsComponent', () => {
 
     expect(element.querySelector('.settings-panel')).not.toBeNull();
     expect(element.querySelector('.list-progress b')).toBeNull();
+  });
+
+  describe('opening and swiping cards', () => {
+    let navigate: MockInstance<Router['navigate']>;
+    let ask: MockInstance<ConfirmService['ask']>;
+    const card = (listId: string) =>
+      element.querySelector(`.list-item[data-list-id="${listId}"] .list-card`) as HTMLButtonElement;
+    const pointer = (target: Element, type: string, clientX: number) =>
+      target.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX, bubbles: true, cancelable: true }));
+    const swipe = (target: Element, from: number, to: number) => {
+      target.setPointerCapture = vi.fn();
+      pointer(target, 'pointerdown', from);
+      pointer(target, 'pointermove', (from + to) / 2);
+      pointer(target, 'pointermove', to);
+      fixture.detectChanges();
+      pointer(target, 'pointerup', to);
+      // The browser ends a swipe with a click on the card.
+      (target as HTMLElement).click();
+      fixture.detectChanges();
+    };
+
+    beforeEach(() => {
+      navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      ask = vi.spyOn(TestBed.inject(ConfirmService), 'ask');
+    });
+
+    it('opens a list on a tap', () => {
+      card('courses').click();
+
+      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/lists', 'courses']);
+      expect(ask).not.toHaveBeenCalled();
+    });
+
+    it('asks before deleting an own list swiped left, then deletes it, without opening it', async () => {
+      ask.mockResolvedValue(true);
+
+      swipe(card('courses'), 300, 200);
+      await settle();
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(ask).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ heading: 'Supprimer la liste ?', confirmLabel: 'Supprimer', tone: 'danger' }),
+      );
+      expect(ask.mock.lastCall![0].message).toContain('« Courses »');
+      http.expectOne({ method: 'DELETE', url: '/api/v1/lists/courses' }).flush(null);
+      await settle();
+      fixture.detectChanges();
+      expect(element.querySelector('.list-item[data-list-id="courses"]')).toBeNull();
+    });
+
+    it('keeps the list when the deletion is cancelled, or the swipe too short', async () => {
+      ask.mockResolvedValue(false);
+
+      swipe(card('courses'), 300, 200);
+      await settle();
+      swipe(card('maison'), 300, 280);
+      await settle();
+
+      expect(ask).toHaveBeenCalledTimes(1);
+      http.expectNone({ method: 'DELETE', url: '/api/v1/lists/courses' });
+      expect(card('courses')).not.toBeNull();
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('does not slide lists shared with the user, who cannot delete them', () => {
+      expect(element.querySelector('.list-item[data-list-id="cadeaux"] .delete-list')).toBeNull();
+
+      swipe(card('cadeaux'), 300, 150);
+
+      expect(ask).not.toHaveBeenCalled();
+      // Not a swipe for this card: the click opens it.
+      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/lists', 'cadeaux']);
+    });
+
+    it('also deletes from the uncovered delete button', async () => {
+      ask.mockResolvedValue(true);
+      const button = element.querySelector('.list-item[data-list-id="maison"] .delete-list') as HTMLButtonElement;
+      expect(button.getAttribute('aria-label')).toBe('Supprimer la liste Maison');
+
+      button.click();
+      await settle();
+
+      http.expectOne({ method: 'DELETE', url: '/api/v1/lists/maison' }).flush(null);
+    });
   });
 
   it('creates a list and opens it in its editor', async () => {

@@ -396,6 +396,28 @@ describe('ListsStore', () => {
     expect(store.detail()?.members).toEqual(listDetail({ id: 'list-2', name: 'Maison' }).members);
   });
 
+  it('deletes a list from the overview without touching the open one, refreshing the home lists', async () => {
+    const loadingHome = store.loadHome();
+    http.expectOne('/api/v1/lists/home').flush([]);
+    await loadingHome;
+    const loading = store.loadLists();
+    http.expectOne('/api/v1/lists').flush([listSummary({ id: 'list-1' }), listSummary({ id: 'list-2', name: 'Maison' })]);
+    http.expectOne('/api/v1/settings/lists').flush(listSettings());
+    await loading;
+    const opening = store.open('list-1');
+    http.expectOne('/api/v1/lists/list-1').flush(listDetail());
+    await opening;
+
+    const deleting = store.deleteList('list-2');
+    http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-2' }).flush(null);
+    expect(await deleting).toBe(true);
+    await settle();
+    http.expectOne('/api/v1/lists/home').flush([]);
+
+    expect(store.lists().map(({ id }) => id)).toEqual(['list-1']);
+    expect(store.detail()?.id).toBe('list-1');
+  });
+
   it('creates and deletes lists', async () => {
     const creating = store.createList({ name: 'Maison', icon: 'home', color: '#7868ef' });
     http.expectOne({ method: 'POST', url: '/api/v1/lists' }).flush(listDetail({ id: 'list-2', name: 'Maison' }));

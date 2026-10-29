@@ -110,13 +110,28 @@
   aria-live="polite"
 >
   @for (card of cards(); track card.list.id) {
-    <div class="list-item" [attr.data-list-id]="card.list.id" [class.dragging]="draggedList() === card.list.id">
+    <div
+      class="list-item"
+      [attr.data-list-id]="card.list.id"
+      [class.dragging]="draggedList() === card.list.id"
+      [class.revealed]="swipedList()?.id === card.list.id && swipe.offset() < 0"
+    >
+    @if (card.list.role === 'owner') {
+      <button class="delete-list" type="button" [attr.aria-label]="'Supprimer la liste ' + card.list.name" (click)="requestDelete(card.list)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
+      </button>
+    }
     <button
       class="list-card"
       type="button"
-      [routerLink]="['/lists', card.list.id]"
       [style.--list-color]="card.list.color"
       [style.--list-surface]="card.surface"
+      [style.transform]="swipedList()?.id === card.list.id && swipe.offset() ? 'translateX(' + swipe.offset() + 'px)' : null"
+      (click)="openList(card.list.id, $event)"
+      (pointerdown)="startSwipe(card.list, $event)"
+      (pointermove)="swipe.move($event)"
+      (pointerup)="swipe.finish()"
+      (pointercancel)="swipe.finish()"
     >
       <span class="list-icon" aria-hidden="true">
         @switch (card.list.icon) {

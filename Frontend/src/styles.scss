@@ -387,6 +387,11 @@ app-lists .drag-handle:hover { background: rgb(255 255 255 / 70%); color: #4b546
 app-lists .drag-handle:active { cursor: grabbing; }
 app-lists .drag-handle:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); }
 app-lists .grid-view .drag-handle { top: .35rem; transform: none; }
+app-lists .list-card { position: relative; z-index: 1; touch-action: pan-y; transition: transform 180ms ease; }
+app-lists .delete-list { position: absolute; top: 0; right: 0; bottom: 0; display: grid; width: 4.5rem; place-items: center; border: 0; border-radius: .9rem; background: #d92d20; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
+app-lists .list-item.revealed .delete-list { opacity: 1; pointer-events: auto; }
+app-lists .delete-list svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+app-lists .grid-view .delete-list { width: 100%; height: 3rem; top: auto; }
 app-lists button.setting-row { cursor: pointer; }
 app-lists .setting-row input { max-width: 9rem; border: 0; outline: 0; background: transparent; color: #687187; font: inherit; font-size: .79rem; text-align: right; }
 app-lists .setting-row input[type='time'] { width: 5rem; }

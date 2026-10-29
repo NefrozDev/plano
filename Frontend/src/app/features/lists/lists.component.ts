@@ -5,10 +5,12 @@ import type { ListSummary } from '@plano/common';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { normalizeText } from '../../core/time/dates';
 import { AutofocusDirective } from '../../shared/ui/autofocus.directive';
+import { ConfirmService } from '../../shared/ui/confirm.service';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { SwitchRowComponent } from '../../shared/ui/switch-row.component';
 import { ToastComponent } from '../../shared/ui/toast.component';
 import { LIST_COLOR_CHOICES } from './list-detail/list-options';
+import { SwipeToDelete } from './list-detail/swipe-to-delete';
 import { ListsStore } from './lists.store';
 
 type ListFilter = 'all' | 'mine' | 'shared' | 'archived';
@@ -47,6 +49,13 @@ export class ListsComponent {
   readonly listsStore = inject(ListsStore);
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
+  private readonly confirm = inject(ConfirmService);
+  /** One card slides at a time: the one being swiped. */
+  readonly swipedList = signal<ListSummary | null>(null);
+  readonly swipe = new SwipeToDelete(() => {
+    const list = this.swipedList();
+    if (list) void this.requestDelete(list);
+  });
   /** The list being dragged by its handle. */
   readonly draggedList = signal<string | null>(null);
   private dragMoved = false;
@@ -167,6 +176,30 @@ export class ListsComponent {
     if (!target) return;
     this.listsStore.moveList(listId, target.list.id);
     void this.listsStore.saveListOrder();
+  }
+
+  /** Owners swipe a card left to delete their list; others' lists do not move. */
+  startSwipe(list: ListSummary, event: PointerEvent): void {
+    if (list.role !== 'owner') return;
+    this.swipedList.set(list);
+    this.swipe.start(event);
+  }
+
+  /** A tap opens the list; the click that ends a swipe does not. */
+  openList(listId: string, event: MouseEvent): void {
+    if (this.swipe.swallowClick(event)) return;
+    void this.router.navigate(['/lists', listId]);
+  }
+
+  /** Always confirmed: every member loses the list and its items. */
+  async requestDelete(list: ListSummary): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      heading: 'Supprimer la liste ?',
+      message: `« ${list.name} » et tous ses éléments seront supprimés pour tous ses membres.`,
+      confirmLabel: 'Supprimer',
+      tone: 'danger',
+    });
+    if (confirmed) await this.listsStore.deleteList(list.id);
   }
 
   /** Creates an untitled list and opens its editor. */
