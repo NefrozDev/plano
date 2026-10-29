@@ -7,7 +7,7 @@ import { AuthUser } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { ProfileService } from '../../core/users/profile.service';
-import { AVATAR_RESIZER, MAX_SOURCE_BYTES, UnreadableImageError } from '../../core/users/resize-avatar';
+import { AVATAR_RESIZER, type AvatarResizer, MAX_SOURCE_BYTES, UnreadableImageError } from '../../core/users/resize-avatar';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { SettingsComponent } from './settings.component';
 
@@ -18,7 +18,7 @@ describe('SettingsComponent', () => {
   let auth: AuthService;
   let http: HttpTestingController;
   let setItem: MockInstance<Storage['setItem']>;
-  let resize: ReturnType<typeof vi.fn<(file: Blob) => Promise<Blob>>>;
+  let resize: ReturnType<typeof vi.fn<AvatarResizer>>;
   const user: AuthUser = {
     id: 'user-1',
     firstName: 'Ada',
@@ -28,6 +28,29 @@ describe('SettingsComponent', () => {
     locale: 'fr',
     avatarVersion: null,
   };
+
+  /** A real 400×200 PNG, so the cropper can decode it. */
+  async function photo(name = 'me.png'): Promise<File> {
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 200;
+    (canvas.getContext('2d') as CanvasRenderingContext2D).fillRect(0, 0, 400, 200);
+    const blob = await new Promise<Blob>((resolve) => canvas.toBlob((png) => resolve(png as Blob), 'image/png'));
+    return new File([blob], name, { type: 'image/png' });
+  }
+
+  const dialog = () => element.querySelector('dialog') as HTMLDialogElement;
+  const saveButton = () => element.querySelector<HTMLButtonElement>('app-avatar-cropper .primary-button');
+
+  /** Picks `file` and waits until the cropper has decoded it (or given up on it). */
+  async function pick(file: File): Promise<void> {
+    component.changePhoto(fileInput(file));
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      if (component.cropping() && saveButton()?.disabled !== false) throw new Error('still decoding');
+    });
+  }
 
   /** A file input holding `file`, as after the user picked it. */
   function fileInput(file: File): HTMLInputElement {
@@ -47,7 +70,7 @@ describe('SettingsComponent', () => {
   beforeEach(async () => {
     // The language choice must not reach this browser's real storage.
     setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => undefined);
-    resize = vi.fn<(file: Blob) => Promise<Blob>>().mockName('resizeAvatar');
+    resize = vi.fn<AvatarResizer>().mockName('resizeAvatar');
     TestBed.configureTestingModule({
       imports: [SettingsComponent],
       providers: [...providePlanoTesting(), { provide: AVATAR_RESIZER, useValue: resize }],
@@ -69,6 +92,7 @@ describe('SettingsComponent', () => {
   afterEach(() => {
     http.verify();
     setItem.mockRestore();
+    vi.restoreAllMocks();
   });
 
   it('shows the profile, every language under its own name, and the groups link', () => {
@@ -124,42 +148,83 @@ describe('SettingsComponent', () => {
       upload = vi.spyOn(TestBed.inject(ProfileService), 'uploadAvatar');
     });
 
-    it('resizes the picked picture before uploading it', async () => {
+    it('crops the picked picture to the chosen area, then resizes and uploads it', async () => {
+      const createUrl = vi.spyOn(URL, 'createObjectURL');
+      const revokeUrl = vi.spyOn(URL, 'revokeObjectURL');
       const resized = new Blob(['webp'], { type: 'image/webp' });
       resize.mockResolvedValue(resized);
       upload.mockImplementation(() => {
         auth.updateUser({ ...user, avatarVersion: 7 });
         return of({ ...user, avatarVersion: 7 });
       });
-      const picked = new File(['photo'], 'me.jpg', { type: 'image/jpeg' });
+      const picked = await photo();
       const input = fileInput(picked);
 
-      await component.changePhoto(input);
+      component.changePhoto(input);
       fixture.detectChanges();
-
-      expect(resize).toHaveBeenCalledTimes(1);
-      expect(resize).toHaveBeenCalledWith(picked);
-      expect(upload).toHaveBeenCalledTimes(1);
-      expect(upload).toHaveBeenCalledWith(resized);
       // The same file can be picked again right away.
       expect(input.value).toBe('');
+      expect(createUrl).toHaveBeenCalledExactlyOnceWith(picked);
+      const url = createUrl.mock.results[0].value as string;
+      expect(dialog().open).toBe(true);
+      expect(dialog().querySelector('h2')?.textContent).toBe('Recadrer la photo');
+      expect(dialog().querySelector('img')?.getAttribute('src')).toBe(url);
+      // Nothing is uploaded before the area is confirmed.
+      expect(resize).not.toHaveBeenCalled();
+
+      await vi.waitFor(() => {
+        fixture.detectChanges();
+        expect(saveButton()?.disabled).toBe(false);
+      });
+      saveButton()!.click();
+      await settle();
+      fixture.detectChanges();
+
+      // Zoom 1 on a 400×200 picture: its centred 200 px square.
+      expect(resize).toHaveBeenCalledExactlyOnceWith(picked, { x: 100, y: 0, size: 200 });
+      expect(upload).toHaveBeenCalledExactlyOnceWith(resized);
+      expect(revokeUrl).toHaveBeenCalledExactlyOnceWith(url);
+      expect(dialog().open).toBe(false);
       expect(component.photoBusy()).toBe(false);
       expect(element.querySelector('app-user-avatar img')?.getAttribute('src')).toBe('/api/v1/users/user-1/avatar?v=7');
       expect(element.querySelector('.photo-actions label')?.textContent).toContain('Changer la photo');
       expect(element.querySelector('.photo-actions button')?.textContent).toContain('Retirer la photo');
     });
 
+    it('closes the cropper without uploading when cancelled', async () => {
+      const revokeUrl = vi.spyOn(URL, 'revokeObjectURL');
+      await pick(await photo());
+
+      (element.querySelector('app-avatar-cropper button.secondary') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(component.cropping()).toBeNull();
+      expect(dialog().open).toBe(false);
+      expect(revokeUrl).toHaveBeenCalledTimes(1);
+      expect(resize).not.toHaveBeenCalled();
+      expect(upload).not.toHaveBeenCalled();
+    });
+
     it('refuses huge or unreadable files without uploading anything', async () => {
       const huge = new File(['x'], 'huge.jpg');
       Object.defineProperty(huge, 'size', { value: MAX_SOURCE_BYTES + 1 });
 
-      await component.changePhoto(fileInput(huge));
+      component.changePhoto(fileInput(huge));
       fixture.detectChanges();
-      expect(resize).not.toHaveBeenCalled();
+      expect(component.cropping()).toBeNull();
       expect(element.querySelector('[role="alert"]')?.textContent).toContain('trop lourde');
 
+      // The browser cannot decode it: the cropper gives up and the page says why.
+      await pick(new File(['text'], 'notes.txt', { type: 'text/plain' }));
+      expect(component.cropping()).toBeNull();
+      expect(dialog().open).toBe(false);
+      expect(element.querySelector('[role="alert"]')?.textContent).toContain('ne peut pas être lue');
+
+      // Decodable by the browser but not by the resizer.
       resize.mockRejectedValue(new UnreadableImageError('nope'));
-      await component.changePhoto(fileInput(new File(['text'], 'notes.txt')));
+      await pick(await photo());
+      saveButton()!.click();
+      await settle();
       fixture.detectChanges();
       expect(element.querySelector('[role="alert"]')?.textContent).toContain('ne peut pas être lue');
       expect(upload).not.toHaveBeenCalled();
@@ -169,14 +234,25 @@ describe('SettingsComponent', () => {
       resize.mockResolvedValue(new Blob(['webp'], { type: 'image/webp' }));
       upload.mockReturnValue(throwError(() => new Error('offline')));
 
-      await component.changePhoto(document.createElement('input'));
-      expect(upload).not.toHaveBeenCalled();
+      component.changePhoto(document.createElement('input'));
+      expect(component.cropping()).toBeNull();
 
-      await component.changePhoto(fileInput(new File(['photo'], 'me.png')));
+      await pick(await photo());
+      saveButton()!.click();
+      await settle();
       fixture.detectChanges();
       expect(upload).toHaveBeenCalledTimes(1);
       expect(element.querySelector('[role="alert"]')?.textContent).toContain('n’a pas pu être enregistrée');
       expect(component.photoBusy()).toBe(false);
+    });
+
+    it('frees the picked picture when the page closes mid-crop', async () => {
+      const revokeUrl = vi.spyOn(URL, 'revokeObjectURL');
+      await pick(await photo());
+
+      fixture.destroy();
+
+      expect(revokeUrl).toHaveBeenCalledTimes(1);
     });
 
     it('removes the picture', async () => {

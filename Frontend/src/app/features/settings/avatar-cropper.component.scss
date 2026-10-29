@@ -1,0 +1,12 @@
+:host { display: grid; justify-items: center; gap: .7rem; }
+.viewport { position: relative; overflow: hidden; border-radius: 50%; background: #e9edf4; box-shadow: 0 0 0 3px #fff, 0 0 0 4px #d5dbe6; cursor: grab; touch-action: none; user-select: none; }
+.viewport:active { cursor: grabbing; }
+.viewport:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 4px; }
+img { position: absolute; max-width: none; visibility: hidden; pointer-events: none; }
+img.ready { visibility: visible; }
+.hint { margin: 0; color: var(--color-text-muted); font-size: .74rem; text-align: center; }
+.zoom { display: grid; width: 100%; grid-template-columns: auto 1fr; gap: .7rem; align-items: center; font-size: .78rem; font-weight: 650; }
+.zoom input { width: 100%; accent-color: var(--color-primary); }
+.dialog-actions { width: 100%; }
+.dialog-actions .primary-button { min-height: 2.6rem; font-size: .85rem; }
+.secondary { min-height: 2.6rem; border: 1px solid #dfe4ec; border-radius: .78rem; background: #fff; color: #394254; cursor: pointer; font: inherit; font-size: .85rem; font-weight: 650; }

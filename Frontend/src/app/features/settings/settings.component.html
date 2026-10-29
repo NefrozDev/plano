@@ -39,6 +39,21 @@
     </section>
   }
 
+  <app-modal-dialog
+    [heading]="'settings.profile.crop.heading' | transloco"
+    [open]="cropping() !== null"
+    (closed)="closeCropper()"
+  >
+    @if (cropping(); as picked) {
+      <app-avatar-cropper
+        [src]="picked.url"
+        (confirmed)="savePhoto($event)"
+        (cancelled)="closeCropper()"
+        (failed)="rejectPhoto()"
+      />
+    }
+  </app-modal-dialog>
+
   <section aria-labelledby="language-heading">
     <h2 id="language-heading">{{ 'settings.language.heading' | transloco }}</h2>
     <div class="languages" role="radiogroup" aria-labelledby="language-heading">

@@ -1,0 +1,52 @@
+<div
+  class="viewport"
+  tabindex="0"
+  role="group"
+  [style.width.px]="viewport"
+  [style.height.px]="viewport"
+  [attr.aria-label]="'settings.profile.crop.area' | transloco"
+  [attr.aria-describedby]="hintId"
+  (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerEnd($event)"
+  (pointercancel)="onPointerEnd($event)"
+  (wheel)="onWheel($event)"
+  (keydown)="onKeydown($event)"
+>
+  <img
+    #image
+    alt=""
+    draggable="false"
+    [src]="src()"
+    [class.ready]="loaded()"
+    [style.width.px]="imageBox()?.width"
+    [style.height.px]="imageBox()?.height"
+    [style.left.px]="imageBox()?.left"
+    [style.top.px]="imageBox()?.top"
+    (load)="onLoad(image)"
+    (error)="failed.emit()"
+  />
+</div>
+<p class="hint" [id]="hintId">{{ 'settings.profile.crop.hint' | transloco }}</p>
+
+<label class="zoom">
+  <span>{{ 'settings.profile.crop.zoom' | transloco }}</span>
+  <input
+    type="range"
+    min="1"
+    step="0.01"
+    [max]="maxZoom"
+    [value]="zoom()"
+    [disabled]="!loaded()"
+    (input)="setZoom($any($event.target).valueAsNumber)"
+  />
+</label>
+
+<div class="dialog-actions">
+  <button class="secondary" type="button" (click)="cancelled.emit()">
+    {{ 'settings.profile.crop.cancel' | transloco }}
+  </button>
+  <button class="primary-button" type="button" [disabled]="!loaded()" (click)="confirm()">
+    {{ 'settings.profile.crop.save' | transloco }}
+  </button>
+</div>

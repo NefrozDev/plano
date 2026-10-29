@@ -17,7 +17,15 @@
       "saving": "Saving…",
       "tooLarge": "This image is too large (20 MB maximum).",
       "unreadable": "This image can’t be read. Choose a JPEG, PNG or WebP photo.",
-      "failed": "The photo couldn’t be saved. Please try again."
+      "failed": "The photo couldn’t be saved. Please try again.",
+      "crop": {
+        "heading": "Crop your photo",
+        "area": "Photo area",
+        "hint": "Drag to move the photo; pinch or scroll to zoom.",
+        "zoom": "Zoom",
+        "cancel": "Cancel",
+        "save": "Save"
+      }
     },
     "language": {
       "heading": "Language",

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LOCALES, type Locale } from '@plano/common';
@@ -6,9 +6,11 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { ProfileService } from '../../core/users/profile.service';
-import { AVATAR_RESIZER, MAX_SOURCE_BYTES, UnreadableImageError } from '../../core/users/resize-avatar';
+import { AVATAR_RESIZER, type CropArea, MAX_SOURCE_BYTES, UnreadableImageError } from '../../core/users/resize-avatar';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog.component';
 import { PageHeaderComponent } from '../../shared/ui/page-header.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
+import { AvatarCropperComponent } from './avatar-cropper.component';
 import { FriendsPanelComponent } from './friends-panel.component';
 
 /** Each language under its own name, so anyone finds theirs whatever is shown. */
@@ -24,7 +26,15 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
 /** `/settings`, opened from the profile picture: photo, language, friends, groups and sign-out. */
 @Component({
   selector: 'app-settings',
-  imports: [FriendsPanelComponent, PageHeaderComponent, RouterLink, TranslocoPipe, UserAvatarComponent],
+  imports: [
+    AvatarCropperComponent,
+    FriendsPanelComponent,
+    ModalDialogComponent,
+    PageHeaderComponent,
+    RouterLink,
+    TranslocoPipe,
+    UserAvatarComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -41,12 +51,18 @@ export class SettingsComponent {
   /** Translation key of the last photo error, empty when none. */
   readonly photoError = signal('');
   readonly photoBusy = signal(false);
+  /** The picked file while its crop is being chosen. */
+  readonly cropping = signal<{ file: File; url: string } | null>(null);
   readonly languageError = signal(false);
   readonly logoutPending = signal(false);
   readonly logoutError = signal(false);
 
-  /** Resizes the chosen picture in the browser, then uploads it. */
-  async changePhoto(input: HTMLInputElement): Promise<void> {
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.closeCropper());
+  }
+
+  /** Opens the cropper on the chosen picture; the upload waits for its area. */
+  changePhoto(input: HTMLInputElement): void {
     const file = input.files?.[0];
     input.value = '';
     if (!file || this.photoBusy()) return;
@@ -55,9 +71,31 @@ export class SettingsComponent {
       this.photoError.set('settings.profile.tooLarge');
       return;
     }
+    this.closeCropper();
+    this.cropping.set({ file, url: URL.createObjectURL(file) });
+  }
+
+  closeCropper(): void {
+    const cropping = this.cropping();
+    if (!cropping) return;
+    URL.revokeObjectURL(cropping.url);
+    this.cropping.set(null);
+  }
+
+  /** The browser could not decode the picked file. */
+  rejectPhoto(): void {
+    this.closeCropper();
+    this.photoError.set('settings.profile.unreadable');
+  }
+
+  /** Crops and resizes the picture in the browser, then uploads it. */
+  async savePhoto(area: CropArea): Promise<void> {
+    const file = this.cropping()?.file;
+    this.closeCropper();
+    if (!file || this.photoBusy()) return;
     this.photoBusy.set(true);
     try {
-      await firstValueFrom(this.profile.uploadAvatar(await this.resize(file)));
+      await firstValueFrom(this.profile.uploadAvatar(await this.resize(file, area)));
     } catch (error) {
       this.photoError.set(
         error instanceof UnreadableImageError ? 'settings.profile.unreadable' : 'settings.profile.failed',

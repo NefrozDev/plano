@@ -17,7 +17,15 @@
       "saving": "Enregistrement…",
       "tooLarge": "Cette image est trop lourde (20 Mo maximum).",
       "unreadable": "Cette image ne peut pas être lue. Choisissez une photo JPEG, PNG ou WebP.",
-      "failed": "La photo n’a pas pu être enregistrée. Réessayez."
+      "failed": "La photo n’a pas pu être enregistrée. Réessayez.",
+      "crop": {
+        "heading": "Recadrer la photo",
+        "area": "Zone de la photo",
+        "hint": "Faites glisser pour déplacer la photo, pincez ou utilisez la molette pour zoomer.",
+        "zoom": "Zoom",
+        "cancel": "Annuler",
+        "save": "Enregistrer"
+      }
     },
     "language": {
       "heading": "Langue",

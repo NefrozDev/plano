@@ -17,7 +17,15 @@
       "saving": "Opslaan…",
       "tooLarge": "Deze afbeelding is te groot (maximaal 20 MB).",
       "unreadable": "Deze afbeelding kan niet worden gelezen. Kies een JPEG-, PNG- of WebP-foto.",
-      "failed": "De foto kon niet worden opgeslagen. Probeer het opnieuw."
+      "failed": "De foto kon niet worden opgeslagen. Probeer het opnieuw.",
+      "crop": {
+        "heading": "Foto bijsnijden",
+        "area": "Fotogebied",
+        "hint": "Sleep om de foto te verplaatsen; knijp of scrol om te zoomen.",
+        "zoom": "Zoom",
+        "cancel": "Annuleren",
+        "save": "Opslaan"
+      }
     },
     "language": {
       "heading": "Taal",

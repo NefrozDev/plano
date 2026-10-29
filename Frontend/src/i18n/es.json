@@ -17,7 +17,15 @@
       "saving": "Guardando…",
       "tooLarge": "Esta imagen es demasiado grande (20 MB como máximo).",
       "unreadable": "No se puede leer esta imagen. Elige una foto JPEG, PNG o WebP.",
-      "failed": "No se pudo guardar la foto. Inténtalo de nuevo."
+      "failed": "No se pudo guardar la foto. Inténtalo de nuevo.",
+      "crop": {
+        "heading": "Recortar la foto",
+        "area": "Zona de la foto",
+        "hint": "Arrastra para mover la foto; pellizca o usa la rueda para hacer zoom.",
+        "zoom": "Zoom",
+        "cancel": "Cancelar",
+        "save": "Guardar"
+      }
     },
     "language": {
       "heading": "Idioma",
