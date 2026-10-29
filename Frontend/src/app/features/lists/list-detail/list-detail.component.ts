@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal, DOCUMENT 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import type { ListEntry, ListSection, UpdateEntryRequest } from '@plano/common';
 import { toPerson } from '../../../core/people/people';
+import { AutoGrowDirective } from '../../../shared/ui/auto-grow.directive';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
@@ -41,6 +42,7 @@ function percent(part: number, whole: number): number {
   imports: [
     RouterLink,
     AutofocusDirective,
+    AutoGrowDirective,
     AvatarStackComponent,
     BottomNavComponent,
     ListEditorComponent,
@@ -77,11 +79,11 @@ export class ListDetailComponent {
   readonly isOwner = computed(() => this.list()?.role === 'owner');
   /**
    * The header's list actions: a single one gets its own button, several go
-   * behind the "more options" menu (viewers can only pin the list).
+   * behind the "more options" menu (only owners also edit the list). New
+   * sections have their own button under the last one.
    */
-  readonly listActions = computed<readonly ('edit' | 'section' | 'home')[]>(() => [
+  readonly listActions = computed<readonly ('edit' | 'home')[]>(() => [
     ...(this.isOwner() ? (['edit'] as const) : []),
-    ...(this.canEdit() ? (['section'] as const) : []),
     'home',
   ]);
   readonly people = computed(() => (this.list()?.members ?? []).map(toPerson));
@@ -113,6 +115,8 @@ export class ListDetailComponent {
   readonly listEditorOpen = signal(false);
   readonly sectionCreatorOpen = signal(false);
   readonly sharingOpen = signal(false);
+  /** Sharing was opened from the editor: closing it goes back there. */
+  private returnToEditor = false;
   /** Section whose "new entry" input is shown. */
   readonly addingTo = signal<string | null>(null);
   readonly newEntryValue = signal('');
@@ -164,7 +168,8 @@ export class ListDetailComponent {
   /** Also runs on blur, which can come late from a section that is no longer edited. */
   finishAdding(sectionId: string): void {
     if (this.addingTo() !== sectionId) return;
-    const name = this.newEntryValue().trim();
+    // A pasted line break becomes a space: an item is one line of text.
+    const name = this.newEntryValue().replace(/\s*\n\s*/g, ' ').trim();
     this.cancelAdding();
     if (name) void this.store.addEntry(sectionId, name);
   }
@@ -206,9 +211,22 @@ export class ListDetailComponent {
     }
   }
 
-  openSharingFromEditor(): void {
+  /**
+   * Saves the editor's drafts first (a new list would otherwise keep its
+   * placeholder name), then shows the sharing panel and comes back to the
+   * editor once it closes.
+   */
+  async openSharingFromEditor(edits: ListEdits): Promise<void> {
+    if (!(await this.store.updateList(edits))) return;
     this.listEditorOpen.set(false);
+    this.returnToEditor = true;
     this.sharingOpen.set(true);
+  }
+
+  closeSharing(): void {
+    this.sharingOpen.set(false);
+    if (this.returnToEditor) this.listEditorOpen.set(true);
+    this.returnToEditor = false;
   }
 
   openSectionCreator(): void {

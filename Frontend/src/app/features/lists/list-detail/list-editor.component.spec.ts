@@ -30,6 +30,34 @@ describe('ListEditorComponent', () => {
     ]);
   });
 
+  it('opens with the name focused and selected, so typing replaces it', async () => {
+    // Rendered in the document, where focus can land.
+    document.body.append(fixture.nativeElement as HTMLElement);
+    const fresh = TestBed.createComponent(ListEditorComponent);
+    fresh.componentRef.setInput('list', listDetail({ name: 'Nouvelle liste' }));
+    document.body.append(fresh.nativeElement as HTMLElement);
+    fresh.detectChanges();
+    await fresh.whenStable();
+
+    const name = (fresh.nativeElement as HTMLElement).querySelector('input[type="text"]') as HTMLInputElement;
+    expect(document.activeElement).toBe(name);
+    expect([name.selectionStart, name.selectionEnd]).toEqual([0, 'Nouvelle liste'.length]);
+    (fresh.nativeElement as HTMLElement).remove();
+    (fixture.nativeElement as HTMLElement).remove();
+  });
+
+  it('hands the drafts over when asked to invite someone', () => {
+    const shared: ListEdits[] = [];
+    editor.share.subscribe((edits) => shared.push(edits));
+    editor.draftName.set('Courses du samedi');
+
+    ((fixture.nativeElement as HTMLElement).querySelector('.sharing-row button') as HTMLButtonElement).click();
+
+    expect(shared).toEqual([{ name: 'Courses du samedi', icon: 'cart', color: '#2ecb70', description: 'Pour samedi' }]);
+    // Inviting is not saving: the parent decides.
+    expect(saved).toEqual([]);
+  });
+
   it('keeps the current name when the draft is blank', () => {
     editor.draftName.set('   ');
     editor.submit();

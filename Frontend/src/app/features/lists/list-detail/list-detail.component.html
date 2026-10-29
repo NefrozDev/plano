@@ -37,11 +37,6 @@
               <span aria-hidden="true">✎</span> Modifier la liste
             </button>
           }
-          @if (canEdit()) {
-            <button type="button" (click)="openSectionCreator()">
-              <span aria-hidden="true">＋</span> Ajouter une section
-            </button>
-          }
           <button class="home-toggle" type="button" [attr.aria-pressed]="list()!.onHome" (click)="toggleOnHome()">
             <span aria-hidden="true">⌂</span> {{ list()!.onHome ? 'Retirer de l’accueil' : 'Afficher sur l’accueil' }}
           </button>
@@ -122,10 +117,12 @@
             }
             @if (canEdit()) {
               @if (addingTo() === view.section.id) {
-                <input
+                <!-- Wraps like the items it adds; Enter adds it, there are no line breaks. -->
+                <textarea
                   appAutofocus
+                  appAutoGrow
                   class="new-entry-input"
-                  type="text"
+                  rows="1"
                   maxlength="200"
                   placeholder="Nouvel élément..."
                   aria-label="Nouvel élément"
@@ -134,7 +131,7 @@
                   (keydown.enter)="$event.preventDefault(); finishAdding(view.section.id)"
                   (keydown.escape)="cancelAdding()"
                   (blur)="finishAdding(view.section.id)"
-                />
+                ></textarea>
               } @else {
                 <button
                   class="empty-entry"
@@ -155,6 +152,11 @@
         <p class="empty-state">Cette liste est vide.</p>
       }
     }
+    @if (canEdit() && sectionViews().length) {
+      <button class="new-section-button" type="button" (click)="openSectionCreator()">
+        <span aria-hidden="true">＋</span> Nouvelle section
+      </button>
+    }
   </section>
 } @else if (notFound()) {
   <p class="empty-state" role="alert">Cette liste n’existe pas ou n’est plus partagée avec vous.</p>
@@ -168,7 +170,7 @@
       [list]="list"
       [people]="people()"
       (save)="saveList($event)"
-      (share)="openSharingFromEditor()"
+      (share)="openSharingFromEditor($event)"
       (delete)="deleteList()"
       (closed)="listEditorOpen.set(false)"
     />
@@ -191,7 +193,7 @@
   }
 
   @if (sharingOpen()) {
-    <app-list-sharing-panel [list]="list" (closed)="sharingOpen.set(false)" />
+    <app-list-sharing-panel [list]="list" (closed)="closeSharing()" />
   }
 }
 

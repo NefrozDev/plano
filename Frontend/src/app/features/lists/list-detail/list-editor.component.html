@@ -9,6 +9,7 @@
     <label class="editor-field">
       <span>Nom de la liste</span>
       <input
+        #nameInput
         type="text"
         maxlength="80"
         [value]="draftName()"
@@ -69,7 +70,7 @@
       <h3 id="sharing-title">Partagée avec</h3>
       <div class="sharing-row">
         <app-avatar-stack [people]="people()" [max]="4" />
-        <button type="button" (click)="share.emit()"><span aria-hidden="true">＋</span> Inviter</button>
+        <button type="button" (click)="openSharing()"><span aria-hidden="true">＋</span> Inviter</button>
       </div>
     </section>
 

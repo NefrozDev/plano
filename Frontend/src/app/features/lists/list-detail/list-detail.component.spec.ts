@@ -130,6 +130,23 @@ describe('ListDetailComponent', () => {
       expect(component.list()?.sections[0].entries.length).toBe(4);
     });
 
+    it('opens the name for a real tap: pressing does not capture the pointer away from it', async () => {
+      await create();
+      const capture = vi.spyOn(HTMLElement.prototype, 'setPointerCapture');
+      const press = (type: string, x = 40) =>
+        title().dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x, bubbles: true }));
+
+      press('pointerdown');
+      press('pointerup');
+      title().click();
+      await render();
+
+      // Captured, the click would land on the header and never reach the name.
+      expect(capture).not.toHaveBeenCalled();
+      expect(nameInput()?.value).toBe('Produits frais');
+      capture.mockRestore();
+    });
+
     it('sends nothing when the name is cancelled, blank or unchanged', async () => {
       await create();
       const rename = vi.spyOn(store, 'renameSection');
@@ -249,15 +266,31 @@ describe('ListDetailComponent', () => {
     expect(component.addingTo()).toBeNull();
   });
 
+  it('turns line breaks typed or pasted into a new item into spaces', async () => {
+    await create();
+
+    component.beginAdding('fresh');
+    component.newEntryValue.set('Beurre\n  doux \r\n demi-sel');
+    component.finishAdding('fresh');
+
+    const request = http.expectOne('/api/v1/lists/list-1/sections/fresh/entries');
+    expect(request.request.body).toEqual({ name: 'Beurre doux demi-sel' });
+    request.flush(entry('butter', 'Beurre doux demi-sel'));
+  });
+
   it('focuses the new entry input, named for screen readers, when it appears', async () => {
     await create();
 
     component.beginAdding('fresh');
     await render();
 
-    const input = element.querySelector('.new-entry-input');
+    const input = element.querySelector('.new-entry-input') as HTMLTextAreaElement;
     expect(document.activeElement).toBe(input);
-    expect(input?.getAttribute('aria-label')).toBe('Nouvel élément');
+    expect(input.getAttribute('aria-label')).toBe('Nouvel élément');
+    // A textarea, so long text wraps like the items instead of scrolling sideways.
+    expect(input.tagName).toBe('TEXTAREA');
+    expect(input.rows).toBe(1);
+    expect(input.hasAttribute('appAutoGrow')).toBe(true);
   });
 
   it('asks before deleting an entry when the setting says so', async () => {
@@ -391,13 +424,13 @@ describe('ListDetailComponent', () => {
       (element.querySelector('.more-button') as HTMLButtonElement).click();
       await render();
       const items = Array.from(element.querySelectorAll<HTMLButtonElement>('.list-menu button'));
+      // New sections have their own button under the sections.
       expect(items.map((item) => item.textContent?.trim())).toEqual([
         '✎ Modifier la liste',
-        '＋ Ajouter une section',
         '⌂ Afficher sur l’accueil',
       ]);
 
-      items[2].click();
+      items[1].click();
       const pin = http.expectOne('/api/v1/lists/list-1/preferences');
       expect(pin.request.body).toEqual({ onHome: true });
       pin.flush(null, { status: 204, statusText: 'No Content' });
@@ -435,11 +468,26 @@ describe('ListDetailComponent', () => {
     });
   });
 
+  it('gives editors the pin as their only list action, and a button to add sections', async () => {
+    await create({ detail: listDetail({ role: 'editor', ownership: 'shared' }) });
+
+    expect(element.querySelector('.more-button')).toBeNull();
+    expect(element.querySelector('.home-pin')).not.toBeNull();
+    const add = element.querySelector('.new-section-button') as HTMLButtonElement;
+    expect(add.textContent).toContain('Nouvelle section');
+
+    add.click();
+    await render();
+    expect(component.sectionCreatorOpen()).toBe(true);
+    expect(element.querySelector('app-list-section-creator')).not.toBeNull();
+  });
+
   it('lets viewers read the list without editing controls', async () => {
     await create({ detail: listDetail({ role: 'viewer', ownership: 'shared' }) });
 
     expect(element.querySelector('.more-button')).toBeNull();
     expect(element.querySelector('.empty-entry')).toBeNull();
+    expect(element.querySelector('.new-section-button')).toBeNull();
     expect(element.querySelector('.drag-handle')).toBeNull();
     expect((element.querySelector('.entry-toggle') as HTMLButtonElement).disabled).toBe(true);
     expect(element.querySelector('.members button')).toBeNull();
@@ -466,6 +514,48 @@ describe('ListDetailComponent', () => {
       await create({ query: { edit: '1' } });
 
       expect(element.querySelector('app-list-editor')).not.toBeNull();
+    });
+
+    it('saves the editor drafts before inviting, then comes back to the editor', async () => {
+      await create({ query: { edit: '1' } });
+      const editor = () => element.querySelector('app-list-editor');
+      const nameField = editor()!.querySelector('input[type="text"]') as HTMLInputElement;
+      nameField.value = 'Courses du samedi';
+      nameField.dispatchEvent(new Event('input'));
+
+      (editor()!.querySelector('.sharing-row button') as HTMLButtonElement).click();
+      const save = http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1' });
+      expect(save.request.body).toEqual(expect.objectContaining({ name: 'Courses du samedi' }));
+      save.flush(listDetail({ name: 'Courses du samedi' }));
+      await render();
+
+      expect(editor()).toBeNull();
+      expect(element.querySelector('app-list-sharing-panel')).not.toBeNull();
+      expect(element.querySelector('.list-title')?.textContent).toBe('Courses du samedi');
+
+      component.closeSharing();
+      await render();
+      expect(element.querySelector('app-list-sharing-panel')).toBeNull();
+      expect((editor()!.querySelector('input[type="text"]') as HTMLInputElement).value).toBe('Courses du samedi');
+
+      // Closing the sharing panel opened from the header does not open the editor.
+      component.listEditorOpen.set(false);
+      component.sharingOpen.set(true);
+      component.closeSharing();
+      await render();
+      expect(editor()).toBeNull();
+    });
+
+    it('stays in the editor when saving its drafts before inviting fails', async () => {
+      await create({ query: { edit: '1' } });
+
+      const inviting = component.openSharingFromEditor({ name: 'X', icon: 'cart', color: '#2ecb70', description: '' });
+      http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1' }).flush(null, { status: 500, statusText: 'Error' });
+      await inviting;
+      await render();
+
+      expect(component.listEditorOpen()).toBe(true);
+      expect(component.sharingOpen()).toBe(false);
     });
 
     it('saves the editor and deletes the list', async () => {

@@ -48,15 +48,17 @@ describe('ListEntryRowComponent', () => {
   it('slides with a left swipe, clamped, and deletes past the threshold', () => {
     const start = pointer(200);
     row.startSwipe(start);
-    // Capturing keeps the gesture alive when the finger leaves the row.
     const capture = (start.currentTarget as unknown as { setPointerCapture: ReturnType<typeof vi.fn> })
       .setPointerCapture;
-    expect(capture).toHaveBeenCalledTimes(1);
-    expect(capture).toHaveBeenCalledWith(1);
+    // A press alone is still a tap: no capture, so its click keeps its target.
+    expect(capture).not.toHaveBeenCalled();
     row.moveSwipe(pointer(190));
     expect(row.offset()).toBe(-10);
+    // Now a swipe: capturing keeps the gesture alive when the finger leaves the row, once.
+    expect(capture).toHaveBeenCalledExactlyOnceWith(1);
     row.moveSwipe(pointer(50));
     expect(row.offset()).toBe(-58);
+    expect(capture).toHaveBeenCalledTimes(1);
 
     row.finishSwipe();
 
