@@ -48,6 +48,10 @@ Keep these root commands working when package scripts change.
 - "Contacts" are a user's friends plus the members of all their groups (`ContactsService`, `GET /contacts`). Anything that shares or invites (list members, event participants) must go through contacts, so unfriending or leaving a group revokes access.
 - Friendships are mutual: one `friendships` row per pair (unique index on the unordered pair), accepted by the recipient. User search is a capped username prefix match that never returns e-mails.
 - Profile pictures live in `users.avatar` (bytea, `select: false`). The type is read from the file's first bytes, never from the client. URLs carry `?v=avatarVersion` so they can be cached forever.
+- Usernames can change (`PATCH /users/me`), with the registration rules and a 409 when taken in any case; `users/username.ts` holds the shared rules.
+- Each member arranges lists for themselves: `list_preferences` (one row per user and list: `position`, `onHome`) orders their overview and pins lists to their home page (`GET /lists/home`). Never store such choices on the list itself: shared lists would change for everyone.
+- Friend changes are pushed live once committed (`friend.requested`, `friend.accepted` with the other person's public profile, `friends.changed`). The app's `FriendNotificationsService` turns them into a toast and the badge (incoming requests plus unseen acceptances).
+- Password recovery: `POST /auth/password-reset` answers 204 whatever the address; the link puts a single-use, 30-minute token in the URL fragment (never logged by proxies), stored as a SHA-256; confirming ends every session.
 
 ## Frontend i18n
 
@@ -119,12 +123,14 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 - Frontend and API share one origin, so `FRONTEND_URL` is `https://$DOMAIN` and CORS/origin checks need no changes. Keep it that way unless a separate API domain is deliberately introduced.
 - Docker build context is the repository root for both images because they compile `Common/`. Keep `.dockerignore` excluding `node_modules`, `dist` and `.env`.
 - The production `.env` exists only on the VPS (template: `.env.production.example`). Use hex passwords: the DB password is embedded in `DATABASE_URL`.
+- E-mail goes through `MailService` (nodemailer) to `SMTP_HOST`, in production a Mailcow mailbox (`SMTP_*`, `MAIL_FROM` in the VPS `.env`, passed by `compose.prod.yaml`). An empty `SMTP_HOST` sends nothing; outside production the reset link is logged instead, never in production (`NODE_ENV=production` in the image).
 - Rate limiting (`@nestjs/throttler`, global guard, stricter `@Throttle` on login/register) keys on `req.ip`. That only works because `configureApp()` trusts private proxy hops and `deploy/Caddyfile` sets `trusted_proxies`; keep both, or every user shares one bucket. The store is in memory, which is fine only while the API runs as a single instance.
 
 ## Testing expectations
 
 - Unit tests should exercise controllers/services without opening a network port.
-- End-to-end tests should create the real `AppModule`, call `configureApp(app)`, and exercise versioned HTTP routes through Supertest.
+- End-to-end tests should create the real `AppModule`, call `configureApp(app)`, and exercise versioned HTTP routes through Supertest. `createTestApp(overrides)` replaces providers that reach outside, e.g. `MailService` to capture e-mails.
+- Do not run `npm run backend:build` while `npm run start:back` is running: both write `Backend/dist` and the watcher crashes on half-written files.
 - Do not duplicate global prefix, validation, or CORS configuration inside tests.
 - Type-check the end-to-end project when changing its configuration:
 
