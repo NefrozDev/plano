@@ -11,6 +11,7 @@ describe('UsersController', () => {
   beforeEach(() => {
     users = {
       updateProfile: vi.fn().mockResolvedValue('profile'),
+      isUsernameAvailable: vi.fn().mockResolvedValue(false),
       setAvatar: vi.fn().mockResolvedValue('set'),
       removeAvatar: vi.fn().mockResolvedValue('removed'),
       findAvatar: vi
@@ -33,6 +34,16 @@ describe('UsersController', () => {
     expect(users.setAvatar).toHaveBeenCalledWith('user-1', file);
     expect(users.removeAvatar).toHaveBeenCalledWith('user-1');
     expect(users.findAvatar).not.toHaveBeenCalled();
+  });
+
+  it('checks a username for the signed-in user', async () => {
+    await expect(
+      controller.usernameAvailability('user-1', { username: 'bob' }),
+    ).resolves.toEqual({ available: false });
+
+    expect(users.isUsernameAvailable).toHaveBeenCalledTimes(1);
+    expect(users.isUsernameAvailable).toHaveBeenCalledWith('user-1', 'bob');
+    expect(users.updateProfile).not.toHaveBeenCalled();
   });
 
   it('serves a picture with its type, long caching and no sniffing', async () => {

@@ -5,15 +5,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import {
-  DataSource,
-  LessThanOrEqual,
-  QueryFailedError,
-  Repository,
-} from 'typeorm';
+import { DataSource, LessThanOrEqual, Repository } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
 import { User } from '../users/user.entity';
 import { toAuthUser } from '../users/user.mapper';
+import {
+  isUniqueConstraintError,
+  normalizeIdentifier as normalize,
+} from '../users/username';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterDto } from './dto/register.dto';
 import { PasswordService } from './password.service';
@@ -27,20 +26,8 @@ const REGISTRATION_CONFLICT_MESSAGE =
   "Ce nom d'utilisateur ou cette adresse e-mail est déjà utilisé.";
 const SESSION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
-function normalize(value: string): string {
-  return value.trim().toLocaleLowerCase('en-US');
-}
-
 function hashSessionToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
-}
-
-function isUniqueConstraintError(error: unknown): boolean {
-  if (!(error instanceof QueryFailedError)) {
-    return false;
-  }
-
-  return /unique constraint/i.test(String(error.driverError));
 }
 
 @Injectable()

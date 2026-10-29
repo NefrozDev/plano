@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { DataSource } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
@@ -68,6 +72,78 @@ describe('UsersService', () => {
     await expect(users.updateProfile(userId, {})).resolves.toEqual(
       expect.objectContaining({ locale: 'it' }),
     );
+  });
+
+  describe('username', () => {
+    beforeEach(async () => {
+      await dataSource.manager.insert(User, {
+        id: randomUUID(),
+        firstName: 'Bob',
+        lastName: 'Builder',
+        username: 'bob',
+        normalizedUsername: 'bob',
+        email: 'bob@example.com',
+        normalizedEmail: 'bob@example.com',
+        passwordHash: 'hash',
+        termsAcceptedAt: new Date(),
+      });
+    });
+
+    it('renames, stored lower case, and keeps the other settings', async () => {
+      await users.updateProfile(userId, { locale: 'de' });
+
+      await expect(
+        users.updateProfile(userId, { username: 'Ada.L' }),
+      ).resolves.toEqual(
+        expect.objectContaining({ username: 'ada.l', locale: 'de' }),
+      );
+      await expect(
+        dataSource.manager.findOneOrFail(User, {
+          where: { id: userId },
+          select: { username: true, normalizedUsername: true },
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          username: 'ada.l',
+          normalizedUsername: 'ada.l',
+        }),
+      );
+    });
+
+    it('refuses a name someone else has, whatever its case', async () => {
+      for (const username of ['bob', 'BOB']) {
+        await expect(
+          users.updateProfile(userId, { username }),
+        ).rejects.toBeInstanceOf(ConflictException);
+      }
+      // Nothing changed, the language included.
+      await expect(
+        users.updateProfile(userId, { username: 'bob', locale: 'it' }),
+      ).rejects.toThrow("Ce nom d'utilisateur est déjà pris.");
+      await expect(
+        dataSource.manager.findOneByOrFail(User, { id: userId }),
+      ).resolves.toEqual(
+        expect.objectContaining({ username: 'ada', locale: 'fr' }),
+      );
+    });
+
+    it('accepts the current name in another case as a no-op', async () => {
+      await expect(
+        users.updateProfile(userId, { username: 'ADA' }),
+      ).resolves.toEqual(expect.objectContaining({ username: 'ada' }));
+    });
+
+    it('says whether a name is free, counting one’s own as free', async () => {
+      await expect(users.isUsernameAvailable(userId, 'Bob')).resolves.toBe(
+        false,
+      );
+      await expect(users.isUsernameAvailable(userId, 'ADA')).resolves.toBe(
+        true,
+      );
+      await expect(users.isUsernameAvailable(userId, 'carol')).resolves.toBe(
+        true,
+      );
+    });
   });
 
   it('stores a picture with its detected type and a new version each time', async () => {

@@ -11,7 +11,7 @@ import {
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2]);
 
-describe('Profile: language and picture (e2e)', () => {
+describe('Profile: username, language and picture (e2e)', () => {
   let testApp: TestApp;
   let ada: RegisteredUser;
 
@@ -69,6 +69,59 @@ describe('Profile: language and picture (e2e)', () => {
       .send({ email: 'other@example.com' })
       .expect(400);
     expect((await session()).locale).toBe('es');
+  });
+
+  it('changes the username only to a free, well-formed one', async () => {
+    await registerUser(testApp.app, 'bob');
+    const available = async (username: string) =>
+      (
+        await http()
+          .get('/api/v1/users/username-availability')
+          .query({ username })
+          .set('Cookie', ada.cookie)
+          .expect(200)
+      ).body as { available: boolean };
+
+    await expect(available('BOB')).resolves.toEqual({ available: false });
+    await expect(available('ada')).resolves.toEqual({ available: true });
+    await expect(available('lovelace')).resolves.toEqual({ available: true });
+    await http()
+      .get('/api/v1/users/username-availability')
+      .query({ username: 'a b' })
+      .set('Cookie', ada.cookie)
+      .expect(400);
+    await http()
+      .get('/api/v1/users/username-availability')
+      .query({ username: 'bob' })
+      .expect(401);
+
+    const taken = await http()
+      .patch('/api/v1/users/me')
+      .set('Cookie', ada.cookie)
+      .send({ username: 'Bob' })
+      .expect(409);
+    expect((taken.body as { message: string }).message).toBe(
+      "Ce nom d'utilisateur est déjà pris.",
+    );
+    await http()
+      .patch('/api/v1/users/me')
+      .set('Cookie', ada.cookie)
+      .send({ username: 'no' })
+      .expect(400);
+
+    const renamed = await http()
+      .patch('/api/v1/users/me')
+      .set('Cookie', ada.cookie)
+      .send({ username: ' Lovelace ' })
+      .expect(200);
+    expect((renamed.body as AuthUser).username).toBe('lovelace');
+    expect((await session()).username).toBe('lovelace');
+    // The new name signs in; the old one is free again.
+    await http()
+      .post('/api/v1/auth/login')
+      .send({ username: 'LOVELACE', password: validRegistration.password })
+      .expect(200);
+    await expect(available('ada')).resolves.toEqual({ available: true });
   });
 
   it('uploads, serves and removes a profile picture', async () => {

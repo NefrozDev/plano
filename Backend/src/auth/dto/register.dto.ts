@@ -11,6 +11,10 @@ import {
 } from 'class-validator';
 import type { Locale } from '@plano/common';
 import { SUPPORTED_LOCALES } from '../../users/user.mapper';
+import {
+  USERNAME_FORMAT_MESSAGE,
+  USERNAME_PATTERN,
+} from '../../users/username';
 import { trimString } from './trim-string.transform';
 
 export class RegisterDto {
@@ -28,10 +32,7 @@ export class RegisterDto {
 
   @IsString()
   @Transform(trimString)
-  @Matches(/^[a-zA-Z0-9._-]{3,30}$/, {
-    message:
-      'username must contain 3 to 30 letters, numbers, dots, underscores, or hyphens',
-  })
+  @Matches(USERNAME_PATTERN, { message: USERNAME_FORMAT_MESSAGE })
   username!: string;
 
   @IsEmail()
