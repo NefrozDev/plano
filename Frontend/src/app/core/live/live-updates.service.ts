@@ -11,7 +11,13 @@ export const EVENT_SOURCE_FACTORY = new InjectionToken<(url: string) => EventSou
 });
 
 /** The named events the API sends; anything else (the heartbeat) is ignored. */
-const EVENT_TYPES: readonly LiveEvent['type'][] = ['list.changed', 'list.removed'];
+const EVENT_TYPES: readonly LiveEvent['type'][] = [
+  'list.changed',
+  'list.removed',
+  'friend.requested',
+  'friend.accepted',
+  'friends.changed',
+];
 
 /**
  * One Server-Sent Events stream while signed in, closed on sign-out. The

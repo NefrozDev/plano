@@ -53,7 +53,12 @@
     "logoutFailed": "Uscita non riuscita. Riprova."
   },
   "dashboard": {
-    "openSettings": "Apri impostazioni"
+    "openSettings": "Apri impostazioni",
+    "openSettingsWithNews": "Apri le impostazioni, {{count}} novità"
+  },
+  "notifications": {
+    "friendRequested": "{{name}} ti ha inviato una richiesta di amicizia.",
+    "friendAccepted": "{{name}} ha accettato la tua richiesta di amicizia."
   },
   "friends": {
     "heading": "Amici",

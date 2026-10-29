@@ -11,8 +11,19 @@
     </svg>
   </a>
   @if (user(); as currentUser) {
-    <a class="profile-button" routerLink="/settings" [attr.aria-label]="'dashboard.openSettings' | transloco">
+    <a
+      class="profile-button"
+      routerLink="/settings"
+      [attr.aria-label]="
+        notifications.count()
+          ? ('dashboard.openSettingsWithNews' | transloco: { count: notifications.count() })
+          : ('dashboard.openSettings' | transloco)
+      "
+    >
       <app-user-avatar [user]="currentUser" [size]="40" />
+      @if (notifications.count()) {
+        <i class="badge" aria-hidden="true">{{ notifications.count() }}</i>
+      }
     </a>
   }
 </header>

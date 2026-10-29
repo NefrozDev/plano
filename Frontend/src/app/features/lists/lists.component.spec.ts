@@ -2,6 +2,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
+import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { ListsComponent } from './lists.component';
 import { ListsStore } from './lists.store';
 import { listDetail, listSettings, listSummary } from './testing/lists-fixtures';
@@ -38,8 +39,20 @@ describe('ListsComponent', () => {
     expect(captions).toEqual(['Partagée avec 1 personne', 'Privée', 'Partagée avec vous']);
     expect(element.querySelector('.list-progress b')?.textContent).toBe('2 / 6');
     expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
-    // No notification feed exists yet: the bell must not claim an unread one.
-    expect(element.querySelector('[aria-label="Notifications"] i')).toBeNull();
+    // Nothing new: the bell leads to the friends settings without a badge.
+    const bell = element.querySelector('.notifications-link') as HTMLAnchorElement;
+    expect(bell.getAttribute('href')).toBe('/settings');
+    expect(bell.getAttribute('aria-label')).toBe('Notifications');
+    expect(bell.querySelector('.badge')).toBeNull();
+  });
+
+  it('shows friend news on the bell', () => {
+    TestBed.inject(FriendNotificationsService).incoming.set(2);
+    fixture.detectChanges();
+
+    const bell = element.querySelector('.notifications-link') as HTMLAnchorElement;
+    expect(bell.querySelector('.badge')?.textContent).toBe('2');
+    expect(bell.getAttribute('aria-label')).toBe('Notifications : 2 nouvelle(s)');
   });
 
   it('filters personal, shared and archived lists', () => {

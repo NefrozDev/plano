@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FriendNotificationsService } from '../../../core/friends/friend-notifications.service';
 import { ObjectivesStore } from '../objectives.store';
 import { provideObjectivesTesting } from '../objectives.testing';
 import { ObjectivesOverviewComponent } from './objectives-overview.component';
@@ -31,6 +32,18 @@ describe('ObjectivesOverviewComponent', () => {
     expect(element.textContent).toContain('En pause');
     expect(element.querySelector('.fab')?.getAttribute('href')).toBe('/objectives/new');
     expect(element.querySelector('app-bottom-nav .active')?.textContent).toContain('Objectifs');
+  });
+
+  it('leads from the bell to the friends settings, with a badge for friend news', () => {
+    const bell = element.querySelector('.notifications-link') as HTMLAnchorElement;
+    expect(bell.getAttribute('href')).toBe('/settings');
+    expect(bell.querySelector('.badge')).toBeNull();
+
+    TestBed.inject(FriendNotificationsService).incoming.set(1);
+    fixture.detectChanges();
+
+    expect(bell.querySelector('.badge')?.textContent).toBe('1');
+    expect(bell.getAttribute('aria-label')).toBe('Notifications : 1 nouvelle(s)');
   });
 
   it('switches tabs and labels the archived section', () => {

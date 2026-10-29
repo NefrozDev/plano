@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal 
 import { RouterLink } from '@angular/router';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import type { Objective } from '@plano/common';
+import { FriendNotificationsService } from '../../../core/friends/friend-notifications.service';
 import { formatDate } from '../../../core/time/dates';
 import { objectiveProgress, objectiveTint, progressLabel } from '../objective.utils';
 import { ObjectiveTab, ObjectivesStore } from '../objectives.store';
@@ -20,6 +21,8 @@ import { ObjectiveCardComponent, ObjectiveCardView } from '../ui/objective-card.
   },
 })
 export class ObjectivesOverviewComponent {
+  /** Friend news, shown on the bell that leads to the friends list. */
+  readonly notifications = inject(FriendNotificationsService);
   readonly store = inject(ObjectivesStore);
   private readonly document = inject(DOCUMENT);
   /** Grips show only in the custom order, the one dragging changes. */

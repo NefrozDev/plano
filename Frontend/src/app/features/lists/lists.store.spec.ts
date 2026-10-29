@@ -496,6 +496,19 @@ describe('ListsStore', () => {
       http.expectNone('/api/v1/lists');
     });
 
+    it('ignores friend events', async () => {
+      const stream = await signedInStream();
+      const loading = store.loadLists();
+      http.expectOne('/api/v1/lists').flush([listSummary()]);
+      http.expectOne('/api/v1/settings/lists').flush(listSettings());
+      await loading;
+
+      stream.emit({ type: 'friends.changed' });
+      await settle();
+
+      http.expectNone('/api/v1/lists');
+    });
+
     it('reloads only what is on screen', async () => {
       const stream = await signedInStream();
       await openList();

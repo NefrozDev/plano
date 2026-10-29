@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../core/auth/auth.service';
+import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
 import { addDays, compareDueDates, formatDate, parseIsoDate, startOfWeek } from '../../core/time/dates';
@@ -23,6 +24,7 @@ const WEEKDAY_LABELS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
 export class DashboardComponent {
   private readonly auth = inject(AuthService);
   private readonly listsStore = inject(ListsStore);
+  readonly notifications = inject(FriendNotificationsService);
   private readonly objectivesStore = inject(ObjectivesStore);
   private readonly agendaStore = inject(AgendaStore);
 

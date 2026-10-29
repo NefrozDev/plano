@@ -53,7 +53,12 @@
     "logoutFailed": "No se pudo cerrar la sesión. Inténtalo de nuevo."
   },
   "dashboard": {
-    "openSettings": "Abrir ajustes"
+    "openSettings": "Abrir ajustes",
+    "openSettingsWithNews": "Abrir los ajustes, {{count}} novedad(es)"
+  },
+  "notifications": {
+    "friendRequested": "{{name}} te ha enviado una solicitud de amistad.",
+    "friendAccepted": "{{name}} ha aceptado tu solicitud de amistad."
   },
   "friends": {
     "heading": "Amigos",

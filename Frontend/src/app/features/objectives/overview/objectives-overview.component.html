@@ -31,9 +31,16 @@
         <i class="badge" aria-hidden="true">{{ store.activeFilterCount() }}</i>
       }
     </a>
-    <button class="icon-button" type="button" aria-label="Notifications">
+    <a
+      class="icon-button notifications-link"
+      routerLink="/settings"
+      [attr.aria-label]="notifications.count() ? 'Notifications : ' + notifications.count() + ' nouvelle(s)' : 'Notifications'"
+    >
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17h12l-1.5-2.5V10a4.5 4.5 0 0 0-9 0v4.5L6 17Z" /><path d="M10 20h4" /></svg>
-    </button>
+      @if (notifications.count()) {
+        <i class="badge notifications-badge" aria-hidden="true">{{ notifications.count() }}</i>
+      }
+    </a>
     <button
       class="icon-button more-button"
       type="button"

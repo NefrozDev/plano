@@ -341,7 +341,8 @@ app-lists .settings-content section { padding: 1.2rem 0; border-bottom: 1px soli
 app-lists .settings-content section:last-child { border-bottom: 0; }
 app-lists .settings-content h3 { margin: 0 0 .65rem; color: #586174; font-size: .72rem; font-weight: 750; }
 app-lists .setting-row { display: grid; width: 100%; min-height: 2.35rem; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .25rem 0; border: 0; background: transparent; color: #20263a; font: inherit; font-size: .79rem; text-align: left; }
-/* Overview search and drag grips (here because the component stylesheet is at its size budget). */
+/* Overview search, drag grips and bell badge (here because the component stylesheet is at its size budget). */
+app-lists .notifications-badge { position: absolute; top: 0; right: 0; display: grid; min-width: 1rem; height: 1rem; place-items: center; border-radius: 1rem; background: var(--color-danger); color: white; font-size: .6rem; font-style: normal; font-weight: 750; }
 app-lists .search-button.active { border-radius: .7rem; background: #eef3ff; color: var(--color-primary); }
 app-lists .lists-search { display: flex; gap: .5rem; align-items: center; margin: 0 1.25rem .6rem; padding: 0 .75rem; border: 1px solid #dfe4ec; border-radius: .75rem; background: #fff; color: #687187; }
 app-lists .lists-search:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 .15rem rgb(50 91 226 / 12%); }

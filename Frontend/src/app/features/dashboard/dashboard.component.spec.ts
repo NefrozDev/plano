@@ -9,6 +9,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { APP_CLOCK } from '../../core/time/dates';
 import { AgendaStore } from '../agenda/agenda.store';
 import { TEST_TODAY, flushListReminders, provideSeedData, settle } from '../../testing/plano-testing';
+import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
@@ -189,6 +190,22 @@ describe('DashboardComponent', () => {
     auth.user.set({ ...user, avatarVersion: 42 });
     fixture.detectChanges();
     expect(link.querySelector('img')?.getAttribute('src')).toBe('/api/v1/users/user-1/avatar?v=42');
+  });
+
+  it('puts a badge with the friend news on the profile picture', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('.profile-button') as HTMLAnchorElement;
+    expect(link.querySelector('.badge')).toBeNull();
+    expect(link.getAttribute('aria-label')).toBe('Ouvrir les paramètres');
+
+    const notifications = TestBed.inject(FriendNotificationsService);
+    notifications.incoming.set(1);
+    notifications.accepted.set([{ id: 'user-2', username: 'bob', firstName: 'Bob', lastName: '', avatarVersion: null }]);
+    fixture.detectChanges();
+
+    expect(link.querySelector('.badge')?.textContent).toBe('2');
+    expect(link.getAttribute('aria-label')).toBe('Ouvrir les paramètres, 2 nouveauté(s)');
   });
 
   it('shows no profile link while nobody is signed in', () => {

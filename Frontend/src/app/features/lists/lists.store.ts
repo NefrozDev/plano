@@ -360,6 +360,7 @@ export class ListsStore {
    * on screen, quietly. A list that cannot be read any more counts as removed.
    */
   private async applyLive(event: LiveEvent): Promise<void> {
+    if (event.type !== 'list.changed' && event.type !== 'list.removed') return;
     if (event.type === 'list.removed') {
       this.forget(event.listId);
       return;

@@ -29,9 +29,16 @@
     >
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
     </button>
-    <button class="icon-button" type="button" aria-label="Notifications">
+    <a
+      class="icon-button notifications-link"
+      routerLink="/settings"
+      [attr.aria-label]="notifications.count() ? 'Notifications : ' + notifications.count() + ' nouvelle(s)' : 'Notifications'"
+    >
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17h12l-1.5-2.5V10a4.5 4.5 0 0 0-9 0v4.5L6 17Z" /><path d="M10 20h4" /></svg>
-    </button>
+      @if (notifications.count()) {
+        <i class="badge notifications-badge" aria-hidden="true">{{ notifications.count() }}</i>
+      }
+    </a>
     @if (actions.length === 1) {
       <button class="icon-button action-button" type="button" [attr.aria-label]="actions[0].label" (click)="runAction(actions[0].id)">
         <ng-container *ngTemplateOutlet="actionIcon; context: { $implicit: actions[0].id }" />

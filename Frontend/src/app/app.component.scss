@@ -2,3 +2,13 @@
   display: block;
   min-height: 100dvh;
 }
+
+/* Above the bottom navigation, on top of every screen. */
+.notification-toast {
+  position: fixed;
+  z-index: 60;
+  right: 1rem;
+  bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  left: 1rem;
+  pointer-events: none;
+}

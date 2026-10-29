@@ -53,7 +53,12 @@
     "logoutFailed": "La déconnexion a échoué. Veuillez réessayer."
   },
   "dashboard": {
-    "openSettings": "Ouvrir les paramètres"
+    "openSettings": "Ouvrir les paramètres",
+    "openSettingsWithNews": "Ouvrir les paramètres, {{count}} nouveauté(s)"
+  },
+  "notifications": {
+    "friendRequested": "{{name}} vous a envoyé une demande d’ami.",
+    "friendAccepted": "{{name}} a accepté votre demande d’ami."
   },
   "friends": {
     "heading": "Amis",

@@ -1,2 +1,5 @@
 <router-outlet />
 <app-confirm-host />
+<div class="notification-toast">
+  <app-toast tone="info" [duration]="5000" [message]="notifications.message()" (dismissed)="notifications.dismiss()" />
+</div>

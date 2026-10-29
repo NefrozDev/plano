@@ -2,6 +2,7 @@ import type { MockInstance } from 'vitest';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { Friend, FriendRequests, PublicUser, UserSearchResult } from '@plano/common';
+import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { FriendsPanelComponent } from './friends-panel.component';
@@ -78,6 +79,37 @@ describe('FriendsPanelComponent', () => {
     expect(texts('.person .identity')).toEqual(['Cyd Test@cyd', 'Dan Test@dan', 'Bob Test@bob']);
     expect(texts('.person .actions')).toEqual(['Accepter Refuser', 'Annuler', 'Retirer']);
     expect(element.querySelector('.results')).toBeNull();
+  });
+
+  describe('friend news', () => {
+    it('counts the acceptances as seen once the panel shows, and keeps the badge in step with the requests', async () => {
+      const notifications = TestBed.inject(FriendNotificationsService);
+      expect(notifications.incoming()).toBe(1);
+      notifications.accepted.set([bob]);
+
+      // A new panel (the settings page opened again) marks them seen.
+      const again = TestBed.createComponent(FriendsPanelComponent);
+      again.detectChanges();
+      flushLists();
+      await settle();
+
+      expect(notifications.accepted()).toEqual([]);
+      expect(notifications.count()).toBe(1);
+    });
+
+    it('reloads both lists when a friend event arrives', async () => {
+      const notifications = TestBed.inject(FriendNotificationsService);
+      notifications.accepted.set([bob]);
+      // Signed out in this spec: emit the event the service relays.
+      (notifications as unknown as { changesSubject: { next(): void } }).changesSubject.next();
+
+      flushLists([friendOf(bob), friendOf(cyd)], { incoming: [], outgoing: [] });
+      await render();
+
+      expect(texts('.person strong')).toContain('Cyd Test');
+      expect(notifications.accepted()).toEqual([]);
+      expect(notifications.incoming()).toBe(0);
+    });
   });
 
   it('accepts a received request, then reloads both lists', async () => {

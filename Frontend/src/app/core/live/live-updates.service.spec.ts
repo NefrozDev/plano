@@ -56,6 +56,7 @@ describe('LiveUpdatesService', () => {
     const source = FakeEventSource.latest() as FakeEventSource;
     source.emit({ type: 'list.changed', listId: 'list-1' });
     source.emit({ type: 'list.removed', listId: 'list-2' });
+    source.emit({ type: 'friends.changed' });
     // The heartbeat and malformed events are dropped.
     source.dispatchEvent(new MessageEvent('ping', { data: '' }));
     source.dispatchEvent(new MessageEvent('list.changed', { data: '{oops' }));
@@ -63,6 +64,7 @@ describe('LiveUpdatesService', () => {
     expect(received).toEqual([
       { type: 'list.changed', listId: 'list-1' },
       { type: 'list.removed', listId: 'list-2' },
+      { type: 'friends.changed' },
     ]);
   });
 

@@ -3,6 +3,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import type { Friend, FriendRequests, PublicUser, UserSearchResult } from '@plano/common';
 import { Observable, catchError, debounceTime, distinctUntilChanged, firstValueFrom, map, of, switchMap } from 'rxjs';
+import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { FriendsService, MIN_SEARCH_LENGTH } from '../../core/friends/friends.service';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { SearchFieldComponent } from '../../shared/ui/search-field.component';
@@ -24,6 +25,7 @@ export class FriendsPanelComponent implements OnInit {
   private readonly confirm = inject(ConfirmService);
   private readonly transloco = inject(TranslocoService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notifications = inject(FriendNotificationsService);
 
   readonly friends = signal<readonly Friend[]>([]);
   readonly requests = signal<FriendRequests>({ incoming: [], outgoing: [] });
@@ -36,6 +38,11 @@ export class FriendsPanelComponent implements OnInit {
   readonly error = signal('');
 
   constructor() {
+    // Someone answered or asked while the panel is open: show it, and it counts as seen.
+    this.notifications.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.notifications.markSeen();
+      void this.reload();
+    });
     toObservable(this.query)
       .pipe(
         map((query) => query.trim()),
@@ -57,6 +64,7 @@ export class FriendsPanelComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.notifications.markSeen();
     void this.reload();
   }
 
@@ -123,6 +131,8 @@ export class FriendsPanelComponent implements OnInit {
       ]);
       this.friends.set(friends);
       this.requests.set(requests);
+      // The badge follows what the panel just loaded, without asking again.
+      this.notifications.incoming.set(requests.incoming.length);
     } catch {
       this.error.set('friends.errors.load');
     }

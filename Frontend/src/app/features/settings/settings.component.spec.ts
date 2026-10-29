@@ -83,9 +83,12 @@ describe('SettingsComponent', () => {
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
-    // The friends panel loads its lists (covered by its own spec).
+    // The friends panel loads its lists (covered by its own spec); the signed-in
+    // user's friend news count asks for the requests too.
     http.expectOne('/api/v1/friends').flush([]);
-    http.expectOne('/api/v1/friends/requests').flush({ incoming: [], outgoing: [] });
+    const pending = http.match('/api/v1/friends/requests');
+    expect(pending).toHaveLength(2);
+    for (const request of pending) request.flush({ incoming: [], outgoing: [] });
     await render();
   });
 
