@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import type { ListSummary } from '@plano/common';
@@ -34,10 +34,19 @@ function caption(list: ListSummary): string {
   templateUrl: './lists.component.html',
   styleUrl: './lists.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(pointermove)': 'moveDrag($event)',
+    '(pointerup)': 'endDrag()',
+    '(pointercancel)': 'endDrag()',
+  },
 })
 export class ListsComponent {
   readonly listsStore = inject(ListsStore);
   private readonly router = inject(Router);
+  private readonly document = inject(DOCUMENT);
+  /** The list being dragged by its handle. */
+  readonly draggedList = signal<string | null>(null);
+  private dragMoved = false;
 
   readonly filters: readonly { label: string; value: ListFilter }[] = [
     { label: 'Toutes', value: 'all' },
@@ -116,6 +125,45 @@ export class ListsComponent {
   toggleSetting(setting: BooleanSetting): void {
     const settings = this.listsStore.settings();
     if (settings) void this.listsStore.updateSettings({ [setting]: !settings[setting] });
+  }
+
+  startDrag(listId: string, event: PointerEvent): void {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    this.dragMoved = false;
+    this.draggedList.set(listId);
+  }
+
+  /** Moves the dragged list onto the card under the pointer. */
+  moveDrag(event: PointerEvent): void {
+    const sourceId = this.draggedList();
+    if (!sourceId) return;
+    event.preventDefault();
+    const targetId = this.document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>('.list-item')?.dataset['listId'];
+    if (!targetId || targetId === sourceId) return;
+    this.listsStore.moveList(sourceId, targetId);
+    this.dragMoved = true;
+  }
+
+  /** Saves the new order once, on drop. */
+  endDrag(): void {
+    if (!this.draggedList()) return;
+    this.draggedList.set(null);
+    if (this.dragMoved) void this.listsStore.saveListOrder();
+  }
+
+  /** Keyboard alternative to dragging: arrows move the list past its visible neighbour. */
+  moveWithKeyboard(listId: string, event: KeyboardEvent): void {
+    const step = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const cards = this.cards();
+    const target = cards[cards.findIndex(({ list }) => list.id === listId) + step];
+    if (!target) return;
+    this.listsStore.moveList(listId, target.list.id);
+    void this.listsStore.saveListOrder();
   }
 
   /** Creates an untitled list and opens its editor. */

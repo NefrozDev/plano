@@ -103,6 +103,7 @@
   aria-live="polite"
 >
   @for (card of cards(); track card.list.id) {
+    <div class="list-item" [attr.data-list-id]="card.list.id" [class.dragging]="draggedList() === card.list.id">
     <button
       class="list-card"
       type="button"
@@ -137,6 +138,15 @@
         <i><em [style.width.%]="card.progress"></em></i>
       </span>
     </button>
+    <button
+      class="drag-handle"
+      type="button"
+      [attr.aria-label]="'Déplacer la liste ' + card.list.name + ' (flèches pour changer sa place)'"
+      (pointerdown)="startDrag(card.list.id, $event)"
+      (keydown)="moveWithKeyboard(card.list.id, $event)"
+      (click)="$event.preventDefault()"
+    >⠿</button>
+    </div>
   } @empty {
     @if (query().trim() && !listsStore.loading()) {
       <p class="empty-state">Aucune liste ne correspond à « {{ query().trim() }} ».</p>

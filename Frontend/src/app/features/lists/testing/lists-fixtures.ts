@@ -31,6 +31,7 @@ export function listDetail(changes: Partial<ListDetail> = {}): ListDetail {
     memberCount: 2,
     completed: 2,
     total: 6,
+    onHome: false,
     description: '',
     members: [
       { id: OWNER_ID, name: 'Ada Lovelace', role: 'owner' },

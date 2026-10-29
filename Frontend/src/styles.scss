@@ -170,6 +170,22 @@ app-list-detail .list-menu button {
   text-align: left;
 }
 
+app-list-detail .home-pin svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+app-list-detail .home-pin.active {
+  color: var(--color-primary);
+}
+
+app-list-detail .home-pin.active svg {
+  fill: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
 app-list-detail .list-menu button:hover {
   background: var(--color-surface);
 }

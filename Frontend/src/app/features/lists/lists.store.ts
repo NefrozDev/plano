@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type {
   CreateListRequest,
+  HomeList,
   ListDetail,
   ListEntry,
   ListMemberRole,
@@ -49,6 +50,8 @@ export class ListsStore {
   private readonly detailState = signal<ListDetail | null>(null);
   private readonly settingsState = signal<ListSettings | null>(null);
   private readonly remindersState = signal<readonly ListReminder[]>([]);
+  private readonly homeState = signal<readonly HomeList[] | null>(null);
+  private homeRequested = false;
   private remindersRequested = false;
   /** Whether a screen shows the overview, so live changes refresh it. */
   private listsRequested = false;
@@ -60,6 +63,8 @@ export class ListsStore {
   readonly settings = this.settingsState.asReadonly();
   /** Entries with a reminder across every visible list, for the agenda. */
   readonly reminders = this.remindersState.asReadonly();
+  /** Lists pinned to the home page; null until loaded. */
+  readonly home = this.homeState.asReadonly();
   readonly loading = signal(false);
   /** Message of the last failed request, until cleared. */
   readonly error = signal('');
@@ -210,6 +215,54 @@ export class ListsStore {
     this.detailState.set({ ...detail, sections });
   }
 
+  /** Moves a list onto another one's place in the overview, locally: call saveListOrder() on drop. */
+  moveList(listId: string, targetListId: string): void {
+    const lists = [...this.listsState()];
+    const from = lists.findIndex(({ id }) => id === listId);
+    const to = lists.findIndex(({ id }) => id === targetListId);
+    if (from < 0 || to < 0 || from === to) return;
+    const [moved] = lists.splice(from, 1);
+    lists.splice(to, 0, moved);
+    this.listsState.set(lists);
+  }
+
+  /** Saves the user's list order; on failure the overview is reloaded to the server's order. */
+  async saveListOrder(): Promise<void> {
+    const saved = await this.run(this.api.reorder(this.listsState().map(({ id }) => id)), () => undefined);
+    if (!saved) {
+      await this.run(this.api.findAll(), (lists) => this.listsState.set(lists));
+      return;
+    }
+    this.refreshHome();
+  }
+
+  /** Pins the open list to (or unpins it from) the user's home page. */
+  async setOnHome(onHome: boolean): Promise<boolean> {
+    const listId = this.detailState()?.id;
+    if (!listId) return false;
+    const saved = await this.run(this.api.setOnHome(listId, onHome), () => {
+      this.detailState.update((detail) => (detail?.id === listId ? { ...detail, onHome } : detail));
+      this.listsState.update((lists) => lists.map((list) => (list.id === listId ? { ...list, onHome } : list)));
+    });
+    if (saved) this.refreshHome();
+    return saved;
+  }
+
+  async loadHome(): Promise<void> {
+    this.homeRequested = true;
+    await this.run(this.api.findHome(), (home) => this.homeState.set(home));
+  }
+
+  /** Ticks an item from the home page, then refreshes the pinned lists. */
+  async checkHomeEntry(listId: string, entryId: string): Promise<boolean> {
+    const checked = await this.run(this.api.updateEntry(listId, entryId, { done: true }), () => undefined);
+    if (checked) {
+      this.refreshHome();
+      this.refreshReminders();
+    }
+    return checked;
+  }
+
   /** Saves the section order; on failure the list is reloaded to the server's order. */
   async saveSectionOrder(): Promise<void> {
     const detail = this.detailState();
@@ -327,6 +380,7 @@ export class ListsStore {
       }
     }
     this.refreshReminders();
+    this.refreshHome();
   }
 
   private forget(listId: string): void {
@@ -336,10 +390,15 @@ export class ListsStore {
       this.error.set(REMOVED_MESSAGE);
     }
     this.refreshReminders();
+    this.refreshHome();
   }
 
   private refreshReminders(): void {
     if (this.remindersRequested) void this.loadReminders();
+  }
+
+  private refreshHome(): void {
+    if (this.homeRequested) void this.loadHome();
   }
 
   private async ensureSettings(): Promise<void> {

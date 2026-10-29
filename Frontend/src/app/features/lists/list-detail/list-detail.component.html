@@ -8,7 +8,18 @@
       <button class="icon-button" type="button" aria-label="Partager la liste" (click)="sharingOpen.set(true)">
         <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="10" cy="8" r="3.5" /><path d="M3.5 20v-3c0-3 2.2-5 6.5-5s6.5 2 6.5 5v3Z" /><circle cx="19" cy="9" r="2.5" /><path d="M17 13c3.7-.4 5.5 1.4 5.5 4v3h-4" /></svg>
       </button>
-      @if (canEdit()) {
+      @if (listActions().length === 1) {
+        <button
+          class="icon-button home-pin"
+          type="button"
+          [attr.aria-label]="list()!.onHome ? 'Retirer de l’accueil' : 'Afficher sur l’accueil'"
+          [attr.aria-pressed]="list()!.onHome"
+          [class.active]="list()!.onHome"
+          (click)="toggleOnHome()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7v9H4Z" /><path d="M10 20v-5h4v5" /></svg>
+        </button>
+      } @else {
         <button
           class="icon-button more-button"
           type="button"
@@ -26,8 +37,13 @@
               <span aria-hidden="true">✎</span> Modifier la liste
             </button>
           }
-          <button type="button" (click)="openSectionCreator()">
-            <span aria-hidden="true">＋</span> Ajouter une section
+          @if (canEdit()) {
+            <button type="button" (click)="openSectionCreator()">
+              <span aria-hidden="true">＋</span> Ajouter une section
+            </button>
+          }
+          <button class="home-toggle" type="button" [attr.aria-pressed]="list()!.onHome" (click)="toggleOnHome()">
+            <span aria-hidden="true">⌂</span> {{ list()!.onHome ? 'Retirer de l’accueil' : 'Afficher sur l’accueil' }}
           </button>
         </div>
       }

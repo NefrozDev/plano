@@ -75,6 +75,15 @@ export class ListDetailComponent {
   readonly notFound = signal(false);
   readonly canEdit = computed(() => !!this.list() && this.list()?.role !== 'viewer');
   readonly isOwner = computed(() => this.list()?.role === 'owner');
+  /**
+   * The header's list actions: a single one gets its own button, several go
+   * behind the "more options" menu (viewers can only pin the list).
+   */
+  readonly listActions = computed<readonly ('edit' | 'section' | 'home')[]>(() => [
+    ...(this.isOwner() ? (['edit'] as const) : []),
+    ...(this.canEdit() ? (['section'] as const) : []),
+    'home',
+  ]);
   readonly people = computed(() => (this.list()?.members ?? []).map(toPerson));
   readonly progress = computed(() => percent(this.list()?.completed ?? 0, this.list()?.total ?? 0));
 
@@ -163,6 +172,13 @@ export class ListDetailComponent {
   cancelAdding(): void {
     this.addingTo.set(null);
     this.newEntryValue.set('');
+  }
+
+  /** Pins the list to the user's own home page, or unpins it. */
+  async toggleOnHome(): Promise<void> {
+    this.listMenuOpen.set(false);
+    const list = this.list();
+    if (list) await this.store.setOnHome(!list.onHome);
   }
 
   toggleListMenu(): void {

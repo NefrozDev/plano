@@ -5,6 +5,7 @@ import type {
   CreateEntryRequest,
   CreateListRequest,
   CreateSectionRequest,
+  HomeList,
   ListDetail,
   ListEntry,
   ListMember,
@@ -99,6 +100,20 @@ export class ListsApiService {
 
   removeAllMembers(listId: string): Observable<void> {
     return this.http.delete<void>(`${this.lists}/${listId}/members`);
+  }
+
+  /** The lists pinned to the home page, in the user's order. */
+  findHome(): Observable<HomeList[]> {
+    return this.http.get<HomeList[]>(`${this.lists}/home`);
+  }
+
+  /** The user's own order of their lists. */
+  reorder(listIds: string[]): Observable<void> {
+    return this.http.put<void>(`${this.lists}/order`, { listIds });
+  }
+
+  setOnHome(listId: string, onHome: boolean): Observable<void> {
+    return this.http.patch<void>(`${this.lists}/${listId}/preferences`, { onHome });
   }
 
   findSettings(): Observable<ListSettings> {

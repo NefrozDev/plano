@@ -385,6 +385,56 @@ describe('ListDetailComponent', () => {
     });
   });
 
+  describe('home page', () => {
+    it('lets the owner pin the list from the more-options menu, and unpin it', async () => {
+      await create();
+      (element.querySelector('.more-button') as HTMLButtonElement).click();
+      await render();
+      const items = Array.from(element.querySelectorAll<HTMLButtonElement>('.list-menu button'));
+      expect(items.map((item) => item.textContent?.trim())).toEqual([
+        '✎ Modifier la liste',
+        '＋ Ajouter une section',
+        '⌂ Afficher sur l’accueil',
+      ]);
+
+      items[2].click();
+      const pin = http.expectOne('/api/v1/lists/list-1/preferences');
+      expect(pin.request.body).toEqual({ onHome: true });
+      pin.flush(null, { status: 204, statusText: 'No Content' });
+      await render();
+      expect(element.querySelector('.list-menu')).toBeNull();
+
+      (element.querySelector('.more-button') as HTMLButtonElement).click();
+      await render();
+      const toggle = element.querySelector('.home-toggle') as HTMLButtonElement;
+      expect(toggle.textContent).toContain('Retirer de l’accueil');
+      expect(toggle.getAttribute('aria-pressed')).toBe('true');
+      toggle.click();
+      const unpin = http.expectOne('/api/v1/lists/list-1/preferences');
+      expect(unpin.request.body).toEqual({ onHome: false });
+      unpin.flush(null, { status: 204, statusText: 'No Content' });
+      await render();
+      expect(store.detail()?.onHome).toBe(false);
+    });
+
+    it('gives viewers the pin as their only action, as its own button', async () => {
+      await create({ detail: listDetail({ role: 'viewer', ownership: 'shared' }) });
+
+      expect(element.querySelector('.more-button')).toBeNull();
+      const pin = element.querySelector('.home-pin') as HTMLButtonElement;
+      expect(pin.getAttribute('aria-label')).toBe('Afficher sur l’accueil');
+      expect(pin.getAttribute('aria-pressed')).toBe('false');
+
+      pin.click();
+      http.expectOne('/api/v1/lists/list-1/preferences').flush(null, { status: 204, statusText: 'No Content' });
+      await render();
+
+      expect(pin.getAttribute('aria-label')).toBe('Retirer de l’accueil');
+      expect(pin.getAttribute('aria-pressed')).toBe('true');
+      expect(pin.classList).toContain('active');
+    });
+  });
+
   it('lets viewers read the list without editing controls', async () => {
     await create({ detail: listDetail({ role: 'viewer', ownership: 'shared' }) });
 

@@ -4,6 +4,7 @@ import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { AuthService } from '../../core/auth/auth.service';
 import { FakeEventSource } from '../../testing/fake-event-source';
 import { ListsStore, REMOVED_MESSAGE } from './lists.store';
+import type { HomeList } from '@plano/common';
 import { MEMBER_ID, entry, listDetail, listSettings, listSummary } from './testing/lists-fixtures';
 
 describe('ListsStore', () => {
@@ -202,6 +203,140 @@ describe('ListsStore', () => {
     expect(names()).toEqual(['Lait', 'Œufs', 'Tomates', 'Salade']);
   });
 
+  describe('order and home page', () => {
+    const homeList = (changes: Partial<HomeList> = {}): HomeList => ({
+      id: 'list-1',
+      name: 'Courses',
+      icon: 'cart',
+      color: '#2ecb70',
+      role: 'owner',
+      remaining: 2,
+      entries: [
+        { id: 'milk', name: 'Lait' },
+        { id: 'eggs', name: 'Œufs' },
+      ],
+      ...changes,
+    });
+
+    async function loadThree(): Promise<void> {
+      const loading = store.loadLists();
+      http.expectOne('/api/v1/lists').flush([
+        listSummary({ id: 'a', name: 'A' }),
+        listSummary({ id: 'b', name: 'B' }),
+        listSummary({ id: 'c', name: 'C' }),
+      ]);
+      http.expectOne('/api/v1/settings/lists').flush(listSettings());
+      await loading;
+    }
+    const order = () => store.lists().map(({ id }) => id);
+
+    it('moves lists locally and saves the whole order once', async () => {
+      await loadThree();
+
+      store.moveList('c', 'a');
+      store.moveList('missing', 'a');
+      store.moveList('c', 'c');
+      expect(order()).toEqual(['c', 'a', 'b']);
+      http.expectNone('/api/v1/lists/order');
+
+      const saving = store.saveListOrder();
+      const request = http.expectOne('/api/v1/lists/order');
+      expect(request.request.method).toBe('PUT');
+      expect(request.request.body).toEqual({ listIds: ['c', 'a', 'b'] });
+      request.flush(null, { status: 204, statusText: 'No Content' });
+      await saving;
+
+      expect(order()).toEqual(['c', 'a', 'b']);
+      // The home page was never shown: nothing to refresh.
+      http.expectNone('/api/v1/lists/home');
+    });
+
+    it('restores the server order when saving it fails', async () => {
+      await loadThree();
+      store.moveList('c', 'a');
+
+      const saving = store.saveListOrder();
+      http.expectOne('/api/v1/lists/order').flush({ message: 'Liste introuvable.' }, { status: 404, statusText: 'Not Found' });
+      await settle();
+      http.expectOne('/api/v1/lists').flush([listSummary({ id: 'a' }), listSummary({ id: 'b' }), listSummary({ id: 'c' })]);
+      await saving;
+
+      expect(order()).toEqual(['a', 'b', 'c']);
+      expect(store.error()).toBe('Liste introuvable.');
+    });
+
+    it('pins the open list to the home page and refreshes the home lists', async () => {
+      const loadingHome = store.loadHome();
+      http.expectOne('/api/v1/lists/home').flush([]);
+      await loadingHome;
+      expect(store.home()).toEqual([]);
+      await loadThree();
+      // Settings already loaded with the overview.
+      const opening = store.open('list-1');
+      http.expectOne('/api/v1/lists/list-1').flush(listDetail());
+      await opening;
+
+      const pinning = store.setOnHome(true);
+      const request = http.expectOne('/api/v1/lists/list-1/preferences');
+      expect(request.request.method).toBe('PATCH');
+      expect(request.request.body).toEqual({ onHome: true });
+      request.flush(null, { status: 204, statusText: 'No Content' });
+      await settle();
+      http.expectOne('/api/v1/lists/home').flush([homeList()]);
+      expect(await pinning).toBe(true);
+      await settle();
+
+      expect(store.detail()?.onHome).toBe(true);
+      // Only the open list is pinned; the other lists of the overview are untouched.
+      expect(store.lists().map(({ onHome }) => onHome)).toEqual([false, false, false]);
+      expect(store.home()?.map(({ name }) => name)).toEqual(['Courses']);
+    });
+
+    it('keeps the pin unchanged when the server refuses it, and needs an open list', async () => {
+      expect(await store.setOnHome(true)).toBe(false);
+      http.expectNone('/api/v1/lists/list-1/preferences');
+      await openList();
+
+      const pinning = store.setOnHome(true);
+      http.expectOne('/api/v1/lists/list-1/preferences').flush(null, { status: 500, statusText: 'Error' });
+
+      expect(await pinning).toBe(false);
+      expect(store.detail()?.onHome).toBe(false);
+      expect(store.error()).not.toBe('');
+    });
+
+    it('ticks a home item, then reloads the home lists', async () => {
+      const loadingHome = store.loadHome();
+      http.expectOne('/api/v1/lists/home').flush([homeList()]);
+      await loadingHome;
+
+      const checking = store.checkHomeEntry('list-1', 'milk');
+      const request = http.expectOne('/api/v1/lists/list-1/entries/milk');
+      expect(request.request.method).toBe('PATCH');
+      expect(request.request.body).toEqual({ done: true });
+      request.flush(entry('milk', 'Lait', { done: true }));
+      await settle();
+      http.expectOne('/api/v1/lists/home').flush([homeList({ remaining: 1, entries: [{ id: 'eggs', name: 'Œufs' }] })]);
+      expect(await checking).toBe(true);
+      await settle();
+
+      expect(store.home()?.[0].entries.map(({ name }) => name)).toEqual(['Œufs']);
+    });
+
+    it('keeps the home lists when ticking fails', async () => {
+      const loadingHome = store.loadHome();
+      http.expectOne('/api/v1/lists/home').flush([homeList()]);
+      await loadingHome;
+
+      const checking = store.checkHomeEntry('list-1', 'milk');
+      http.expectOne('/api/v1/lists/list-1/entries/milk').flush(null, { status: 500, statusText: 'Error' });
+
+      expect(await checking).toBe(false);
+      http.expectNone('/api/v1/lists/home');
+      expect(store.home()?.[0].remaining).toBe(2);
+    });
+  });
+
   it('manages members and sharing', async () => {
     await openList();
 
@@ -346,6 +481,19 @@ describe('ListsStore', () => {
       expect(store.error()).toBe('');
       // Reminders were never loaded: nothing to refresh.
       http.expectNone('/api/v1/lists/reminders');
+    });
+
+    it('reloads the home lists when a list changes elsewhere, once they are shown', async () => {
+      const stream = await signedInStream();
+      const loadingHome = store.loadHome();
+      http.expectOne('/api/v1/lists/home').flush([]);
+      await loadingHome;
+
+      stream.emit({ type: 'list.changed', listId: 'list-1' });
+      await settle();
+
+      http.expectOne('/api/v1/lists/home').flush([]);
+      http.expectNone('/api/v1/lists');
     });
 
     it('reloads only what is on screen', async () => {

@@ -139,6 +139,83 @@ describe('ListsComponent', () => {
     expect(element.querySelector('.settings-panel')).not.toBeNull();
   });
 
+  describe('reordering', () => {
+    const order = () => Array.from(element.querySelectorAll<HTMLElement>('.list-item')).map((item) => item.dataset['listId']);
+    const handle = (listId: string) =>
+      element.querySelector(`.list-item[data-list-id="${listId}"] .drag-handle`) as HTMLButtonElement;
+    const pointer = (type: string, target: Element, x = 0, y = 0) =>
+      target.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x, clientY: y, bubbles: true, cancelable: true }));
+    const centre = (listId: string) => {
+      const box = (element.querySelector(`.list-item[data-list-id="${listId}"]`) as HTMLElement).getBoundingClientRect();
+      return [box.left + box.width / 2, box.top + box.height / 2] as const;
+    };
+
+    beforeEach(() => {
+      // Real layout: the cards must be on screen for elementFromPoint().
+      document.body.append(element);
+    });
+
+    afterEach(() => element.remove());
+
+    it('drags a list by its handle onto another card and saves the order on drop', () => {
+      expect(order()).toEqual(['courses', 'maison', 'cadeaux']);
+      const grip = handle('cadeaux');
+      expect(grip.getAttribute('aria-label')).toBe('Déplacer la liste Cadeaux (flèches pour changer sa place)');
+      grip.setPointerCapture = vi.fn();
+
+      pointer('pointerdown', grip);
+      fixture.detectChanges();
+      expect(grip.setPointerCapture).toHaveBeenCalledExactlyOnceWith(1);
+      expect(element.querySelector('.list-item.dragging')?.getAttribute('data-list-id')).toBe('cadeaux');
+      pointer('pointermove', grip, ...centre('courses'));
+      fixture.detectChanges();
+      expect(order()).toEqual(['cadeaux', 'courses', 'maison']);
+      http.expectNone('/api/v1/lists/order');
+
+      pointer('pointerup', grip);
+      fixture.detectChanges();
+
+      const save = http.expectOne('/api/v1/lists/order');
+      expect(save.request.body).toEqual({ listIds: ['cadeaux', 'courses', 'maison', 'ete'] });
+      save.flush(null, { status: 204, statusText: 'No Content' });
+      expect(element.querySelector('.list-item.dragging')).toBeNull();
+    });
+
+    it('saves nothing for a drag that moved nothing, and ignores moves without a drag', () => {
+      pointer('pointermove', element, ...centre('maison'));
+      const grip = handle('courses');
+      grip.setPointerCapture = vi.fn();
+      pointer('pointerdown', grip);
+      pointer('pointermove', grip, ...centre('courses'));
+      pointer('pointerup', grip);
+      pointer('pointerup', grip);
+
+      http.expectNone('/api/v1/lists/order');
+      expect(order()).toEqual(['courses', 'maison', 'cadeaux']);
+    });
+
+    it('moves a list with the arrow keys of its handle, past visible neighbours only', () => {
+      const key = (listId: string, name: string) => {
+        const event = new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true });
+        handle(listId).dispatchEvent(event);
+        fixture.detectChanges();
+        return event.defaultPrevented;
+      };
+
+      expect(key('maison', 'ArrowDown')).toBe(true);
+      expect(order()).toEqual(['courses', 'cadeaux', 'maison']);
+      expect(http.expectOne('/api/v1/lists/order').request.body).toEqual({
+        listIds: ['courses', 'cadeaux', 'maison', 'ete'],
+      });
+
+      // Already first, or a key that is not an arrow: nothing happens.
+      expect(key('courses', 'ArrowUp')).toBe(true);
+      expect(key('courses', 'Enter')).toBe(false);
+      http.expectNone('/api/v1/lists/order');
+      expect(order()).toEqual(['courses', 'cadeaux', 'maison']);
+    });
+  });
+
   it('switches to the grid layout and saves it as the default view', () => {
     (element.querySelector('.menu-button') as HTMLButtonElement).click();
     fixture.detectChanges();

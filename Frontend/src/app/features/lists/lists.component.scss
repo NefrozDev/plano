@@ -29,6 +29,14 @@
 .list-progress em { display: block; height: 100%; border-radius: inherit; background: var(--list-color); }
 .new-list-button { display: flex; width: 100%; min-height: 3.5rem; align-items: center; justify-content: center; gap: .55rem; border: 0; border-radius: .8rem; background: #eef4ff; color: #3264ed; cursor: pointer; font-weight: 700; }
 .new-list-button span { font-size: 1.35rem; font-weight: 400; }
+.list-item { position: relative; }
+.list-item.dragging .list-card { opacity: .65; box-shadow: 0 .6rem 1.4rem rgb(31 41 55 / 16%); }
+.lists-content:not(.grid-view) .list-card { padding-right: 2.6rem; }
+.drag-handle { position: absolute; top: 50%; right: .35rem; display: grid; width: 2rem; height: 2.6rem; place-items: center; padding: 0; border: 0; border-radius: .5rem; background: transparent; color: #9aa3b5; cursor: grab; font-size: 1.05rem; transform: translateY(-50%); touch-action: none; user-select: none; }
+.drag-handle:hover { background: rgb(255 255 255 / 70%); color: #4b5468; }
+.drag-handle:active { cursor: grabbing; }
+.drag-handle:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); }
+.grid-view .drag-handle { top: .35rem; transform: none; }
 .empty-state { margin: 3rem 0; color: var(--color-text-muted); font-size: .85rem; text-align: center; }
 .lists-content.grid-view { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-content: start; }
 .grid-view .list-card { min-height: 12.5rem; grid-template-columns: 1fr; grid-template-rows: 3.5rem auto auto; gap: .55rem; justify-items: center; margin: 0; padding: 1.2rem .9rem; text-align: center; }
