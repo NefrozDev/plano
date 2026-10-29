@@ -1,5 +1,9 @@
 import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import {
+  Test,
+  TestingModule,
+  type TestingModuleBuilder,
+} from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { configureApp } from './../src/app.config';
@@ -40,15 +44,23 @@ export interface TestApp {
   close(): Promise<void>;
 }
 
-async function startApp(databaseUrl: string): Promise<INestApplication<App>> {
+/** Replaces providers of the real AppModule, e.g. the mailer. */
+export type ModuleOverrides = (
+  builder: TestingModuleBuilder,
+) => TestingModuleBuilder;
+
+async function startApp(
+  databaseUrl: string,
+  overrides: ModuleOverrides = (builder) => builder,
+): Promise<INestApplication<App>> {
   process.env.DATABASE_URL = databaseUrl;
   process.env.AUTH_SCRYPT_COST = '1024';
   process.env.AUTH_SCRYPT_BLOCK_SIZE = '8';
   process.env.AUTH_SCRYPT_PARALLELIZATION = '1';
 
-  const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
+  const moduleFixture: TestingModule = await overrides(
+    Test.createTestingModule({ imports: [AppModule] }),
+  ).compile();
   const app = moduleFixture.createNestApplication<INestApplication<App>>();
   configureApp(app);
   await app.init();
@@ -56,13 +68,15 @@ async function startApp(databaseUrl: string): Promise<INestApplication<App>> {
 }
 
 /** The real AppModule with the runtime HTTP setup, on a throwaway database. */
-export async function createTestApp(): Promise<TestApp> {
+export async function createTestApp(
+  overrides?: ModuleOverrides,
+): Promise<TestApp> {
   const database = await createTestDatabase();
   const testApp: TestApp = {
-    app: await startApp(database.url),
+    app: await startApp(database.url, overrides),
     restart: async () => {
       await testApp.app.close();
-      testApp.app = await startApp(database.url);
+      testApp.app = await startApp(database.url, overrides);
       return testApp.app;
     },
     close: async () => {

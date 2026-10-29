@@ -7,6 +7,7 @@ import type {
   AuthUser,
   IssuedAuthentication,
 } from './auth.types';
+import type { PasswordResetService } from './password-reset.service';
 import type { SessionSettingsService } from './session-settings.service';
 
 describe('AuthController', () => {
@@ -33,6 +34,7 @@ describe('AuthController', () => {
     setCookie: Mock;
     clearCookie: Mock;
   };
+  let passwordResets: { request: Mock; confirm: Mock };
   let controller: AuthController;
   let response: Response;
 
@@ -46,9 +48,14 @@ describe('AuthController', () => {
       setCookie: vi.fn(),
       clearCookie: vi.fn(),
     };
+    passwordResets = {
+      request: vi.fn().mockResolvedValue(undefined),
+      confirm: vi.fn().mockResolvedValue(undefined),
+    };
     controller = new AuthController(
       authService as unknown as AuthService,
       sessionSettings as unknown as SessionSettingsService,
+      passwordResets as unknown as PasswordResetService,
     );
     response = {} as Response;
   });
@@ -84,6 +91,28 @@ describe('AuthController', () => {
       authentication.token,
       authentication.expiresAt,
     );
+  });
+
+  it('forwards password recovery without touching sessions or cookies', async () => {
+    await expect(
+      controller.requestPasswordReset({ email: 'ada@example.com' }),
+    ).resolves.toBeUndefined();
+    await expect(
+      controller.confirmPasswordReset({
+        token: 't'.repeat(43),
+        password: 'new-password',
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(passwordResets.request).toHaveBeenCalledExactlyOnceWith(
+      'ada@example.com',
+    );
+    expect(passwordResets.confirm).toHaveBeenCalledExactlyOnceWith(
+      't'.repeat(43),
+      'new-password',
+    );
+    expect(authService.login).not.toHaveBeenCalled();
+    expect(sessionSettings.setCookie).not.toHaveBeenCalled();
   });
 
   it('returns the user attached by the session guard', () => {

@@ -13,6 +13,8 @@ import type { Response } from 'express';
 import { AllowedOriginGuard } from './allowed-origin.guard';
 import {
   LOGIN_THROTTLE,
+  PASSWORD_RESET_CONFIRM_THROTTLE,
+  PASSWORD_RESET_THROTTLE,
   REGISTER_THROTTLE,
   SESSION_COOKIE_NAME,
 } from './auth.constants';
@@ -20,6 +22,11 @@ import { AuthService } from './auth.service';
 import type { AuthenticatedRequest, AuthUser } from './auth.types';
 import { CurrentUser } from './current-user.decorator';
 import { LoginDto } from './dto/login.dto';
+import {
+  ConfirmPasswordResetDto,
+  PasswordResetDto,
+} from './dto/password-reset.dto';
+import { PasswordResetService } from './password-reset.service';
 import { RegisterDto } from './dto/register.dto';
 import { SessionAuthGuard } from './session-auth.guard';
 import { SessionSettingsService } from './session-settings.service';
@@ -30,6 +37,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly sessionSettings: SessionSettingsService,
+    private readonly passwordResets: PasswordResetService,
   ) {}
 
   @Post('register')
@@ -63,6 +71,26 @@ export class AuthController {
     );
 
     return authentication.user;
+  }
+
+  /** Same answer whether or not the address has an account. */
+  @Post('password-reset')
+  @HttpCode(204)
+  @Throttle(PASSWORD_RESET_THROTTLE)
+  async requestPasswordReset(
+    @Body() { email }: PasswordResetDto,
+  ): Promise<void> {
+    await this.passwordResets.request(email);
+  }
+
+  /** Sets the new password and signs the account out everywhere. */
+  @Post('password-reset/confirm')
+  @HttpCode(204)
+  @Throttle(PASSWORD_RESET_CONFIRM_THROTTLE)
+  async confirmPasswordReset(
+    @Body() { token, password }: ConfirmPasswordResetDto,
+  ): Promise<void> {
+    await this.passwordResets.confirm(token, password);
   }
 
   @Get('session')

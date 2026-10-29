@@ -46,6 +46,11 @@ services:
       DATABASE_URL: postgres://plano:${POSTGRES_PASSWORD}@db:5432/plano
       DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-5}
       SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
       NODE_OPTIONS: --max-old-space-size=192
     mem_limit: 320m
     logging: *logging

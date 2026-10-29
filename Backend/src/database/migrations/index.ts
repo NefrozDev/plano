@@ -5,6 +5,7 @@ import { AllowSeveralGroups1787180000000 } from './1787180000000-allow-several-g
 import { CreateFriendships1787260000000 } from './1787260000000-create-friendships';
 import { AddUserLocaleAndAvatar1787340000000 } from './1787340000000-add-user-locale-and-avatar';
 import { CreateListPreferences1787420000000 } from './1787420000000-create-list-preferences';
+import { CreatePasswordResets1787500000000 } from './1787500000000-create-password-resets';
 
 /** Every migration, oldest first; shared by the app and the in-memory test database. */
 export const MIGRATIONS = [
@@ -15,4 +16,5 @@ export const MIGRATIONS = [
   CreateFriendships1787260000000,
   AddUserLocaleAndAvatar1787340000000,
   CreateListPreferences1787420000000,
+  CreatePasswordResets1787500000000,
 ];

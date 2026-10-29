@@ -8,6 +8,17 @@ export interface UpdateProfileRequest {
   username?: string;
 }
 
+/** POST /auth/password-reset: always answered with 204, account or not. */
+export interface PasswordResetRequest {
+  email: string;
+}
+
+/** POST /auth/password-reset/confirm, with the token from the e-mailed link. */
+export interface ConfirmPasswordResetRequest {
+  token: string;
+  password: string;
+}
+
 export interface UsernameAvailability {
   available: boolean;
 }
