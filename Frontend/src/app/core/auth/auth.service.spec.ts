@@ -111,6 +111,25 @@ describe('AuthService', () => {
     expect(service.status()).toBe('authenticated');
   });
 
+  it('asks for a recovery link and sets a new password, without signing anyone in', () => {
+    let requested = false;
+    let confirmed = false;
+    service.requestPasswordReset('ada@example.com').subscribe(() => (requested = true));
+    const request = http.expectOne('/api/v1/auth/password-reset');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ email: 'ada@example.com' });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+
+    service.confirmPasswordReset('token', 'new-password').subscribe(() => (confirmed = true));
+    const confirm = http.expectOne('/api/v1/auth/password-reset/confirm');
+    expect(confirm.request.method).toBe('POST');
+    expect(confirm.request.body).toEqual({ token: 'token', password: 'new-password' });
+    confirm.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect([requested, confirmed]).toEqual([true, true]);
+    expect(service.user()).toBeNull();
+  });
+
   it('clears its in-memory session after a successful logout', () => {
     service.login({ username: 'ada', password: 'password123' }).subscribe();
     http.expectOne('/api/v1/auth/login').flush(user);

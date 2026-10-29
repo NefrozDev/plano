@@ -21,6 +21,24 @@ export const routes: Routes = [
       ),
     title: 'Créer un compte | Plano',
   },
+  {
+    path: 'forgot-password',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password.component').then(
+        (component) => component.ForgotPasswordComponent,
+      ),
+    title: 'Mot de passe oublié | Plano',
+  },
+  {
+    // Opened from the recovery e-mail, signed in or not: the token decides.
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password.component').then(
+        (component) => component.ResetPasswordComponent,
+      ),
+    title: 'Nouveau mot de passe | Plano',
+  },
   // Former single-group page, still reached from older links.
   { path: 'group/setup', redirectTo: 'groups' },
   {

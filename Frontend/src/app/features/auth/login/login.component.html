@@ -37,20 +37,7 @@
         }
       </div>
 
-      <button
-        class="link-button forgot-password"
-        type="button"
-        aria-controls="recovery-information"
-        (click)="showRecoveryInfo()"
-      >
-        Mot de passe oublié&nbsp;?
-      </button>
-
-      @if (recoveryMessage()) {
-        <p id="recovery-information" class="form-information" role="status">
-          {{ recoveryMessage() }}
-        </p>
-      }
+      <a class="link-button forgot-password" routerLink="/forgot-password">Mot de passe oublié&nbsp;?</a>
 
       @if (submissionError()) {
         <div class="form-error" role="alert">{{ submissionError() }}</div>

@@ -36,11 +36,14 @@ describe('app routes', () => {
     }
   });
 
-  it('keeps login and register for guests and every other screen for signed-in users', () => {
+  it('keeps sign-in, sign-up and recovery requests for guests, the e-mailed link open, the rest for signed-in users', () => {
     const guardsOf = (path: string) => routes.find((route) => route.path === path)?.canActivate;
 
     expect(guardsOf('login')).toEqual([guestGuard]);
     expect(guardsOf('register')).toEqual([guestGuard]);
+    expect(guardsOf('forgot-password')).toEqual([guestGuard]);
+    // The e-mailed link must work even where someone is signed in.
+    expect(guardsOf('reset-password')).toBeUndefined();
     for (const path of ['groups', 'groups/:groupId', 'agenda', 'objectives']) {
       expect(guardsOf(path), path).toEqual([authenticatedGuard]);
     }

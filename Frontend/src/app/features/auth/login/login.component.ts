@@ -31,7 +31,6 @@ export class LoginComponent {
   readonly submitted = signal(false);
   readonly submitting = signal(false);
   readonly submissionError = signal('');
-  readonly recoveryMessage = signal('');
 
   showError(controlName: 'username' | 'password'): boolean {
     const control = this.form.controls[controlName];
@@ -51,16 +50,9 @@ export class LoginComponent {
       : 'Le mot de passe ne peut pas dépasser 128 caractères.';
   }
 
-  showRecoveryInfo(): void {
-    this.recoveryMessage.set(
-      'La récupération du mot de passe sera prochainement disponible.',
-    );
-  }
-
   submit(): void {
     this.submitted.set(true);
     this.submissionError.set('');
-    this.recoveryMessage.set('');
 
     if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();

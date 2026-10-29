@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
+import type { ConfirmPasswordResetRequest, PasswordResetRequest } from '@plano/common';
 import { Observable, catchError, finalize, of, shareReplay, tap } from 'rxjs';
 import { API_BASE_URL } from '../http/api-base-url';
 import {
@@ -54,6 +55,18 @@ export class AuthService {
     }
 
     return this.restoreRequest;
+  }
+
+  /** Answers the same whether or not the address has an account. */
+  requestPasswordReset(email: string): Observable<void> {
+    const details: PasswordResetRequest = { email };
+    return this.http.post<void>(`${this.apiUrl}/password-reset`, details);
+  }
+
+  /** Sets the new password; every session of the account ends, this one included. */
+  confirmPasswordReset(token: string, password: string): Observable<void> {
+    const details: ConfirmPasswordResetRequest = { token, password };
+    return this.http.post<void>(`${this.apiUrl}/password-reset/confirm`, details);
   }
 
   logout(): Observable<void> {

@@ -72,10 +72,15 @@ describe('LoginComponent', () => {
     expect(component.fieldError('password')).toContain('128 caractères');
   });
 
-  it('shows password recovery information', () => {
-    component.showRecoveryInfo();
+  it('links to password recovery', () => {
+    const fixture = TestBed.createComponent(LoginComponent);
+    fixture.detectChanges();
 
-    expect(component.recoveryMessage()).toContain('prochainement disponible');
+    const link = (fixture.nativeElement as HTMLElement).querySelector('.forgot-password') as HTMLAnchorElement;
+    expect(link.tagName).toBe('A');
+    expect(link.getAttribute('href')).toBe('/forgot-password');
+    expect(link.textContent).toContain('Mot de passe oublié');
+    expect(auth.login).not.toHaveBeenCalled();
   });
 
   it('submits trimmed username, keeps the password intact, and navigates', () => {
