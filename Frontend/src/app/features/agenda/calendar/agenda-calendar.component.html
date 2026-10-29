@@ -45,7 +45,7 @@
 <div class="date-bar">
   <button class="nav" type="button" aria-label="Période précédente" (click)="shift(-1)">‹</button>
   <button class="title" type="button" [attr.aria-label]="'Choisir une date, ' + title()" (click)="openDatePicker(picker)">
-    {{ title() }} <span aria-hidden="true">⌄</span>
+    {{ title() }}
   </button>
   <input #picker class="picker" type="date" tabindex="-1" aria-hidden="true" aria-label="Choisir une date" [value]="date()" (change)="pickDate(picker.value)" />
   <button class="nav" type="button" aria-label="Période suivante" (click)="shift(1)">›</button>

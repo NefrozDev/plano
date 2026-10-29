@@ -35,7 +35,8 @@ describe('AgendaCalendarComponent', () => {
     flushListReminders();
     await settle();
 
-    expect(element().querySelector('.date-bar .title')?.textContent).toContain('Jeudi 15 octobre');
+    // Just the date: the button itself opens the date picker, no arrow needed.
+    expect(element().querySelector('.date-bar .title')?.textContent?.trim()).toBe('Jeudi 15 octobre');
     expect(element().querySelector('.date-bar .today')).toBeNull();
     expect(cardTitles()).toEqual(['Rendez-vous projet', 'Courses', 'Déjeuner', 'Appel avec Camille', 'Sport', 'Lait', 'Restaurant']);
     const rows = Array.from(element().querySelectorAll('.timeline > div'));
