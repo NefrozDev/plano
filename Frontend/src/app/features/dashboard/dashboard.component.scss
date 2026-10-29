@@ -53,7 +53,6 @@
   font-size: 0.85rem;
 }
 .week-card,
-.agenda-card,
 .tasks-card,
 .goals-card {
   overflow: hidden;
@@ -119,28 +118,6 @@
   font-size: 0.74rem;
   font-weight: 650;
 }
-.agenda-card .event {
-  color: inherit;
-  text-decoration: none;
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid var(--color-border);
-}
-.agenda-card strong {
-  font-size: 0.9rem;
-}
-.agenda-card p {
-  margin: 0.05rem 0 0;
-  font-size: 0.72rem;
-}
-.agenda-card .event-icon {
-  background: color-mix(in srgb, var(--c) 16%, white);
-  color: var(--c);
-  font-size: 0.9rem;
-}
-.event-icon,
 .goal-icon {
   display: grid;
   flex: 0 0 2.4rem;
@@ -149,14 +126,9 @@
   border-radius: 0.55rem;
   font-size: 1.25rem;
 }
-.event-icon--blue {
-  background: #dceaff;
-}
-.event-icon--green,
 .goal-icon--green {
   background: #c7f7df;
 }
-.event-icon--pink,
 .goal-icon--pink {
   background: #f5c9f3;
 }
@@ -174,7 +146,6 @@
   font-weight: 650;
 }
 /* Same inner spacing for every card, so empty states line up too. */
-.agenda-card,
 .tasks-card,
 .goals-card {
   padding: 0.55rem 0.85rem;

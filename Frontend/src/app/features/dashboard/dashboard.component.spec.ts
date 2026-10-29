@@ -41,7 +41,7 @@ describe('DashboardComponent', () => {
   it('renders the French landing page for the restored user', () => {
     const loadTasks = vi.spyOn(TestBed.inject(AgendaStore), 'loadTasks');
     const fixture = TestBed.createComponent(DashboardComponent);
-    // The agenda preview needs the dated list tasks: loaded once on creation.
+    // The week dots need the dated list tasks: loaded once on creation.
     expect(loadTasks).toHaveBeenCalledTimes(1);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
@@ -182,47 +182,32 @@ describe('DashboardComponent', () => {
     });
   });
 
-  it('previews today from the agenda, list reminders included, linking to each item', async () => {
+  it('has no agenda preview, but marks the week days that have agenda items', async () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     flushListReminders();
     await settle();
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
-    const events = element.querySelectorAll('.agenda-card .event');
 
-    // Thursday 15 October has 7 items: the card shows 3 and links to the rest.
-    expect(events.length).toBe(3);
-    expect(events[0].textContent).toContain('09:00');
-    expect(events[0].getAttribute('href')).toBe('/agenda/events/rendez-vous-projet?date=2026-10-15');
-    expect(element.querySelector('.agenda-card a.card-link')?.textContent).toContain('voir tout (7)');
-    expect(element.querySelector('.section-heading a')?.getAttribute('href')).toBe('/agenda');
+    expect(element.querySelector('.agenda-card')).toBeNull();
+    expect(element.textContent).not.toContain('Rien de prévu');
+    expect(element.querySelectorAll('.dashboard-section')).toHaveLength(2);
+    // Thursday 15 October has agenda items, list reminders included.
+    expect(element.querySelector('.week-day.selected i')).not.toBeNull();
   });
 
-  it('labels all-day items and offers to plan an empty day', () => {
-    // Friday 16 October only has Camille's birthday (all day).
-    TestBed.overrideProvider(APP_CLOCK, { useValue: () => new Date(2026, 9, 16, 8) });
-    const fixture = TestBed.createComponent(DashboardComponent);
-    fixture.detectChanges();
-    const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelector('.agenda-card .event strong')?.textContent).toBe('Journée');
-
-    TestBed.inject(AgendaStore).updateFilters({ showEvents: false });
-    fixture.detectChanges();
-    expect(element.querySelector('.agenda-card .card-link')?.getAttribute('href')).toBe('/agenda/new');
-  });
-
-  it('spaces the three home cards and their headings the same way', () => {
+  it('spaces the home cards and their headings the same way', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const style = (selector: string) => getComputedStyle(element.querySelector(selector) as HTMLElement);
-    const cards = ['.agenda-card', '.tasks-card', '.goals-card'].map((selector) => style(selector).padding);
+    const cards = ['.tasks-card', '.goals-card'].map((selector) => style(selector).padding);
     const headings = Array.from(element.querySelectorAll<HTMLElement>('.dashboard-section .section-heading'))
       .map((heading) => getComputedStyle(heading).marginBottom);
 
     expect(new Set(cards).size).toBe(1);
     expect(cards[0]).not.toBe('0px');
-    expect(headings.length).toBe(3);
+    expect(headings.length).toBe(2);
     expect(new Set(headings).size).toBe(1);
   });
 

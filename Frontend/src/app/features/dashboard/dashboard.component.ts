@@ -10,7 +10,6 @@ import { addDays, compareDueDates, createId, formatDate, parseIsoDate, startOfWe
 import { objectiveProgress, objectiveTint } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaStore } from '../agenda/agenda.store';
-import { formatTime, timePart } from '../agenda/agenda.utils';
 import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.component';
 
 const WEEKDAY_LABELS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
@@ -51,15 +50,6 @@ export class DashboardComponent {
   readonly completedTasks = computed(
     () => this.tasks().filter((task) => task.done).length,
   );
-  readonly todayItems = computed(() => this.agendaStore.itemsOn(this.agendaStore.today()));
-  readonly agendaPreview = computed(() =>
-    this.todayItems()
-      .slice(0, 3)
-      .map((item) => ({
-        item,
-        time: item.allDay ? 'Journée' : formatTime(timePart(item.start), this.agendaStore.settings().hourFormat),
-      })),
-  );
   readonly goals = computed(() =>
     this.objectivesStore
       .objectives()
@@ -83,7 +73,7 @@ export class DashboardComponent {
   readonly newTaskValue = signal('');
 
   constructor() {
-    // Today's agenda preview includes list reminders served by the API.
+    // The week strip's event dots include list reminders served by the API.
     this.agendaStore.loadTasks();
   }
 

@@ -34,29 +34,6 @@
     }
   </section>
 
-  <section class="dashboard-section" aria-labelledby="today-title">
-    <div class="section-heading">
-      <h2 id="today-title">Aujourd’hui</h2>
-      <a routerLink="/agenda">voir l’agenda →</a>
-    </div>
-    <div class="agenda-card">
-      @for (entry of agendaPreview(); track entry.item.key) {
-        <a class="event" [routerLink]="entry.item.link" [queryParams]="entry.item.queryParams" [style.--c]="entry.item.color">
-          <span class="event-icon" aria-hidden="true">●</span>
-          <div>
-            <strong>{{ entry.time }}</strong>
-            <p>{{ entry.item.title }}</p>
-          </div>
-        </a>
-      } @empty {
-        <a class="card-link" routerLink="/agenda/new">Rien de prévu aujourd’hui · + Ajouter un événement</a>
-      }
-      @if (todayItems().length > agendaPreview().length) {
-        <a class="card-link" routerLink="/agenda">voir tout ({{ todayItems().length }})</a>
-      }
-    </div>
-  </section>
-
   <section class="dashboard-section" aria-labelledby="tasks-title">
     <div class="section-heading">
       <h2 id="tasks-title">À faire</h2>
