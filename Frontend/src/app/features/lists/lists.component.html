@@ -18,34 +18,73 @@
   </button>
   <h1>Listes</h1>
   <div class="header-actions">
-    <button class="icon-button" type="button" aria-label="Rechercher">
+    <button
+      class="icon-button search-button"
+      type="button"
+      aria-label="Rechercher une liste"
+      aria-controls="lists-search"
+      [attr.aria-expanded]="searchOpen()"
+      [class.active]="searchOpen()"
+      (click)="toggleSearch()"
+    >
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
     </button>
     <button class="icon-button" type="button" aria-label="Notifications">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17h12l-1.5-2.5V10a4.5 4.5 0 0 0-9 0v4.5L6 17Z" /><path d="M10 20h4" /></svg>
     </button>
-    <button
-      class="icon-button more-button"
-      type="button"
-      aria-label="Plus d’options"
-      [attr.aria-expanded]="menuOpen()"
-      (click)="toggleMenu()"
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="12" cy="19" r="1.2" /></svg>
-    </button>
-    @if (menuOpen()) {
-      <div class="overview-menu">
-        <button type="button" (click)="openSettings()">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4A2 2 0 0 0 4 9.9l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          Paramètres
-        </button>
-      </div>
+    @if (actions.length === 1) {
+      <button class="icon-button action-button" type="button" [attr.aria-label]="actions[0].label" (click)="runAction(actions[0].id)">
+        <ng-container *ngTemplateOutlet="actionIcon; context: { $implicit: actions[0].id }" />
+      </button>
+    } @else {
+      <button
+        class="icon-button more-button"
+        type="button"
+        aria-label="Plus d’options"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="toggleMenu()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="12" cy="19" r="1.2" /></svg>
+      </button>
+      @if (menuOpen()) {
+        <div class="overview-menu">
+          @for (action of actions; track action.id) {
+            <button type="button" (click)="runAction(action.id)">
+              <ng-container *ngTemplateOutlet="actionIcon; context: { $implicit: action.id }" />
+              {{ action.label }}
+            </button>
+          }
+        </div>
+      }
     }
   </div>
 </header>
+
+<ng-template #actionIcon let-action>
+  @switch (action) {
+    @case ('settings') {
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4A2 2 0 0 0 4 9.9l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    }
+  }
+</ng-template>
+
+@if (searchOpen()) {
+  <div class="lists-search" id="lists-search" role="search">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
+    <input
+      appAutofocus
+      type="search"
+      placeholder="Rechercher une liste"
+      aria-label="Rechercher une liste"
+      [value]="query()"
+      (input)="query.set($any($event.target).value)"
+      (keydown.escape)="toggleSearch()"
+    />
+  </div>
+}
 
 <nav class="list-filters" aria-label="Filtrer les listes">
   @for (filter of filters; track filter.value) {
@@ -99,8 +138,8 @@
       </span>
     </button>
   } @empty {
-    @if (!listsStore.loading()) {
-      <p class="empty-state">Aucune liste dans cette catégorie.</p>
+    @if (query().trim() && !listsStore.loading()) {
+      <p class="empty-state">Aucune liste ne correspond à « {{ query().trim() }} ».</p>
     }
   }
 
@@ -123,7 +162,7 @@
         <h3>Général</h3>
         <label class="setting-row select-row">
           <span>Vue par défaut</span>
-          <select aria-label="Vue par défaut" [value]="settings.defaultView" (change)="setDefaultView($any($event.target).value)">
+          <select class="choice-select" aria-label="Vue par défaut" [value]="settings.defaultView" (change)="setDefaultView($any($event.target).value)">
             <option value="list">Liste</option>
             <option value="grid">Grille</option>
           </select>
@@ -145,7 +184,7 @@
         </label>
         <label class="setting-row select-row">
           <span>Me notifier</span>
-          <select [value]="settings.notifyScope" (change)="listsStore.updateSettings({ notifyScope: $any($event.target).value })">
+          <select class="choice-select" [value]="settings.notifyScope" (change)="listsStore.updateSettings({ notifyScope: $any($event.target).value })">
             <option value="mine">Pour mes listes</option>
             <option value="all">Pour toutes les listes</option>
             <option value="none">Jamais</option>

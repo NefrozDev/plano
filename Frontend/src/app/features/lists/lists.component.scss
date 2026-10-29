@@ -6,6 +6,12 @@
 .icon-button svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .icon-button .grid-icon { fill: currentColor; stroke: none; }
 .more-button svg { fill: currentColor; stroke: none; }
+.action-button svg { stroke-width: 1.7; }
+.search-button.active { border-radius: .7rem; background: #eef3ff; color: var(--color-primary); }
+.lists-search { display: flex; gap: .5rem; align-items: center; margin: 0 1.25rem .6rem; padding: 0 .75rem; border: 1px solid #dfe4ec; border-radius: .75rem; background: #fff; color: #687187; }
+.lists-search:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 .15rem rgb(50 91 226 / 12%); }
+.lists-search svg { width: 1.05rem; height: 1.05rem; flex: none; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 2; }
+.lists-search input { width: 100%; min-width: 0; height: 2.5rem; border: 0; outline: 0; background: transparent; color: var(--color-text); font: inherit; font-size: .85rem; }
 .list-filters { display: grid; grid-template-columns: repeat(4, 1fr); padding: 0 .95rem; border-bottom: 1px solid #edf0f5; }
 .list-filters button { position: relative; min-height: 3.4rem; padding: .45rem .2rem; border: 0; background: transparent; color: #747b8e; cursor: pointer; font-size: .78rem; font-weight: 650; }
 .list-filters button.active { color: #3264ed; }

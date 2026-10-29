@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { ListsComponent } from './lists.component';
+import { ListsStore } from './lists.store';
 import { listDetail, listSettings, listSummary } from './testing/lists-fixtures';
 
 describe('ListsComponent', () => {
@@ -50,6 +51,92 @@ describe('ListsComponent', () => {
     expect(names()).toEqual(['Cadeaux']);
     component.selectFilter('archived');
     expect(names()).toEqual(['Été']);
+  });
+
+  it('searches the lists of the active category by name, ignoring case and accents', () => {
+    const names = () => Array.from(element.querySelectorAll('.list-copy strong')).map((name) => name.textContent);
+    const search = element.querySelector('.search-button') as HTMLButtonElement;
+    expect(element.querySelector('.lists-search')).toBeNull();
+
+    search.click();
+    fixture.detectChanges();
+    const input = element.querySelector('.lists-search input') as HTMLInputElement;
+    expect(search.getAttribute('aria-expanded')).toBe('true');
+    input.value = 'COU';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(names()).toEqual(['Courses']);
+
+    component.selectFilter('archived');
+    input.value = 'ete';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(names()).toEqual(['Été']);
+
+    input.value = 'zzz';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(names()).toEqual([]);
+    expect(element.querySelector('.empty-state')?.textContent).toContain('Aucune liste ne correspond à « zzz »');
+
+    // Escape closes the search and forgets the query.
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(element.querySelector('.lists-search')).toBeNull();
+    expect(component.query()).toBe('');
+    expect(names()).toEqual(['Été']);
+  });
+
+  it('shows nothing, not even a message, for an empty category', async () => {
+    // Reload without the archived list.
+    void TestBed.inject(ListsStore).loadLists();
+    http.expectOne('/api/v1/lists').flush([listSummary({ id: 'courses', name: 'Courses' })]);
+    await settle();
+    component.selectFilter('archived');
+    fixture.detectChanges();
+
+    expect(element.querySelectorAll('.list-card')).toHaveLength(0);
+    expect(element.querySelector('.empty-state')).toBeNull();
+    expect(element.querySelector('.new-list-button')).not.toBeNull();
+  });
+
+  it('shows a lone overview action as its own button instead of a menu', () => {
+    expect(element.querySelector('.more-button')).toBeNull();
+    const settings = element.querySelector('.action-button') as HTMLButtonElement;
+    expect(settings.getAttribute('aria-label')).toBe('Paramètres');
+
+    settings.click();
+    fixture.detectChanges();
+
+    expect(element.querySelector('.settings-panel')).not.toBeNull();
+    expect(component.menuOpen()).toBe(false);
+  });
+
+  it('gathers several overview actions behind the more-options menu', async () => {
+    // A fresh page, given a second action before its first render.
+    fixture = TestBed.createComponent(ListsComponent);
+    component = fixture.componentInstance;
+    element = fixture.nativeElement as HTMLElement;
+    (component as unknown as { actions: unknown[] }).actions = [
+      { id: 'settings', label: 'Paramètres' },
+      { id: 'other', label: 'Autre' },
+    ];
+    http.expectOne('/api/v1/lists').flush([listSummary({ id: 'courses', name: 'Courses' })]);
+    await settle();
+    fixture.detectChanges();
+    expect(element.querySelector('.action-button')).toBeNull();
+
+    const more = element.querySelector('.more-button') as HTMLButtonElement;
+    more.click();
+    fixture.detectChanges();
+    expect(more.getAttribute('aria-expanded')).toBe('true');
+    const items = Array.from(element.querySelectorAll<HTMLButtonElement>('.overview-menu button'));
+    expect(items.map((item) => item.textContent?.trim())).toEqual(['Paramètres', 'Autre']);
+
+    items[0].click();
+    fixture.detectChanges();
+    expect(element.querySelector('.overview-menu')).toBeNull();
+    expect(element.querySelector('.settings-panel')).not.toBeNull();
   });
 
   it('switches to the grid layout and saves it as the default view', () => {

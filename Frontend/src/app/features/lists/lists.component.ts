@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import type { ListSummary } from '@plano/common';
+import { normalizeText } from '../../core/time/dates';
+import { AutofocusDirective } from '../../shared/ui/autofocus.directive';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { SwitchRowComponent } from '../../shared/ui/switch-row.component';
 import { ToastComponent } from '../../shared/ui/toast.component';
@@ -9,6 +12,7 @@ import { ListsStore } from './lists.store';
 
 type ListFilter = 'all' | 'mine' | 'shared' | 'archived';
 type BooleanSetting = 'showCounts' | 'showCompleted' | 'completedLast' | 'archiveCompleted' | 'confirmDelete';
+type OverviewAction = 'settings';
 
 export interface ListCard {
   list: ListSummary;
@@ -26,7 +30,7 @@ function caption(list: ListSummary): string {
 
 @Component({
   selector: 'app-lists',
-  imports: [RouterLink, BottomNavComponent, SwitchRowComponent, ToastComponent],
+  imports: [NgTemplateOutlet, RouterLink, AutofocusDirective, BottomNavComponent, SwitchRowComponent, ToastComponent],
   templateUrl: './lists.component.html',
   styleUrl: './lists.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,13 +45,22 @@ export class ListsComponent {
     { label: 'Partagées', value: 'shared' },
     { label: 'Archivées', value: 'archived' },
   ];
+  /**
+   * Overview actions: a single one is shown as its own button, several go
+   * behind the "more options" menu.
+   */
+  readonly actions: readonly { id: OverviewAction; label: string }[] = [{ id: 'settings', label: 'Paramètres' }];
   readonly activeFilter = signal<ListFilter>('all');
+  readonly searchOpen = signal(false);
+  readonly query = signal('');
   readonly gridView = computed(() => this.listsStore.settings()?.defaultView === 'grid');
   readonly menuOpen = signal(false);
   readonly settingsOpen = signal(false);
   readonly creating = signal(false);
+  private readonly search = computed(() => normalizeText(this.query()));
   readonly cards = computed<readonly ListCard[]>(() => {
     const filter = this.activeFilter();
+    const search = this.search();
     return this.listsStore
       .lists()
       .filter((list) =>
@@ -55,6 +68,7 @@ export class ListsComponent {
           ? list.archived
           : !list.archived && (filter === 'all' || list.ownership === filter),
       )
+      .filter((list) => !search || normalizeText(list.name).includes(search))
       .map((list) => ({
         list,
         caption: caption(list),
@@ -77,6 +91,17 @@ export class ListsComponent {
 
   toggleMenu(): void {
     this.menuOpen.update((open) => !open);
+  }
+
+  runAction(action: OverviewAction): void {
+    this.menuOpen.set(false);
+    if (action === 'settings') this.openSettings();
+  }
+
+  /** Closing the search also clears it, so no list stays hidden by a forgotten query. */
+  toggleSearch(): void {
+    this.searchOpen.update((open) => !open);
+    if (!this.searchOpen()) this.query.set('');
   }
 
   openSettings(): void {
