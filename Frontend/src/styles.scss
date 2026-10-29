@@ -325,8 +325,8 @@ app-lists .settings-content section { padding: 1.2rem 0; border-bottom: 1px soli
 app-lists .settings-content section:last-child { border-bottom: 0; }
 app-lists .settings-content h3 { margin: 0 0 .65rem; color: #586174; font-size: .72rem; font-weight: 750; }
 app-lists .setting-row { display: grid; width: 100%; min-height: 2.35rem; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .25rem 0; border: 0; background: transparent; color: #20263a; font: inherit; font-size: .79rem; text-align: left; }
-app-lists button.setting-row, app-lists .setting-row select { cursor: pointer; }
-app-lists .setting-row select, app-lists .setting-row input { max-width: 9rem; border: 0; outline: 0; background: transparent; color: #687187; font: inherit; font-size: .79rem; text-align: right; }
+app-lists button.setting-row { cursor: pointer; }
+app-lists .setting-row input { max-width: 9rem; border: 0; outline: 0; background: transparent; color: #687187; font: inherit; font-size: .79rem; text-align: right; }
 app-lists .setting-row input[type='time'] { width: 5rem; }
 
 app-list-detail .list-menu button + button {
@@ -551,7 +551,6 @@ app-list-detail .detail-field > span,
 app-list-detail .detail-notes > span { font-size: .72rem; font-weight: 700; }
 app-list-detail .detail-field strong { color: #697386; font-size: .78rem; font-weight: 600; }
 app-list-detail .detail-field small { grid-column: 2; color: #8A93A3; font-size: .68rem; }
-app-list-detail .detail-field select,
 app-list-detail .detail-field input { max-width: 10rem; border: 0; outline: 0; background: transparent; color: #697386; font: inherit; font-size: .76rem; text-align: right; }
 app-list-detail .detail-notes { display: grid; gap: .65rem; padding: 1rem 1.25rem; }
 app-list-detail .detail-notes textarea { width: 100%; padding: 0; border: 0; outline: 0; color: var(--color-text); font: inherit; font-size: .8rem; resize: none; }
@@ -573,7 +572,6 @@ app-list-detail .sharing-panel h3 { margin: 0 0 .75rem; color: #3C4658; font-siz
 app-list-detail .sharing-member { display: grid; min-height: 2.6rem; grid-template-columns: 1.8rem 1fr auto; gap: .6rem; align-items: center; }
 app-list-detail .member-avatar { display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border-radius: 50%; color: white; font-size: .65rem; font-weight: 750; }
 app-list-detail .sharing-member strong { font-size: .79rem; }
-app-list-detail .sharing-member select { max-width: 8.5rem; border: 0; outline: 0; background: transparent; color: #7A8395; font: inherit; font-size: .71rem; text-align: right; }
 app-list-detail .owner-role { color: #8A93A3; font-size: .71rem; }
 app-list-detail .invite-people { display: flex; gap: .5rem; align-items: center; margin-top: .55rem; padding: .5rem 0; border: 0; background: transparent; color: var(--color-primary); cursor: pointer; font-size: .8rem; font-weight: 650; }
 app-list-detail .invite-people span { font-size: 1.15rem; font-weight: 400; }
@@ -686,6 +684,40 @@ a:focus-visible,
 input:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent);
   outline-offset: 3px;
+}
+
+/*
+ * Choice fields of settings and forms: a fixed box with the chosen value
+ * centred, while the open list keeps its options left-aligned.
+ */
+select.choice-select {
+  width: 9.5rem;
+  max-width: 100%;
+  min-height: 2rem;
+  padding: 0 1.5rem;
+  border: 1px solid #dfe4ec;
+  border-radius: 0.55rem;
+  background: #f7f9fc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m3 4.5 3 3 3-3' fill='none' stroke='%23687187' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 0.5rem center / 0.75rem;
+  outline: 0;
+  appearance: none;
+  color: #4b5468;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  text-align: center;
+  text-align-last: center;
+  text-overflow: ellipsis;
+}
+select.choice-select:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.15rem rgb(50 91 226 / 15%);
+}
+select.choice-select:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+select option {
+  text-align: left;
 }
 
 .visually-hidden {

@@ -20,14 +20,14 @@ type ToggleSetting = 'eventNotifications' | 'invitationNotifications' | 'showWee
         <h2>Général</h2>
         <label class="setting-row">
           <span>Premier jour de la semaine</span>
-          <select (change)="update({ weekStartsOn: +$any($event.target).value === 0 ? 0 : 1 })">
+          <select class="choice-select" (change)="update({ weekStartsOn: +$any($event.target).value === 0 ? 0 : 1 })">
             <option value="1" [selected]="settings().weekStartsOn === 1">Lundi</option>
             <option value="0" [selected]="settings().weekStartsOn === 0">Dimanche</option>
           </select>
         </label>
         <label class="setting-row">
           <span>Durée par défaut</span>
-          <select (change)="update({ defaultDurationMinutes: +$any($event.target).value })">
+          <select class="choice-select" (change)="update({ defaultDurationMinutes: +$any($event.target).value })">
             @for (option of durations; track option.value) {
               <option [value]="option.value" [selected]="settings().defaultDurationMinutes === option.value">{{ option.label }}</option>
             }
@@ -35,7 +35,7 @@ type ToggleSetting = 'eventNotifications' | 'invitationNotifications' | 'showWee
         </label>
         <label class="setting-row">
           <span>Fuseau horaire</span>
-          <select (change)="update({ timeZone: $any($event.target).value })">
+          <select class="choice-select" (change)="update({ timeZone: $any($event.target).value })">
             @for (zone of timeZones; track zone.value) {
               <option [value]="zone.value" [selected]="settings().timeZone === zone.value">{{ zone.label }}</option>
             }
@@ -47,7 +47,7 @@ type ToggleSetting = 'eventNotifications' | 'invitationNotifications' | 'showWee
         <h2>Notifications</h2>
         <label class="setting-row">
           <span>Rappel par défaut</span>
-          <select (change)="setDefaultReminder($any($event.target).value)">
+          <select class="choice-select" (change)="setDefaultReminder($any($event.target).value)">
             @for (option of reminders; track option.label) {
               <option [value]="option.value ?? 'none'" [selected]="settings().defaultReminderMinutes === option.value">{{ option.label }}</option>
             }
@@ -62,7 +62,7 @@ type ToggleSetting = 'eventNotifications' | 'invitationNotifications' | 'showWee
         <app-switch-row label="Afficher les numéros de semaine" [checked]="settings().showWeekNumbers" (toggled)="toggle('showWeekNumbers')" />
         <label class="setting-row">
           <span>Affichage des heures</span>
-          <select (change)="update({ hourFormat: $any($event.target).value === '12h' ? '12h' : '24h' })">
+          <select class="choice-select" (change)="update({ hourFormat: $any($event.target).value === '12h' ? '12h' : '24h' })">
             <option value="24h" [selected]="settings().hourFormat === '24h'">24 heures</option>
             <option value="12h" [selected]="settings().hourFormat === '12h'">12 heures (AM/PM)</option>
           </select>
@@ -77,7 +77,6 @@ type ToggleSetting = 'eventNotifications' | 'invitationNotifications' | 'showWee
     section:last-child { border-bottom: 0; }
     h2 { margin: 0 0 .5rem; color: #586174; font-size: .72rem; font-weight: 750; }
     .setting-row { display: grid; width: 100%; min-height: 2.6rem; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .25rem 0; border: 0; background: transparent; color: #20263a; cursor: pointer; font: inherit; font-size: .8rem; text-align: left; }
-    .setting-row select { max-width: 10.5rem; border: 0; outline: 0; background: transparent; color: #687187; cursor: pointer; font: inherit; font-size: .78rem; text-align: right; }
   `,
 })
 export class AgendaSettingsComponent {

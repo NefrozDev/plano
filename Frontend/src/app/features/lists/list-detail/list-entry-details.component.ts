@@ -54,7 +54,7 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
           </div>
           <label class="detail-field">
             <span>Assigné à</span>
-            <select [disabled]="readonly()" (change)="entryChange.emit({ assignedTo: $any($event.target).value || null })">
+            <select class="choice-select" [disabled]="readonly()" (change)="entryChange.emit({ assignedTo: $any($event.target).value || null })">
               <option value="" [selected]="!entry().assignedTo">Non assigné</option>
               @for (member of members(); track member.id) {
                 <option [value]="member.id" [selected]="member.id === entry().assignedTo">{{ member.name }}</option>

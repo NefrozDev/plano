@@ -23,7 +23,7 @@
           @if (member.role === 'owner' || !isOwner()) {
             <span class="owner-role">{{ roleLabels[member.role] }}</span>
           } @else {
-            <select [value]="member.role" [attr.aria-label]="'Droits de ' + member.name" (change)="updateRole(member.id, $any($event.target).value)">
+            <select class="choice-select" [value]="member.role" [attr.aria-label]="'Droits de ' + member.name" (change)="updateRole(member.id, $any($event.target).value)">
               <option value="editor">{{ roleLabels.editor }}</option>
               <option value="viewer">{{ roleLabels.viewer }}</option>
             </select>

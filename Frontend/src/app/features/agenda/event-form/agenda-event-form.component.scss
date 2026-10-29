@@ -7,10 +7,10 @@
 .field .form-control { min-height: 2.6rem; font-size: .82rem; resize: none; }
 .row { display: flex; width: 100%; min-height: 2.9rem; gap: 1rem; align-items: center; justify-content: space-between; padding: 0; border: 0; border-bottom: 1px solid #edf0f5; background: transparent; color: var(--color-text); font: inherit; font-size: .8rem; text-align: left; }
 .row > span:first-child { font-weight: 650; }
-.row input:not(.toggle), .row select { min-width: 0; max-width: 60%; border: 0; outline: 0; background: transparent; color: #687187; font: inherit; font-size: .78rem; text-align: right; }
+.row input:not(.toggle) { min-width: 0; max-width: 60%; border: 0; outline: 0; background: transparent; color: #687187; font: inherit; font-size: .78rem; text-align: right; }
 // Free-text fields take the rest of the row and read left to right, unlike the short date/time values.
 .row input:is(:not([type]), [type='text'], [type='url']) { flex: 1; max-width: none; text-align: left; }
-.row input:focus-visible, .row select:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-focus) 60%, transparent); border-radius: .3rem; }
+.row input:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-focus) 60%, transparent); border-radius: .3rem; }
 .link-row { cursor: pointer; }
 .value { color: #687187; font-size: .78rem; }
 .calendar-row .value { display: flex; gap: .45rem; align-items: center; }

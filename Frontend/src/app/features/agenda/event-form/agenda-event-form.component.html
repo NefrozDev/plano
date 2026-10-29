@@ -100,13 +100,13 @@
     } @else {
       <label class="row">
         <span>Récurrence</span>
-        <select formControlName="recurrence">
+        <select class="choice-select" formControlName="recurrence">
           @for (option of recurrences; track option[0]) {<option [value]="option[0]">{{ option[1] }}</option>}
         </select>
       </label>
       <label class="row">
         <span>Rappel</span>
-        <select formControlName="reminderMinutes">
+        <select class="choice-select" formControlName="reminderMinutes">
           @for (option of reminders; track option.label) {<option [ngValue]="option.value">{{ option.label }}</option>}
         </select>
       </label>
@@ -149,11 +149,11 @@
       @if (advancedOpen()) {
         <label class="row">
           <span>Disponibilité</span>
-          <select formControlName="availability"><option value="busy">Occupé</option><option value="free">Disponible</option></select>
+          <select class="choice-select" formControlName="availability"><option value="busy">Occupé</option><option value="free">Disponible</option></select>
         </label>
         <label class="row">
           <span>Visibilité</span>
-          <select formControlName="visibility"><option value="default">Par défaut</option><option value="private">Privé</option></select>
+          <select class="choice-select" formControlName="visibility"><option value="default">Par défaut</option><option value="private">Privé</option></select>
         </label>
       }
       <button class="step-link back" type="button" (click)="step.set(1)">‹ Informations principales</button>
