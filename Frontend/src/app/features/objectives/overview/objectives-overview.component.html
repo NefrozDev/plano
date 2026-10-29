@@ -74,7 +74,19 @@
     <h2>{{ activeTab() === 'archived' ? 'Archivés' : 'En cours' }}</h2>
     <div class="cards">
       @for (card of inProgress(); track card.objective.id) {
-        <app-objective-card [card]="card" [tile]="gridView()" />
+        <div class="objective-item" [attr.data-objective-id]="card.objective.id" [class.dragging]="draggedObjective() === card.objective.id">
+          <app-objective-card [card]="card" [tile]="gridView()" />
+          @if (reorderable()) {
+            <button
+              class="drag-handle"
+              type="button"
+              [attr.aria-label]="'Déplacer l’objectif ' + card.objective.title + ' (flèches pour changer sa place)'"
+              (pointerdown)="startDrag(card.objective.id, $event)"
+              (keydown)="moveWithKeyboard(card.objective.id, $event)"
+              (click)="$event.preventDefault()"
+            >⠿</button>
+          }
+        </div>
       }
     </div>
   }
@@ -90,7 +102,19 @@
     </div>
     <div class="cards">
       @for (card of visibleCompleted(); track card.objective.id) {
-        <app-objective-card [card]="card" [tile]="gridView()" />
+        <div class="objective-item" [attr.data-objective-id]="card.objective.id" [class.dragging]="draggedObjective() === card.objective.id">
+          <app-objective-card [card]="card" [tile]="gridView()" />
+          @if (reorderable()) {
+            <button
+              class="drag-handle"
+              type="button"
+              [attr.aria-label]="'Déplacer l’objectif ' + card.objective.title + ' (flèches pour changer sa place)'"
+              (pointerdown)="startDrag(card.objective.id, $event)"
+              (keydown)="moveWithKeyboard(card.objective.id, $event)"
+              (click)="$event.preventDefault()"
+            >⠿</button>
+          }
+        </div>
       }
     </div>
   }

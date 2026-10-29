@@ -50,9 +50,35 @@ describe('ObjectivesStore', () => {
       store.filters.update((filters) => ({ ...filters, statuses: [], categories: [], sort: 'title', direction: 'asc' }));
       expect(store.query('all')[0].title).toBe('Apprendre l’italien');
 
-      store.resetFilters();
-      // Default sort is by due date, earliest first.
+      store.filters.update((filters) => ({ ...filters, sort: 'dueDate' }));
+      // By due date, earliest first.
       expect(store.query('all')[0].id).toBe('mediter-30-jours');
+
+      store.resetFilters();
+      // The default is the user's own order: the stored one.
+      expect(store.filters().sort).toBe('manual');
+      expect(store.query('all').map(({ id }) => id)).toEqual(
+        store.objectives().filter(({ archived }) => !archived).map(({ id }) => id),
+      );
+    });
+
+    it('moves objectives in the custom order, saved with the data, both ways round', () => {
+      const ids = () => store.query('all').map(({ id }) => id);
+      const [first, second, third] = ids();
+      const save = vi.spyOn(TestBed.inject(PLANO_DATA_ADAPTER), 'save');
+
+      store.moveObjective(third, first);
+
+      expect(ids().slice(0, 3)).toEqual([third, first, second]);
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(save.mock.calls[0][0].objectives.items.slice(0, 3).map(({ id }) => id)).toEqual([third, first, second]);
+      store.filters.update((filters) => ({ ...filters, direction: 'desc' }));
+      expect(ids().slice(-3)).toEqual([second, first, third]);
+
+      // Unknown or identical ids change nothing and save nothing.
+      store.moveObjective('missing', first);
+      store.moveObjective(first, first);
+      expect(save).toHaveBeenCalledTimes(1);
     });
 
     it('searches titles, descriptions and category names without caring about accents', () => {

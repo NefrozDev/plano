@@ -42,6 +42,7 @@
     <legend>Tri</legend>
     <div class="sort">
       <select aria-label="Trier par" (change)="setSort({ sort: $any($event.target).value })">
+        <option value="manual" [selected]="filters().sort === 'manual'">Personnalisé</option>
         <option value="dueDate" [selected]="filters().sort === 'dueDate'">Date d’échéance</option>
         <option value="progress" [selected]="filters().sort === 'progress'">Progression</option>
         <option value="title" [selected]="filters().sort === 'title'">Nom</option>

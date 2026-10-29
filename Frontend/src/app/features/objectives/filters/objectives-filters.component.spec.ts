@@ -68,6 +68,6 @@ describe('ObjectivesFiltersComponent', () => {
     );
 
     (element.querySelector('.reset') as HTMLButtonElement).click();
-    expect(store.filters().sort).toBe('dueDate');
+    expect(store.filters().sort).toBe('manual');
   });
 });

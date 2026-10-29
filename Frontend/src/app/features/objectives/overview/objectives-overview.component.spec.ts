@@ -106,4 +106,68 @@ describe('ObjectivesOverviewComponent', () => {
 
     expect(element.querySelector('.overview-menu a')?.getAttribute('href')).toBe('/objectives/settings');
   });
+
+  describe('custom order', () => {
+    const ids = () =>
+      Array.from(element.querySelectorAll<HTMLElement>('.content .objective-item')).map((item) => item.dataset['objectiveId']);
+    const handle = (id: string) =>
+      element.querySelector(`.objective-item[data-objective-id="${id}"] .drag-handle`) as HTMLButtonElement;
+    const pointer = (type: string, target: Element, x = 0, y = 0) =>
+      target.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x, clientY: y, bubbles: true, cancelable: true }));
+    const centre = (id: string) => {
+      const box = (element.querySelector(`.objective-item[data-objective-id="${id}"]`) as HTMLElement).getBoundingClientRect();
+      return [box.left + box.width / 2, box.top + box.height / 2] as const;
+    };
+
+    beforeEach(() => document.body.append(element));
+    afterEach(() => element.remove());
+
+    it('drags an objective by its grip onto another card, keeping the new order', () => {
+      const [first, second, third] = ids() as string[];
+      const grip = handle(third);
+      expect(grip.getAttribute('aria-label')).toContain('Déplacer l’objectif');
+      grip.setPointerCapture = vi.fn();
+
+      pointer('pointerdown', grip);
+      fixture.detectChanges();
+      expect(grip.setPointerCapture).toHaveBeenCalledExactlyOnceWith(1);
+      expect(element.querySelector('.objective-item.dragging')?.getAttribute('data-objective-id')).toBe(third);
+      pointer('pointermove', grip, ...centre(first));
+      pointer('pointerup', grip);
+      fixture.detectChanges();
+
+      expect(ids().slice(0, 3)).toEqual([third, first, second]);
+      expect(store.objectives().slice(0, 3).map(({ id }) => id)).toEqual([third, first, second]);
+      expect(element.querySelector('.objective-item.dragging')).toBeNull();
+      // Moving after the drop does nothing.
+      pointer('pointermove', grip, ...centre(second));
+      fixture.detectChanges();
+      expect(ids().slice(0, 3)).toEqual([third, first, second]);
+    });
+
+    it('moves an objective with the arrow keys of its grip', () => {
+      const [first, second] = ids() as string[];
+      const key = (id: string, name: string) => {
+        const event = new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true });
+        handle(id).dispatchEvent(event);
+        fixture.detectChanges();
+        return event.defaultPrevented;
+      };
+
+      expect(key(first, 'ArrowDown')).toBe(true);
+      expect(ids().slice(0, 2)).toEqual([second, first]);
+      expect(key(second, 'ArrowUp')).toBe(true);
+      expect(key(second, 'Tab')).toBe(false);
+      expect(ids().slice(0, 2)).toEqual([second, first]);
+    });
+
+    it('hides the grips when another sort is chosen', () => {
+      expect(element.querySelectorAll('.drag-handle').length).toBe(ids().length);
+
+      store.filters.update((filters) => ({ ...filters, sort: 'title' }));
+      fixture.detectChanges();
+
+      expect(element.querySelector('.drag-handle')).toBeNull();
+    });
+  });
 });

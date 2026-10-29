@@ -34,7 +34,8 @@ export interface ObjectiveFilters {
   /** Empty arrays mean "no restriction". */
   statuses: readonly ObjectiveStatus[];
   categories: readonly ObjectiveCategory[];
-  sort: 'dueDate' | 'progress' | 'title';
+  /** `manual` follows the order the user set by dragging. */
+  sort: 'manual' | 'dueDate' | 'progress' | 'title';
   direction: 'asc' | 'desc';
 }
 
@@ -54,7 +55,7 @@ export interface ObjectiveDraft {
 export const DEFAULT_OBJECTIVE_FILTERS: ObjectiveFilters = {
   statuses: [],
   categories: [],
-  sort: 'dueDate',
+  sort: 'manual',
   direction: 'asc',
 };
 
@@ -107,16 +108,31 @@ export class ObjectivesStore {
     };
     const factor = direction === 'asc' ? 1 : -1;
     const compare = (first: Objective, second: Objective): number => {
+      if (sort === 'manual') return 0;
       if (sort === 'progress') return objectiveProgress(first) - objectiveProgress(second);
       if (sort === 'title') return first.title.localeCompare(second.title, 'fr');
       // Objectives without a due date always sort last.
       return compareDueDates(first.dueDate, second.dueDate);
     };
-    return this.objectives()
+    const sorted = this.objectives()
       .filter(inTab)
       .filter((objective) => !statuses.length || statuses.includes(objective.status))
       .filter((objective) => !categories.length || categories.includes(objective.category))
       .sort((first, second) => compare(first, second) * factor);
+    // The manual order is the stored order (sort() is stable): reverse it for "desc".
+    return sort === 'manual' && factor < 0 ? sorted.reverse() : sorted;
+  }
+
+  /** Moves an objective onto another one's place in the user's own order. */
+  moveObjective(id: string, targetId: string): void {
+    const items = [...this.objectives()];
+    const from = items.findIndex((objective) => objective.id === id);
+    const to = items.findIndex((objective) => objective.id === targetId);
+    // Checked before updating: every update is written to storage.
+    if (from < 0 || to < 0 || from === to) return;
+    const [moved] = items.splice(from, 1);
+    items.splice(to, 0, moved);
+    this.appData.update((data) => ({ ...data, objectives: { ...data.objectives, items } }));
   }
 
   search(query: string): Objective[] {

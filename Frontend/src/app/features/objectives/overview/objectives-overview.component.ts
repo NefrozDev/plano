@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import type { Objective } from '@plano/common';
@@ -13,9 +13,18 @@ import { ObjectiveCardComponent, ObjectiveCardView } from '../ui/objective-card.
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-overview.component.html',
   styleUrl: './objectives-overview.component.scss',
+  host: {
+    '(pointermove)': 'moveDrag($event)',
+    '(pointerup)': 'endDrag()',
+    '(pointercancel)': 'endDrag()',
+  },
 })
 export class ObjectivesOverviewComponent {
   readonly store = inject(ObjectivesStore);
+  private readonly document = inject(DOCUMENT);
+  /** Grips show only in the custom order, the one dragging changes. */
+  readonly reorderable = computed(() => this.store.filters().sort === 'manual');
+  readonly draggedObjective = signal<string | null>(null);
 
   readonly tabs: readonly { label: string; value: ObjectiveTab }[] = [
     { label: 'Tous', value: 'all' },
@@ -44,6 +53,37 @@ export class ObjectivesOverviewComponent {
   /** Same behaviour as the Lists header: the choice is saved as the default view. */
   toggleView(): void {
     this.store.updateSettings({ defaultView: this.gridView() ? 'list' : 'grid' });
+  }
+
+  startDrag(id: string, event: PointerEvent): void {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    this.draggedObjective.set(id);
+  }
+
+  /** Moves the dragged objective onto the card under the pointer; the store saves at once. */
+  moveDrag(event: PointerEvent): void {
+    const sourceId = this.draggedObjective();
+    if (!sourceId) return;
+    event.preventDefault();
+    const targetId = this.document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>('.objective-item')?.dataset['objectiveId'];
+    if (targetId && targetId !== sourceId) this.store.moveObjective(sourceId, targetId);
+  }
+
+  endDrag(): void {
+    this.draggedObjective.set(null);
+  }
+
+  /** Keyboard alternative to dragging: arrows move the objective past its visible neighbour. */
+  moveWithKeyboard(id: string, event: KeyboardEvent): void {
+    const step = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const visible = [...this.inProgress(), ...this.visibleCompleted()];
+    const target = visible[visible.findIndex(({ objective }) => objective.id === id) + step];
+    if (target) this.store.moveObjective(id, target.objective.id);
   }
 
   selectTab(tab: ObjectiveTab): void {
