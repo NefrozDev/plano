@@ -25,6 +25,34 @@ export interface ListSummary {
   memberCount: number;
   completed: number;
   total: number;
+  /** Shown on the signed-in user's home page (their own choice). */
+  onHome: boolean;
+}
+
+/** The signed-in user's full order of their lists; lists left out go last. */
+export interface ReorderListsRequest {
+  listIds: string[];
+}
+
+export interface UpdateListPreferencesRequest {
+  onHome: boolean;
+}
+
+export interface HomeListEntry {
+  id: string;
+  name: string;
+}
+
+/** A list pinned to the home page, with its first unchecked items. */
+export interface HomeList {
+  id: string;
+  name: string;
+  icon: ListIcon;
+  color: string;
+  role: ShareRole;
+  /** Unchecked items in the whole list. */
+  remaining: number;
+  entries: HomeListEntry[];
 }
 
 export interface ListEntry {

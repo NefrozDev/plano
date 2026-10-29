@@ -4,6 +4,7 @@ import { CreateListTables1787100000000 } from './1787100000000-create-list-table
 import { AllowSeveralGroups1787180000000 } from './1787180000000-allow-several-groups';
 import { CreateFriendships1787260000000 } from './1787260000000-create-friendships';
 import { AddUserLocaleAndAvatar1787340000000 } from './1787340000000-add-user-locale-and-avatar';
+import { CreateListPreferences1787420000000 } from './1787420000000-create-list-preferences';
 
 /** Every migration, oldest first; shared by the app and the in-memory test database. */
 export const MIGRATIONS = [
@@ -13,4 +14,5 @@ export const MIGRATIONS = [
   AllowSeveralGroups1787180000000,
   CreateFriendships1787260000000,
   AddUserLocaleAndAvatar1787340000000,
+  CreateListPreferences1787420000000,
 ];

@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type {
+  HomeList,
   ListDetail,
   ListEntry,
   ListMember,
@@ -24,6 +25,10 @@ import { AllowedOriginGuard } from '../auth/allowed-origin.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { CreateListDto, UpdateListDto } from './dto/list.dto';
+import {
+  ReorderListsDto,
+  UpdateListPreferencesDto,
+} from './dto/list-preferences.dto';
 import {
   AddListMemberDto,
   UpdateListMemberDto,
@@ -37,6 +42,7 @@ import {
   UpdateSectionDto,
 } from './dto/section-entry.dto';
 import { ListContentService } from './list-content.service';
+import { ListPreferencesService } from './list-preferences.service';
 import { ListsService } from './lists.service';
 
 const ListId = () => Param('listId', ParseUUIDPipe);
@@ -47,6 +53,7 @@ export class ListsController {
   constructor(
     private readonly lists: ListsService,
     private readonly content: ListContentService,
+    private readonly preferences: ListPreferencesService,
   ) {}
 
   @Get()
@@ -58,6 +65,22 @@ export class ListsController {
   @Get('reminders')
   findReminders(@CurrentUser('id') userId: string): Promise<ListReminder[]> {
     return this.lists.findReminders(userId);
+  }
+
+  /** The lists the user pinned to their home page, in their order. */
+  @Get('home')
+  findHome(@CurrentUser('id') userId: string): Promise<HomeList[]> {
+    return this.preferences.home(userId);
+  }
+
+  /** The user's own order; it changes nothing for the other members. */
+  @Put('order')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  reorder(
+    @CurrentUser('id') userId: string,
+    @Body() { listIds }: ReorderListsDto,
+  ): Promise<void> {
+    return this.preferences.reorder(userId, listIds);
   }
 
   @Post()
@@ -92,6 +115,17 @@ export class ListsController {
     @ListId() listId: string,
   ): Promise<void> {
     return this.lists.remove(listId, userId);
+  }
+
+  /** Pins the list to (or unpins it from) the user's own home page. */
+  @Patch(':listId/preferences')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  updatePreferences(
+    @CurrentUser('id') userId: string,
+    @ListId() listId: string,
+    @Body() { onHome }: UpdateListPreferencesDto,
+  ): Promise<void> {
+    return this.preferences.setOnHome(userId, listId, onHome);
   }
 
   @Post(':listId/sections')

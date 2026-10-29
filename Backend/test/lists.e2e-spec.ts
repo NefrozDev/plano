@@ -1,4 +1,5 @@
 import type {
+  HomeList,
   ListDetail,
   ListEntry,
   ListSection,
@@ -301,6 +302,85 @@ describe('Lists API (e2e)', () => {
       .set('Cookie', ada.cookie)
       .expect(404);
     expect(deleted.body).toMatchObject({ statusCode: 404 });
+  });
+
+  it('orders lists and pins them to the home page per user', async () => {
+    const maison = (
+      await http()
+        .post('/api/v1/lists')
+        .set('Cookie', ada.cookie)
+        .send({ name: 'Maison', icon: 'home', color: '#3264ed' })
+        .expect(201)
+    ).body as ListDetail;
+    const names = async () =>
+      (
+        (
+          await http()
+            .get('/api/v1/lists')
+            .set('Cookie', ada.cookie)
+            .expect(200)
+        ).body as ListSummary[]
+      ).map(({ name, onHome }) => ({ name, onHome }));
+
+    await http()
+      .put('/api/v1/lists/order')
+      .set('Cookie', ada.cookie)
+      .send({ listIds: [maison.id, list.id] })
+      .expect(204);
+    await http()
+      .patch(`/api/v1/lists/${list.id}/preferences`)
+      .set('Cookie', ada.cookie)
+      .send({ onHome: true })
+      .expect(204);
+
+    await expect(names()).resolves.toEqual([
+      { name: 'Maison', onHome: false },
+      { name: 'Courses', onHome: true },
+    ]);
+    const home = (
+      await http()
+        .get('/api/v1/lists/home')
+        .set('Cookie', ada.cookie)
+        .expect(200)
+    ).body as HomeList[];
+    expect(home).toEqual([
+      expect.objectContaining({ id: list.id, name: 'Courses', entries: [] }),
+    ]);
+    // Bob's home is his own, and he cannot arrange a list he cannot open.
+    await http()
+      .get('/api/v1/lists/home')
+      .set('Cookie', bob.cookie)
+      .expect(200)
+      .expect([]);
+    await http()
+      .put('/api/v1/lists/order')
+      .set('Cookie', bob.cookie)
+      .send({ listIds: [list.id] })
+      .expect(404);
+    await http()
+      .patch(`/api/v1/lists/${list.id}/preferences`)
+      .set('Cookie', bob.cookie)
+      .send({ onHome: true })
+      .expect(404);
+
+    // Malformed bodies.
+    for (const body of [
+      { listIds: [list.id, list.id] },
+      { listIds: ['not-a-uuid'] },
+      { listIds: 'nope' },
+    ]) {
+      await http()
+        .put('/api/v1/lists/order')
+        .set('Cookie', ada.cookie)
+        .send(body)
+        .expect(400);
+    }
+    await http()
+      .patch(`/api/v1/lists/${list.id}/preferences`)
+      .set('Cookie', ada.cookie)
+      .send({ onHome: 'yes' })
+      .expect(400);
+    await http().get('/api/v1/lists/home').expect(401);
   });
 
   it('stores list settings per user', async () => {

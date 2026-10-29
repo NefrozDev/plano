@@ -28,6 +28,7 @@ import { ListSection } from './entities/list-section.entity';
 import { List } from './entities/list.entity';
 import { ListAccess, ListAccessService } from './list-access.service';
 import { ListChangesService } from './list-changes.service';
+import { ListPreferencesService } from './list-preferences.service';
 import { displayName, toSectionResponse } from './list.mapper';
 
 @Injectable()
@@ -38,10 +39,15 @@ export class ListsService {
     private readonly access: ListAccessService,
     private readonly contacts: ContactsService,
     private readonly changes: ListChangesService,
+    private readonly preferences: ListPreferencesService,
   ) {}
 
+  /** In the user's own order (see ListPreferencesService.arrange). */
   async findAll(userId: string): Promise<ListSummary[]> {
-    const accesses = await this.access.findAll(userId);
+    const accesses = await this.preferences.arrange(
+      userId,
+      await this.access.findAll(userId),
+    );
     const manager = this.dataSource.manager;
     const listIds = accesses.map(({ list }) => list.id);
     const entries = listIds.length
@@ -57,9 +63,9 @@ export class ListsService {
         })
       : [];
 
-    return accesses.map(({ list, role }) => {
+    return accesses.map(({ list, role, onHome }) => {
       const listEntries = entries.filter((entry) => entry.listId === list.id);
-      return this.toSummary(list, role, userId, {
+      return this.toSummary(list, role, userId, onHome, {
         memberCount:
           1 + members.filter((member) => member.listId === list.id).length,
         completed: listEntries.filter((entry) => entry.done).length,
@@ -271,11 +277,17 @@ export class ListsService {
     });
 
     return {
-      ...this.toSummary(list, role, userId, {
-        memberCount: members.length + 1,
-        completed: entries.filter((entry) => entry.done).length,
-        total: entries.length,
-      }),
+      ...this.toSummary(
+        list,
+        role,
+        userId,
+        await this.preferences.isOnHome(userId, list.id),
+        {
+          memberCount: members.length + 1,
+          completed: entries.filter((entry) => entry.done).length,
+          total: entries.length,
+        },
+      ),
       description: list.description,
       members: [
         { id: owner.id, name: displayName(owner), role: 'owner' },
@@ -298,6 +310,7 @@ export class ListsService {
     list: List,
     role: ListAccess['role'],
     userId: string,
+    onHome: boolean,
     counts: Pick<ListSummary, 'memberCount' | 'completed' | 'total'>,
   ): ListSummary {
     return {
@@ -309,6 +322,7 @@ export class ListsService {
       ownership: list.ownerId === userId ? 'mine' : 'shared',
       role,
       ...counts,
+      onHome,
     };
   }
 

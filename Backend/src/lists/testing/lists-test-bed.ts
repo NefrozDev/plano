@@ -17,12 +17,14 @@ import { LiveEventsService } from '../../live/live-events.service';
 import { ListAccessService } from '../list-access.service';
 import { ListChangesService } from '../list-changes.service';
 import { ListContentService } from '../list-content.service';
+import { ListPreferencesService } from '../list-preferences.service';
 import { ListSettingsService } from '../list-settings.service';
 import { ListsService } from '../lists.service';
 
 export interface ListsTestBed {
   dataSource: DataSource;
   lists: ListsService;
+  preferences: ListPreferencesService;
   content: ListContentService;
   settings: ListSettingsService;
   /** Receives the live events the services publish; spy on `publish`. */
@@ -71,6 +73,7 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
   const access = new ListAccessService(dataSource, contacts);
   const live = new LiveEventsService();
   const changes = new ListChangesService(dataSource, live);
+  const preferences = new ListPreferencesService(dataSource, writeLock, access);
 
   const [ada, bob, cyd] = await Promise.all(
     ['Ada', 'Bob', 'Cyd'].map((name) => insertUser(dataSource, name)),
@@ -95,7 +98,15 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
 
   return {
     dataSource,
-    lists: new ListsService(dataSource, writeLock, access, contacts, changes),
+    lists: new ListsService(
+      dataSource,
+      writeLock,
+      access,
+      contacts,
+      changes,
+      preferences,
+    ),
+    preferences,
     content: new ListContentService(dataSource, writeLock, access, changes),
     live,
     settings: new ListSettingsService(dataSource, writeLock),

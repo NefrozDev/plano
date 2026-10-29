@@ -3,6 +3,7 @@ import { ListSettingsController } from './list-settings.controller';
 import type { ListSettingsService } from './list-settings.service';
 import { ListsController } from './lists.controller';
 import type { ListContentService } from './list-content.service';
+import type { ListPreferencesService } from './list-preferences.service';
 import type { ListsService } from './lists.service';
 
 /**
@@ -19,6 +20,7 @@ describe('ListsController', () => {
 
   let lists: Record<string, Mock>;
   let content: Record<string, Mock>;
+  let preferences: Record<string, Mock>;
   let controller: ListsController;
 
   beforeEach(() => {
@@ -48,16 +50,18 @@ describe('ListsController', () => {
       'updateEntry',
       'removeEntry',
     ]);
+    preferences = service(['home', 'reorder', 'setOnHome']);
     controller = new ListsController(
       lists as unknown as ListsService,
       content as unknown as ListContentService,
+      preferences as unknown as ListPreferencesService,
     );
   });
 
   const cases: {
     handler: string;
     call: (c: ListsController) => Promise<unknown>;
-    service: 'lists' | 'content';
+    service: 'lists' | 'content' | 'preferences';
     method: string;
     args: unknown[];
   }[] = [
@@ -67,6 +71,27 @@ describe('ListsController', () => {
       service: 'lists',
       method: 'findAll',
       args: [USER],
+    },
+    {
+      handler: 'findHome',
+      call: (c) => c.findHome(USER),
+      service: 'preferences',
+      method: 'home',
+      args: [USER],
+    },
+    {
+      handler: 'reorder',
+      call: (c) => c.reorder(USER, { listIds: [LIST, 'list-2'] }),
+      service: 'preferences',
+      method: 'reorder',
+      args: [USER, [LIST, 'list-2']],
+    },
+    {
+      handler: 'updatePreferences',
+      call: (c) => c.updatePreferences(USER, LIST, { onHome: true }),
+      service: 'preferences',
+      method: 'setOnHome',
+      args: [USER, LIST, true],
     },
     {
       handler: 'findReminders',
@@ -194,7 +219,7 @@ describe('ListsController', () => {
   it.each(cases)(
     '$handler forwards to the $service service ($method) with the ids in order',
     async ({ call, service, method, args }) => {
-      const target = service === 'lists' ? lists : content;
+      const target = { lists, content, preferences }[service];
 
       await expect(call(controller)).resolves.toEqual({ from: method });
 
@@ -204,6 +229,7 @@ describe('ListsController', () => {
       const others = [
         ...Object.entries(lists),
         ...Object.entries(content),
+        ...Object.entries(preferences),
       ].filter(([name, mock]) => mock !== target[method] && name !== method);
       for (const [, mock] of others) expect(mock).not.toHaveBeenCalled();
     },

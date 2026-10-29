@@ -6,6 +6,7 @@ import { GroupMembership } from '../../groups/group-membership.entity';
 import { Group } from '../../groups/group.entity';
 import { ListEntry } from '../../lists/entities/list-entry.entity';
 import { ListMember } from '../../lists/entities/list-member.entity';
+import { ListPreference } from '../../lists/entities/list-preference.entity';
 import { ListSection } from '../../lists/entities/list-section.entity';
 import { ListSettings } from '../../lists/entities/list-settings.entity';
 import { List } from '../../lists/entities/list.entity';
@@ -23,6 +24,7 @@ export const ENTITIES = [
   ListSection,
   ListEntry,
   ListSettings,
+  ListPreference,
 ];
 
 export interface TestDatabase {

@@ -6,12 +6,14 @@ import { FriendsModule } from '../friends/friends.module';
 import { LiveModule } from '../live/live.module';
 import { ListEntry } from './entities/list-entry.entity';
 import { ListMember } from './entities/list-member.entity';
+import { ListPreference } from './entities/list-preference.entity';
 import { ListSection } from './entities/list-section.entity';
 import { ListSettings } from './entities/list-settings.entity';
 import { List } from './entities/list.entity';
 import { ListAccessService } from './list-access.service';
 import { ListChangesService } from './list-changes.service';
 import { ListContentService } from './list-content.service';
+import { ListPreferencesService } from './list-preferences.service';
 import { ListSettingsController } from './list-settings.controller';
 import { ListSettingsService } from './list-settings.service';
 import { ListsController } from './lists.controller';
@@ -30,6 +32,7 @@ import { ListsService } from './lists.service';
       ListSection,
       ListEntry,
       ListSettings,
+      ListPreference,
     ]),
   ],
   controllers: [ListsController, ListSettingsController],
@@ -38,6 +41,7 @@ import { ListsService } from './lists.service';
     ListChangesService,
     ListsService,
     ListContentService,
+    ListPreferencesService,
     ListSettingsService,
   ],
 })

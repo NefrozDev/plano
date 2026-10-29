@@ -40,6 +40,7 @@ describe('ListsService', () => {
       memberCount: 1,
       completed: 0,
       total: 0,
+      onHome: false,
       description: '',
       members: [{ id: bed.ada, name: 'Ada Test', role: 'owner' }],
       sections: [],
