@@ -341,6 +341,20 @@ app-lists .settings-content section { padding: 1.2rem 0; border-bottom: 1px soli
 app-lists .settings-content section:last-child { border-bottom: 0; }
 app-lists .settings-content h3 { margin: 0 0 .65rem; color: #586174; font-size: .72rem; font-weight: 750; }
 app-lists .setting-row { display: grid; width: 100%; min-height: 2.35rem; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .25rem 0; border: 0; background: transparent; color: #20263a; font: inherit; font-size: .79rem; text-align: left; }
+/* Overview search and drag grips (here because the component stylesheet is at its size budget). */
+app-lists .search-button.active { border-radius: .7rem; background: #eef3ff; color: var(--color-primary); }
+app-lists .lists-search { display: flex; gap: .5rem; align-items: center; margin: 0 1.25rem .6rem; padding: 0 .75rem; border: 1px solid #dfe4ec; border-radius: .75rem; background: #fff; color: #687187; }
+app-lists .lists-search:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 .15rem rgb(50 91 226 / 12%); }
+app-lists .lists-search svg { width: 1.05rem; height: 1.05rem; flex: none; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 2; }
+app-lists .lists-search input { width: 100%; min-width: 0; height: 2.5rem; border: 0; outline: 0; background: transparent; color: var(--color-text); font: inherit; font-size: .85rem; }
+app-lists .list-item { position: relative; }
+app-lists .list-item.dragging .list-card { opacity: .65; box-shadow: 0 .6rem 1.4rem rgb(31 41 55 / 16%); }
+app-lists .lists-content:not(.grid-view) .list-card { padding-right: 2.6rem; }
+app-lists .drag-handle { position: absolute; top: 50%; right: .35rem; display: grid; width: 2rem; height: 2.6rem; place-items: center; padding: 0; border: 0; border-radius: .5rem; background: transparent; color: #9aa3b5; cursor: grab; font-size: 1.05rem; transform: translateY(-50%); touch-action: none; user-select: none; }
+app-lists .drag-handle:hover { background: rgb(255 255 255 / 70%); color: #4b5468; }
+app-lists .drag-handle:active { cursor: grabbing; }
+app-lists .drag-handle:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); }
+app-lists .grid-view .drag-handle { top: .35rem; transform: none; }
 app-lists button.setting-row { cursor: pointer; }
 app-lists .setting-row input { max-width: 9rem; border: 0; outline: 0; background: transparent; color: #687187; font: inherit; font-size: .79rem; text-align: right; }
 app-lists .setting-row input[type='time'] { width: 5rem; }
