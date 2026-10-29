@@ -34,41 +34,36 @@
     }
   </section>
 
-  <section class="dashboard-section" aria-labelledby="tasks-title">
-    <div class="section-heading">
-      <h2 id="tasks-title">À faire</h2>
-      <span>{{ completedTasks() }}/{{ tasks().length }}</span>
-    </div>
-    <div class="tasks-card">
-      @for (task of tasks(); track task.id; let index = $index) {
-        <label [class.completed]="task.done"
-          ><input
-            type="checkbox"
-            [checked]="task.done"
-            (change)="toggleTask(index)"
-          />
-          <span>{{ task.label }}</span></label
-        >
-      }
-      @if (addingTask()) {
-        <input
-          appAutofocus
-          class="new-task-input"
-          type="text"
-          maxlength="200"
-          placeholder="Nouvelle tâche..."
-          aria-label="Nouvelle tâche"
-          [value]="newTaskValue()"
-          (input)="newTaskValue.set($any($event.target).value)"
-          (keydown.enter)="$event.preventDefault(); finishAddingTask()"
-          (keydown.escape)="cancelAddingTask()"
-          (blur)="finishAddingTask()"
-        />
-      } @else {
-        <button class="card-link" type="button" (click)="beginAddingTask()">+ Ajouter une tâche</button>
-      }
-    </div>
-  </section>
+  @for (home of homeLists(); track home.id) {
+    <section class="dashboard-section home-list" [attr.aria-labelledby]="'home-list-' + home.id" [style.--list-color]="home.color">
+      <div class="section-heading">
+        <h2 [id]="'home-list-' + home.id">{{ home.name }}</h2>
+        <a [routerLink]="['/lists', home.id]">{{ home.remaining ? home.remaining + ' à faire' : 'voir la liste' }} →</a>
+      </div>
+      <div class="list-card">
+        @for (entry of home.entries; track entry.id) {
+          <label
+            ><input
+              type="checkbox"
+              [disabled]="home.role === 'viewer' || checking() !== ''"
+              [checked]="checking() === entry.id"
+              (change)="check(home.id, entry.id)"
+            />
+            <span>{{ entry.name }}</span></label
+          >
+        } @empty {
+          <a class="card-link" [routerLink]="['/lists', home.id]">Tout est fait ✓</a>
+        }
+        @if (home.remaining > home.entries.length) {
+          <a class="card-link" [routerLink]="['/lists', home.id]">+ {{ home.remaining - home.entries.length }} de plus</a>
+        }
+      </div>
+    </section>
+  } @empty {
+    @if (homeLists()) {
+      <a class="home-hint" routerLink="/lists">Affichez vos listes ici depuis leur menu « Afficher sur l’accueil ».</a>
+    }
+  }
 
   <section
     class="dashboard-section goals-section"

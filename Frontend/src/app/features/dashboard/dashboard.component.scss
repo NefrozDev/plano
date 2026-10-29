@@ -53,7 +53,7 @@
   font-size: 0.85rem;
 }
 .week-card,
-.tasks-card,
+.list-card,
 .goals-card {
   overflow: hidden;
   border-radius: 0.85rem;
@@ -146,41 +146,51 @@
   font-weight: 650;
 }
 /* Same inner spacing for every card, so empty states line up too. */
-.tasks-card,
+.list-card,
 .goals-card {
   padding: 0.55rem 0.85rem;
 }
-.tasks-card label {
+.home-list h2 {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+.home-list h2::before {
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--list-color);
+  content: '';
+}
+.list-card label {
   display: flex;
   gap: 0.45rem;
   align-items: center;
   margin: 0.25rem 0;
   font-size: 0.78rem;
 }
-.tasks-card input {
+.list-card input {
   width: 1rem;
   height: 1rem;
   margin: 0;
-  accent-color: var(--color-primary);
+  accent-color: var(--list-color);
 }
-.tasks-card .completed span {
+.list-card input:checked + span {
   color: var(--color-text-muted);
   text-decoration: line-through;
 }
-.tasks-card .new-task-input {
-  width: 100%;
-  height: auto;
-  margin: 0.3rem 0 0.15rem;
-  padding: 0.5rem 0.65rem;
-  border: 1px dashed var(--color-border-strong);
-  border-radius: 0.55rem;
-  outline: 0;
-  color: var(--color-text);
-  font-size: 0.78rem;
-}
-.tasks-card .new-task-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 0.15rem rgb(50 91 226 / 12%);
+.home-hint {
+  display: block;
+  margin: 1rem 0 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px dashed #b9cdfc;
+  border-radius: 0.85rem;
+  color: var(--color-primary);
+  font-size: 0.76rem;
+  font-weight: 650;
+  text-align: center;
+  text-decoration: none;
 }
 .goals-card .goal {
   color: inherit;

@@ -1,11 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import type { HomeList } from '@plano/common';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AuthUser } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
-import { PLANO_DATA_ADAPTER } from '../../core/data/plano-data.adapter';
 import { APP_CLOCK } from '../../core/time/dates';
 import { AgendaStore } from '../agenda/agenda.store';
 import { TEST_TODAY, flushListReminders, provideSeedData, settle } from '../../testing/plano-testing';
@@ -23,6 +23,22 @@ describe('DashboardComponent', () => {
     avatarVersion: null,
   };
 
+  let http: HttpTestingController;
+  const homeList = (changes: Partial<HomeList> = {}): HomeList => ({
+    id: 'courses',
+    name: 'Courses',
+    icon: 'cart',
+    color: '#2ecb70',
+    role: 'owner',
+    remaining: 7,
+    entries: [
+      { id: 'milk', name: 'Lait' },
+      { id: 'eggs', name: 'Œufs' },
+    ],
+    ...changes,
+  });
+  const flushHome = (lists: HomeList[]) => http.expectOne('/api/v1/lists/home').flush(lists);
+
   beforeEach(async () => {
     auth = { user: signal<AuthUser | null>(user) };
     await TestBed.configureTestingModule({
@@ -36,6 +52,7 @@ describe('DashboardComponent', () => {
         provideSeedData(),
       ],
     }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
   });
 
   it('renders the French landing page for the restored user', () => {
@@ -74,16 +91,88 @@ describe('DashboardComponent', () => {
     expect(component.displayName()).toBe('vous');
   });
 
-  it('updates tasks, flipping only the targeted one', () => {
-    const component =
-      TestBed.createComponent(DashboardComponent).componentInstance;
-    const before = component.tasks().map(({ done }) => done);
-    component.toggleTask(0);
-    expect(component.completedTasks()).toBe(2);
-    expect(component.tasks().map(({ done }) => done)).toEqual([!before[0], ...before.slice(1)]);
+  describe('pinned lists', () => {
+    it('shows the pinned lists in order, with their first unchecked items and links', async () => {
+      const fixture = TestBed.createComponent(DashboardComponent);
+      flushHome([
+        homeList(),
+        homeList({ id: 'maison', name: 'Maison', color: '#3264ed', remaining: 0, entries: [] }),
+      ]);
+      await settle();
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const sections = Array.from(element.querySelectorAll<HTMLElement>('.home-list'));
 
-    component.toggleTask(0);
-    expect(component.tasks().map(({ done }) => done)).toEqual(before);
+      expect(sections.map((section) => section.querySelector('h2')?.textContent)).toEqual(['Courses', 'Maison']);
+      expect(sections[0].style.getPropertyValue('--list-color')).toBe('#2ecb70');
+      expect(Array.from(sections[0].querySelectorAll('label')).map((label) => label.textContent?.trim())).toEqual([
+        'Lait',
+        'Œufs',
+      ]);
+      expect(sections[0].querySelector('.section-heading a')?.textContent).toContain('7 à faire');
+      expect(sections[0].querySelector('.section-heading a')?.getAttribute('href')).toBe('/lists/courses');
+      // 7 unchecked, 2 shown: the rest is one tap away.
+      expect(sections[0].querySelector('.card-link')?.textContent).toContain('+ 5 de plus');
+      expect(sections[1].querySelector('.section-heading a')?.textContent).toContain('voir la liste');
+      expect(sections[1].querySelector('.card-link')?.textContent).toContain('Tout est fait');
+      expect(element.querySelector('.home-hint')).toBeNull();
+      // Lists come before the objectives.
+      expect(element.querySelector('.dashboard-section:last-of-type h2')?.textContent).toBe('Mes objectifs');
+    });
+
+    it('ticks an item once, then shows the refreshed list', async () => {
+      const fixture = TestBed.createComponent(DashboardComponent);
+      flushHome([homeList()]);
+      await settle();
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const boxes = () => Array.from(element.querySelectorAll<HTMLInputElement>('.home-list input'));
+
+      boxes()[0].click();
+      boxes()[1].click();
+      fixture.detectChanges();
+      expect(boxes().every((box) => box.disabled)).toBe(true);
+      const tick = http.expectOne('/api/v1/lists/courses/entries/milk');
+      expect(tick.request.method).toBe('PATCH');
+      expect(tick.request.body).toEqual({ done: true });
+      http.expectNone('/api/v1/lists/courses/entries/eggs');
+      tick.flush({ id: 'milk', done: true });
+      await settle();
+      flushHome([homeList({ remaining: 6, entries: [{ id: 'eggs', name: 'Œufs' }] })]);
+      await settle();
+      fixture.detectChanges();
+
+      expect(boxes()).toHaveLength(1);
+      expect(boxes()[0].disabled).toBe(false);
+      expect(element.querySelector('.home-list label')?.textContent).toContain('Œufs');
+    });
+
+    it('lets viewers see a pinned list without ticking it', async () => {
+      const fixture = TestBed.createComponent(DashboardComponent);
+      flushHome([homeList({ role: 'viewer' })]);
+      await settle();
+      fixture.detectChanges();
+
+      const boxes = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>('.home-list input');
+      expect(Array.from(boxes).every((box) => box.disabled)).toBe(true);
+    });
+
+    it('explains how to pin a list once it knows none is pinned, and has no default list', async () => {
+      const fixture = TestBed.createComponent(DashboardComponent);
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      // Still loading: no hint yet.
+      expect(element.querySelector('.home-hint')).toBeNull();
+
+      flushHome([]);
+      await settle();
+      fixture.detectChanges();
+
+      const hint = element.querySelector('.home-hint') as HTMLAnchorElement;
+      expect(hint.getAttribute('href')).toBe('/lists');
+      expect(element.querySelector('.tasks-card')).toBeNull();
+      expect(element.textContent).not.toContain('À faire');
+    });
   });
 
   it('opens Settings from the profile picture, or the initials without one', () => {
@@ -110,78 +199,6 @@ describe('DashboardComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('.profile-button')).toBeNull();
   });
 
-  describe('adding a task', () => {
-    const taskLabels = (element: HTMLElement) =>
-      Array.from(element.querySelectorAll('.tasks-card label span')).map((label) => label.textContent);
-
-    function openTaskInput() {
-      const fixture = TestBed.createComponent(DashboardComponent);
-      fixture.detectChanges();
-      const element = fixture.nativeElement as HTMLElement;
-      element.querySelector<HTMLButtonElement>('.tasks-card .card-link')!.click();
-      fixture.detectChanges();
-      return { fixture, element, input: element.querySelector<HTMLInputElement>('.new-task-input')! };
-    }
-
-    function type(input: HTMLInputElement, value: string) {
-      input.value = value;
-      input.dispatchEvent(new Event('input'));
-    }
-
-    it('opens a focused field and adds the task on Enter, saving it', async () => {
-      const { fixture, element, input } = openTaskInput();
-      await fixture.whenStable();
-      expect(document.activeElement).toBe(input);
-
-      type(input, '  Appeler le plombier  ');
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-      fixture.detectChanges();
-
-      expect(taskLabels(element)).toEqual([
-        'Préparer la présentation', '30 minutes de course à pied', 'Réserver le restaurant', 'Appeler le plombier',
-      ]);
-      expect(element.querySelector('.new-task-input')).toBeNull();
-      expect(element.querySelector('[aria-labelledby="tasks-title"] .section-heading span')?.textContent).toBe('1/4');
-      expect(TestBed.inject(PLANO_DATA_ADAPTER).load()?.dashboard.tasks.at(-1)).toEqual(
-        expect.objectContaining({ label: 'Appeler le plombier', done: false }),
-      );
-    });
-
-    it('also adds on blur, and gives every task its own id', () => {
-      const { fixture, element, input } = openTaskInput();
-      type(input, 'Appeler le plombier');
-      input.dispatchEvent(new Event('blur'));
-      fixture.detectChanges();
-      const component = fixture.componentInstance;
-      component.beginAddingTask();
-      component.newTaskValue.set('Appeler le plombier');
-      component.finishAddingTask();
-      fixture.detectChanges();
-
-      const ids = component.tasks().map((task) => task.id);
-      expect(taskLabels(element).filter((label) => label === 'Appeler le plombier')).toHaveLength(2);
-      expect(new Set(ids).size).toBe(ids.length);
-    });
-
-    it('closes without adding on Escape or when left empty', () => {
-      const { fixture, element, input } = openTaskInput();
-      type(input, 'Abandonnée');
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-      fixture.detectChanges();
-      expect(element.querySelector('.new-task-input')).toBeNull();
-
-      element.querySelector<HTMLButtonElement>('.tasks-card .card-link')!.click();
-      fixture.detectChanges();
-      const emptyInput = element.querySelector<HTMLInputElement>('.new-task-input')!;
-      type(emptyInput, '   ');
-      emptyInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-      fixture.detectChanges();
-
-      expect(taskLabels(element)).toHaveLength(3);
-      expect(element.querySelector('.new-task-input')).toBeNull();
-    });
-  });
-
   it('has no agenda preview, but marks the week days that have agenda items', async () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     flushListReminders();
@@ -191,17 +208,20 @@ describe('DashboardComponent', () => {
 
     expect(element.querySelector('.agenda-card')).toBeNull();
     expect(element.textContent).not.toContain('Rien de prévu');
-    expect(element.querySelectorAll('.dashboard-section')).toHaveLength(2);
+    // No pinned list yet: the objectives are the only section.
+    expect(element.querySelectorAll('.dashboard-section')).toHaveLength(1);
     // Thursday 15 October has agenda items, list reminders included.
     expect(element.querySelector('.week-day.selected i')).not.toBeNull();
   });
 
-  it('spaces the home cards and their headings the same way', () => {
+  it('spaces the home cards and their headings the same way', async () => {
     const fixture = TestBed.createComponent(DashboardComponent);
+    flushHome([homeList()]);
+    await settle();
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const style = (selector: string) => getComputedStyle(element.querySelector(selector) as HTMLElement);
-    const cards = ['.tasks-card', '.goals-card'].map((selector) => style(selector).padding);
+    const cards = ['.list-card', '.goals-card'].map((selector) => style(selector).padding);
     const headings = Array.from(element.querySelectorAll<HTMLElement>('.dashboard-section .section-heading'))
       .map((heading) => getComputedStyle(heading).marginBottom);
 
