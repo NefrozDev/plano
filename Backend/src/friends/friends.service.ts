@@ -16,6 +16,7 @@ import type {
 import { randomUUID } from 'node:crypto';
 import { DataSource, In } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
+import { LiveEventsService } from '../live/live-events.service';
 import { User } from '../users/user.entity';
 import { toPublicUser } from '../users/user.mapper';
 import { Friendship } from './friendship.entity';
@@ -39,12 +40,16 @@ function pairWhere(userId: string, otherId: string) {
   ];
 }
 
-/** Friendships are mutual: a request becomes a friendship for both once accepted. */
+/**
+ * Friendships are mutual: a request becomes a friendship for both once accepted.
+ * The other person's open apps hear about every change, once it is committed.
+ */
 @Injectable()
 export class FriendsService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly writeLock: DatabaseWriteLockService,
+    private readonly live: LiveEventsService,
   ) {}
 
   /**
@@ -141,12 +146,13 @@ export class FriendsService {
         'Vous ne pouvez pas vous ajouter vous-même.',
       );
     }
-    return this.writeLock.runExclusive(() =>
+    const result = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
         const target = await manager.findOne(User, {
           where: { id: targetUserId },
         });
         if (!target) throw new NotFoundException('Utilisateur introuvable.');
+        const sender = await manager.findOneByOrFail(User, { id: userId });
 
         const existing = await manager.findOne(Friendship, {
           where: pairWhere(userId, targetUserId),
@@ -162,7 +168,7 @@ export class FriendsService {
           existing.status = 'accepted';
           existing.acceptedAt = new Date();
           await manager.save(existing);
-          return { status: 'accepted' as const };
+          return { status: 'accepted' as const, sender };
         }
 
         const pending = await manager.count(Friendship, {
@@ -182,34 +188,45 @@ export class FriendsService {
             acceptedAt: null,
           }),
         );
-        return { status: 'pending' as const };
+        return { status: 'pending' as const, sender };
       }),
     );
+    this.live.publish([targetUserId], {
+      type:
+        result.status === 'accepted' ? 'friend.accepted' : 'friend.requested',
+      user: toPublicUser(result.sender),
+    });
+    return { status: result.status };
   }
 
   /** Only the recipient accepts. */
   async accept(userId: string, requestId: string): Promise<Friend> {
-    return this.writeLock.runExclusive(() =>
+    const { friend, accepter } = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
         const request = await manager.findOne(Friendship, {
           where: { id: requestId, addresseeId: userId, status: 'pending' },
-          relations: { requester: true },
+          relations: { requester: true, addressee: true },
         });
         if (!request) throw new NotFoundException('Demande introuvable.');
         request.status = 'accepted';
         request.acceptedAt = new Date();
         await manager.save(request);
         return {
-          ...toPublicUser(request.requester),
-          since: request.acceptedAt.toISOString(),
+          friend: {
+            ...toPublicUser(request.requester),
+            since: request.acceptedAt.toISOString(),
+          },
+          accepter: toPublicUser(request.addressee),
         };
       }),
     );
+    this.live.publish([friend.id], { type: 'friend.accepted', user: accepter });
+    return friend;
   }
 
   /** The recipient declines, or the sender cancels: either way the request goes. */
   async removeRequest(userId: string, requestId: string): Promise<void> {
-    await this.writeLock.runExclusive(() =>
+    const otherId = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
         const request = await manager.findOne(Friendship, {
           where: [
@@ -219,8 +236,12 @@ export class FriendsService {
         });
         if (!request) throw new NotFoundException('Demande introuvable.');
         await manager.delete(Friendship, { id: request.id });
+        return request.requesterId === userId
+          ? request.addresseeId
+          : request.requesterId;
       }),
     );
+    this.live.publish([otherId], { type: 'friends.changed' });
   }
 
   async removeFriend(userId: string, friendId: string): Promise<void> {
@@ -240,6 +261,7 @@ export class FriendsService {
         await manager.delete(Friendship, { id: friendship.id });
       }),
     );
+    this.live.publish([friendId], { type: 'friends.changed' });
   }
 
   private async relationsWith(

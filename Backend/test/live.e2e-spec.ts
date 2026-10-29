@@ -147,4 +147,56 @@ describe('Live updates (e2e)', () => {
       stream.close();
     }
   });
+
+  it('tells someone at once that they got a friend request, and the sender once accepted', async () => {
+    await testApp.app.listen(0);
+    const server = testApp.app.getHttpServer() as unknown as Server;
+    const { port } = server.address() as AddressInfo;
+    const bobStream = await openStream(port, bob.cookie);
+    const adaStream = await openStream(port, ada.cookie);
+    try {
+      await http()
+        .post('/api/v1/friends/requests')
+        .set('Cookie', ada.cookie)
+        .send({ userId: bob.user.id })
+        .expect(201);
+      await expect(bobStream.next()).resolves.toEqual({
+        type: 'friend.requested',
+        data: {
+          type: 'friend.requested',
+          user: expect.objectContaining({
+            id: ada.user.id,
+            username: 'ada',
+          }) as unknown,
+        },
+      });
+
+      const { incoming } = (
+        await http()
+          .get('/api/v1/friends/requests')
+          .set('Cookie', bob.cookie)
+          .expect(200)
+      ).body as { incoming: { id: string }[] };
+      await http()
+        .post(`/api/v1/friends/requests/${incoming[0].id}/accept`)
+        .set('Cookie', bob.cookie)
+        .expect(200);
+      const accepted = await adaStream.next();
+      expect(accepted).toEqual({
+        type: 'friend.accepted',
+        data: {
+          type: 'friend.accepted',
+          user: expect.objectContaining({
+            id: bob.user.id,
+            username: 'bob',
+          }) as unknown,
+        },
+      });
+      // Public profile only: no e-mail address travels with the event.
+      expect(JSON.stringify(accepted)).not.toContain('@example.com');
+    } finally {
+      bobStream.close();
+      adaStream.close();
+    }
+  });
 });

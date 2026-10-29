@@ -61,6 +61,7 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
   await dataSource.runMigrations();
 
   const writeLock = new DatabaseWriteLockService();
+  const live = new LiveEventsService();
   const groups = new GroupsService(
     dataSource.getRepository(GroupMembership),
     dataSource,
@@ -68,10 +69,9 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
   );
   const contacts = new ContactsService(
     groups,
-    new FriendsService(dataSource, writeLock),
+    new FriendsService(dataSource, writeLock, live),
   );
   const access = new ListAccessService(dataSource, contacts);
-  const live = new LiveEventsService();
   const changes = new ListChangesService(dataSource, live);
   const preferences = new ListPreferencesService(dataSource, writeLock, access);
 

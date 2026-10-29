@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import {
   BadRequestException,
   ConflictException,
@@ -15,6 +16,7 @@ import {
 import { GroupMembership } from '../groups/group-membership.entity';
 import { Group } from '../groups/group.entity';
 import { GroupsService } from '../groups/groups.service';
+import { LiveEventsService } from '../live/live-events.service';
 import { User } from '../users/user.entity';
 import { ContactsService } from './contacts.service';
 import {
@@ -28,6 +30,16 @@ import { Friendship } from './friendship.entity';
 describe('FriendsService and ContactsService', () => {
   let database: TestDatabase;
   let dataSource: DataSource;
+  let live: LiveEventsService;
+  let publish: MockInstance<LiveEventsService['publish']>;
+  /** What `user` looks like in a friend event. */
+  const publicUser = (id: string, username: string, firstName: string) => ({
+    id,
+    username,
+    firstName,
+    lastName: 'Test',
+    avatarVersion: null,
+  });
   let friends: FriendsService;
   let contacts: ContactsService;
   let ada: string;
@@ -90,7 +102,9 @@ describe('FriendsService and ContactsService', () => {
     await dataSource.initialize();
     await dataSource.runMigrations();
     const writeLock = new DatabaseWriteLockService();
-    friends = new FriendsService(dataSource, writeLock);
+    live = new LiveEventsService();
+    publish = vi.spyOn(live, 'publish');
+    friends = new FriendsService(dataSource, writeLock, live);
     contacts = new ContactsService(
       new GroupsService(
         dataSource.getRepository(GroupMembership),
@@ -161,6 +175,73 @@ describe('FriendsService and ContactsService', () => {
       expect(await relation('dan')).toBe('incoming');
       expect(await relation('eve')).toBe('friend');
       expect(await relation('cyd')).toBe('none');
+    });
+  });
+
+  describe('live events', () => {
+    it('tells the recipient about a request, and the sender about its acceptance', async () => {
+      await friends.sendRequest(ada, bob);
+
+      expect(publish).toHaveBeenCalledExactlyOnceWith([bob], {
+        type: 'friend.requested',
+        user: publicUser(ada, 'ada', 'Ada'),
+      });
+
+      await friends.accept(bob, (await incomingIds(bob))[0]);
+
+      expect(publish).toHaveBeenCalledTimes(2);
+      expect(publish).toHaveBeenLastCalledWith([ada], {
+        type: 'friend.accepted',
+        user: publicUser(bob, 'bob', 'Bob'),
+      });
+    });
+
+    it('tells the first asker when asking back makes them friends', async () => {
+      await friends.sendRequest(bob, ada);
+      publish.mockClear();
+
+      await friends.sendRequest(ada, bob);
+
+      expect(publish).toHaveBeenCalledExactlyOnceWith([bob], {
+        type: 'friend.accepted',
+        user: publicUser(ada, 'ada', 'Ada'),
+      });
+    });
+
+    it('tells the other person when a request or a friendship goes', async () => {
+      await friends.sendRequest(ada, bob);
+      publish.mockClear();
+      // Declined by the recipient: the sender hears.
+      await friends.removeRequest(bob, (await incomingIds(bob))[0]);
+      expect(publish).toHaveBeenCalledExactlyOnceWith([ada], {
+        type: 'friends.changed',
+      });
+
+      // Cancelled by the sender: the recipient hears.
+      await friends.sendRequest(ada, bob);
+      publish.mockClear();
+      await friends.removeRequest(ada, (await incomingIds(bob))[0]);
+      expect(publish).toHaveBeenCalledExactlyOnceWith([bob], {
+        type: 'friends.changed',
+      });
+
+      await friends.sendRequest(ada, bob);
+      await friends.accept(bob, (await incomingIds(bob))[0]);
+      publish.mockClear();
+      await friends.removeFriend(bob, ada);
+      expect(publish).toHaveBeenCalledExactlyOnceWith([ada], {
+        type: 'friends.changed',
+      });
+    });
+
+    it('publishes nothing when the change is refused', async () => {
+      await expect(friends.sendRequest(ada, ada)).rejects.toThrow();
+      await expect(friends.sendRequest(ada, randomUUID())).rejects.toThrow();
+      await expect(friends.accept(ada, randomUUID())).rejects.toThrow();
+      await expect(friends.removeRequest(ada, randomUUID())).rejects.toThrow();
+      await expect(friends.removeFriend(ada, bob)).rejects.toThrow();
+
+      expect(publish).not.toHaveBeenCalled();
     });
   });
 
