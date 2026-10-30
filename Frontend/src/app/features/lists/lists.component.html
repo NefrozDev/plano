@@ -132,6 +132,8 @@
       (pointermove)="swipe.move($event)"
       (pointerup)="swipe.finish()"
       (pointercancel)="swipe.finish()"
+      (wheel)="wheelSwipe(card.list, $event)"
+      (keydown.delete)="card.list.role === 'owner' && requestDelete(card.list)"
     >
       <span class="list-icon" aria-hidden="true">
         @switch (card.list.icon) {

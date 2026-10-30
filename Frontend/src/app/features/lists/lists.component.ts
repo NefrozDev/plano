@@ -185,6 +185,13 @@ export class ListsComponent {
     this.swipe.start(event);
   }
 
+  /** Two-finger touchpad swipe over an own list's card. */
+  wheelSwipe(list: ListSummary, event: WheelEvent): void {
+    if (list.role !== 'owner') return;
+    if (this.swipedList()?.id !== list.id) this.swipedList.set(list);
+    this.swipe.wheel(event);
+  }
+
   /** A tap opens the list; the click that ends a swipe does not. */
   openList(listId: string, event: MouseEvent): void {
     if (this.swipe.swallowClick(event)) return;

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { entry as listEntry } from '../testing/lists-fixtures';
 import { ListEntryRowComponent } from './list-entry-row.component';
+import { WHEEL_SWIPE_END_MS } from './swipe-to-delete';
 
 describe('ListEntryRowComponent', () => {
   let fixture: ComponentFixture<ListEntryRowComponent>;
@@ -64,6 +65,21 @@ describe('ListEntryRowComponent', () => {
 
     expect(row.offset()).toBe(0);
     expect(emitted).toEqual(['remove']);
+  });
+
+  it('deletes after a touchpad swipe left, unless read-only', async () => {
+    const wheel = new WheelEvent('wheel', { deltaX: 50, cancelable: true });
+    row.wheelSwipe(wheel);
+    expect(wheel.defaultPrevented).toBe(true);
+    expect(row.offset()).toBe(-50);
+
+    await new Promise((resolve) => setTimeout(resolve, WHEEL_SWIPE_END_MS + 50));
+
+    expect(row.offset()).toBe(0);
+    expect(emitted).toEqual(['remove']);
+    fixture.componentRef.setInput('readonly', true);
+    row.wheelSwipe(new WheelEvent('wheel', { deltaX: 80, cancelable: true }));
+    expect(row.offset()).toBe(0);
   });
 
   it('cancels a short swipe but swallows the click that follows it', () => {

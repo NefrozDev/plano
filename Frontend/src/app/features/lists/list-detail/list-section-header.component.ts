@@ -32,6 +32,7 @@ import { SwipeToDelete } from './swipe-to-delete';
         (pointermove)="swipe.move($event)"
         (pointerup)="swipe.finish()"
         (pointercancel)="swipe.finish()"
+        (wheel)="wheelSwipe($event)"
       >
         @if (editing()) {
           <input
@@ -95,6 +96,10 @@ export class ListSectionHeaderComponent {
     if (!this.editable() || this.editing()) return;
     if ((event.target as HTMLElement).closest('.collapse, .drag-handle')) return;
     this.swipe.start(event);
+  }
+
+  wheelSwipe(event: WheelEvent): void {
+    if (this.editable() && !this.editing()) this.swipe.wheel(event);
   }
 
   /** The parent tracks the drag across sections, like entry drags. */

@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { ListsComponent } from './lists.component';
+import { WHEEL_SWIPE_END_MS } from './list-detail/swipe-to-delete';
 import { ListsStore } from './lists.store';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { listDetail, listSettings, listSummary } from './testing/lists-fixtures';
@@ -321,6 +322,53 @@ describe('ListsComponent', () => {
       expect(ask).not.toHaveBeenCalled();
       // Not a swipe for this card: the click opens it.
       expect(navigate).toHaveBeenCalledExactlyOnceWith(['/lists', 'cadeaux']);
+    });
+
+    it('follows a two-finger touchpad swipe, keeping it from the browser, and asks once it ends', async () => {
+      ask.mockResolvedValue(false);
+      const wheel = (deltaX: number, deltaY = 0) => {
+        const event = new WheelEvent('wheel', { deltaX, deltaY, bubbles: true, cancelable: true });
+        card('courses').dispatchEvent(event);
+        fixture.detectChanges();
+        return event.defaultPrevented;
+      };
+
+      // Vertical scrolling stays the page's.
+      expect(wheel(2, 40)).toBe(false);
+      expect(wheel(12)).toBe(true);
+      expect(wheel(12)).toBe(true);
+      expect(wheel(12)).toBe(true);
+      expect(card('courses').style.transform).toBe('translateX(-36px)');
+      expect(ask).not.toHaveBeenCalled();
+
+      await new Promise((resolve) => setTimeout(resolve, WHEEL_SWIPE_END_MS + 50));
+      fixture.detectChanges();
+
+      expect(ask).toHaveBeenCalledTimes(1);
+      expect(card('courses').style.transform).toBe('');
+      // No click follows a touchpad swipe: the next tap opens the list.
+      card('courses').click();
+      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/lists', 'courses']);
+    });
+
+    it('ignores touchpad swipes over lists shared with the user', () => {
+      const event = new WheelEvent('wheel', { deltaX: 80, bubbles: true, cancelable: true });
+
+      card('cadeaux').dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBe(false);
+      expect(card('cadeaux').style.transform).toBe('');
+    });
+
+    it('asks to delete an own list with the Delete key, and not a shared one', () => {
+      const press = (listId: string) =>
+        card(listId).dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
+
+      press('cadeaux');
+      expect(ask).not.toHaveBeenCalled();
+      press('courses');
+      expect(ask).toHaveBeenCalledTimes(1);
+      expect(ask.mock.lastCall![0].message).toContain('« Courses »');
     });
 
     it('also deletes from the uncovered delete button', async () => {

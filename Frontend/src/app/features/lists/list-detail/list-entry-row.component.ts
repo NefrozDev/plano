@@ -36,6 +36,7 @@ import { SwipeToDelete } from './swipe-to-delete';
         (pointermove)="moveSwipe($event)"
         (pointerup)="finishSwipe()"
         (pointercancel)="finishSwipe()"
+        (wheel)="wheelSwipe($event)"
       >
         <button
           class="entry-toggle"
@@ -105,6 +106,10 @@ export class ListEntryRowComponent {
 
   finishSwipe(): void {
     this.swipe.finish();
+  }
+
+  wheelSwipe(event: WheelEvent): void {
+    if (!this.readonly()) this.swipe.wheel(event);
   }
 
   /** A click ending a swipe must not open the entry. */

@@ -6,11 +6,14 @@ const TAP_TOLERANCE = 6;
 const DELETE_THRESHOLD = -32;
 /** Furthest the row slides, uncovering the delete button. */
 const MAX_OFFSET = -58;
+/** A touchpad swipe is a burst of wheel events: this long without one ends it. */
+export const WHEEL_SWIPE_END_MS = 160;
 
 /**
  * Swipe left to uncover a delete button; released far enough, it asks to delete.
- * Shared by list rows (entries, section headers): the owner wires its pointer
- * events here and slides itself by `offset()`.
+ * Shared by list rows (entries, section headers, list cards): the owner wires
+ * its pointer events (finger, pen, mouse drag) and wheel events (two-finger
+ * touchpad swipe) here and slides itself by `offset()`.
  */
 export class SwipeToDelete {
   private readonly gesture = signal<{ startX: number; currentX: number } | null>(null);
@@ -18,6 +21,7 @@ export class SwipeToDelete {
   private pressed: { element: HTMLElement; pointerId: number } | null = null;
   /** A swipe ends with a click on the row; that click must not trigger the row's tap action. */
   private suppressNextClick = false;
+  private wheelEnd: ReturnType<typeof setTimeout> | null = null;
 
   readonly offset = computed(() => {
     const gesture = this.gesture();
@@ -49,12 +53,34 @@ export class SwipeToDelete {
   }
 
   finish(): void {
+    this.end(true);
+  }
+
+  /**
+   * A two-finger touchpad swipe: horizontal wheel events, with the content
+   * moving opposite to the fingers. Vertical ones are left to scroll the page;
+   * horizontal ones are kept from the browser, which would go back or forward.
+   */
+  wheel(event: WheelEvent): void {
+    if (this.pressed || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+    event.preventDefault();
+    const gesture = this.gesture() ?? { startX: 0, currentX: 0 };
+    this.gesture.set({ ...gesture, currentX: gesture.currentX - event.deltaX });
+    if (this.wheelEnd) clearTimeout(this.wheelEnd);
+    this.wheelEnd = setTimeout(() => {
+      this.wheelEnd = null;
+      // No click follows a touchpad swipe: nothing to swallow.
+      this.end(false);
+    }, WHEEL_SWIPE_END_MS);
+  }
+
+  private end(clickFollows: boolean): void {
     const gesture = this.gesture();
     if (!gesture) return;
     this.pressed = null;
     this.gesture.set(null);
     const distance = gesture.currentX - gesture.startX;
-    if (Math.abs(distance) > TAP_TOLERANCE) this.suppressNextClick = true;
+    if (clickFollows && Math.abs(distance) > TAP_TOLERANCE) this.suppressNextClick = true;
     if (distance < DELETE_THRESHOLD) this.onDelete();
   }
 
