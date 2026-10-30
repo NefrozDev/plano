@@ -22,6 +22,8 @@ export class SwipeToDelete {
   /** A swipe ends with a click on the row; that click must not trigger the row's tap action. */
   private suppressNextClick = false;
   private wheelEnd: ReturnType<typeof setTimeout> | null = null;
+  /** A finger or mouse is sliding the row (pointer captured). */
+  private sliding = false;
 
   readonly offset = computed(() => {
     const gesture = this.gesture();
@@ -47,6 +49,7 @@ export class SwipeToDelete {
       if (this.pressed) {
         this.pressed.element.setPointerCapture(this.pressed.pointerId);
         this.pressed = null;
+        this.sliding = true;
       }
     }
     this.gesture.set({ ...gesture, currentX: event.clientX });
@@ -62,8 +65,14 @@ export class SwipeToDelete {
    * horizontal ones are kept from the browser, which would go back or forward.
    */
   wheel(event: WheelEvent): void {
-    if (this.pressed || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+    if (this.sliding || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
     event.preventDefault();
+    if (this.pressed) {
+      // A press that never became a swipe and was never released here (let go
+      // outside the row, right click): forget it, or it would block every swipe.
+      this.pressed = null;
+      this.gesture.set(null);
+    }
     const gesture = this.gesture() ?? { startX: 0, currentX: 0 };
     this.gesture.set({ ...gesture, currentX: gesture.currentX - event.deltaX });
     if (this.wheelEnd) clearTimeout(this.wheelEnd);
@@ -78,6 +87,7 @@ export class SwipeToDelete {
     const gesture = this.gesture();
     if (!gesture) return;
     this.pressed = null;
+    this.sliding = false;
     this.gesture.set(null);
     const distance = gesture.currentX - gesture.startX;
     if (clickFollows && Math.abs(distance) > TAP_TOLERANCE) this.suppressNextClick = true;

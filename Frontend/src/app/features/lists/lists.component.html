@@ -129,9 +129,9 @@
       [style.transform]="swipedList()?.id === card.list.id && swipe.offset() ? 'translateX(' + swipe.offset() + 'px)' : null"
       (click)="openList(card.list.id, $event)"
       (pointerdown)="startSwipe(card.list, $event)"
-      (pointermove)="swipe.move($event)"
-      (pointerup)="swipe.finish()"
-      (pointercancel)="swipe.finish()"
+      (pointermove)="moveSwipe(card.list, $event)"
+      (pointerup)="finishSwipe(card.list)"
+      (pointercancel)="finishSwipe(card.list)"
       (wheel)="wheelSwipe(card.list, $event)"
       (keydown.delete)="card.list.role === 'owner' && requestDelete(card.list)"
     >
@@ -236,3 +236,4 @@
 }
 
 <app-toast tone="error" [message]="listsStore.error()" (dismissed)="listsStore.clearError()" />
+<app-toast tone="info" [message]="notice()" (dismissed)="notice.set('')" />

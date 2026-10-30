@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
-import { ListsComponent } from './lists.component';
+import { ListsComponent, SHARED_LIST_NOTICE } from './lists.component';
 import { WHEEL_SWIPE_END_MS } from './list-detail/swipe-to-delete';
 import { ListsStore } from './lists.store';
 import { ConfirmService } from '../../shared/ui/confirm.service';
@@ -320,7 +320,9 @@ describe('ListsComponent', () => {
       swipe(card('cadeaux'), 300, 150);
 
       expect(ask).not.toHaveBeenCalled();
-      // Not a swipe for this card: the click opens it.
+      expect(card('cadeaux').style.transform).toBe('');
+      // A tap still opens it.
+      card('cadeaux').click();
       expect(navigate).toHaveBeenCalledExactlyOnceWith(['/lists', 'cadeaux']);
     });
 
@@ -351,13 +353,39 @@ describe('ListsComponent', () => {
       expect(navigate).toHaveBeenCalledExactlyOnceWith(['/lists', 'courses']);
     });
 
-    it('ignores touchpad swipes over lists shared with the user', () => {
+    it('explains, without sliding, that only the owner deletes a list shared with the user', async () => {
       const event = new WheelEvent('wheel', { deltaX: 80, bubbles: true, cancelable: true });
 
       card('cadeaux').dispatchEvent(event);
-
-      expect(event.defaultPrevented).toBe(false);
+      fixture.detectChanges();
       expect(card('cadeaux').style.transform).toBe('');
+      await new Promise((resolve) => setTimeout(resolve, WHEEL_SWIPE_END_MS + 50));
+      fixture.detectChanges();
+
+      expect(ask).not.toHaveBeenCalled();
+      expect(component.notice()).toBe(SHARED_LIST_NOTICE);
+      expect(element.textContent).toContain('Seule la personne qui a créé cette liste peut la supprimer.');
+      // With a finger or the mouse too, and the click ending that swipe opens nothing.
+      component.notice.set('');
+      swipe(card('cadeaux'), 300, 150);
+      expect(component.notice()).toBe(SHARED_LIST_NOTICE);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('still follows a touchpad swipe after a press released outside its card', async () => {
+      ask.mockResolvedValue(false);
+      // Pressed on a card, then let go elsewhere: no pointerup reaches the card.
+      card('maison').dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 200, bubbles: true }));
+
+      const event = new WheelEvent('wheel', { deltaX: 60, bubbles: true, cancelable: true });
+      card('courses').dispatchEvent(event);
+      fixture.detectChanges();
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(card('courses').style.transform).toBe('translateX(-58px)');
+      await new Promise((resolve) => setTimeout(resolve, WHEEL_SWIPE_END_MS + 50));
+      expect(ask).toHaveBeenCalledTimes(1);
+      expect(ask.mock.lastCall![0].message).toContain('« Courses »');
     });
 
     it('asks to delete an own list with the Delete key, and not a shared one', () => {

@@ -17,6 +17,8 @@ type ListFilter = 'all' | 'mine' | 'shared' | 'archived';
 type BooleanSetting = 'showCounts' | 'showCompleted' | 'completedLast' | 'archiveCompleted' | 'confirmDelete';
 type OverviewAction = 'settings';
 
+export const SHARED_LIST_NOTICE = 'Seule la personne qui a créé cette liste peut la supprimer.';
+
 export interface ListCard {
   list: ListSummary;
   caption: string;
@@ -56,6 +58,10 @@ export class ListsComponent {
     const list = this.swipedList();
     if (list) void this.requestDelete(list);
   });
+  /** Lists shared with the user do not slide; a swipe says why instead. */
+  readonly sharedSwipe = new SwipeToDelete(() => this.notice.set(SHARED_LIST_NOTICE));
+  /** Short explanation shown in a toast, empty when none. */
+  readonly notice = signal('');
   /** The list being dragged by its handle. */
   readonly draggedList = signal<string | null>(null);
   private dragMoved = false;
@@ -180,21 +186,35 @@ export class ListsComponent {
 
   /** Owners swipe a card left to delete their list; others' lists do not move. */
   startSwipe(list: ListSummary, event: PointerEvent): void {
-    if (list.role !== 'owner') return;
+    if (list.role !== 'owner') {
+      this.sharedSwipe.start(event);
+      return;
+    }
     this.swipedList.set(list);
     this.swipe.start(event);
   }
 
+  moveSwipe(list: ListSummary, event: PointerEvent): void {
+    (list.role === 'owner' ? this.swipe : this.sharedSwipe).move(event);
+  }
+
+  finishSwipe(list: ListSummary): void {
+    (list.role === 'owner' ? this.swipe : this.sharedSwipe).finish();
+  }
+
   /** Two-finger touchpad swipe over an own list's card. */
   wheelSwipe(list: ListSummary, event: WheelEvent): void {
-    if (list.role !== 'owner') return;
+    if (list.role !== 'owner') {
+      this.sharedSwipe.wheel(event);
+      return;
+    }
     if (this.swipedList()?.id !== list.id) this.swipedList.set(list);
     this.swipe.wheel(event);
   }
 
   /** A tap opens the list; the click that ends a swipe does not. */
   openList(listId: string, event: MouseEvent): void {
-    if (this.swipe.swallowClick(event)) return;
+    if (this.swipe.swallowClick(event) || this.sharedSwipe.swallowClick(event)) return;
     void this.router.navigate(['/lists', listId]);
   }
 
