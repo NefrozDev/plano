@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { GroupsModule } from './groups/groups.module';
 import { ListsModule } from './lists/lists.module';
 import { LiveModule } from './live/live.module';
+import { ObjectivesModule } from './objectives/objectives.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { UsersModule } from './users/users.module';
     GroupsModule,
     FriendsModule,
     ListsModule,
+    ObjectivesModule,
     LiveModule,
     UsersModule,
     HealthModule,

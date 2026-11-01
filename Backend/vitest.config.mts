@@ -28,6 +28,7 @@ export default defineConfig({
         'src/groups/dto/*.dto.ts',
         'src/groups/group.types.ts',
         'src/lists/dto/*.dto.ts',
+        'src/objectives/dto/*.dto.ts',
         'src/**/testing/**',
         'src/database/migrations/**',
       ],
