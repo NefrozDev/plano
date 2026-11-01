@@ -1,0 +1,212 @@
+/**
+ * REST contract of the objectives API (`/api/v1/objectives`). Request interfaces
+ * are implemented by the API's validated DTOs. Objectives form a tree: every
+ * sub-objective is a full objective, with its own bars and settings.
+ */
+import type {
+  DueReminder,
+  IsoDate,
+  ObjectiveCategory,
+  ObjectiveReminder,
+  ObjectiveSessionStatus,
+  ObjectiveStatus,
+} from './models';
+
+/**
+ * What drives the completion bar. `none`: no bar, completed by hand;
+ * `children`: weighted average of the sub-objectives; `metric`: a numeric target;
+ * `habit`: days checked; `manual`: a percentage set by hand.
+ */
+export type CompletionMode = 'none' | 'children' | 'metric' | 'habit' | 'manual';
+/** `elapsed` fills up from start to deadline; `remaining` starts full and empties. */
+export type TimelapseMode = 'off' | 'elapsed' | 'remaining';
+/** `max` keeps the best session (longest run), `sum` accumulates (money saved). */
+export type MetricAggregation = 'sum' | 'max';
+export type ObjectiveRole = 'owner' | 'contributor' | 'viewer';
+
+export interface ObjectiveMetricSettings {
+  unit: string;
+  target: number;
+  aggregation: MetricAggregation;
+}
+
+export interface ObjectivePerson {
+  id: string;
+  name: string;
+}
+
+/** Progress in the objective's own unit; only for metrics and habits. */
+export interface ObjectiveAmount {
+  current: number;
+  target: number;
+  unit: string;
+}
+
+/** An objective on a card or as a row of its parent. */
+export interface ObjectiveSummary {
+  id: string;
+  parentId: string | null;
+  title: string;
+  category: ObjectiveCategory;
+  status: ObjectiveStatus;
+  archived: boolean;
+  completion: CompletionMode;
+  /** 0 to 100, reached only when complete; null without a completion bar. */
+  percent: number | null;
+  amount: ObjectiveAmount | null;
+  timelapse: TimelapseMode;
+  startDate: IsoDate;
+  dueDate: IsoDate | null;
+  /** ISO timestamp. */
+  completedAt: string | null;
+  /** Share of the parent's bar, relative to its siblings. */
+  weight: number;
+  /** The signed-in user's role. */
+  role: ObjectiveRole;
+  owner: ObjectivePerson;
+  /** Direct sub-objectives, archived ones left out. */
+  childCount: number;
+  completedChildCount: number;
+  /** Shown on the signed-in user's home page (their own choice). */
+  onHome: boolean;
+}
+
+export interface ObjectiveSessionEntry {
+  id: string;
+  date: IsoDate;
+  status: ObjectiveSessionStatus;
+  label: string;
+  value: number;
+  durationMinutes: number | null;
+  /** Null for an account since deleted. */
+  author: ObjectivePerson | null;
+}
+
+export interface ObjectiveCheckIn {
+  date: IsoDate;
+  userId: string;
+}
+
+export interface ObjectiveCrumb {
+  id: string;
+  title: string;
+}
+
+export interface ObjectiveDetail extends ObjectiveSummary {
+  description: string;
+  plan: string;
+  metric: ObjectiveMetricSettings | null;
+  habitTargetDays: number | null;
+  manualProgress: number;
+  /** The way down from the top of what the user can see, without this objective. */
+  breadcrumb: ObjectiveCrumb[];
+  children: ObjectiveSummary[];
+  /** Everything below this objective, at any depth. */
+  descendantCount: number;
+  sessions: ObjectiveSessionEntry[];
+  checkIns: ObjectiveCheckIn[];
+  /** The signed-in user's own reminders. */
+  reminder: ObjectiveReminder;
+  dueReminder: DueReminder;
+}
+
+export interface ObjectiveSettingsFields {
+  title?: string;
+  category?: ObjectiveCategory;
+  description?: string;
+  plan?: string;
+  completion?: CompletionMode;
+  metric?: ObjectiveMetricSettings | null;
+  habitTargetDays?: number | null;
+  timelapse?: TimelapseMode;
+  startDate?: IsoDate;
+  dueDate?: IsoDate | null;
+  weight?: number;
+}
+
+export interface CreateObjectiveRequest extends ObjectiveSettingsFields {
+  title: string;
+  category: ObjectiveCategory;
+  completion: CompletionMode;
+  startDate: IsoDate;
+  /** Under this objective; a new top-level objective without it. */
+  parentId?: string;
+  /** Sub-objectives to create with it, without a bar of their own. */
+  children?: string[];
+  reminder?: ObjectiveReminder;
+  dueReminder?: DueReminder;
+}
+
+export interface UpdateObjectiveRequest extends ObjectiveSettingsFields {
+  archived?: boolean;
+  paused?: boolean;
+}
+
+export interface AddObjectiveSessionRequest {
+  date: IsoDate;
+  status: ObjectiveSessionStatus;
+  label: string;
+  value: number;
+  durationMinutes?: number;
+}
+
+export interface SetObjectiveProgressRequest {
+  percent: number;
+}
+
+export interface SetObjectiveCompletedRequest {
+  completed: boolean;
+}
+
+/** The signed-in user's full order of their top-level objectives. */
+export interface ReorderObjectivesRequest {
+  objectiveIds: string[];
+}
+
+/** The owner's order of an objective's sub-objectives, each named once. */
+export interface ReorderChildObjectivesRequest {
+  objectiveIds: string[];
+}
+
+export interface UpdateObjectivePreferencesRequest {
+  onHome?: boolean;
+  reminder?: ObjectiveReminder;
+  dueReminder?: DueReminder;
+}
+
+/** An objective as this browser stored it before they moved to the API. */
+export interface ImportObjectiveRequest {
+  /** Its id in the browser: importing it twice creates it once. */
+  localId: string;
+  title: string;
+  category: ObjectiveCategory;
+  tracking: 'metric' | 'steps' | 'habit';
+  status: ObjectiveStatus;
+  archived: boolean;
+  createdOn: IsoDate;
+  dueDate: IsoDate | null;
+  completedOn: IsoDate | null;
+  description: string;
+  plan: string;
+  reminder: ObjectiveReminder;
+  dueReminder: DueReminder;
+  metric: ObjectiveMetricSettings | null;
+  sessions: {
+    date: IsoDate;
+    status: ObjectiveSessionStatus;
+    label: string;
+    value: number;
+    durationMinutes: number | null;
+  }[];
+  steps: { label: string; done: boolean; completedOn: IsoDate | null }[];
+  habit: { targetDays: number; checkIns: IsoDate[] } | null;
+}
+
+export interface ImportObjectivesRequest {
+  objectives: ImportObjectiveRequest[];
+}
+
+export interface ImportObjectivesResponse {
+  /** Objectives created; those imported before are not counted. */
+  imported: number;
+}

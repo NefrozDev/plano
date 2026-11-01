@@ -11,6 +11,10 @@ import { PasswordReset } from '../../auth/password-reset.entity';
 import { ListSection } from '../../lists/entities/list-section.entity';
 import { ListSettings } from '../../lists/entities/list-settings.entity';
 import { List } from '../../lists/entities/list.entity';
+import { ObjectiveCheckInRow } from '../../objectives/entities/objective-check-in.entity';
+import { ObjectivePreference } from '../../objectives/entities/objective-preference.entity';
+import { ObjectiveSession } from '../../objectives/entities/objective-session.entity';
+import { Objective } from '../../objectives/entities/objective.entity';
 import { User } from '../../users/user.entity';
 
 /** Every entity, for tests that build a DataSource without the Nest modules. */
@@ -27,6 +31,10 @@ export const ENTITIES = [
   ListSettings,
   ListPreference,
   PasswordReset,
+  Objective,
+  ObjectiveSession,
+  ObjectiveCheckInRow,
+  ObjectivePreference,
 ];
 
 export interface TestDatabase {

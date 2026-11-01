@@ -7,6 +7,7 @@ import { AddUserLocaleAndAvatar1787340000000 } from './1787340000000-add-user-lo
 import { CreateListPreferences1787420000000 } from './1787420000000-create-list-preferences';
 import { CreatePasswordResets1787500000000 } from './1787500000000-create-password-resets';
 import { AddListRemoveChecked1787580000000 } from './1787580000000-add-list-remove-checked';
+import { CreateObjectives1787660000000 } from './1787660000000-create-objectives';
 
 /** Every migration, oldest first; shared by the app and the in-memory test database. */
 export const MIGRATIONS = [
@@ -19,4 +20,5 @@ export const MIGRATIONS = [
   CreateListPreferences1787420000000,
   CreatePasswordResets1787500000000,
   AddListRemoveChecked1787580000000,
+  CreateObjectives1787660000000,
 ];
