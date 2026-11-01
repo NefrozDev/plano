@@ -31,6 +31,18 @@ import { ListChangesService } from './list-changes.service';
 import { ListPreferencesService } from './list-preferences.service';
 import { displayName, toSectionResponse } from './list.mapper';
 
+/** The owner, then the people they shared the list with (`members` oldest first). */
+function toPeople(owner: User, members: ListMember[]): ListMemberResponse[] {
+  return [
+    { id: owner.id, name: displayName(owner), role: 'owner' },
+    ...members.map((member) => ({
+      id: member.userId,
+      name: displayName(member.user),
+      role: member.role,
+    })),
+  ];
+}
+
 @Injectable()
 export class ListsService {
   constructor(
@@ -59,18 +71,34 @@ export class ListsService {
     const members = listIds.length
       ? await manager.find(ListMember, {
           where: { listId: In(listIds) },
-          select: { listId: true },
+          relations: { user: true },
+          order: { createdAt: 'ASC' },
         })
+      : [];
+    const ownerIds = [...new Set(accesses.map(({ list }) => list.ownerId))];
+    const owners = ownerIds.length
+      ? await manager.find(User, { where: { id: In(ownerIds) } })
       : [];
 
     return accesses.map(({ list, role, onHome }) => {
       const listEntries = entries.filter((entry) => entry.listId === list.id);
-      return this.toSummary(list, role, userId, onHome, {
-        memberCount:
-          1 + members.filter((member) => member.listId === list.id).length,
-        completed: listEntries.filter((entry) => entry.done).length,
-        total: listEntries.length,
-      });
+      const owner = owners.find(({ id }) => id === list.ownerId);
+      return this.toSummary(
+        list,
+        role,
+        userId,
+        onHome,
+        owner
+          ? toPeople(
+              owner,
+              members.filter((member) => member.listId === list.id),
+            )
+          : [],
+        {
+          completed: listEntries.filter((entry) => entry.done).length,
+          total: listEntries.length,
+        },
+      );
     });
   }
 
@@ -282,21 +310,13 @@ export class ListsService {
         role,
         userId,
         await this.preferences.isOnHome(userId, list.id),
+        toPeople(owner, members),
         {
-          memberCount: members.length + 1,
           completed: entries.filter((entry) => entry.done).length,
           total: entries.length,
         },
       ),
       description: list.description,
-      members: [
-        { id: owner.id, name: displayName(owner), role: 'owner' },
-        ...members.map((member) => ({
-          id: member.userId,
-          name: displayName(member.user),
-          role: member.role,
-        })),
-      ],
       sections: sections.map((section) =>
         toSectionResponse(
           section,
@@ -311,7 +331,8 @@ export class ListsService {
     role: ListAccess['role'],
     userId: string,
     onHome: boolean,
-    counts: Pick<ListSummary, 'memberCount' | 'completed' | 'total'>,
+    members: ListMemberResponse[],
+    counts: Pick<ListSummary, 'completed' | 'total'>,
   ): ListSummary {
     return {
       id: list.id,
@@ -321,6 +342,8 @@ export class ListsService {
       archived: list.archived,
       ownership: list.ownerId === userId ? 'mine' : 'shared',
       role,
+      memberCount: members.length,
+      members,
       ...counts,
       onHome,
     };

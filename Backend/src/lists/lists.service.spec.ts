@@ -63,11 +63,17 @@ describe('ListsService', () => {
       role: 'editor',
     });
 
+    // Owner first, then whoever it is shared with: each side sees who.
+    const people = [
+      { id: bed.ada, name: 'Ada Test', role: 'owner' },
+      { id: bed.bob, name: 'Bob Test', role: 'editor' },
+    ];
     expect(await bed.lists.findAll(bed.ada)).toEqual([
       expect.objectContaining({
         ownership: 'mine',
         role: 'owner',
         memberCount: 2,
+        members: people,
         completed: 1,
         total: 2,
       }),
@@ -77,9 +83,29 @@ describe('ListsService', () => {
         ownership: 'shared',
         role: 'editor',
         name: 'Courses',
+        members: people,
       }),
     ]);
     expect(await bed.lists.findAll(bed.cyd)).toEqual([]);
+  });
+
+  it('names the members of each list in the overview, alone when not shared', async () => {
+    const shared = await createList();
+    const own = await createList(bed.bob);
+    await bed.lists.addMember(shared.id, bed.ada, {
+      userId: bed.bob,
+      role: 'viewer',
+    });
+
+    const forBob = await bed.lists.findAll(bed.bob);
+
+    expect(forBob.find(({ id }) => id === own.id)?.members).toEqual([
+      { id: bed.bob, name: 'Bob Test', role: 'owner' },
+    ]);
+    expect(forBob.find(({ id }) => id === shared.id)?.members).toEqual([
+      { id: bed.ada, name: 'Ada Test', role: 'owner' },
+      { id: bed.bob, name: 'Bob Test', role: 'viewer' },
+    ]);
   });
 
   it('hides lists from people they are not shared with', async () => {

@@ -23,6 +23,8 @@ export interface ListSummary {
   role: ShareRole;
   /** People with access, the owner included. */
   memberCount: number;
+  /** Those people, owner first: says who shared a list, and with whom. */
+  members: ListMember[];
   completed: number;
   total: number;
   /** Shown on the signed-in user's home page (their own choice). */
@@ -86,8 +88,6 @@ export interface ListMember {
 
 export interface ListDetail extends ListSummary {
   description: string;
-  /** Owner first. */
-  members: ListMember[];
   sections: ListSection[];
 }
 
