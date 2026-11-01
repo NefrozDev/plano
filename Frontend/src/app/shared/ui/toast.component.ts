@@ -34,7 +34,8 @@ import {
     </div>
   `,
   styles: `
-    :host { position: absolute; right: 0; bottom: calc(1rem + env(safe-area-inset-bottom)); left: 0; display: flex; justify-content: center; pointer-events: none; }
+    /* Above the bottom navigation, which would otherwise hide it. */
+    :host { position: absolute; z-index: 11; right: 0; bottom: calc(1rem + env(safe-area-inset-bottom)); left: 0; display: flex; justify-content: center; pointer-events: none; }
     .toast { display: flex; max-width: 100%; gap: .65rem; align-items: center; padding: .6rem .9rem .6rem .75rem; border: 0; border-radius: .95rem; background: #1f2a44; box-shadow: 0 .75rem 1.75rem rgb(15 23 42 / 28%); color: #fff; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 600; text-align: left; pointer-events: auto; animation: toast-in 200ms ease-out; }
     .toast:hover { background: #26334f; }
     .check { display: grid; width: 1.5rem; height: 1.5rem; flex: none; place-items: center; border-radius: 50%; background: #2fbf7a; }
