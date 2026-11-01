@@ -210,6 +210,7 @@ describe('ListsStore', () => {
       icon: 'cart',
       color: '#2ecb70',
       role: 'owner',
+      removeChecked: false,
       remaining: 2,
       entries: [
         { id: 'milk', name: 'Lait' },
@@ -321,6 +322,20 @@ describe('ListsStore', () => {
       await settle();
 
       expect(store.home()?.[0].entries.map(({ name }) => name)).toEqual(['Œufs']);
+    });
+
+    it('deletes a home item ticked in a list set to remove checked items', async () => {
+      const loadingHome = store.loadHome();
+      http.expectOne('/api/v1/lists/home').flush([homeList({ removeChecked: true })]);
+      await loadingHome;
+
+      const checking = store.checkHomeEntry('list-1', 'milk');
+      http.expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1/entries/milk' }).flush(null);
+      await settle();
+      http.expectOne('/api/v1/lists/home').flush([homeList({ removeChecked: true, entries: [{ id: 'eggs', name: 'Œufs' }] })]);
+
+      expect(await checking).toBe(true);
+      http.expectNone({ method: 'PATCH', url: '/api/v1/lists/list-1/entries/milk' });
     });
 
     it('keeps the home lists when ticking fails', async () => {

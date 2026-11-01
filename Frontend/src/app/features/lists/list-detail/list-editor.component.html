@@ -66,6 +66,15 @@
       </div>
     </fieldset>
 
+    <section class="editor-behaviour" aria-label="Éléments cochés">
+      <app-switch-row
+        label="Supprimer un élément dès qu’il est coché"
+        [checked]="draftRemoveChecked()"
+        (toggled)="draftRemoveChecked.set(!draftRemoveChecked())"
+      />
+      <p>Pour tous les membres. Sinon, il reste dans la liste, barré.</p>
+    </section>
+
     <section class="sharing-editor" aria-labelledby="sharing-title">
       <h3 id="sharing-title">Partagée avec</h3>
       <div class="sharing-row">

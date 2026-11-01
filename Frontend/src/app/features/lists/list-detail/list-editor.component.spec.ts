@@ -26,7 +26,7 @@ describe('ListEditorComponent', () => {
     editor.submit();
 
     expect(saved).toEqual([
-      { name: 'Courses du week-end', icon: 'gift', color: '#e65591', description: 'Pour samedi' },
+      { name: 'Courses du week-end', icon: 'gift', color: '#e65591', description: 'Pour samedi', removeChecked: false },
     ]);
   });
 
@@ -53,9 +53,25 @@ describe('ListEditorComponent', () => {
 
     ((fixture.nativeElement as HTMLElement).querySelector('.sharing-row button') as HTMLButtonElement).click();
 
-    expect(shared).toEqual([{ name: 'Courses du samedi', icon: 'cart', color: '#2ecb70', description: 'Pour samedi' }]);
+    expect(shared).toEqual([
+      { name: 'Courses du samedi', icon: 'cart', color: '#2ecb70', description: 'Pour samedi', removeChecked: false },
+    ]);
     // Inviting is not saving: the parent decides.
     expect(saved).toEqual([]);
+  });
+
+  it('switches whether checking an item deletes it, starting from the list', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const toggle = element.querySelector('.editor-behaviour [role="switch"]') as HTMLButtonElement;
+    expect(toggle.textContent).toContain('Supprimer un élément dès qu’il est coché');
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+    editor.submit();
+
+    expect(saved[0].removeChecked).toBe(true);
   });
 
   it('keeps the current name when the draft is blank', () => {

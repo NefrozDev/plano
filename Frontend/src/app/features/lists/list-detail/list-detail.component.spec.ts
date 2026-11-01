@@ -87,6 +87,46 @@ describe('ListDetailComponent', () => {
     expect(summary.textContent).toContain('2 / 2');
   });
 
+  it('deletes a checked item in a list set to remove them, keeping its section open', async () => {
+    await create({ detail: listDetail({ removeChecked: true }) });
+    const section = component.list()!.sections[0];
+    const open = section.entries.filter(({ done }) => !done);
+
+    for (const entry of open) {
+      const toggling = component.toggleEntry(section.id, entry);
+      http.expectOne({ method: 'DELETE', url: `/api/v1/lists/list-1/entries/${entry.id}` }).flush(null);
+      await toggling;
+    }
+    await render();
+
+    http.expectNone({ method: 'PATCH' });
+    expect(component.list()!.sections[0].entries.every(({ done }) => done)).toBe(true);
+    // Unchecking a done item never deletes it.
+    const done = component.list()!.sections[0].entries[0];
+    const unchecking = component.toggleEntry(section.id, done);
+    const patch = http.expectOne({ method: 'PATCH', url: `/api/v1/lists/list-1/entries/${done.id}` });
+    expect(patch.request.body).toEqual({ done: false });
+    patch.flush({ ...done, done: false });
+    await unchecking;
+  });
+
+  it('keeps a section emptied by removed items open', async () => {
+    await create({ detail: listDetail({ removeChecked: true }) });
+    const section = component.list()!.sections[1];
+
+    for (const entry of section.entries) {
+      const toggling = entry.done
+        ? component.store.removeEntry(entry.id)
+        : component.toggleEntry(section.id, entry);
+      http.expectOne({ method: 'DELETE', url: `/api/v1/lists/list-1/entries/${entry.id}` }).flush(null);
+      await toggling;
+    }
+    await render();
+
+    expect(component.list()!.sections[1].entries).toEqual([]);
+    expect(component.collapsedSections()).not.toContain(section.id);
+  });
+
   it('collapses only the section whose chevron is clicked, and reopens it', async () => {
     await create();
 
@@ -549,7 +589,7 @@ describe('ListDetailComponent', () => {
     it('stays in the editor when saving its drafts before inviting fails', async () => {
       await create({ query: { edit: '1' } });
 
-      const inviting = component.openSharingFromEditor({ name: 'X', icon: 'cart', color: '#2ecb70', description: '' });
+      const inviting = component.openSharingFromEditor({ name: 'X', icon: 'cart', color: '#2ecb70', description: '', removeChecked: false });
       http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1' }).flush(null, { status: 500, statusText: 'Error' });
       await inviting;
       await render();
@@ -565,9 +605,10 @@ describe('ListDetailComponent', () => {
       component.openListEditor();
       await render();
 
-      const saving = component.saveList({ name: 'Courses du samedi', icon: 'gift', color: '#e65591', description: 'Samedi' });
+      const edits = { name: 'Courses du samedi', icon: 'gift' as const, color: '#e65591', description: 'Samedi', removeChecked: true };
+      const saving = component.saveList(edits);
       const update = http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1' });
-      expect(update.request.body).toEqual({ name: 'Courses du samedi', icon: 'gift', color: '#e65591', description: 'Samedi' });
+      expect(update.request.body).toEqual(edits);
       update.flush(listDetail({ name: 'Courses du samedi' }));
       await saving;
       expect((await render()).querySelector('.list-title')?.textContent).toContain(

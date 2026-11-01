@@ -12,6 +12,7 @@ import {
 import type { ListDetail, ListIcon } from '@plano/common';
 import type { Person } from '../../../core/people/people';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
+import { SwitchRowComponent } from '../../../shared/ui/switch-row.component';
 import { LIST_COLOR_CHOICES, LIST_ICON_CHOICES } from './list-options';
 
 export interface ListEdits {
@@ -19,17 +20,20 @@ export interface ListEdits {
   icon: ListIcon;
   color: string;
   description: string;
+  removeChecked: boolean;
 }
 
 /** Full-screen list editor working on drafts: nothing changes until save. */
 @Component({
   selector: 'app-list-editor',
-  imports: [AvatarStackComponent],
+  imports: [AvatarStackComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-editor.component.html',
   styles: `
     :host { display: contents; }
     .sharing-row app-avatar-stack { --avatar-size: 1.85rem; }
+    .editor-behaviour { margin-bottom: 1.1rem; }
+    .editor-behaviour p { margin: -.15rem 0 0; color: #7b8292; font-size: .72rem; line-height: 1.35; }
   `,
 })
 export class ListEditorComponent implements OnInit {
@@ -49,6 +53,7 @@ export class ListEditorComponent implements OnInit {
   readonly draftIcon = signal<ListIcon>('cart');
   readonly draftColor = signal(LIST_COLOR_CHOICES[0]);
   readonly draftDescription = signal('');
+  readonly draftRemoveChecked = signal(false);
   private readonly nameInput = viewChild.required<ElementRef<HTMLInputElement>>('nameInput');
 
   constructor() {
@@ -67,6 +72,7 @@ export class ListEditorComponent implements OnInit {
     this.draftIcon.set(list.icon);
     this.draftColor.set(list.color);
     this.draftDescription.set(list.description);
+    this.draftRemoveChecked.set(list.removeChecked);
   }
 
   submit(): void {
@@ -84,6 +90,7 @@ export class ListEditorComponent implements OnInit {
       icon: this.draftIcon(),
       color: this.draftColor(),
       description: this.draftDescription(),
+      removeChecked: this.draftRemoveChecked(),
     };
   }
 }

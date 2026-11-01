@@ -155,7 +155,12 @@ export class ListDetailComponent {
   async toggleEntry(sectionId: string, entry: ListEntry): Promise<void> {
     if (!(await this.store.toggleEntry(entry))) return;
     const section = this.list()?.sections.find(({ id }) => id === sectionId);
-    if (section?.entries.every(({ done }) => done) && !this.collapsedSections().includes(sectionId)) {
+    // A section emptied by removing checked items stays open, ready for new ones.
+    if (
+      section?.entries.length &&
+      section.entries.every(({ done }) => done) &&
+      !this.collapsedSections().includes(sectionId)
+    ) {
       this.collapsedSections.update((sections) => [...sections, sectionId]);
     }
   }

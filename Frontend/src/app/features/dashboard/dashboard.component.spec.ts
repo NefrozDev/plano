@@ -31,6 +31,7 @@ describe('DashboardComponent', () => {
     icon: 'cart',
     color: '#2ecb70',
     role: 'owner',
+    removeChecked: false,
     remaining: 7,
     entries: [
       { id: 'milk', name: 'Lait' },

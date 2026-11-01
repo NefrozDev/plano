@@ -169,7 +169,9 @@ export class ListsStore {
     return updated;
   }
 
+  /** In a list set to remove checked items, checking one deletes it; unchecking never does. */
   toggleEntry(entry: ListEntry): Promise<boolean> {
+    if (!entry.done && this.detailState()?.removeChecked) return this.removeEntry(entry.id);
     return this.updateEntry(entry.id, { done: !entry.done });
   }
 
@@ -258,7 +260,11 @@ export class ListsStore {
 
   /** Ticks an item from the home page, then refreshes the pinned lists. */
   async checkHomeEntry(listId: string, entryId: string): Promise<boolean> {
-    const checked = await this.run(this.api.updateEntry(listId, entryId, { done: true }), () => undefined);
+    const removeChecked = this.homeState()?.find(({ id }) => id === listId)?.removeChecked ?? false;
+    const checked = await this.run<unknown>(
+      removeChecked ? this.api.removeEntry(listId, entryId) : this.api.updateEntry(listId, entryId, { done: true }),
+      () => undefined,
+    );
     if (checked) {
       this.refreshHome();
       this.refreshReminders();
