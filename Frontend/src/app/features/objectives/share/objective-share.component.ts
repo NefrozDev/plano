@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import type { Contact, ObjectiveMemberRole, ObjectiveRole } from '@plano/common';
 import { firstValueFrom } from 'rxjs';
@@ -28,7 +28,7 @@ export const OBJECTIVE_ROLE_LABELS: Readonly<Record<ObjectiveRole, string>> = {
   templateUrl: './objective-share.component.html',
   styleUrl: './objective-share.component.scss',
 })
-export class ObjectiveShareComponent {
+export class ObjectiveShareComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly friends = inject(FriendsService);
   private readonly confirm = inject(ConfirmService);
@@ -65,7 +65,7 @@ export class ObjectiveShareComponent {
   );
   readonly contactName = contactName;
 
-  constructor() {
+  ngOnInit(): void {
     if (this.store.detail()?.id !== this.id) void this.open();
   }
 

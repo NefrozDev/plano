@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -54,7 +54,7 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
   templateUrl: './objective-form.component.html',
   styleUrl: './objective-form.component.scss',
 })
-export class ObjectiveFormComponent {
+export class ObjectiveFormComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -118,7 +118,7 @@ export class ObjectiveFormComponent {
     reminderWeekday: [0],
   });
 
-  constructor() {
+  ngOnInit(): void {
     if (this.objectiveId) void this.loadForEditing(this.objectiveId);
     else if (this.parentId) void this.inheritFromParent(this.parentId);
     else void this.store.loadTemplates();

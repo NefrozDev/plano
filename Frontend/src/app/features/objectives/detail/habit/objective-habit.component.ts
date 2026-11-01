@@ -88,7 +88,7 @@ export class ObjectiveHabitComponent {
 
   /** Completed habits open on their last tracked month rather than an empty current one. */
   private initialMonth(): { year: number; month: number } {
-    const last = [...this.checkIns()].sort().at(-1);
+    const last = [...this.checkIns()].sort((first, second) => first.localeCompare(second)).at(-1);
     const reference = parseIsoDate(last && last < this.today.slice(0, 7) ? last : this.today);
     return { year: reference.getFullYear(), month: reference.getMonth() };
   }
