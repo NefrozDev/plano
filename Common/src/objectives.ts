@@ -110,6 +110,19 @@ export interface ObjectiveDetail extends ObjectiveSummary {
   dueReminder: DueReminder;
 }
 
+/** Something dated on an objective the user can see, for the agenda. */
+export interface ObjectiveAgendaItem {
+  /** Planned session, or the day an open objective is due. */
+  kind: 'session' | 'deadline';
+  /** Stays the same across reloads. */
+  key: string;
+  objectiveId: string;
+  objectiveTitle: string;
+  category: ObjectiveCategory;
+  date: IsoDate;
+  label: string;
+}
+
 export interface ObjectiveSettingsFields {
   title?: string;
   category?: ObjectiveCategory;

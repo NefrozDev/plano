@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import type {
   ImportObjectivesResponse,
+  ObjectiveAgendaItem,
   ObjectiveDetail,
   ObjectiveSummary,
 } from '@plano/common';
@@ -31,6 +32,7 @@ import {
   UpdateObjectiveDto,
   UpdateObjectivePreferencesDto,
 } from './dto/objective.dto';
+import { ObjectiveAgendaService } from './objective-agenda.service';
 import { ObjectiveDateParamPipe } from './objective-date-param.pipe';
 import { ObjectiveImportService } from './objective-import.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
@@ -47,11 +49,20 @@ export class ObjectivesController {
     private readonly tracking: ObjectiveTrackingService,
     private readonly preferences: ObjectivePreferencesService,
     private readonly importer: ObjectiveImportService,
+    private readonly agenda: ObjectiveAgendaService,
   ) {}
 
   @Get()
   findAll(@CurrentUser('id') userId: string): Promise<ObjectiveSummary[]> {
     return this.objectives.findAll(userId);
+  }
+
+  // Declared before ':objectiveId' so "agenda" is not taken for an objective id.
+  @Get('agenda')
+  findAgenda(
+    @CurrentUser('id') userId: string,
+  ): Promise<ObjectiveAgendaItem[]> {
+    return this.agenda.find(userId);
   }
 
   /** The user's own order; it changes nothing for anyone else. */

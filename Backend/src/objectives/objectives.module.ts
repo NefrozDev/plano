@@ -7,6 +7,7 @@ import { ObjectivePreference } from './entities/objective-preference.entity';
 import { ObjectiveSession } from './entities/objective-session.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveAccessService } from './objective-access.service';
+import { ObjectiveAgendaService } from './objective-agenda.service';
 import { ObjectiveImportService } from './objective-import.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { ObjectiveTrackingService } from './objective-tracking.service';
@@ -36,6 +37,7 @@ import { ObjectivesService } from './objectives.service';
     ObjectivesService,
     ObjectiveTrackingService,
     ObjectiveImportService,
+    ObjectiveAgendaService,
   ],
 })
 export class ObjectivesModule {}
