@@ -11,9 +11,12 @@ import {
 import { ObjectiveAccessService } from '../objective-access.service';
 import { ObjectiveActivityService } from '../objective-activity.service';
 import { ObjectiveChangesService } from '../objective-changes.service';
+import { ObjectiveAgendaService } from '../objective-agenda.service';
 import { ObjectiveImportService } from '../objective-import.service';
 import { ObjectiveMembersService } from '../objective-members.service';
 import { ObjectivePreferencesService } from '../objective-preferences.service';
+import { ObjectiveRecurrenceService } from '../objective-recurrence.service';
+import { ObjectiveTemplatesService } from '../objective-templates.service';
 import { ObjectiveTrackingService } from '../objective-tracking.service';
 import { ObjectiveViewService } from '../objective-view.service';
 import { ObjectiveWriterService } from '../objective-writer.service';
@@ -27,6 +30,9 @@ export interface ObjectivesTestBed extends ListsTestBed {
   access: ObjectiveAccessService;
   members: ObjectiveMembersService;
   activity: ObjectiveActivityService;
+  recurrence: ObjectiveRecurrenceService;
+  templates: ObjectiveTemplatesService;
+  agenda: ObjectiveAgendaService;
 }
 
 /** The lists test bed's people and database, with the objectives services on top. */
@@ -50,11 +56,18 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     changes,
   );
   const view = new ObjectiveViewService(bed.dataSource);
+  const recurrence = new ObjectiveRecurrenceService(
+    bed.dataSource,
+    writer,
+    access,
+    changes,
+  );
   const objectivePreferences = new ObjectivePreferencesService(
     bed.dataSource,
     writeLock,
     access,
     view,
+    recurrence,
   );
   const members = new ObjectiveMembersService(
     access,
@@ -63,19 +76,30 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     contacts,
     changes,
   );
+  const objectives = new ObjectivesService(
+    access,
+    writer,
+    view,
+    objectivePreferences,
+    members,
+    changes,
+    recurrence,
+  );
   return {
     ...bed,
     access,
     members,
-    objectivePreferences,
-    objectives: new ObjectivesService(
+    recurrence,
+    agenda: new ObjectiveAgendaService(bed.dataSource, access, recurrence),
+    templates: new ObjectiveTemplatesService(
+      bed.dataSource,
+      writeLock,
       access,
       writer,
-      view,
-      objectivePreferences,
-      members,
-      changes,
+      objectives,
     ),
+    objectivePreferences,
+    objectives,
     tracking: new ObjectiveTrackingService(access, writer, view),
     importer: new ObjectiveImportService(writer),
     activity: new ObjectiveActivityService(bed.dataSource, access, writer),

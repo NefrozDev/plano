@@ -9,16 +9,19 @@ import type {
   ObjectiveCategory,
   ObjectiveMemberRole,
   ObjectiveMetricSettings,
+  ObjectiveRecurrence,
   ObjectiveReminder,
   ObjectiveSessionStatus,
   ReorderChildObjectivesRequest,
   ReorderObjectivesRequest,
+  SaveObjectiveTemplateRequest,
   SetObjectiveCompletedRequest,
   SetObjectiveProgressRequest,
   TimelapseMode,
   UpdateObjectiveMemberRequest,
   UpdateObjectivePreferencesRequest,
   UpdateObjectiveRequest,
+  UseObjectiveTemplateRequest,
 } from '@plano/common';
 import { Transform, Type } from 'class-transformer';
 import {
@@ -141,6 +144,22 @@ class ObjectiveSettingsDto {
   @Min(1)
   @Max(100)
   weight?: number;
+
+  @IsOptionalButNotNull()
+  @IsIn(['none', 'weekly', 'monthly', 'yearly'])
+  recurrence?: ObjectiveRecurrence;
+}
+
+export class SaveObjectiveTemplateDto implements SaveObjectiveTemplateRequest {
+  @IsString()
+  @Transform(trimString)
+  @Length(1, 80)
+  name!: string;
+}
+
+export class UseObjectiveTemplateDto implements UseObjectiveTemplateRequest {
+  @IsIsoDate()
+  startDate!: string;
 }
 
 export class CreateObjectiveDto

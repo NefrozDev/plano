@@ -4,6 +4,7 @@ import type {
   ObjectiveCommentEntry,
   ObjectiveDetail,
   ObjectiveSummary,
+  ObjectiveTemplateSummary,
 } from '@plano/common';
 import request from 'supertest';
 import {
@@ -509,6 +510,77 @@ describe('Objectives API (e2e)', () => {
       .delete(`${url}/comments/${comment.id}`)
       .set('Cookie', ada.cookie)
       .expect(204);
+  });
+
+  it('repeats an objective, for top-level ones only', async () => {
+    const top = await create({ ...newObjective, recurrence: 'monthly' });
+    expect(top.recurrence).toBe('monthly');
+
+    await http()
+      .post('/api/v1/objectives')
+      .set('Cookie', ada.cookie)
+      .send({ ...newObjective, recurrence: 'daily' })
+      .expect(400);
+    await http()
+      .post('/api/v1/objectives')
+      .set('Cookie', ada.cookie)
+      .send({ ...newObjective, parentId: top.id, recurrence: 'weekly' })
+      .expect(400);
+  });
+
+  it('saves a template, keeps it private, and uses it', async () => {
+    const objective = await create();
+    await http()
+      .post(`/api/v1/objectives/${objective.id}/template`)
+      .set('Cookie', ada.cookie)
+      .send({ name: '   ' })
+      .expect(400);
+    const saved = await http()
+      .post(`/api/v1/objectives/${objective.id}/template`)
+      .set('Cookie', ada.cookie)
+      .send({ name: '  Modèle  ' })
+      .expect(201);
+    const template = saved.body as ObjectiveTemplateSummary;
+    expect(template).toMatchObject({ name: 'Modèle', nodeCount: 1 });
+
+    const list = await http()
+      .get('/api/v1/objectives/templates')
+      .set('Cookie', ada.cookie)
+      .expect(200);
+    expect(list.body).toEqual([template]);
+    const others = await http()
+      .get('/api/v1/objectives/templates')
+      .set('Cookie', bob.cookie)
+      .expect(200);
+    expect(others.body).toEqual([]);
+
+    const use = `/api/v1/objectives/templates/${template.id}/use`;
+    await http()
+      .post(use)
+      .set('Cookie', bob.cookie)
+      .send({ startDate: '2026-11-01' })
+      .expect(404);
+    await http()
+      .post(use)
+      .set('Cookie', ada.cookie)
+      .send({ startDate: 'bientôt' })
+      .expect(400);
+    const made = await http()
+      .post(use)
+      .set('Cookie', ada.cookie)
+      .send({ startDate: '2026-11-01' })
+      .expect(201);
+    expect((made.body as ObjectiveDetail).id).not.toBe(objective.id);
+
+    await http()
+      .delete(`/api/v1/objectives/templates/${template.id}`)
+      .set('Cookie', bob.cookie)
+      .expect(404);
+    await http()
+      .delete(`/api/v1/objectives/templates/${template.id}`)
+      .set('Cookie', ada.cookie)
+      .expect(204);
+    await http().get('/api/v1/objectives/templates').expect(401);
   });
 
   it('rejects an id that is not one', async () => {

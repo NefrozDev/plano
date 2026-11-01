@@ -7,7 +7,8 @@ import { ObjectiveActivity } from './entities/objective-activity.entity';
 export async function recordActivity(
   manager: EntityManager,
   objectiveId: string,
-  actorId: string,
+  /** Null for what happens by itself. */
+  actorId: string | null,
   kind: ObjectiveActivityKind,
   detail = '',
 ): Promise<void> {

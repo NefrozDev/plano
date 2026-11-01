@@ -8,6 +8,7 @@ import {
   ObjectiveAccess,
   ObjectiveAccessService,
 } from './objective-access.service';
+import { ObjectiveRecurrenceService } from './objective-recurrence.service';
 import { ObjectiveViewService } from './objective-view.service';
 
 /** Each person's own arrangement of the objectives they can open. */
@@ -18,6 +19,7 @@ export class ObjectivePreferencesService {
     private readonly writeLock: DatabaseWriteLockService,
     private readonly access: ObjectiveAccessService,
     private readonly view: ObjectiveViewService,
+    private readonly recurrence: ObjectiveRecurrenceService,
   ) {}
 
   /**
@@ -57,9 +59,11 @@ export class ObjectivePreferencesService {
       where: { userId, onHome: true },
       relations: { objective: true },
     });
-    const trees = await this.access.loadTrees([
+    const rootIds = [
       ...new Set(pinned.map(({ objective }) => objective.rootId)),
-    ]);
+    ];
+    await this.recurrence.restartDue(rootIds);
+    const trees = await this.access.loadTrees(rootIds);
     const accesses = pinned.flatMap(({ objective }): ObjectiveAccess[] => {
       const tree = trees.get(objective.rootId);
       const node = tree?.node(objective.id);

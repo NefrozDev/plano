@@ -12,6 +12,7 @@ export interface ObjectiveChange {
   /** The tree as it was before the change. */
   before: ObjectiveTree;
   objectiveId: string;
+  /** Empty for what happens by itself. */
   actorId: string;
   /** What the others should hear about, beyond the screens reloading. */
   news?: ObjectiveNewsKind;

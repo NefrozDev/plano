@@ -12,6 +12,7 @@ import { DataSource, In } from 'typeorm';
 import { displayName } from '../lists/list.mapper';
 import { User } from '../users/user.entity';
 import { ObjectiveCheckInRow } from './entities/objective-check-in.entity';
+import { ObjectivePeriod } from './entities/objective-period.entity';
 import { ObjectivePreference } from './entities/objective-preference.entity';
 import { ObjectiveSession } from './entities/objective-session.entity';
 import type { Objective } from './entities/objective.entity';
@@ -81,7 +82,7 @@ export class ObjectiveViewService {
   ): Promise<ObjectiveDetail> {
     const manager = this.dataSource.manager;
     const children = tree.childrenOf(node.id);
-    const [sessions, checkIns, preferences] = await Promise.all([
+    const [sessions, checkIns, preferences, periods] = await Promise.all([
       manager.find(ObjectiveSession, {
         where: { objectiveId: node.id },
         relations: { author: true },
@@ -92,6 +93,10 @@ export class ObjectiveViewService {
         order: { date: 'ASC' },
       }),
       this.preferences(userId, [node.id, ...children.map(({ id }) => id)]),
+      manager.find(ObjectivePeriod, {
+        where: { objectiveId: node.id },
+        order: { startDate: 'DESC' },
+      }),
     ]);
     const preference = preferences.get(node.id);
     const people = await this.people([
@@ -158,6 +163,12 @@ export class ObjectiveViewService {
         checkIns,
         people,
       ),
+      periods: periods.map(({ startDate, endDate, percent, completed }) => ({
+        startDate,
+        endDate,
+        percent,
+        completed,
+      })),
       reminder: {
         frequency: preference?.reminderFrequency ?? 'none',
         time: preference?.reminderTime ?? '09:00',
@@ -197,6 +208,7 @@ export class ObjectiveViewService {
       dueDate: node.dueDate,
       completedAt: node.completedAt?.toISOString() ?? null,
       weight: node.weight,
+      recurrence: node.recurrence,
       role: tree.roleOf(node.id, userId) ?? 'viewer',
       owner: this.person(people, node.ownerId),
       sharing: this.sharing(memberships),
@@ -281,6 +293,7 @@ export class ObjectiveViewService {
     checkIns: readonly ObjectiveCheckInRow[],
     people: People,
   ): ObjectiveContribution[] {
+    const periodStart = tree.root.periodStart ?? '';
     const values = new Map<string, number>();
     const add = (userId: string, value: number, best = false) => {
       const known = values.get(userId) ?? 0;
@@ -289,7 +302,11 @@ export class ObjectiveViewService {
 
     if (node.completion === 'metric') {
       for (const session of sessions) {
-        if (session.status === 'done' && session.authorId) {
+        if (
+          session.status === 'done' &&
+          session.authorId &&
+          session.date >= periodStart
+        ) {
           add(
             session.authorId,
             session.value,
@@ -306,7 +323,9 @@ export class ObjectiveViewService {
       for (const person of tree.participantsOf(node)) {
         if (known.has(person)) add(person, 0);
       }
-      for (const checkIn of checkIns) add(checkIn.userId, 1);
+      for (const checkIn of checkIns) {
+        if (checkIn.date >= periodStart) add(checkIn.userId, 1);
+      }
     } else if (node.completion === 'children') {
       for (const child of tree.childrenOf(node.id)) {
         if (child.status === 'completed' && child.completedByUserId) {

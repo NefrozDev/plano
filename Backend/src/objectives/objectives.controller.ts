@@ -19,6 +19,7 @@ import type {
   ObjectiveCommentEntry,
   ObjectiveDetail,
   ObjectiveSummary,
+  ObjectiveTemplateSummary,
 } from '@plano/common';
 import { AllowedOriginGuard } from '../auth/allowed-origin.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -31,11 +32,13 @@ import {
   CreateObjectiveDto,
   ReorderChildObjectivesDto,
   ReorderObjectivesDto,
+  SaveObjectiveTemplateDto,
   SetObjectiveCompletedDto,
   SetObjectiveProgressDto,
   UpdateObjectiveDto,
   UpdateObjectiveMemberDto,
   UpdateObjectivePreferencesDto,
+  UseObjectiveTemplateDto,
 } from './dto/objective.dto';
 import { ObjectiveActivityService } from './objective-activity.service';
 import { ObjectiveAgendaService } from './objective-agenda.service';
@@ -43,6 +46,7 @@ import { ObjectiveDateParamPipe } from './objective-date-param.pipe';
 import { ObjectiveImportService } from './objective-import.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
+import { ObjectiveTemplatesService } from './objective-templates.service';
 import { ObjectiveTrackingService } from './objective-tracking.service';
 import { ObjectivesService } from './objectives.service';
 
@@ -59,6 +63,7 @@ export class ObjectivesController {
     private readonly agenda: ObjectiveAgendaService,
     private readonly members: ObjectiveMembersService,
     private readonly activity: ObjectiveActivityService,
+    private readonly templates: ObjectiveTemplatesService,
   ) {}
 
   @Get()
@@ -78,6 +83,33 @@ export class ObjectivesController {
   @Get('home')
   findHome(@CurrentUser('id') userId: string): Promise<ObjectiveSummary[]> {
     return this.preferences.home(userId);
+  }
+
+  /** The structures the user saved to reuse. */
+  @Get('templates')
+  findTemplates(
+    @CurrentUser('id') userId: string,
+  ): Promise<ObjectiveTemplateSummary[]> {
+    return this.templates.findAll(userId);
+  }
+
+  /** A new objective with this structure. */
+  @Post('templates/:templateId/use')
+  useTemplate(
+    @CurrentUser('id') userId: string,
+    @Param('templateId', ParseUUIDPipe) templateId: string,
+    @Body() details: UseObjectiveTemplateDto,
+  ): Promise<ObjectiveDetail> {
+    return this.templates.use(templateId, userId, details);
+  }
+
+  @Delete('templates/:templateId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeTemplate(
+    @CurrentUser('id') userId: string,
+    @Param('templateId', ParseUUIDPipe) templateId: string,
+  ): Promise<void> {
+    return this.templates.remove(templateId, userId);
   }
 
   /** The user's own order; it changes nothing for anyone else. */
@@ -151,6 +183,16 @@ export class ObjectivesController {
     @Body() changes: UpdateObjectivePreferencesDto,
   ): Promise<ObjectiveDetail> {
     return this.preferences.update(objectiveId, userId, changes);
+  }
+
+  /** Saves this objective's structure, for this user only. */
+  @Post(':objectiveId/template')
+  saveTemplate(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+    @Body() details: SaveObjectiveTemplateDto,
+  ): Promise<ObjectiveTemplateSummary> {
+    return this.templates.save(objectiveId, userId, details);
   }
 
   @Get(':objectiveId/activity')

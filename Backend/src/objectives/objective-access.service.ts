@@ -114,11 +114,11 @@ export class ObjectiveAccessService {
     const objectiveIds = nodes.map(({ id }) => id);
     const doneSessions = await manager.find(ObjectiveSession, {
       where: { objectiveId: In(objectiveIds), status: 'done' },
-      select: { objectiveId: true, value: true },
+      select: { objectiveId: true, value: true, date: true },
     });
     const checkIns = await manager.find(ObjectiveCheckInRow, {
       where: { objectiveId: In(objectiveIds) },
-      select: { objectiveId: true, userId: true },
+      select: { objectiveId: true, userId: true, date: true },
     });
     const members = await manager.find(ObjectiveMember, {
       where: { objectiveId: In(objectiveIds) },
@@ -136,6 +136,8 @@ export class ObjectiveAccessService {
         ids.has(objectiveId),
       );
       const ownerId = treeNodes[0].ownerId;
+      const periodStart =
+        treeNodes.find(({ parentId }) => parentId === null)?.periodStart ?? '';
       // Looked up once per owner, and only when something is shared.
       if (treeMembers.length && !contactsOf.has(ownerId)) {
         contactsOf.set(ownerId, await this.contacts.contactIds(ownerId));
@@ -143,10 +145,14 @@ export class ObjectiveAccessService {
       trees.set(
         rootId,
         new ObjectiveTree(treeNodes, {
-          doneSessions: doneSessions.filter(({ objectiveId }) =>
-            ids.has(objectiveId),
+          doneSessions: doneSessions.filter(
+            ({ objectiveId, date }) =>
+              ids.has(objectiveId) && date >= periodStart,
           ),
-          checkIns: checkIns.filter(({ objectiveId }) => ids.has(objectiveId)),
+          checkIns: checkIns.filter(
+            ({ objectiveId, date }) =>
+              ids.has(objectiveId) && date >= periodStart,
+          ),
           // Losing both links (friend, group mate) revokes access at once.
           memberships: treeMembers.filter(({ userId }) =>
             contactsOf.get(ownerId)?.has(userId),

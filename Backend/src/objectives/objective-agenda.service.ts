@@ -4,6 +4,7 @@ import { DataSource, In } from 'typeorm';
 import { ObjectiveSession } from './entities/objective-session.entity';
 import type { Objective } from './entities/objective.entity';
 import { ObjectiveAccessService } from './objective-access.service';
+import { ObjectiveRecurrenceService } from './objective-recurrence.service';
 import type { ObjectiveTree } from './objective-tree';
 
 /** What is dated on an objective: planned sessions, and the deadlines still open. */
@@ -12,9 +13,13 @@ export class ObjectiveAgendaService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly access: ObjectiveAccessService,
+    private readonly recurrence: ObjectiveRecurrenceService,
   ) {}
 
   async find(userId: string): Promise<ObjectiveAgendaItem[]> {
+    await this.recurrence.restartDue(
+      (await this.access.findTops(userId)).map(({ tree }) => tree.root.id),
+    );
     const nodes = (await this.access.findTops(userId)).flatMap(
       ({ tree, node }) => this.unarchivedFrom(tree, node),
     );

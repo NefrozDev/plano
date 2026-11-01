@@ -1,6 +1,7 @@
 import type {
   CompletionMode,
   MetricAggregation,
+  ObjectiveRecurrence,
   ObjectiveCategory,
   ObjectiveStatus,
   TimelapseMode,
@@ -108,6 +109,14 @@ export class Objective {
 
   @Column({ type: 'timestamptz', nullable: true })
   completedAt!: Date | null;
+
+  /** Only on a top-level objective. */
+  @Column({ type: 'varchar', length: 8, default: 'none' })
+  recurrence!: ObjectiveRecurrence;
+
+  /** Start of the current period: only what falls in it counts. Null without recurrence. */
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  periodStart!: string | null;
 
   /** Null while open, or once that user's account is deleted. */
   @Column({ type: 'varchar', length: 36, nullable: true })

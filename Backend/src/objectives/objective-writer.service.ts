@@ -19,7 +19,7 @@ import type { ObjectiveTree } from './objective-tree';
  */
 export function settleStatuses(
   tree: ObjectiveTree,
-  actorId: string,
+  actorId: string | null,
   now = new Date(),
 ): Objective[] {
   const changed: Objective[] = [];
@@ -104,7 +104,7 @@ export class ObjectiveWriterService {
    */
   async settle(
     rootId: string,
-    actorId: string,
+    actorId: string | null,
     manager: EntityManager,
   ): Promise<Objective[]> {
     const tree = await this.access.loadTree(rootId, manager);

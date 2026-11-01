@@ -23,6 +23,8 @@ export type TimelapseMode = 'off' | 'elapsed' | 'remaining';
 /** `max` keeps the best session (longest run), `sum` accumulates (money saved). */
 export type MetricAggregation = 'sum' | 'max';
 export type ObjectiveRole = 'owner' | 'contributor' | 'viewer';
+/** A top-level objective can restart each period, the whole tree with it. */
+export type ObjectiveRecurrence = 'none' | 'weekly' | 'monthly' | 'yearly';
 /** `viewer` follows an objective (shared); `contributor` also moves it forward (common). */
 export type ObjectiveMemberRole = Exclude<ObjectiveRole, 'owner'>;
 /** What the people on an objective can do with it, as far as the user can see. */
@@ -47,7 +49,8 @@ export type ObjectiveActivityKind =
   | 'member_removed'
   | 'member_left'
   | 'assigned'
-  | 'unassigned';
+  | 'unassigned'
+  | 'restarted';
 
 export interface ObjectiveMetricSettings {
   unit: string;
@@ -94,6 +97,7 @@ export interface ObjectiveSummary {
   people: ObjectivePerson[];
   assignee: ObjectivePerson | null;
   completedBy: ObjectivePerson | null;
+  recurrence: ObjectiveRecurrence;
   /** Direct sub-objectives, archived ones left out. */
   childCount: number;
   completedChildCount: number;
@@ -123,6 +127,14 @@ export interface ObjectiveCrumb {
   title: string;
 }
 
+export interface ObjectivePeriodEntry {
+  startDate: IsoDate;
+  endDate: IsoDate;
+  /** Where the bar was; null without a completion bar. */
+  percent: number | null;
+  completed: boolean;
+}
+
 export interface ObjectiveMemberView extends ObjectivePerson {
   role: ObjectiveRole;
   /** Where this access comes from, when invited higher up. */
@@ -150,6 +162,8 @@ export interface ObjectiveDetail extends ObjectiveSummary {
   checkIns: ObjectiveCheckIn[];
   members: ObjectiveMemberView[];
   contributions: ObjectiveContribution[];
+  /** How the past periods of a recurring objective ended, latest first. */
+  periods: ObjectivePeriodEntry[];
   /** The signed-in user's own reminders. */
   reminder: ObjectiveReminder;
   dueReminder: DueReminder;
@@ -207,6 +221,8 @@ export interface ObjectiveSettingsFields {
   startDate?: IsoDate;
   dueDate?: IsoDate | null;
   weight?: number;
+  /** Only on a top-level objective. */
+  recurrence?: ObjectiveRecurrence;
 }
 
 export interface CreateObjectiveRequest extends ObjectiveSettingsFields {
@@ -307,4 +323,36 @@ export interface ImportObjectivesRequest {
 export interface ImportObjectivesResponse {
   /** Objectives created; those imported before are not counted. */
   imported: number;
+}
+
+/** The settings of an objective and everything below it, without progress or people. */
+export interface ObjectiveTemplateNode {
+  title: string;
+  category: ObjectiveCategory;
+  description: string;
+  plan: string;
+  completion: CompletionMode;
+  metric: ObjectiveMetricSettings | null;
+  habitTargetDays: number | null;
+  timelapse: TimelapseMode;
+  /** Days from start to deadline; null without a deadline. */
+  durationDays: number | null;
+  weight: number;
+  recurrence: ObjectiveRecurrence;
+  children: ObjectiveTemplateNode[];
+}
+
+export interface ObjectiveTemplateSummary {
+  id: string;
+  name: string;
+  /** The objective and its sub-objectives. */
+  nodeCount: number;
+}
+
+export interface SaveObjectiveTemplateRequest {
+  name: string;
+}
+
+export interface UseObjectiveTemplateRequest {
+  startDate: IsoDate;
 }

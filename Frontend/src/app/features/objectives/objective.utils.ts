@@ -154,6 +154,7 @@ const ACTIVITY_LABELS: Readonly<Record<ObjectiveActivityKind, string>> = {
   member_left: 'a quitté l’objectif',
   assigned: 'a assigné à',
   unassigned: 'a retiré l’assignation',
+  restarted: 'a relancé une nouvelle période',
 };
 
 /** What a line of history says after the person's name. */

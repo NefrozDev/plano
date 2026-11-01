@@ -10,6 +10,7 @@ import { AddListRemoveChecked1787580000000 } from './1787580000000-add-list-remo
 import { CreateObjectives1787660000000 } from './1787660000000-create-objectives';
 import { AddObjectiveSharing1787740000000 } from './1787740000000-add-objective-sharing';
 import { AddObjectiveActivity1787820000000 } from './1787820000000-add-objective-activity';
+import { AddObjectiveRecurrenceAndTemplates1787900000000 } from './1787900000000-add-objective-recurrence-and-templates';
 
 /** Every migration, oldest first; shared by the app and the in-memory test database. */
 export const MIGRATIONS = [
@@ -25,4 +26,5 @@ export const MIGRATIONS = [
   CreateObjectives1787660000000,
   AddObjectiveSharing1787740000000,
   AddObjectiveActivity1787820000000,
+  AddObjectiveRecurrenceAndTemplates1787900000000,
 ];

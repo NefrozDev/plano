@@ -21,6 +21,7 @@ import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
+import { ObjectiveRecurrenceService } from './objective-recurrence.service';
 import { MAX_OBJECTIVE_LEVELS, MAX_TREE_NODES } from './objective-tree';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
@@ -62,6 +63,14 @@ export function applySettings(
       'Une barre de temps a besoin d’une échéance.',
     );
   }
+  if (node.recurrence !== 'none' && node.parentId) {
+    throw new BadRequestException(
+      'Seul un objectif principal peut se répéter.',
+    );
+  }
+  // Changing what repeats starts a new period from the objective's start.
+  if (node.recurrence === 'none') node.periodStart = null;
+  else node.periodStart ??= node.startDate;
 }
 
 /** Objectives and their tree: creating, reading, editing, deleting. */
@@ -74,10 +83,13 @@ export class ObjectivesService {
     private readonly preferences: ObjectivePreferencesService,
     private readonly members: ObjectiveMembersService,
     private readonly changes: ObjectiveChangesService,
+    private readonly recurrence: ObjectiveRecurrenceService,
   ) {}
 
   /** The top of what the user can see, in their own order. */
   async findAll(userId: string): Promise<ObjectiveSummary[]> {
+    const tops = await this.access.findTops(userId);
+    await this.recurrence.restartDue(tops.map(({ tree }) => tree.root.id));
     const arranged = await this.preferences.arrange(
       userId,
       await this.access.findTops(userId),
@@ -86,6 +98,8 @@ export class ObjectivesService {
   }
 
   async findOne(id: string, userId: string): Promise<ObjectiveDetail> {
+    const { tree } = await this.access.require(id, userId, 'read');
+    await this.recurrence.restartDue([tree.root.id]);
     return this.view.detail(
       await this.access.require(id, userId, 'read'),
       userId,
@@ -124,6 +138,8 @@ export class ObjectivesService {
         timelapse: 'off',
         dueDate: null,
         weight: 1,
+        recurrence: 'none',
+        periodStart: null,
         metricUnit: null,
         metricTarget: null,
         metricAggregation: null,
@@ -200,7 +216,12 @@ export class ObjectivesService {
       async ({ tree, node }, manager) => {
         const { archived, paused, assignedToUserId, ...settings } =
           sentFields(changes);
+        const recurredBefore = node.recurrence !== 'none';
         applySettings(node, settings);
+        // Turned on later: from now, or a start long past would restart it at once.
+        if (!recurredBefore && node.recurrence !== 'none') {
+          node.periodStart = new Date().toISOString().slice(0, 10);
+        }
         if (Object.keys(settings).length) {
           await recordActivity(manager, node.id, userId, 'edited');
         }

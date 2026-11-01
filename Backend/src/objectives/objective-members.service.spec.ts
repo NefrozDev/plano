@@ -8,7 +8,6 @@ import type { CreateObjectiveRequest, ObjectiveDetail } from '@plano/common';
 import { randomUUID } from 'node:crypto';
 import { User } from '../users/user.entity';
 import { ObjectiveMember } from './entities/objective-member.entity';
-import { ObjectiveAgendaService } from './objective-agenda.service';
 import {
   createObjectivesTestBed,
   objectiveDetails,
@@ -567,9 +566,8 @@ describe('ObjectiveMembersService', () => {
         dueDate: '2026-12-02',
       });
 
-      const agenda = new ObjectiveAgendaService(bed.dataSource, bed.access);
       expect(
-        (await agenda.find(bed.bob)).map(({ objectiveId }) => objectiveId),
+        (await bed.agenda.find(bed.bob)).map(({ objectiveId }) => objectiveId),
       ).toEqual([branch.id]);
 
       const seen = await bed.objectives.findOne(branch.id, bed.bob);

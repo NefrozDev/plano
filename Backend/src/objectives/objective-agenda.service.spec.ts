@@ -11,7 +11,7 @@ describe('ObjectiveAgendaService', () => {
 
   beforeEach(async () => {
     bed = await createObjectivesTestBed();
-    agenda = new ObjectiveAgendaService(bed.dataSource, bed.access);
+    agenda = bed.agenda;
   });
 
   afterEach(() => bed.destroy());

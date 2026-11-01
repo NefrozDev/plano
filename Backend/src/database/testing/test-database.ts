@@ -15,6 +15,8 @@ import { ObjectiveActivity } from '../../objectives/entities/objective-activity.
 import { ObjectiveComment } from '../../objectives/entities/objective-comment.entity';
 import { ObjectiveCheckInRow } from '../../objectives/entities/objective-check-in.entity';
 import { ObjectiveMember } from '../../objectives/entities/objective-member.entity';
+import { ObjectivePeriod } from '../../objectives/entities/objective-period.entity';
+import { ObjectiveTemplate } from '../../objectives/entities/objective-template.entity';
 import { ObjectivePreference } from '../../objectives/entities/objective-preference.entity';
 import { ObjectiveSession } from '../../objectives/entities/objective-session.entity';
 import { Objective } from '../../objectives/entities/objective.entity';
@@ -41,6 +43,8 @@ export const ENTITIES = [
   ObjectiveMember,
   ObjectiveActivity,
   ObjectiveComment,
+  ObjectivePeriod,
+  ObjectiveTemplate,
 ];
 
 export interface TestDatabase {
