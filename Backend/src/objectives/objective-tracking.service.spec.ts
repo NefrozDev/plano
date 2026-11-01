@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type {
   AddObjectiveSessionRequest,
   CreateObjectiveRequest,
@@ -186,21 +182,6 @@ describe('ObjectiveTrackingService', () => {
       await expect(
         bed.tracking.removeSession(objective.id, randomUUID(), bed.ada),
       ).rejects.toThrow(NotFoundException);
-      expect(await bed.dataSource.manager.count(ObjectiveSession)).toBe(1);
-    });
-
-    it('keeps a contributor from removing someone else’s session', async () => {
-      const objective = await metric();
-      const { sessions } = await bed.tracking.addSession(
-        objective.id,
-        bed.ada,
-        session(),
-      );
-      vi.spyOn(bed.access, 'roleOn').mockReturnValue('contributor');
-
-      await expect(
-        bed.tracking.removeSession(objective.id, sessions[0].id, bed.bob),
-      ).rejects.toThrow(ForbiddenException);
       expect(await bed.dataSource.manager.count(ObjectiveSession)).toBe(1);
     });
 

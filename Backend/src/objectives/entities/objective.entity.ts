@@ -120,6 +120,17 @@ export class Objective {
   })
   completedBy!: User | null;
 
+  /** Null when nobody is assigned, or once that user's account is deleted. */
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  assignedToUserId!: string | null;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({
+    name: 'assignedToUserId',
+    foreignKeyConstraintName: 'FK_objectives_assigned_to',
+  })
+  assignedTo!: User | null;
+
   @Column({ type: 'boolean', default: false })
   archived!: boolean;
 

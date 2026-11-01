@@ -1,11 +1,16 @@
 import type { CreateObjectiveRequest } from '@plano/common';
 import { DatabaseWriteLockService } from '../../database/database-write-lock.service';
+import { ContactsService } from '../../friends/contacts.service';
+import { FriendsService } from '../../friends/friends.service';
+import { GroupMembership } from '../../groups/group-membership.entity';
+import { GroupsService } from '../../groups/groups.service';
 import {
   createListsTestBed,
   type ListsTestBed,
 } from '../../lists/testing/lists-test-bed';
 import { ObjectiveAccessService } from '../objective-access.service';
 import { ObjectiveImportService } from '../objective-import.service';
+import { ObjectiveMembersService } from '../objective-members.service';
 import { ObjectivePreferencesService } from '../objective-preferences.service';
 import { ObjectiveTrackingService } from '../objective-tracking.service';
 import { ObjectiveViewService } from '../objective-view.service';
@@ -18,13 +23,22 @@ export interface ObjectivesTestBed extends ListsTestBed {
   objectivePreferences: ObjectivePreferencesService;
   importer: ObjectiveImportService;
   access: ObjectiveAccessService;
+  members: ObjectiveMembersService;
 }
 
 /** The lists test bed's people and database, with the objectives services on top. */
 export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
   const bed = await createListsTestBed();
   const writeLock = new DatabaseWriteLockService();
-  const access = new ObjectiveAccessService(bed.dataSource);
+  const contacts = new ContactsService(
+    new GroupsService(
+      bed.dataSource.getRepository(GroupMembership),
+      bed.dataSource,
+      writeLock,
+    ),
+    new FriendsService(bed.dataSource, writeLock, bed.live),
+  );
+  const access = new ObjectiveAccessService(bed.dataSource, contacts);
   const writer = new ObjectiveWriterService(bed.dataSource, writeLock, access);
   const view = new ObjectiveViewService(bed.dataSource);
   const objectivePreferences = new ObjectivePreferencesService(
@@ -33,15 +47,18 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     access,
     view,
   );
+  const members = new ObjectiveMembersService(access, writer, view, contacts);
   return {
     ...bed,
     access,
+    members,
     objectivePreferences,
     objectives: new ObjectivesService(
       access,
       writer,
       view,
       objectivePreferences,
+      members,
     ),
     tracking: new ObjectiveTrackingService(access, writer, view),
     importer: new ObjectiveImportService(writer),

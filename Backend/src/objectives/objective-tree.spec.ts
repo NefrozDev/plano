@@ -107,6 +107,80 @@ describe('ObjectiveTree', () => {
     });
   });
 
+  describe('access', () => {
+    const tree = new ObjectiveTree(
+      [
+        root(),
+        node('a'),
+        node('a1', { parentId: 'a' }),
+        node('b'),
+        node('b1', { parentId: 'b' }),
+      ],
+      {
+        ...NO_FACTS,
+        memberships: [
+          { objectiveId: 'a', userId: 'bob', role: 'viewer' },
+          { objectiveId: 'a1', userId: 'bob', role: 'contributor' },
+          { objectiveId: 'root', userId: 'cyd', role: 'viewer' },
+          { objectiveId: 'b1', userId: 'cyd', role: 'contributor' },
+          { objectiveId: 'a1', userId: 'dan', role: 'viewer' },
+          { objectiveId: 'b1', userId: 'dan', role: 'viewer' },
+        ],
+      },
+    );
+
+    it('makes the owner owner everywhere', () => {
+      for (const id of ['root', 'a', 'a1', 'b', 'b1']) {
+        expect(tree.roleOf(id, 'ada')).toBe('owner');
+      }
+    });
+
+    it('gives nothing above or beside an invitation, and everything below it', () => {
+      expect(tree.roleOf('root', 'bob')).toBeNull();
+      expect(tree.roleOf('b', 'bob')).toBeNull();
+      expect(tree.roleOf('b1', 'bob')).toBeNull();
+      expect(tree.roleOf('a', 'bob')).toBe('viewer');
+      expect(tree.roleOf('a1', 'dan')).toBe('viewer');
+      expect(tree.roleOf('a', 'dan')).toBeNull();
+    });
+
+    it('takes the strongest invitation on the way up', () => {
+      expect(tree.roleOf('a1', 'bob')).toBe('contributor');
+      expect(tree.roleOf('b1', 'cyd')).toBe('contributor');
+      expect(tree.roleOf('b', 'cyd')).toBe('viewer');
+    });
+
+    it('gives nothing to a stranger, or on an unknown objective', () => {
+      expect(tree.roleOf('root', 'eve')).toBeNull();
+      expect(tree.roleOf('nope', 'ada')).toBeNull();
+    });
+
+    it('finds the highest objectives of each person', () => {
+      expect(tree.topsFor('ada').map(({ id }) => id)).toEqual(['root']);
+      // Invited lower down as well: only the top counts.
+      expect(tree.topsFor('bob').map(({ id }) => id)).toEqual(['a']);
+      expect(tree.topsFor('cyd').map(({ id }) => id)).toEqual(['root']);
+      // Two separate branches.
+      expect(tree.topsFor('dan').map(({ id }) => id)).toEqual(['a1', 'b1']);
+      expect(tree.topsFor('eve')).toEqual([]);
+    });
+
+    it('counts the owner and contributors on the way up as taking part', () => {
+      expect(tree.participantsOf(tree.node('a1')!)).toEqual(['ada', 'bob']);
+      expect(tree.participantsOf(tree.node('a')!)).toEqual(['ada']);
+      expect(tree.participantsOf(tree.node('b1')!)).toEqual(['ada', 'cyd']);
+    });
+
+    it('walks the path from the top', () => {
+      expect(tree.pathTo('a1').map(({ id }) => id)).toEqual([
+        'root',
+        'a',
+        'a1',
+      ]);
+      expect(tree.pathTo('nope')).toEqual([]);
+    });
+  });
+
   describe('progress', () => {
     it('has no bar for `none`', () => {
       const tree = new ObjectiveTree([root({ completion: 'none' })], NO_FACTS);
@@ -194,13 +268,20 @@ describe('ObjectiveTree', () => {
       });
 
       it('averages each participant, so one person cannot finish it alone', () => {
-        const tree = new ObjectiveTree(
-          [habit],
-          checkIns('ada', 'ada', 'ada', 'ada', 'ada', 'bob', 'bob'),
-          () => ['ada', 'bob'],
-        );
-        // Ada is capped at 100%, Bob is at 50%.
+        const tree = new ObjectiveTree([habit], {
+          ...checkIns('ada', 'ada', 'ada', 'ada', 'ada', 'bob', 'bob'),
+          memberships: [
+            { objectiveId: 'root', userId: 'bob', role: 'contributor' },
+            { objectiveId: 'root', userId: 'cyd', role: 'viewer' },
+          ],
+        });
+        // Ada is capped at 100%, Bob is at 50%, and a viewer does not take part.
         expect(tree.percent('root')).toBe(75);
+        expect(tree.amount('root', 'bob')?.current).toBe(2);
+        expect(tree.amount('root', 'ada')?.current).toBe(5);
+        // Someone who does not take part sees the most advanced.
+        expect(tree.amount('root', 'cyd')?.current).toBe(5);
+        expect(tree.amount('root')?.current).toBe(5);
       });
 
       it('ignores people who no longer take part', () => {
@@ -219,11 +300,7 @@ describe('ObjectiveTree', () => {
           ).percent('root'),
         ).toBe(0);
         expect(
-          new ObjectiveTree([habit], NO_FACTS, () => []).percent('root'),
-        ).toBe(0);
-        expect(
-          new ObjectiveTree([habit], NO_FACTS, () => []).amount('root')
-            ?.current,
+          new ObjectiveTree([habit], NO_FACTS).amount('root')?.current,
         ).toBe(0);
       });
     });

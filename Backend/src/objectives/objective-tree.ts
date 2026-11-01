@@ -1,4 +1,8 @@
-import type { ObjectiveAmount } from '@plano/common';
+import type {
+  ObjectiveAmount,
+  ObjectiveMemberRole,
+  ObjectiveRole,
+} from '@plano/common';
 import type { Objective } from './entities/objective.entity';
 
 /** The levels of a tree, top-level objective included. */
@@ -13,6 +17,14 @@ export interface TreeFacts {
     value: number;
   }[];
   checkIns: readonly { objectiveId: string; userId: string }[];
+  /** Invitations still valid: people who are no longer contacts are left out. */
+  memberships?: readonly TreeMembership[];
+}
+
+export interface TreeMembership {
+  objectiveId: string;
+  userId: string;
+  role: ObjectiveMemberRole;
 }
 
 /** Below 100, the bar never shows full: only a complete objective reaches it. */
@@ -32,14 +44,13 @@ export class ObjectiveTree {
   private readonly checkInCounts = new Map<string, Map<string, number>>();
   readonly root: Objective;
 
+  private readonly memberships: readonly TreeMembership[];
+
   constructor(
     readonly nodes: readonly Objective[],
     facts: TreeFacts,
-    /** People whose check-ins make up a habit's bar, for each node. */
-    private readonly participantsOf: (node: Objective) => readonly string[] = (
-      node,
-    ) => [node.ownerId],
   ) {
+    this.memberships = facts.memberships ?? [];
     for (const node of nodes) {
       this.byId.set(node.id, node);
       if (node.parentId) {
@@ -108,6 +119,55 @@ export class ObjectiveTree {
     return this.ancestorsOf(id).length + 1;
   }
 
+  /** The node and the way up to the top, top first. */
+  pathTo(id: string): Objective[] {
+    const node = this.byId.get(id);
+    return node ? [...this.ancestorsOf(id), node] : [];
+  }
+
+  membershipsOn(id: string): readonly TreeMembership[] {
+    return this.memberships.filter(({ objectiveId }) => objectiveId === id);
+  }
+
+  /**
+   * An invitation reaches everything below it, and the strongest one on the way
+   * up decides. Nothing above an invitation is reachable: null means no access.
+   */
+  roleOf(id: string, userId: string): ObjectiveRole | null {
+    if (!this.byId.has(id)) return null;
+    if (this.root.ownerId === userId) return 'owner';
+    const roles = this.pathTo(id)
+      .flatMap((node) => this.membershipsOn(node.id))
+      .filter((membership) => membership.userId === userId)
+      .map(({ role }) => role);
+    if (roles.includes('contributor')) return 'contributor';
+    return roles.length ? 'viewer' : null;
+  }
+
+  /** The highest objectives the person was invited to: nothing above them is theirs. */
+  topsFor(userId: string): Objective[] {
+    if (this.root.ownerId === userId) return [this.root];
+    return this.memberships
+      .filter((membership) => membership.userId === userId)
+      .map(({ objectiveId }) => this.byId.get(objectiveId))
+      .filter((node): node is Objective => !!node)
+      .filter(
+        (node) =>
+          !this.ancestorsOf(node.id).some(
+            (ancestor) => this.roleOf(ancestor.id, userId) !== null,
+          ),
+      );
+  }
+
+  /** People whose days count on a habit: the owner, and whoever can contribute to it. */
+  participantsOf(node: Objective): string[] {
+    const contributors = this.pathTo(node.id)
+      .flatMap((step) => this.membershipsOn(step.id))
+      .filter(({ role }) => role === 'contributor')
+      .map(({ userId }) => userId);
+    return [...new Set([node.ownerId, ...contributors])];
+  }
+
   /** The node's progress, 0 to 100 and unrounded; null without a completion bar. */
   exactProgress(id: string): number | null {
     if (!this.exact.has(id)) {
@@ -122,8 +182,12 @@ export class ObjectiveTree {
     return exact === null ? null : displayPercent(exact);
   }
 
-  /** Progress in the objective's own unit; only metrics and habits have one. */
-  amount(id: string): ObjectiveAmount | null {
+  /**
+   * Progress in the objective's own unit; only metrics and habits have one. On a
+   * habit each person has their own days: `viewerId`'s, or the most advanced ones
+   * for someone who does not take part.
+   */
+  amount(id: string, viewerId?: string): ObjectiveAmount | null {
     const node = this.byId.get(id);
     if (node?.completion === 'metric') {
       return {
@@ -134,13 +198,12 @@ export class ObjectiveTree {
     }
     if (node?.completion === 'habit') {
       const counts = this.checkInCounts.get(id);
+      const people = this.participantsOf(node);
       return {
-        current: counts
-          ? Math.max(
-              0,
-              ...this.participantsOf(node).map((user) => counts.get(user) ?? 0),
-            )
-          : 0,
+        current:
+          viewerId && people.includes(viewerId)
+            ? (counts?.get(viewerId) ?? 0)
+            : Math.max(0, ...people.map((user) => counts?.get(user) ?? 0)),
         target: node.habitTargetDays ?? 0,
         unit: 'jours',
       };

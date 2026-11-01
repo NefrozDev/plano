@@ -15,6 +15,7 @@ import type {
 import { ObjectivePreference } from './entities/objective-preference.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveAccessService } from './objective-access.service';
+import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { MAX_OBJECTIVE_LEVELS, MAX_TREE_NODES } from './objective-tree';
 import { ObjectiveViewService } from './objective-view.service';
@@ -67,6 +68,7 @@ export class ObjectivesService {
     private readonly writer: ObjectiveWriterService,
     private readonly view: ObjectiveViewService,
     private readonly preferences: ObjectivePreferencesService,
+    private readonly members: ObjectiveMembersService,
   ) {}
 
   /** The top of what the user can see, in their own order. */
@@ -90,8 +92,14 @@ export class ObjectivesService {
     details: CreateObjectiveDto,
   ): Promise<ObjectiveDetail> {
     const id = await this.writer.inTransaction(async (manager) => {
-      const { parentId, children, reminder, dueReminder, ...settings } =
-        details;
+      const {
+        parentId,
+        children,
+        reminder,
+        dueReminder,
+        members,
+        ...settings
+      } = details;
       const placement = parentId
         ? await this.placeUnder(
             parentId,
@@ -156,6 +164,9 @@ export class ObjectivesService {
           ['userId', 'objectiveId'],
         );
       }
+      for (const member of members ?? []) {
+        await this.members.addTo(node.id, userId, member, manager);
+      }
       await this.writer.settle(node.rootId, userId, manager);
       return node.id;
     });
@@ -167,13 +178,27 @@ export class ObjectivesService {
     userId: string,
     changes: UpdateObjectiveDto,
   ): Promise<ObjectiveDetail> {
-    await this.writer.change(id, userId, 'own', async ({ node }, manager) => {
-      const { archived, paused, ...settings } = sentFields(changes);
-      applySettings(node, settings);
-      if (archived !== undefined) node.archived = archived;
-      if (paused !== undefined) this.setPaused(node, paused);
-      await manager.save(node);
-    });
+    await this.writer.change(
+      id,
+      userId,
+      'own',
+      async ({ tree, node }, manager) => {
+        const { archived, paused, assignedToUserId, ...settings } =
+          sentFields(changes);
+        applySettings(node, settings);
+        if (archived !== undefined) node.archived = archived;
+        if (paused !== undefined) this.setPaused(node, paused);
+        if (assignedToUserId !== undefined) {
+          if (assignedToUserId && !tree.roleOf(node.id, assignedToUserId)) {
+            throw new BadRequestException(
+              'Un objectif ne peut être assigné qu’à une personne qui y a accès.',
+            );
+          }
+          node.assignedToUserId = assignedToUserId;
+        }
+        await manager.save(node);
+      },
+    );
     return this.findOne(id, userId);
   }
 

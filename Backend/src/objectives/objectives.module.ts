@@ -2,13 +2,16 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
+import { FriendsModule } from '../friends/friends.module';
 import { ObjectiveCheckInRow } from './entities/objective-check-in.entity';
+import { ObjectiveMember } from './entities/objective-member.entity';
 import { ObjectivePreference } from './entities/objective-preference.entity';
 import { ObjectiveSession } from './entities/objective-session.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveAgendaService } from './objective-agenda.service';
 import { ObjectiveImportService } from './objective-import.service';
+import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { ObjectiveTrackingService } from './objective-tracking.service';
 import { ObjectiveViewService } from './objective-view.service';
@@ -21,11 +24,13 @@ import { ObjectivesService } from './objectives.service';
   imports: [
     AuthModule,
     DatabaseModule,
+    FriendsModule,
     TypeOrmModule.forFeature([
       Objective,
       ObjectiveSession,
       ObjectiveCheckInRow,
       ObjectivePreference,
+      ObjectiveMember,
     ]),
   ],
   controllers: [ObjectivesController],
@@ -38,6 +43,7 @@ import { ObjectivesService } from './objectives.service';
     ObjectiveTrackingService,
     ObjectiveImportService,
     ObjectiveAgendaService,
+    ObjectiveMembersService,
   ],
 })
 export class ObjectivesModule {}

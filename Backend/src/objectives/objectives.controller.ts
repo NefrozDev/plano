@@ -23,6 +23,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { ImportObjectivesDto } from './dto/import-objectives.dto';
 import {
+  AddObjectiveMemberDto,
   AddObjectiveSessionDto,
   CreateObjectiveDto,
   ReorderChildObjectivesDto,
@@ -30,11 +31,13 @@ import {
   SetObjectiveCompletedDto,
   SetObjectiveProgressDto,
   UpdateObjectiveDto,
+  UpdateObjectiveMemberDto,
   UpdateObjectivePreferencesDto,
 } from './dto/objective.dto';
 import { ObjectiveAgendaService } from './objective-agenda.service';
 import { ObjectiveDateParamPipe } from './objective-date-param.pipe';
 import { ObjectiveImportService } from './objective-import.service';
+import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { ObjectiveTrackingService } from './objective-tracking.service';
 import { ObjectivesService } from './objectives.service';
@@ -50,6 +53,7 @@ export class ObjectivesController {
     private readonly preferences: ObjectivePreferencesService,
     private readonly importer: ObjectiveImportService,
     private readonly agenda: ObjectiveAgendaService,
+    private readonly members: ObjectiveMembersService,
   ) {}
 
   @Get()
@@ -136,6 +140,44 @@ export class ObjectivesController {
     @Body() changes: UpdateObjectivePreferencesDto,
   ): Promise<ObjectiveDetail> {
     return this.preferences.update(objectiveId, userId, changes);
+  }
+
+  @Post(':objectiveId/members')
+  addMember(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+    @Body() details: AddObjectiveMemberDto,
+  ): Promise<ObjectiveDetail> {
+    return this.members.add(objectiveId, userId, details);
+  }
+
+  /** Leaves: everything the user was invited to in this objective's tree. */
+  @Delete(':objectiveId/members/me')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  leave(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+  ): Promise<void> {
+    return this.members.leave(objectiveId, userId);
+  }
+
+  @Patch(':objectiveId/members/:userId')
+  updateMember(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+    @Param('userId', ParseUUIDPipe) memberUserId: string,
+    @Body() { role }: UpdateObjectiveMemberDto,
+  ): Promise<ObjectiveDetail> {
+    return this.members.updateRole(objectiveId, memberUserId, userId, role);
+  }
+
+  @Delete(':objectiveId/members/:userId')
+  removeMember(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+    @Param('userId', ParseUUIDPipe) memberUserId: string,
+  ): Promise<ObjectiveDetail> {
+    return this.members.remove(objectiveId, memberUserId, userId);
   }
 
   @Post(':objectiveId/sessions')

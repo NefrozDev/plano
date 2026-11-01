@@ -23,6 +23,10 @@ export type TimelapseMode = 'off' | 'elapsed' | 'remaining';
 /** `max` keeps the best session (longest run), `sum` accumulates (money saved). */
 export type MetricAggregation = 'sum' | 'max';
 export type ObjectiveRole = 'owner' | 'contributor' | 'viewer';
+/** `viewer` follows an objective (shared); `contributor` also moves it forward (common). */
+export type ObjectiveMemberRole = Exclude<ObjectiveRole, 'owner'>;
+/** What the people on an objective can do with it, as far as the user can see. */
+export type ObjectiveSharing = 'private' | 'shared' | 'common';
 
 export interface ObjectiveMetricSettings {
   unit: string;
@@ -64,6 +68,11 @@ export interface ObjectiveSummary {
   /** The signed-in user's role. */
   role: ObjectiveRole;
   owner: ObjectivePerson;
+  sharing: ObjectiveSharing;
+  /** Who the user can see on this objective, owner first. */
+  people: ObjectivePerson[];
+  assignee: ObjectivePerson | null;
+  completedBy: ObjectivePerson | null;
   /** Direct sub-objectives, archived ones left out. */
   childCount: number;
   completedChildCount: number;
@@ -87,9 +96,22 @@ export interface ObjectiveCheckIn {
   userId: string;
 }
 
+/** `id` is null for an objective above what the user was invited to: only its name shows. */
 export interface ObjectiveCrumb {
-  id: string;
+  id: string | null;
   title: string;
+}
+
+export interface ObjectiveMemberView extends ObjectivePerson {
+  role: ObjectiveRole;
+  /** Where this access comes from, when invited higher up. */
+  inheritedFrom: ObjectiveCrumb | null;
+}
+
+/** One person's share of an objective: their amount, days or sub-objectives completed. */
+export interface ObjectiveContribution {
+  person: ObjectivePerson;
+  value: number;
 }
 
 export interface ObjectiveDetail extends ObjectiveSummary {
@@ -105,6 +127,8 @@ export interface ObjectiveDetail extends ObjectiveSummary {
   descendantCount: number;
   sessions: ObjectiveSessionEntry[];
   checkIns: ObjectiveCheckIn[];
+  members: ObjectiveMemberView[];
+  contributions: ObjectiveContribution[];
   /** The signed-in user's own reminders. */
   reminder: ObjectiveReminder;
   dueReminder: DueReminder;
@@ -148,11 +172,24 @@ export interface CreateObjectiveRequest extends ObjectiveSettingsFields {
   children?: string[];
   reminder?: ObjectiveReminder;
   dueReminder?: DueReminder;
+  members?: AddObjectiveMemberRequest[];
 }
 
 export interface UpdateObjectiveRequest extends ObjectiveSettingsFields {
   archived?: boolean;
   paused?: boolean;
+  /** Someone who can open the objective; null to unassign. */
+  assignedToUserId?: string | null;
+}
+
+/** Shares an objective, and everything below it, with one of the owner's contacts. */
+export interface AddObjectiveMemberRequest {
+  userId: string;
+  role: ObjectiveMemberRole;
+}
+
+export interface UpdateObjectiveMemberRequest {
+  role: ObjectiveMemberRole;
 }
 
 export interface AddObjectiveSessionRequest {

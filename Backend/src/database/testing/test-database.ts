@@ -12,6 +12,7 @@ import { ListSection } from '../../lists/entities/list-section.entity';
 import { ListSettings } from '../../lists/entities/list-settings.entity';
 import { List } from '../../lists/entities/list.entity';
 import { ObjectiveCheckInRow } from '../../objectives/entities/objective-check-in.entity';
+import { ObjectiveMember } from '../../objectives/entities/objective-member.entity';
 import { ObjectivePreference } from '../../objectives/entities/objective-preference.entity';
 import { ObjectiveSession } from '../../objectives/entities/objective-session.entity';
 import { Objective } from '../../objectives/entities/objective.entity';
@@ -35,6 +36,7 @@ export const ENTITIES = [
   ObjectiveSession,
   ObjectiveCheckInRow,
   ObjectivePreference,
+  ObjectiveMember,
 ];
 
 export interface TestDatabase {

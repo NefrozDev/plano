@@ -36,8 +36,12 @@
 
   @if (objective.breadcrumb.length) {
     <nav class="breadcrumb" aria-label="Objectifs parents">
-      @for (crumb of objective.breadcrumb; track crumb.id) {
-        <a [routerLink]="['/objectives', crumb.id]">{{ crumb.title }}</a>
+      @for (crumb of objective.breadcrumb; track $index) {
+        @if (crumb.id; as id) {
+          <a [routerLink]="['/objectives', id]">{{ crumb.title }}</a>
+        } @else {
+          <span class="hidden-crumb">{{ crumb.title }}</span>
+        }
         <span aria-hidden="true">›</span>
       }
     </nav>

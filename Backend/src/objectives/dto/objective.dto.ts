@@ -1,10 +1,12 @@
 import type {
+  AddObjectiveMemberRequest,
   AddObjectiveSessionRequest,
   CompletionMode,
   CreateObjectiveRequest,
   DueReminder,
   MetricAggregation,
   ObjectiveCategory,
+  ObjectiveMemberRole,
   ObjectiveMetricSettings,
   ObjectiveReminder,
   ObjectiveSessionStatus,
@@ -13,6 +15,7 @@ import type {
   SetObjectiveCompletedRequest,
   SetObjectiveProgressRequest,
   TimelapseMode,
+  UpdateObjectiveMemberRequest,
   UpdateObjectivePreferencesRequest,
   UpdateObjectiveRequest,
 } from '@plano/common';
@@ -79,6 +82,19 @@ export class ObjectiveReminderDto implements ObjectiveReminder {
   @Min(0)
   @Max(6)
   weekday!: number;
+}
+
+export class AddObjectiveMemberDto implements AddObjectiveMemberRequest {
+  @IsUUID()
+  userId!: string;
+
+  @IsIn(['viewer', 'contributor'])
+  role!: ObjectiveMemberRole;
+}
+
+export class UpdateObjectiveMemberDto implements UpdateObjectiveMemberRequest {
+  @IsIn(['viewer', 'contributor'])
+  role!: ObjectiveMemberRole;
 }
 
 /** Fields shared by creating and editing; each is optional on its own here. */
@@ -163,6 +179,13 @@ export class CreateObjectiveDto
   @IsOptionalButNotNull()
   @IsIn(DUE_REMINDERS)
   dueReminder?: DueReminder;
+
+  @IsOptionalButNotNull()
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => AddObjectiveMemberDto)
+  members?: AddObjectiveMemberDto[];
 }
 
 export class UpdateObjectiveDto
@@ -194,6 +217,10 @@ export class UpdateObjectiveDto
   @IsOptionalButNotNull()
   @IsBoolean()
   paused?: boolean;
+
+  @IsOptional()
+  @IsUUID()
+  assignedToUserId?: string | null;
 }
 
 export class AddObjectiveSessionDto implements AddObjectiveSessionRequest {

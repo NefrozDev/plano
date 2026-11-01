@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { CreateObjectiveRequest, ObjectiveDetail } from '@plano/common';
 import { randomUUID } from 'node:crypto';
 import { Objective } from './entities/objective.entity';
@@ -469,33 +465,6 @@ describe('ObjectivesService', () => {
         bed.objectives.remove(objective.id, bed.bob),
       ).rejects.toThrow(NotFoundException);
       expect(await bed.dataSource.manager.count(Objective)).toBe(1);
-    });
-  });
-
-  describe('access rules', () => {
-    it('forbids what the role does not allow', async () => {
-      const objective = await create();
-      const access = await bed.access.require(objective.id, bed.ada, 'own');
-      expect(access.role).toBe('owner');
-
-      const roleOn = vi.spyOn(bed.access, 'roleOn').mockReturnValue('viewer');
-      await expect(
-        bed.access.require(objective.id, bed.bob, 'contribute'),
-      ).rejects.toThrow(ForbiddenException);
-      await expect(
-        bed.access.require(objective.id, bed.bob, 'own'),
-      ).rejects.toThrow(ForbiddenException);
-      await expect(
-        bed.access.require(objective.id, bed.bob, 'read'),
-      ).resolves.toMatchObject({ role: 'viewer' });
-
-      roleOn.mockReturnValue('contributor');
-      await expect(
-        bed.access.require(objective.id, bed.bob, 'contribute'),
-      ).resolves.toMatchObject({ role: 'contributor' });
-      await expect(
-        bed.access.require(objective.id, bed.bob, 'own'),
-      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

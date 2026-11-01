@@ -8,6 +8,7 @@ import { CreateListPreferences1787420000000 } from './1787420000000-create-list-
 import { CreatePasswordResets1787500000000 } from './1787500000000-create-password-resets';
 import { AddListRemoveChecked1787580000000 } from './1787580000000-add-list-remove-checked';
 import { CreateObjectives1787660000000 } from './1787660000000-create-objectives';
+import { AddObjectiveSharing1787740000000 } from './1787740000000-add-objective-sharing';
 
 /** Every migration, oldest first; shared by the app and the in-memory test database. */
 export const MIGRATIONS = [
@@ -21,4 +22,5 @@ export const MIGRATIONS = [
   CreatePasswordResets1787500000000,
   AddListRemoveChecked1787580000000,
   CreateObjectives1787660000000,
+  AddObjectiveSharing1787740000000,
 ];

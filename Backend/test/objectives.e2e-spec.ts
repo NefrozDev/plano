@@ -276,6 +276,156 @@ describe('Objectives API (e2e)', () => {
     expect(list.body).toEqual([]);
   });
 
+  describe('sharing', () => {
+    let top: ObjectiveDetail;
+    let branch: ObjectiveDetail;
+
+    beforeEach(async () => {
+      const group = await http()
+        .post('/api/v1/groups')
+        .set('Cookie', ada.cookie)
+        .send({ name: 'Famille' })
+        .expect(201);
+      await http()
+        .post('/api/v1/groups/join')
+        .set('Cookie', bob.cookie)
+        .send({ inviteCode: (group.body as { inviteCode: string }).inviteCode })
+        .expect(201);
+      top = await create({
+        ...newObjective,
+        title: 'Haut',
+        completion: 'children',
+        metric: undefined,
+        children: ['Branche', 'Autre'],
+      });
+      branch = (
+        await http()
+          .get(`/api/v1/objectives/${top.children[0].id}`)
+          .set('Cookie', ada.cookie)
+          .expect(200)
+      ).body as ObjectiveDetail;
+    });
+
+    const invite = (role: string, id = branch.id, cookie = ada.cookie) =>
+      http()
+        .post(`/api/v1/objectives/${id}/members`)
+        .set('Cookie', cookie)
+        .send({ userId: bob.user.id, role });
+
+    it('shares one branch, and nothing around it', async () => {
+      await invite('contributor').expect(201);
+
+      const list = await http()
+        .get('/api/v1/objectives')
+        .set('Cookie', bob.cookie)
+        .expect(200);
+      expect((list.body as ObjectiveSummary[]).map(({ id }) => id)).toEqual([
+        branch.id,
+      ]);
+
+      const seen = await http()
+        .get(`/api/v1/objectives/${branch.id}`)
+        .set('Cookie', bob.cookie)
+        .expect(200);
+      expect(seen.body).toMatchObject({
+        role: 'contributor',
+        parentId: null,
+        breadcrumb: [{ id: null, title: 'Haut' }],
+      });
+
+      for (const id of [top.id, top.children[1].id]) {
+        await http()
+          .get(`/api/v1/objectives/${id}`)
+          .set('Cookie', bob.cookie)
+          .expect(404);
+      }
+    });
+
+    it('forbids what a role does not allow', async () => {
+      await invite('viewer').expect(201);
+      const url = `/api/v1/objectives/${branch.id}`;
+
+      await http()
+        .put(`${url}/completed`)
+        .set('Cookie', bob.cookie)
+        .send({ completed: true })
+        .expect(403);
+      await http()
+        .patch(url)
+        .set('Cookie', bob.cookie)
+        .send({ title: 'X' })
+        .expect(403);
+      await http().delete(url).set('Cookie', bob.cookie).expect(403);
+      await invite('viewer', branch.id, bob.cookie).expect(403);
+    });
+
+    it('changes roles, removes people, and lets them leave', async () => {
+      await invite('viewer').expect(201);
+      const url = `/api/v1/objectives/${branch.id}/members`;
+
+      const updated = await http()
+        .patch(`${url}/${bob.user.id}`)
+        .set('Cookie', ada.cookie)
+        .send({ role: 'contributor' })
+        .expect(200);
+      expect((updated.body as ObjectiveDetail).sharing).toBe('common');
+      await http()
+        .patch(`${url}/${bob.user.id}`)
+        .set('Cookie', ada.cookie)
+        .send({ role: 'owner' })
+        .expect(400);
+
+      await http().delete(`${url}/me`).set('Cookie', bob.cookie).expect(204);
+      await http()
+        .get(`/api/v1/objectives/${branch.id}`)
+        .set('Cookie', bob.cookie)
+        .expect(404);
+
+      await invite('viewer').expect(201);
+      const removed = await http()
+        .delete(`${url}/${bob.user.id}`)
+        .set('Cookie', ada.cookie)
+        .expect(200);
+      expect((removed.body as ObjectiveDetail).sharing).toBe('private');
+    });
+
+    it('rejects a bad invitation', async () => {
+      await invite('owner').expect(400);
+      await http()
+        .post(`/api/v1/objectives/${branch.id}/members`)
+        .set('Cookie', ada.cookie)
+        .send({ userId: 'not-an-id', role: 'viewer' })
+        .expect(400);
+      await invite('viewer').expect(201);
+      await invite('viewer').expect(409);
+    });
+
+    it('assigns, and refuses someone without access', async () => {
+      const url = `/api/v1/objectives/${branch.id}`;
+      await http()
+        .patch(url)
+        .set('Cookie', ada.cookie)
+        .send({ assignedToUserId: bob.user.id })
+        .expect(400);
+
+      await invite('contributor').expect(201);
+      const assigned = await http()
+        .patch(url)
+        .set('Cookie', ada.cookie)
+        .send({ assignedToUserId: bob.user.id })
+        .expect(200);
+      expect((assigned.body as ObjectiveDetail).assignee?.id).toBe(bob.user.id);
+    });
+
+    it('invites while creating', async () => {
+      const shared = await create({
+        ...newObjective,
+        members: [{ userId: bob.user.id, role: 'viewer' }],
+      });
+      expect(shared.sharing).toBe('shared');
+    });
+  });
+
   it('rejects an id that is not one', async () => {
     await http()
       .get('/api/v1/objectives/not-an-id')

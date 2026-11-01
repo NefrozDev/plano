@@ -5,7 +5,9 @@ import {
 } from '@nestjs/common';
 import type { ObjectiveRole } from '@plano/common';
 import { DataSource, EntityManager, In, IsNull } from 'typeorm';
+import { ContactsService } from '../friends/contacts.service';
 import { ObjectiveCheckInRow } from './entities/objective-check-in.entity';
+import { ObjectiveMember } from './entities/objective-member.entity';
 import { ObjectiveSession } from './entities/objective-session.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveTree } from './objective-tree';
@@ -22,7 +24,10 @@ export interface ObjectiveAccess {
 /** Loads objective trees, and decides who may do what with them. */
 @Injectable()
 export class ObjectiveAccessService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly contacts: ContactsService,
+  ) {}
 
   /**
    * Unknown objectives and objectives the user cannot see both answer 404, so
@@ -40,7 +45,7 @@ export class ObjectiveAccessService {
     });
     const tree = row ? await this.loadTree(row.rootId, manager) : null;
     const node = tree?.node(objectiveId);
-    const role = node ? this.roleOn(node, userId) : null;
+    const role = node && tree ? tree.roleOf(node.id, userId) : null;
     if (!tree || !node || !role) {
       throw new NotFoundException('Objectif introuvable.');
     }
@@ -62,23 +67,32 @@ export class ObjectiveAccessService {
     userId: string,
     manager: EntityManager = this.dataSource.manager,
   ): Promise<ObjectiveAccess[]> {
-    const tops = await manager.find(Objective, {
+    const owned = await manager.find(Objective, {
       where: { ownerId: userId, parentId: IsNull() },
       order: { createdAt: 'ASC' },
+      select: { id: true },
     });
-    const trees = await this.loadTrees(
-      tops.map(({ id }) => id),
-      manager,
-    );
-    return tops.map((root) => {
-      const tree = trees.get(root.id)!;
-      return { tree, node: tree.root, role: 'owner' as const };
+    const memberships = await manager.find(ObjectiveMember, {
+      where: { userId },
+      relations: { objective: true },
+      order: { createdAt: 'ASC' },
     });
-  }
+    const rootIds = [
+      ...new Set([
+        ...owned.map(({ id }) => id),
+        ...memberships.map(({ objective }) => objective.rootId),
+      ]),
+    ];
+    const trees = await this.loadTrees(rootIds, manager);
 
-  /** The role on any node of a tree; null when the user cannot see it. */
-  roleOn(node: Objective, userId: string): ObjectiveRole | null {
-    return node.ownerId === userId ? 'owner' : null;
+    return rootIds.flatMap((rootId) => {
+      const tree = trees.get(rootId)!;
+      return tree.topsFor(userId).map((node): ObjectiveAccess => ({
+        tree,
+        node,
+        role: tree.roleOf(node.id, userId)!,
+      }));
+    });
   }
 
   /** Null when the tree is gone. */
@@ -106,14 +120,26 @@ export class ObjectiveAccessService {
       where: { objectiveId: In(objectiveIds) },
       select: { objectiveId: true, userId: true },
     });
+    const members = await manager.find(ObjectiveMember, {
+      where: { objectiveId: In(objectiveIds) },
+    });
 
     const nodesOf = new Map<string, Objective[]>();
     for (const node of nodes) {
       nodesOf.set(node.rootId, [...(nodesOf.get(node.rootId) ?? []), node]);
     }
+    const contactsOf = new Map<string, Set<string>>();
     const trees = new Map<string, ObjectiveTree>();
     for (const [rootId, treeNodes] of nodesOf) {
       const ids = new Set(treeNodes.map(({ id }) => id));
+      const treeMembers = members.filter(({ objectiveId }) =>
+        ids.has(objectiveId),
+      );
+      const ownerId = treeNodes[0].ownerId;
+      // Looked up once per owner, and only when something is shared.
+      if (treeMembers.length && !contactsOf.has(ownerId)) {
+        contactsOf.set(ownerId, await this.contacts.contactIds(ownerId));
+      }
       trees.set(
         rootId,
         new ObjectiveTree(treeNodes, {
@@ -121,6 +147,10 @@ export class ObjectiveAccessService {
             ids.has(objectiveId),
           ),
           checkIns: checkIns.filter(({ objectiveId }) => ids.has(objectiveId)),
+          // Losing both links (friend, group mate) revokes access at once.
+          memberships: treeMembers.filter(({ userId }) =>
+            contactsOf.get(ownerId)?.has(userId),
+          ),
         }),
       );
     }

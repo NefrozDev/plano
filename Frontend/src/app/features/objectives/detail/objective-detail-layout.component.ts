@@ -40,8 +40,8 @@ export class ObjectiveDetailLayoutComponent {
   readonly isOwner = computed(() => this.objective()?.role === 'owner');
   /** One level up the tree, or the overview from the top. */
   readonly backLink = computed(() => {
-    const parent = this.objective()?.breadcrumb.at(-1);
-    return parent ? ['/objectives', parent.id] : ['/objectives'];
+    const parentId = this.objective()?.breadcrumb.at(-1)?.id;
+    return parentId ? ['/objectives', parentId] : ['/objectives'];
   });
   readonly tabs = computed<readonly DetailTab[]>(() => {
     const objective = this.objective();
