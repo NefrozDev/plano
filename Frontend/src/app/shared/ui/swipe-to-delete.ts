@@ -11,7 +11,7 @@ export const WHEEL_SWIPE_END_MS = 160;
 
 /**
  * Swipe left to uncover a delete button; released far enough, it asks to delete.
- * Shared by list rows (entries, section headers, list cards): the owner wires
+ * Shared by list rows (entries, section headers, list cards) and objective cards: the owner wires
  * its pointer events (finger, pen, mouse drag) and wheel events (two-finger
  * touchpad swipe) here and slides itself by `offset()`.
  */

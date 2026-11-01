@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { entry as listEntry } from '../testing/lists-fixtures';
 import { ListEntryRowComponent } from './list-entry-row.component';
-import { WHEEL_SWIPE_END_MS } from './swipe-to-delete';
+import { WHEEL_SWIPE_END_MS } from '../../../shared/ui/swipe-to-delete';
 
 describe('ListEntryRowComponent', () => {
   let fixture: ComponentFixture<ListEntryRowComponent>;

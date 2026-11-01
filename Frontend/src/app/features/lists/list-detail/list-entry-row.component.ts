@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import type { ListEntry } from '@plano/common';
-import { SwipeToDelete } from './swipe-to-delete';
+import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
 
 /**
  * One list entry: tap to open, circle to toggle, swipe left to delete, and a

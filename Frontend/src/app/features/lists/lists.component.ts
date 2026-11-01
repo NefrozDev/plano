@@ -12,7 +12,7 @@ import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { SwitchRowComponent } from '../../shared/ui/switch-row.component';
 import { ToastComponent } from '../../shared/ui/toast.component';
 import { LIST_COLOR_CHOICES } from './list-detail/list-options';
-import { SwipeToDelete } from './list-detail/swipe-to-delete';
+import { SwipeToDelete } from '../../shared/ui/swipe-to-delete';
 import { ListsStore } from './lists.store';
 
 type ListFilter = 'all' | 'mine' | 'shared' | 'archived';

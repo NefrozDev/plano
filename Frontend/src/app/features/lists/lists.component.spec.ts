@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { ListsComponent, SHARED_LIST_NOTICE, caption } from './lists.component';
-import { WHEEL_SWIPE_END_MS } from './list-detail/swipe-to-delete';
+import { WHEEL_SWIPE_END_MS } from '../../shared/ui/swipe-to-delete';
 import { ListsStore } from './lists.store';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { OWNER_ID, listDetail, listSettings, listSummary } from './testing/lists-fixtures';

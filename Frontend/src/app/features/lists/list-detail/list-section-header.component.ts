@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
-import { SwipeToDelete } from './swipe-to-delete';
+import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
 
 /**
  * Title of an open section. Editors tap the name to rename it, fold the section
