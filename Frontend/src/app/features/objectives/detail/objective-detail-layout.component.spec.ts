@@ -261,8 +261,12 @@ describe('ObjectiveDetailLayoutComponent', () => {
 
         nameInput().value = '   ';
         submit();
+        await settleObjectives();
+        harness.detectChanges();
 
         http.expectNone('/api/v1/objectives/obj-1/template');
+        expect(element().querySelector('.saved')).toBeNull();
+        expect(dialog().open).toBe(true);
       });
 
       it('keeps the name when saving fails', async () => {

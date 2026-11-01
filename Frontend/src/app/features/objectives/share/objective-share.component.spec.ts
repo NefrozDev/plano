@@ -220,7 +220,9 @@ describe('ObjectiveShareComponent', () => {
 
       await component.invite();
 
-      http.verify();
+      http.expectNone('/api/v1/objectives/obj-1/members');
+      expect(component.store.error()).toBe('');
+      expect(component.members().map(({ id }) => id)).toEqual([ME]);
     });
   });
 

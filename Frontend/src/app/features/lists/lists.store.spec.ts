@@ -529,7 +529,21 @@ describe('ListsStore', () => {
       stream.emit({ type: 'list.changed', listId: 'list-1' });
       await settle();
 
-      http.expectOne('/api/v1/lists/home').flush([]);
+      http.expectOne('/api/v1/lists/home').flush([
+        {
+          id: 'list-1',
+          name: 'Courses',
+          icon: 'cart',
+          color: '#2ecb70',
+          role: 'owner',
+          removeChecked: false,
+          remaining: 0,
+          entries: [],
+        },
+      ]);
+      await settle();
+
+      expect(store.home()?.map(({ id }) => id)).toEqual(['list-1']);
       http.expectNone('/api/v1/lists');
     });
 
@@ -544,6 +558,8 @@ describe('ListsStore', () => {
       await settle();
 
       http.expectNone('/api/v1/lists');
+      expect(store.lists().map(({ id }) => id)).toEqual(['list-1']);
+      expect(store.error()).toBe('');
     });
 
     it('reloads only what is on screen', async () => {

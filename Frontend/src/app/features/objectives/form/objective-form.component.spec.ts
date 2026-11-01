@@ -305,6 +305,8 @@ describe('ObjectiveFormComponent', () => {
 
       http.expectOne('/api/v1/objectives').flush(objectiveDetail({ id: 'new' }));
       await first;
+
+      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/objectives', 'new'], { replaceUrl: true });
     });
   });
 
@@ -403,12 +405,15 @@ describe('ObjectiveFormComponent', () => {
 
       await component.startFromTemplate();
       http.expectNone('/api/v1/objectives/templates/t1/use');
+      expect(navigate).not.toHaveBeenCalled();
 
       component.templateId.set('t1');
       const first = component.startFromTemplate();
       await component.startFromTemplate();
       http.expectOne('/api/v1/objectives/templates/t1/use').flush(objectiveDetail({ id: 'made' }));
       await first;
+
+      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/objectives', 'made'], { replaceUrl: true });
     });
   });
 

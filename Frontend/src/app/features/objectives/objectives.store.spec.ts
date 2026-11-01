@@ -133,21 +133,25 @@ describe('ObjectivesStore', () => {
         http.expectOne('/api/v1/objectives/obj-1/preferences').flush(objectiveDetail({ onHome: true }));
         await before;
         http.expectNone('/api/v1/objectives/home');
+        expect(store.detail()?.onHome).toBe(true);
+        expect(store.home()).toBeNull();
 
         const loading = store.loadHome();
-        http.expectOne('/api/v1/objectives/home').flush([]);
+        http.expectOne('/api/v1/objectives/home').flush([objectiveSummary()]);
         await loading;
+        expect(store.home()).toHaveLength(1);
 
-        const pinning = store.updatePreferences('obj-1', { onHome: false });
+        const unpinning = store.updatePreferences('obj-1', { onHome: false });
         http.expectOne('/api/v1/objectives/obj-1/preferences').flush(objectiveDetail());
         await settle();
         http.expectOne('/api/v1/objectives/home').flush([]);
-        await pinning;
+        await unpinning;
+        expect(store.home()).toEqual([]);
 
         // Another preference leaves the home page alone.
         const reminding = store.updatePreferences('obj-1', { dueReminder: 'same-day' });
         http.expectOne('/api/v1/objectives/obj-1/preferences').flush(objectiveDetail());
-        await reminding;
+        expect(await reminding).toBe(true);
       });
     });
 
@@ -163,6 +167,9 @@ describe('ObjectivesStore', () => {
         http.expectNone('/api/v1/objectives');
         http.expectNone('/api/v1/objectives/home');
         http.expectNone('/api/v1/objectives/agenda');
+        expect(store.objectives()).toEqual([]);
+        expect(store.home()).toBeNull();
+        expect(store.detail()).toBeNull();
       });
 
       it('reloads the list, the home page, the agenda and what is open', async () => {
@@ -259,6 +266,8 @@ describe('ObjectivesStore', () => {
         emit({ type: 'friends.changed' });
 
         http.expectNone('/api/v1/objectives');
+        expect(store.objectives().map(({ id }) => id)).toEqual(['obj-1']);
+        expect(store.error()).toBe('');
       });
     });
 
@@ -829,14 +838,18 @@ describe('ObjectivesStore', () => {
       const agenda = store.loadAgenda();
       const opening = store.open('obj-1');
 
-      const [request] = http.match('/api/v1/objectives/import');
+      const requests = http.match('/api/v1/objectives/import');
+      expect(requests).toHaveLength(1);
       http.expectNone('/api/v1/objectives');
-      request.flush({ imported: 1 });
+      requests[0].flush({ imported: 1 });
       await settle();
       http.expectOne('/api/v1/objectives').flush([]);
       http.expectOne('/api/v1/objectives/agenda').flush([]);
       http.expectOne('/api/v1/objectives/obj-1').flush(objectiveDetail());
       await Promise.all([loading, agenda, opening]);
+
+      expect(stored()).toEqual([]);
+      expect(store.detail()?.id).toBe('obj-1');
     });
   });
 });
