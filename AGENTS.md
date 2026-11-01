@@ -51,6 +51,10 @@ Keep these root commands working when package scripts change.
 - Usernames can change (`PATCH /users/me`), with the registration rules and a 409 when taken in any case; `users/username.ts` holds the shared rules.
 - Each member arranges lists for themselves: `list_preferences` (one row per user and list: `position`, `onHome`) orders their overview and pins lists to their home page (`GET /lists/home`). Never store such choices on the list itself: shared lists would change for everyone.
 - Friend changes are pushed live once committed (`friend.requested`, `friend.accepted` with the other person's public profile, `friends.changed`). The app's `FriendNotificationsService` turns them into a toast and the badge (incoming requests plus unseen acceptances).
+- Objectives are trees (`objectives`, with `rootId` and `parentId`): one owner per tree, at most 10 levels and 500 objectives, because a whole tree is loaded per request. `ObjectiveTree` is the one place that computes progress and roles, without touching the database. Every write goes through `ObjectiveWriterService.change()`: permission, transaction, statuses settled from progress, then live events once committed. A parent's bar is the weighted average of its children; only a complete objective shows 100.
+- An objective invitation (`objective_members`) reaches that objective and everything below it, nothing above, and the strongest role on the way up decides. `viewer` reads, `contributor` moves things forward, only the owner changes structure, settings and people. Going through contacts revokes access as for lists. Privacy is enforced in `ObjectiveViewService` and `ObjectiveChangesService`: above what was shared, people get names only (`breadcrumb[].id` and `parentId` are null), no progress, no other people, and events never carry an id they may not know. Any new field or event on objectives needs a test in the "leaks nothing" style (`objective-members.service.spec.ts`).
+- Recurring objectives restart lazily: there is no background job, `ObjectiveRecurrenceService.restartDue()` runs on the way to the screens, so any new way of reading objectives must call it. Only what is dated from `periodStart` counts, and days are the server's (UTC). Objective reminders are stored per person, but nothing sends them yet.
+- The browser used to hold objectives (`PlanoData.objectives.items`): `ObjectivesStore` imports them once, in batches under the 100 KB body limit. Their ids are derived from the local ones, so sending them twice creates them once. Display settings and recent searches stay in the browser.
 - Password recovery: `POST /auth/password-reset` answers 204 whatever the address; the link puts a single-use, 30-minute token in the URL fragment (never logged by proxies), stored as a SHA-256; confirming ends every session.
 
 ## Frontend i18n
@@ -59,6 +63,7 @@ Keep these root commands working when package scripts change.
 - Templates use the `transloco` pipe; TypeScript uses `TranslocoService.translate()` at call time. Language names stay in their own language.
 - The language follows the account (`users.locale`); before sign-in it is this browser's last choice, then the browser languages, then French.
 - Every TestBed loads the French texts through the unit-test `providersFile` (`src/test-providers.ts`), so specs assert French strings.
+- The lists and objectives screens are still written in French in their templates; only what is shared with the rest of the app (toasts, the tab bar) goes through Transloco.
 
 ## Frontend layout
 
@@ -144,6 +149,8 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 - Frontend unit tests run with Vitest in browser mode (headless Chromium through Playwright, `@angular/build:unit-test`), not jsdom: specs rely on `<dialog>.showModal()`, `navigator.clipboard` and real layout. Run `npm run test:browser-install` (in `Frontend/`) once per machine. Zone's `fakeAsync`/`tick` do not work under Vitest; use `vi.useFakeTimers()` and `vi.advanceTimersByTime()`.
 - Global styles scoped under a component tag (e.g. `app-list-detail .entry-name-editor`) do not match in specs: the TestBed root is not that tag. Wrap the rendered element in a temporary element of that tag to test them.
 - Do not call `setPointerCapture()` on `pointerdown` of something that is also tapped: the browser then retargets the click to the capturing element, so a tap on a button inside it is lost. Capture once the press becomes a drag or swipe (`SwipeToDelete`). Specs calling `.click()` on the button do not catch this; dispatch the pointer events too.
+- For code that depends on today, in specs running real queries: `vi.useFakeTimers({ toFake: ['Date'] })` freezes the date and leaves the timers the database driver needs.
+- A request from a lazy-loaded screen comes a few macrotasks after navigating: wait with `vi.waitFor()` and `http.match()`, as a fixed number of ticks is flaky on a cold start.
 - `toObservable()` emits from an effect, which runs on change detection: call `fixture.detectChanges()` after changing the signal before waiting on a debounce.
 - ES module exports cannot be spied on in frontend specs either: inject the dependency (e.g. `AVATAR_RESIZER`) so specs can provide a fake.
 - TypeScript 6 no longer loads every installed `@types/*` package: `types` defaults to `[]`. `Backend/tsconfig.json` lists `node` and `vitest/globals`; `tsconfig.build.json` narrows it to `node` so production code cannot use test globals.
