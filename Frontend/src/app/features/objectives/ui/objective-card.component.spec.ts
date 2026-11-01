@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { createMockPlanoData } from '@plano/common';
+import { objectiveSummary } from '../testing/objectives-fixtures';
 import { ObjectiveCardComponent, ObjectiveCardView } from './objective-card.component';
 
 describe('ObjectiveCardComponent', () => {
   let fixture: ComponentFixture<ObjectiveCardComponent>;
   let element: HTMLElement;
-  const objectives = createMockPlanoData().objectives.items;
+  const withBar = objectiveSummary({ percent: 38 });
 
   function render(card: Partial<ObjectiveCardView>, tile: boolean): void {
     fixture.componentRef.setInput('card', {
-      objective: objectives[0],
-      progress: 38,
+      objective: withBar,
       progressText: '38 %',
       caption: 'Échéance : 29 nov. 2026',
       tint: '#3264ed',
+      timelapse: null,
       ...card,
     });
     fixture.componentRef.setInput('tile', tile);
@@ -30,12 +30,42 @@ describe('ObjectiveCardComponent', () => {
     element = fixture.nativeElement as HTMLElement;
   });
 
+  it('links to the objective', () => {
+    render({}, false);
+    expect(element.querySelector('a')?.getAttribute('href')).toBe('/objectives/obj-1');
+  });
+
   it('keeps the thin bar and the trailing value in list mode', () => {
     render({}, false);
 
     expect(element.querySelector('.progress b')?.getAttribute('style')).toContain('width: 38%');
     expect(element.querySelector('.value')?.textContent).toContain('38 %');
     expect(element.querySelector('.meter')).toBeNull();
+  });
+
+  it('shows no bar or value for an objective without a completion bar', () => {
+    for (const tile of [false, true]) {
+      render({ objective: objectiveSummary(), progressText: '' }, tile);
+
+      expect(element.querySelector('.progress')).toBeNull();
+      expect(element.querySelector('.value')).toBeNull();
+      expect(element.querySelector('.meter')).toBeNull();
+      expect(element.querySelector('strong')?.textContent).toBe('Courir 10 km');
+    }
+  });
+
+  it('shows the timelapse bar when there is one, overdue in its own style', () => {
+    render({}, false);
+    expect(element.querySelector('app-timelapse-bar')).toBeNull();
+
+    render({ timelapse: { percent: 40, label: '6 jours restants', overdue: false } }, false);
+    const bar = element.querySelector('app-timelapse-bar') as HTMLElement;
+    expect(bar.textContent).toContain('6 jours restants');
+    expect(bar.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('40');
+    expect(bar.classList).not.toContain('overdue');
+
+    render({ timelapse: { percent: 100, label: '2 jours de retard', overdue: true } }, false);
+    expect(element.querySelector('app-timelapse-bar')?.classList).toContain('overdue');
   });
 
   it('shows the value in a bubble centred on the bar, next to the icon, in tile mode', () => {
@@ -55,7 +85,7 @@ describe('ObjectiveCardComponent', () => {
   });
 
   it('draws a thin line that thickens into a ring around the bubble', () => {
-    render({ progress: 50 }, true);
+    render({ objective: objectiveSummary({ percent: 50 }) }, true);
     const track = (element.querySelector('.meter-track') as HTMLElement).getBoundingClientRect();
     const bubbleElement = element.querySelector('.meter-bubble') as HTMLElement;
     const bubble = bubbleElement.getBoundingClientRect();
@@ -73,14 +103,19 @@ describe('ObjectiveCardComponent', () => {
     expect(fill.width).toBeCloseTo(meter.width / 2, 0);
   });
 
+  it('marks a completed objective', () => {
+    render({ objective: objectiveSummary({ status: 'completed', percent: 100 }) }, false);
+    expect(element.querySelector('.card')?.classList).toContain('completed');
+  });
+
+  it('labels an archived objective', () => {
+    render({ objective: objectiveSummary({ archived: true }) }, false);
+    expect(element.querySelector('em')?.textContent).toBe('Archivé');
+  });
+
   describe('"En pause" pill', () => {
-    const paused = { ...objectives[0], status: 'paused' as const };
-    const centre = (
-      box: DOMRect,
-    ): {
-      x: number;
-      y: number;
-    } => ({
+    const paused = objectiveSummary({ status: 'paused', percent: 38 });
+    const centre = (box: DOMRect): { x: number; y: number } => ({
       x: (box.left + box.right) / 2,
       y: (box.top + box.bottom) / 2,
     });
@@ -109,9 +144,10 @@ describe('ObjectiveCardComponent', () => {
       expect(pill.top).toBeGreaterThanOrEqual(text.getBoundingClientRect().bottom - 1);
     });
   });
+
   it('keeps the number dark on a white bubble whatever the progress', () => {
-    for (const progress of [0, 50, 100]) {
-      render({ progress, progressText: `${progress} %` }, true);
+    for (const percent of [0, 50, 100]) {
+      render({ objective: objectiveSummary({ percent }), progressText: `${percent} %` }, true);
       const bubble = getComputedStyle(element.querySelector('.meter-bubble') as HTMLElement);
 
       // White inner layer (padding-box) under the progress-coloured ring.

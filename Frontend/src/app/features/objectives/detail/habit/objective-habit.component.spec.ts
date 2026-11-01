@@ -1,37 +1,48 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ObjectivesStore } from '../../objectives.store';
-import { provideObjectiveContext, provideObjectivesTesting } from '../../objectives.testing';
+import type { ObjectiveCheckIn } from '@plano/common';
+import {
+  openObjective,
+  provideObjectiveContext,
+  provideObjectivesTesting,
+  provideSignedIn,
+  settleObjectives,
+} from '../../objectives.testing';
+import { ME, OTHER, habitDetail, metricDetail } from '../../testing/objectives-fixtures';
 import { ObjectiveHabitComponent } from './objective-habit.component';
 
 describe('ObjectiveHabitComponent', () => {
   let fixture: ComponentFixture<ObjectiveHabitComponent>;
   let component: ObjectiveHabitComponent;
   let element: HTMLElement;
-  let store: ObjectivesStore;
+  let http: HttpTestingController;
 
-  function setUp(id: string): void {
+  async function setUp(detail = habitDetail()): Promise<void> {
     TestBed.configureTestingModule({
       imports: [ObjectiveHabitComponent],
-      providers: [...provideObjectivesTesting(), provideObjectiveContext(id)],
+      providers: [...provideObjectivesTesting(), provideObjectiveContext('obj-1'), provideSignedIn()],
     });
+    http = TestBed.inject(HttpTestingController);
+    await openObjective(detail);
     fixture = TestBed.createComponent(ObjectiveHabitComponent);
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
-    store = TestBed.inject(ObjectivesStore);
     fixture.detectChanges();
   }
 
   const day = (label: string): HTMLButtonElement =>
     element.querySelector(`.day[aria-label^="${label}"]`) as HTMLButtonElement;
 
+  afterEach(() => http.verify());
+
   describe('for an ongoing habit', () => {
-    beforeEach(() => setUp('mediter-30-min'));
+    beforeEach(() => setUp());
 
     it('computes this month’s successes, rate and best streak', () => {
       expect(element.querySelector('.month-nav span')?.textContent).toBe('Octobre 2026');
-      // 11 of the 15 days elapsed in October are checked in the seed.
-      expect(component.stats()).toEqual({ successes: 11, rate: 73, bestStreak: 3 });
-      expect(element.querySelectorAll('.day.checked').length).toBe(11);
+      // Started on the 1st: 15 days could be tracked so far, 3 were.
+      expect(component.stats()).toEqual({ successes: 3, rate: 20, bestStreak: 2 });
+      expect(element.querySelectorAll('.day.checked').length).toBe(3);
     });
 
     it('disables future and padded days', () => {
@@ -40,13 +51,26 @@ describe('ObjectiveHabitComponent', () => {
       expect(day('Mer 14 octobre').disabled).toBe(false);
     });
 
-    it('toggles a day and recomputes the stats', () => {
-      // 2 October is one of the skipped days in the seed.
+    it('checks a free day', async () => {
       day('Ven 2 octobre').click();
+
+      const request = http.expectOne('/api/v1/objectives/obj-1/check-ins/2026-10-02');
+      expect(request.request.method).toBe('PUT');
+      request.flush(habitDetail({ checkIns: [{ date: '2026-10-02', userId: ME }] }));
+      await settleObjectives();
       fixture.detectChanges();
 
       expect(day('Ven 2 octobre').getAttribute('aria-pressed')).toBe('true');
-      expect(component.stats().successes).toBe(12);
+      expect(component.stats().successes).toBe(1);
+    });
+
+    it('unchecks a checked day', async () => {
+      day('Lun 5 octobre').click();
+
+      const request = http.expectOne('/api/v1/objectives/obj-1/check-ins/2026-10-05');
+      expect(request.request.method).toBe('DELETE');
+      request.flush(habitDetail());
+      await settleObjectives();
     });
 
     it('browses previous months', () => {
@@ -54,55 +78,93 @@ describe('ObjectiveHabitComponent', () => {
       fixture.detectChanges();
 
       expect(element.querySelector('.month-nav span')?.textContent).toBe('Septembre 2026');
-      expect(component.stats()).toEqual(expect.objectContaining({ successes: 23, rate: 77 }));
-
-      component.shiftMonth(-1);
-      // August is before the habit started: nothing can be tracked.
+      // Before the habit started: nothing can be tracked.
       expect(component.stats()).toEqual(expect.objectContaining({ successes: 0, rate: 0 }));
     });
 
-    it('edits the reminder', () => {
-      const select = element.querySelector('.reminder select') as HTMLSelectElement;
-      const time = element.querySelector('.reminder input') as HTMLInputElement;
-      time.value = '06:45';
+    it('edits the signed-in person’s reminder', async () => {
+      const time = element.querySelector('.reminder select') as HTMLSelectElement;
+      time.value = 'daily';
       time.dispatchEvent(new Event('change'));
-      select.value = 'none';
-      select.dispatchEvent(new Event('change'));
+
+      const request = http.expectOne('/api/v1/objectives/obj-1/preferences');
+      expect(request.request.method).toBe('PATCH');
+      expect(request.request.body).toEqual({ reminder: { frequency: 'daily', time: '09:00', weekday: 0 } });
+      request.flush(habitDetail({ reminder: { frequency: 'daily', time: '09:00', weekday: 0 } }));
+      await settleObjectives();
       fixture.detectChanges();
 
-      expect(store.find('mediter-30-min')?.reminder).toEqual(
-        expect.objectContaining({ frequency: 'none', time: '06:45' }),
-      );
-      expect(element.querySelector('.reminder input')).toBeNull();
-    });
-
-    it('locks check-ins while the habit is paused', () => {
-      store.setPaused('mediter-30-min', true);
-      fixture.detectChanges();
-
-      expect(day('Mer 14 octobre').disabled).toBe(true);
-      expect(element.querySelector('.hint')?.textContent).toContain('Reprenez');
+      const input = element.querySelector('.reminder input') as HTMLInputElement;
+      input.value = '06:45';
+      input.dispatchEvent(new Event('change'));
+      const second = http.expectOne('/api/v1/objectives/obj-1/preferences');
+      expect(second.request.body).toEqual({ reminder: { frequency: 'daily', time: '06:45', weekday: 0 } });
+      second.flush(habitDetail());
+      await settleObjectives();
     });
   });
 
-  it('opens a completed habit on its last tracked month', () => {
-    setUp('mediter-30-jours');
+  it('only counts the signed-in person’s days', async () => {
+    const checkIns: ObjectiveCheckIn[] = [
+      { date: '2026-10-05', userId: ME },
+      { date: '2026-10-05', userId: OTHER },
+      { date: '2026-10-06', userId: OTHER },
+    ];
+    await setUp(habitDetail({ checkIns }));
+
+    expect(component.stats().successes).toBe(1);
+    expect(component.isChecked('2026-10-05')).toBe(true);
+    expect(component.isChecked('2026-10-06')).toBe(false);
+  });
+
+  it('locks check-ins while the habit is paused', async () => {
+    await setUp(habitDetail({ status: 'paused' }));
+
+    expect(day('Mer 14 octobre').disabled).toBe(true);
+    expect(element.querySelector('.hint')?.textContent).toContain('Reprenez');
+  });
+
+  it('only lets a viewer read', async () => {
+    await setUp(habitDetail({ role: 'viewer' }));
+
+    expect(day('Mer 14 octobre').disabled).toBe(true);
+    expect(element.querySelector('.hint')?.textContent).toContain('sans y participer');
+  });
+
+  it('lets a contributor check in', async () => {
+    await setUp(habitDetail({ role: 'contributor' }));
+
+    expect(day('Mer 14 octobre').disabled).toBe(false);
+  });
+
+  it('opens a finished habit on its last tracked month', async () => {
+    await setUp(habitDetail({ checkIns: [{ date: '2026-08-05', userId: ME }, { date: '2026-08-06', userId: ME }] }));
+
     expect(element.querySelector('.month-nav span')?.textContent).toBe('Août 2026');
-    expect(component.stats().successes).toBe(30);
   });
 
-  it('ignores actions once the objective has been deleted', () => {
-    setUp('mediter-30-min');
-    store.remove('mediter-30-min');
-    component.toggle('2026-10-14');
-    component.updateReminder({ time: '10:00' });
-
-    expect(component.isChecked('2026-10-14')).toBe(false);
-    expect(component.stats().successes).toBe(0);
-  });
-
-  it('explains that other objectives are not habits', () => {
-    setUp('courir-10-km');
+  it('explains that other objectives are not habits', async () => {
+    await setUp(metricDetail());
     expect(element.querySelector('.empty')).not.toBeNull();
+  });
+});
+
+describe('ObjectiveHabitComponent without an objective', () => {
+  it('ignores actions', () => {
+    TestBed.configureTestingModule({
+      imports: [ObjectiveHabitComponent],
+      providers: [...provideObjectivesTesting(), provideObjectiveContext('gone'), provideSignedIn()],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(ObjectiveHabitComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.toggle('2026-10-14');
+    fixture.componentInstance.updateReminder({ time: '10:00' });
+
+    http.verify();
+    expect(fixture.componentInstance.isChecked('2026-10-14')).toBe(false);
+    expect(fixture.componentInstance.stats().successes).toBe(0);
+    expect(fixture.componentInstance.canContribute()).toBe(false);
   });
 });

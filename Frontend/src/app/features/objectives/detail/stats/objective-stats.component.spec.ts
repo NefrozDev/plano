@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ObjectivesStore } from '../../objectives.store';
-import { provideObjectiveContext, provideObjectivesTesting } from '../../objectives.testing';
-import { ObjectiveContext } from '../objective-context';
+import type { ObjectiveDetail } from '@plano/common';
+import { openObjective, provideObjectiveContext, provideObjectivesTesting } from '../../objectives.testing';
+import { metricDetail, treeDetail } from '../../testing/objectives-fixtures';
 import { ObjectiveStatsComponent, niceStep } from './objective-stats.component';
 
 describe('niceStep', () => {
@@ -25,43 +25,52 @@ describe('ObjectiveStatsComponent', () => {
     Array.from(element.querySelectorAll('.tile')).map(
       (tile) => `${tile.querySelector('strong')?.textContent} | ${tile.querySelector('span')?.textContent}`,
     );
-  const show = (id: string): void => {
-    TestBed.inject(ObjectiveContext).id.set(id);
+  const show = async (detail: ObjectiveDetail): Promise<void> => {
+    await openObjective(detail);
     fixture.detectChanges();
   };
+  const session = (date: string, value: number) => ({
+    id: date,
+    date,
+    status: 'done' as const,
+    label: '',
+    value,
+    durationMinutes: null,
+    author: null,
+  });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [ObjectiveStatsComponent],
-      providers: [...provideObjectivesTesting(), provideObjectiveContext('courir-10-km')],
+      providers: [...provideObjectivesTesting(), provideObjectiveContext('obj-1')],
     });
     fixture = TestBed.createComponent(ObjectiveStatsComponent);
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
-    fixture.detectChanges();
+    await show(metricDetail());
   });
 
   it('summarizes completed sessions', () => {
-    // 8 runs done (243 min, 38.5 km in total) and 1 missed.
+    // 2 runs done (77 min, 12.5 km in total) and 1 missed; the planned one does not count.
     expect(tiles()).toEqual([
-      '6,5 km | Meilleure séance',
-      '4 h 03 | Temps total',
-      '4,8 km | Moyenne par séance',
-      '89 % | Assiduité',
+      '6,5 km | Meilleure valeur',
+      '1 h 17 | Temps total',
+      '6,3 km | Moyenne par séance',
+      '67 % | Assiduité',
     ]);
   });
 
   it('draws the running best as an SVG line against the target', () => {
     const chart = component.chart()!;
 
-    expect(chart.points.map((point) => point.value)).toEqual([3, 3.5, 4.2, 4.8, 5, 5.5, 6, 6.5]);
+    expect(chart.points.map((point) => point.value)).toEqual([6, 6.5]);
     expect(chart.ticks.map((tick) => tick.label)).toEqual(['0', '2,5', '5', '7,5', '10']);
     expect(chart.line.startsWith('M')).toBe(true);
     expect(element.querySelector('.target-label')?.textContent).toBe('Objectif : 10 km');
     expect(element.querySelector('.chart-card header strong')?.textContent).toBe('6,5 km');
     // Lines rendered inside @for blocks must still be real SVG elements.
     expect(element.querySelector('line.grid')?.namespaceURI).toBe('http://www.w3.org/2000/svg');
-    expect(element.querySelectorAll('tbody tr').length).toBe(8);
+    expect(element.querySelectorAll('tbody tr').length).toBe(2);
   });
 
   it('shows a tooltip for the point nearest to the pointer', () => {
@@ -71,7 +80,7 @@ describe('ObjectiveStatsComponent', () => {
     fixture.detectChanges();
 
     expect(component.activeIndex()).toBe(0);
-    expect(element.querySelector('.tooltip strong')?.textContent).toBe('3 km');
+    expect(element.querySelector('.tooltip strong')?.textContent).toBe('6 km');
     expect(element.querySelector('.crosshair')).not.toBeNull();
 
     svg.dispatchEvent(new PointerEvent('pointerleave'));
@@ -86,74 +95,85 @@ describe('ObjectiveStatsComponent', () => {
     };
 
     chart.dispatchEvent(new FocusEvent('focus'));
-    expect(component.activeIndex()).toBe(7);
+    expect(component.activeIndex()).toBe(1);
     press('ArrowLeft');
-    expect(component.activeIndex()).toBe(6);
-    press('Home');
     expect(component.activeIndex()).toBe(0);
     press('ArrowLeft');
     expect(component.activeIndex()).toBe(0);
     press('End');
     press('ArrowRight');
-    expect(component.activeIndex()).toBe(7);
+    expect(component.activeIndex()).toBe(1);
+    press('Home');
+    expect(component.activeIndex()).toBe(0);
     press('a');
-    expect(component.activeIndex()).toBe(7);
+    expect(component.activeIndex()).toBe(0);
   });
 
   it('exposes the chart as a slider that announces the current point', () => {
     const chart = element.querySelector('.chart') as HTMLElement;
-    const slider = () => ['role', 'aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-valuetext']
-      .map((name) => chart.getAttribute(name));
+    const slider = () =>
+      ['role', 'aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-valuetext'].map((name) => chart.getAttribute(name));
 
     // Before any interaction it sits on the latest point.
-    expect(slider()).toEqual(['slider', '0', '7', '7', '6,5 km, le 14 oct. 2026']);
+    expect(slider()).toEqual(['slider', '0', '1', '1', '6,5 km, le 14 oct. 2026']);
 
     chart.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home' }));
     fixture.detectChanges();
-    expect(slider()).toEqual(['slider', '0', '7', '0', '3 km, le 21 sept. 2026']);
+    expect(slider()).toEqual(['slider', '0', '1', '0', '6 km, le 12 oct. 2026']);
     // The visual tooltip repeats the value, so it stays hidden from screen readers.
     expect(element.querySelector('.tooltip')?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('uses totals for cumulative objectives without durations', () => {
-    show('economiser-1000');
+  it('uses totals for cumulative objectives without durations', async () => {
+    await show(
+      metricDetail({
+        amount: { current: 450, target: 1000, unit: '€' },
+        metric: { unit: '€', target: 1000, aggregation: 'sum' },
+        sessions: [session('2026-09-01', 150), session('2026-09-15', 150), session('2026-10-01', 150)],
+      }),
+    );
 
     expect(tiles().slice(0, 2)).toEqual(['450 € | Total cumulé', '3 | Séances réalisées']);
     expect(component.chart()?.points.map((point) => point.value)).toEqual([150, 300, 450]);
   });
 
-  it('handles a single session, no session and non-metric objectives', () => {
-    const store = TestBed.inject(ObjectivesStore);
-    const created = store.create({
-      title: 'Nager', category: 'health', tracking: 'metric', dueDate: null, description: '', plan: '',
-      reminder: { frequency: 'none', time: '09:00', weekday: 0 },
-      metric: { unit: 'km', target: 2, aggregation: 'max' }, steps: [], habitTargetDays: 1,
-    });
-    show(created.id);
+  it('handles a single session, no session and other modes', async () => {
+    await show(metricDetail({ sessions: [], amount: { current: 0, target: 10, unit: 'km' } }));
     expect(element.querySelector('.chart-card .empty')).not.toBeNull();
     expect(tiles()[3]).toBe('0 % | Assiduité');
 
-    store.addSession(created.id, { date: '2026-10-15', status: 'done', value: 1, label: 'Bassin' });
-    fixture.detectChanges();
+    await show(metricDetail({ sessions: [session('2026-10-15', 1)] }));
     expect(component.chart()?.xLabels.length).toBe(1);
 
-    show('apprendre-italien');
+    await show(treeDetail());
     expect(element.querySelector('.chart-card')).toBeNull();
     expect(component.tiles()).toEqual([]);
   });
 
-  it('copes with a missing objective, a hidden chart and empty pointer input', () => {
+  it('copes with a hidden chart and empty pointer input', () => {
     const svg = element.querySelector('svg') as SVGSVGElement;
     vi.spyOn(svg, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 0, 0));
     component.trackPointer(new PointerEvent('pointermove', { clientX: 10 }), svg);
+
     // A zero-width (hidden) chart cannot map the pointer to a point.
     expect(component.activeIndex()).toBeNull();
+  });
+});
 
-    show('inconnu');
+describe('ObjectiveStatsComponent without an objective', () => {
+  it('stays quiet', () => {
+    TestBed.configureTestingModule({
+      imports: [ObjectiveStatsComponent],
+      providers: [...provideObjectivesTesting(), provideObjectiveContext('gone')],
+    });
+    const fixture = TestBed.createComponent(ObjectiveStatsComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
     expect(component.tint()).toBe('#3264ed');
     expect(component.unit()).toBe('');
     expect(component.tooltip()).toBeNull();
-    component.trackPointer(new PointerEvent('pointermove'), svg);
+    component.trackPointer(new PointerEvent('pointermove'), document.createElement('div'));
     component.navigate(new KeyboardEvent('keydown', { key: 'End' }));
     component.focusChart();
     expect(component.activeIndex()).toBe(0);

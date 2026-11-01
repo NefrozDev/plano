@@ -1,11 +1,14 @@
-import { daysBetween, normalizeText, pad2 } from '../../core/time/dates';
+import { daysBetween, formatDate, normalizeText, pad2, toIsoDate } from '../../core/time/dates';
 import type {
+  CompletionMode,
   DueReminder,
   IsoDate,
   Objective,
   ObjectiveCategory,
   ObjectiveReminder,
   ObjectiveStatus,
+  ObjectiveSummary,
+  ImportObjectiveRequest,
 } from '@plano/common';
 
 export interface CategoryMeta {
@@ -26,6 +29,13 @@ export const STATUS_LABELS: Readonly<Record<ObjectiveStatus, string>> = {
   active: 'En cours',
   completed: 'Terminés',
   paused: 'En pause',
+};
+
+export const COMPLETION_LABELS: Readonly<Record<Exclude<CompletionMode, 'none'>, { label: string; hint: string }>> = {
+  children: { label: 'Sous-objectifs', hint: 'Moyenne de leur progression' },
+  metric: { label: 'Objectif chiffré', hint: 'Distance, montant, nombre de livres…' },
+  habit: { label: 'Habitude', hint: 'Un jour réussi à la fois' },
+  manual: { label: 'Pourcentage manuel', hint: 'Vous déplacez la barre vous-même' },
 };
 
 export const DUE_REMINDER_LABELS: Readonly<Record<DueReminder, string>> = {
@@ -58,64 +68,56 @@ export function formatDuration(minutes: number): string {
   return hours ? `${hours} h ${pad2(rest)}` : `${rest} min`;
 }
 
-export function metricCurrent(objective: Objective): number {
-  const values = objective.sessions
-    .filter((session) => session.status === 'done')
-    .map((session) => session.value);
-  if (!values.length) return 0;
-  return objective.metric?.aggregation === 'max'
-    ? Math.max(...values)
-    : values.reduce((total, value) => total + value, 0);
+/** "3 / 10 km", or the percentage; empty for an objective without a completion bar. */
+export function progressText(objective: ObjectiveSummary, showPercentage: boolean): string {
+  if (objective.percent === null) return '';
+  const { amount } = objective;
+  return showPercentage || !amount
+    ? `${objective.percent} %`
+    : `${formatNumber(amount.current)} / ${formatNumber(amount.target)} ${amount.unit}`;
 }
 
-/** Achieved and target amounts in the objective's own unit (km, steps, days…). */
-export function progressAmounts(objective: Objective): { current: number; target: number } {
-  switch (objective.tracking) {
-    case 'metric':
-      return { current: metricCurrent(objective), target: objective.metric?.target ?? 0 };
-    case 'steps':
-      return {
-        current: objective.steps.filter((step) => step.done).length,
-        target: objective.steps.length,
-      };
-    case 'habit':
-      return {
-        current: objective.habit?.checkIns.length ?? 0,
-        target: objective.habit?.targetDays ?? 0,
-      };
+export function dueCaption(objective: Pick<ObjectiveSummary, 'dueDate' | 'status' | 'completedAt'>): string {
+  if (objective.status === 'completed' && objective.completedAt) {
+    return `Terminé le ${formatDate(toIsoDate(new Date(objective.completedAt)))}`;
   }
+  return objective.dueDate ? `Échéance : ${formatDate(objective.dueDate)}` : 'Sans échéance';
 }
 
-export function objectiveProgress(objective: Objective): number {
-  const { current, target } = progressAmounts(objective);
-  return target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+export interface TimelapseView {
+  /** How full the bar is, 0 to 100. */
+  percent: number;
+  label: string;
+  /** Past the deadline and not complete: the bar is full and red. */
+  overdue: boolean;
 }
 
-export function progressUnit(objective: Objective): string {
-  if (objective.tracking === 'metric') return objective.metric?.unit ?? '';
-  return objective.tracking === 'steps' ? 'étapes' : 'jours';
+function days(count: number): string {
+  return `${count} ${count > 1 ? 'jours' : 'jour'}`;
 }
 
-export function progressLabel(objective: Objective): string {
-  const { current, target } = progressAmounts(objective);
-  return `${formatNumber(current)} / ${formatNumber(target)} ${progressUnit(objective)}`;
-}
-
-/**
- * Derives the completion status from progress so it never contradicts the data:
- * reaching 100 % completes an objective, undoing progress reopens it.
- * Paused objectives keep their status until resumed.
- */
-export function withDerivedStatus(objective: Objective, today: IsoDate): Objective {
-  if (objective.status === 'paused') return objective;
-  const complete = objectiveProgress(objective) >= 100;
-  if (complete && objective.status !== 'completed') {
-    return { ...objective, status: 'completed', completedOn: today };
+/** The timelapse bar of an objective; null when it has none. */
+export function timelapseView(
+  objective: Pick<ObjectiveSummary, 'timelapse' | 'startDate' | 'dueDate' | 'status'>,
+  today: IsoDate,
+): TimelapseView | null {
+  const { timelapse, startDate, dueDate, status } = objective;
+  if (timelapse === 'off' || !dueDate) return null;
+  const left = daysBetween(today, dueDate);
+  if (left < 0 && status !== 'completed') {
+    return { percent: 100, label: `${days(-left)} de retard`, overdue: true };
   }
-  if (!complete && objective.status === 'completed') {
-    return { ...objective, status: 'active', completedOn: null };
-  }
-  return objective;
+  const total = Math.max(1, daysBetween(startDate, dueDate));
+  const elapsed = Math.min(total, Math.max(0, daysBetween(startDate, today)));
+  const fill = (elapsed / total) * 100;
+  let label = `${days(left)} restant${left > 1 ? 's' : ''}`;
+  if (status === 'completed') label = 'Terminé';
+  else if (left === 0) label = 'Dernier jour';
+  return {
+    percent: Math.round(timelapse === 'elapsed' ? fill : 100 - fill),
+    label,
+    overdue: false,
+  };
 }
 
 export function objectiveReminderLabel(reminder: ObjectiveReminder): string {
@@ -142,4 +144,72 @@ export function longestStreak(dates: readonly IsoDate[]): number {
 
 export function slugify(value: string): string {
   return normalizeText(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'objectif';
+}
+
+const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function validDate(date: string | null | undefined): IsoDate | null {
+  return date && VALID_DATE.test(date) ? date : null;
+}
+
+/**
+ * An objective as this browser stored it, in the shape the API accepts. Old data
+ * may hold values the API refuses (long texts, a missing target): they are made
+ * valid here, or one bad objective would keep the others from ever being imported.
+ */
+export function toImportRequest(objective: Objective, today: IsoDate): ImportObjectiveRequest {
+  const metric = objective.metric;
+  const habit = objective.habit;
+  const createdOn = validDate(objective.createdOn) ?? today;
+  const reminder = objective.reminder;
+  return {
+    localId: objective.id.slice(0, 200) || slugify(objective.title),
+    title: objective.title.trim().slice(0, 80) || 'Objectif',
+    category: objective.category,
+    tracking: objective.tracking,
+    status: objective.status,
+    archived: objective.archived,
+    createdOn,
+    dueDate: validDate(objective.dueDate),
+    completedOn: validDate(objective.completedOn),
+    description: objective.description.slice(0, 500),
+    plan: objective.plan.slice(0, 120),
+    reminder: {
+      frequency: reminder?.frequency ?? 'none',
+      time: reminder?.time || '09:00',
+      weekday: reminder?.weekday ?? 0,
+    },
+    dueReminder: objective.dueReminder ?? 'none',
+    metric:
+      objective.tracking === 'metric'
+        ? {
+            unit: (metric?.unit ?? '').trim().slice(0, 12) || '-',
+            target: metric && metric.target > 0 ? metric.target : 1,
+            aggregation: metric?.aggregation ?? 'sum',
+          }
+        : null,
+    sessions: (objective.sessions ?? [])
+      .filter((session) => validDate(session.date))
+      .map((session) => ({
+        date: session.date,
+        status: session.status,
+        label: (session.label ?? '').slice(0, 60),
+        value: Math.max(0, session.value || 0),
+        durationMinutes: session.durationMinutes ?? null,
+      })),
+    steps: (objective.tracking === 'steps' ? (objective.steps ?? []) : [])
+      .filter((step) => step.label.trim())
+      .map((step) => ({
+        label: step.label.trim().slice(0, 80),
+        done: step.done,
+        completedOn: validDate(step.completedOn),
+      })),
+    habit:
+      objective.tracking === 'habit'
+        ? {
+            targetDays: Math.max(1, habit?.targetDays ?? 1),
+            checkIns: (habit?.checkIns ?? []).filter((date) => validDate(date)),
+          }
+        : null,
+  };
 }

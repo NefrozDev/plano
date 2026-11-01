@@ -1,208 +1,541 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { createMockPlanoData } from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../../core/data/plano-data.adapter';
-import { ObjectiveDraft, ObjectivesStore } from './objectives.store';
-import { provideObjectivesTesting } from './objectives.testing';
-
-const draft: ObjectiveDraft = {
-  title: '  Courir un semi  ',
-  category: 'health',
-  tracking: 'steps',
-  dueDate: '2027-04-01',
-  description: ' Avant le printemps ',
-  plan: '',
-  reminder: { frequency: 'none', time: '09:00', weekday: 0 },
-  metric: { unit: 'km', target: 21, aggregation: 'max' },
-  steps: ['10 km', '  ', '15 km'],
-  habitTargetDays: 30,
-};
+import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { settle } from '../../testing/plano-testing';
+import { ObjectivesStore } from './objectives.store';
+import { provideObjectivesTesting, provideSignedIn } from './objectives.testing';
+import { ME, metricDetail, objectiveDetail, objectiveSummary, treeDetail } from './testing/objectives-fixtures';
 
 describe('ObjectivesStore', () => {
   let store: ObjectivesStore;
+  let http: HttpTestingController;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({ providers: provideObjectivesTesting() });
-    store = TestBed.inject(ObjectivesStore);
+  const load = async (objectives = [objectiveSummary()]) => {
+    const loading = store.load();
+    http.expectOne('/api/v1/objectives').flush(objectives);
+    await loading;
+  };
+  const open = async (detail = objectiveDetail()) => {
+    const opening = store.open(detail.id);
+    http.expectOne(`/api/v1/objectives/${detail.id}`).flush(detail);
+    return opening;
+  };
+
+  describe('with the API', () => {
+    beforeEach(() => {
+      TestBed.configureTestingModule({ providers: [...provideObjectivesTesting(), provideSignedIn()] });
+      store = TestBed.inject(ObjectivesStore);
+      http = TestBed.inject(HttpTestingController);
+    });
+
+    afterEach(() => http.verify());
+
+    it('loads the objectives and says when it is done', async () => {
+      const loading = store.load();
+      expect(store.loading()).toBe(true);
+      http.expectOne('/api/v1/objectives').flush([objectiveSummary()]);
+      await loading;
+
+      expect(store.objectives().map(({ id }) => id)).toEqual(['obj-1']);
+      expect(store.find('obj-1')?.title).toBe('Courir 10 km');
+      expect(store.find('nope')).toBeUndefined();
+      expect(store.loading()).toBe(false);
+    });
+
+    it('reports a failed load, with the API message, and keeps what it had', async () => {
+      await load();
+
+      const loading = store.load();
+      http.expectOne('/api/v1/objectives').flush({ message: 'Hors service' }, { status: 500, statusText: 'Error' });
+      await loading;
+
+      expect(store.error()).toBe('Hors service');
+      expect(store.objectives()).toHaveLength(1);
+      expect(store.loading()).toBe(false);
+    });
+
+    it('opens an objective, clearing the previous one first', async () => {
+      expect(await open(objectiveDetail({ id: 'a' }))).toBe(true);
+      expect(store.detail()?.id).toBe('a');
+
+      const opening = store.open('b');
+      expect(store.detail()).toBeNull();
+      http.expectOne('/api/v1/objectives/b').flush(objectiveDetail({ id: 'b' }));
+      await opening;
+      expect(store.detail()?.id).toBe('b');
+    });
+
+    it('keeps the objective on screen while reloading it', async () => {
+      await open();
+
+      const opening = store.open('obj-1');
+      expect(store.detail()?.id).toBe('obj-1');
+      http.expectOne('/api/v1/objectives/obj-1').flush(objectiveDetail());
+      await opening;
+    });
+
+    it('answers false for an objective it cannot open', async () => {
+      const opening = store.open('hidden');
+      http.expectOne('/api/v1/objectives/hidden').flush({ message: 'Objectif introuvable.' }, { status: 404, statusText: 'Not Found' });
+
+      expect(await opening).toBe(false);
+      expect(store.detail()).toBeNull();
+      expect(store.error()).toBe('Objectif introuvable.');
+    });
+
+    it('loads the agenda items, and keeps quiet when that fails', async () => {
+      const item = {
+        kind: 'deadline' as const,
+        key: 'deadline:a',
+        objectiveId: 'a',
+        objectiveTitle: 'A',
+        category: 'health' as const,
+        date: '2026-10-20',
+        label: 'A',
+      };
+      const loading = store.loadAgenda();
+      http.expectOne('/api/v1/objectives/agenda').flush([item]);
+      await loading;
+      expect(store.agenda()).toEqual([item]);
+
+      const failing = store.loadAgenda();
+      http.expectOne('/api/v1/objectives/agenda').flush(null, { status: 500, statusText: 'Error' });
+      await failing;
+      expect(store.agenda()).toEqual([item]);
+      expect(store.error()).toBe('');
+    });
+
+    describe('overview queries', () => {
+      const mine = objectiveSummary({ id: 'mine', title: 'B', percent: 80, dueDate: '2026-12-01' });
+      const shared = objectiveSummary({
+        id: 'shared',
+        title: 'A',
+        role: 'contributor',
+        category: 'finance',
+        status: 'paused',
+        percent: 20,
+        dueDate: '2026-11-01',
+      });
+      const noBar = objectiveSummary({ id: 'nobar', title: 'C', category: 'learning', status: 'completed' });
+      const archived = objectiveSummary({ id: 'archived', title: 'D', archived: true });
+      const ids = (tab: Parameters<ObjectivesStore['query']>[0]) => store.query(tab).map(({ id }) => id);
+
+      beforeEach(() => load([mine, shared, noBar, archived]));
+
+      it('splits objectives across the four tabs', () => {
+        expect(ids('all')).toEqual(['mine', 'shared', 'nobar']);
+        expect(ids('mine')).toEqual(['mine', 'nobar']);
+        expect(ids('shared')).toEqual(['shared']);
+        expect(ids('archived')).toEqual(['archived']);
+      });
+
+      it('includes archived objectives in "Tous" when the setting asks for it', () => {
+        store.updateSettings({ showArchived: true });
+        expect(ids('all')).toContain('archived');
+        expect(ids('mine')).not.toContain('archived');
+      });
+
+      it('filters by status and category', () => {
+        store.filters.set({ statuses: ['paused'], categories: ['finance'], sort: 'manual', direction: 'asc' });
+
+        expect(ids('all')).toEqual(['shared']);
+        expect(store.activeFilterCount()).toBe(2);
+
+        store.filters.update((filters) => ({ ...filters, categories: ['health'] }));
+        expect(ids('all')).toEqual([]);
+
+        store.resetFilters();
+        expect(store.activeFilterCount()).toBe(0);
+        expect(ids('all')).toHaveLength(3);
+      });
+
+      it('sorts by progress, with bars before what has none going down', () => {
+        store.filters.update((filters) => ({ ...filters, sort: 'progress', direction: 'desc' }));
+        expect(ids('all')).toEqual(['mine', 'shared', 'nobar']);
+      });
+
+      it('sorts by title and by deadline, undated last', () => {
+        store.filters.update((filters) => ({ ...filters, sort: 'title' }));
+        expect(ids('all')).toEqual(['shared', 'mine', 'nobar']);
+
+        store.filters.update((filters) => ({ ...filters, sort: 'dueDate' }));
+        expect(ids('all')).toEqual(['shared', 'mine', 'nobar']);
+      });
+
+      it('reverses the user’s own order', () => {
+        store.filters.update((filters) => ({ ...filters, direction: 'desc' }));
+        expect(ids('all')).toEqual(['nobar', 'shared', 'mine']);
+      });
+
+      it('searches titles and category names, ignoring accents and case', () => {
+        expect(store.search('').map(({ id }) => id)).toEqual([]);
+        expect(store.search('  ').map(({ id }) => id)).toEqual([]);
+        expect(store.search('b').map(({ id }) => id)).toContain('mine');
+        expect(store.search('finances').map(({ id }) => id)).toEqual(['shared']);
+        expect(store.search('sante').map(({ id }) => id)).toContain('mine');
+      });
+    });
+
+    describe('order', () => {
+      const a = objectiveSummary({ id: 'a' });
+      const b = objectiveSummary({ id: 'b' });
+      const c = objectiveSummary({ id: 'c' });
+      const order = () => store.objectives().map(({ id }) => id);
+
+      beforeEach(() => load([a, b, c]));
+
+      it('moves locally without calling the API, ignoring impossible moves', () => {
+        store.moveObjective('c', 'a');
+        expect(order()).toEqual(['c', 'a', 'b']);
+
+        store.moveObjective('c', 'c');
+        store.moveObjective('nope', 'a');
+        store.moveObjective('a', 'nope');
+        expect(order()).toEqual(['c', 'a', 'b']);
+      });
+
+      it('saves the order on demand', async () => {
+        store.moveObjective('c', 'a');
+
+        const saving = store.saveOrder();
+        const request = http.expectOne('/api/v1/objectives/order');
+        expect(request.request.method).toBe('PUT');
+        expect(request.request.body).toEqual({ objectiveIds: ['c', 'a', 'b'] });
+        request.flush(null);
+
+        expect(await saving).toBe(true);
+      });
+
+      it('takes the server’s order back when saving fails', async () => {
+        store.moveObjective('c', 'a');
+
+        const saving = store.saveOrder();
+        http.expectOne('/api/v1/objectives/order').flush(null, { status: 500, statusText: 'Error' });
+        await settle();
+        http.expectOne('/api/v1/objectives').flush([a, b, c]);
+
+        expect(await saving).toBe(false);
+        expect(order()).toEqual(['a', 'b', 'c']);
+      });
+    });
+
+    describe('order of sub-objectives', () => {
+      const children = () => store.detail()?.children.map(({ id }) => id);
+
+      it('does nothing without an open objective', async () => {
+        store.moveChild('a', 'b');
+        expect(await store.saveChildOrder()).toBe(false);
+      });
+
+      it('moves locally, then saves and takes the server’s answer', async () => {
+        await open(treeDetail());
+
+        store.moveChild('child-2', 'child-1');
+        expect(children()).toEqual(['child-2', 'child-1']);
+        store.moveChild('child-2', 'child-2');
+        store.moveChild('nope', 'child-1');
+        expect(children()).toEqual(['child-2', 'child-1']);
+
+        const saving = store.saveChildOrder();
+        const request = http.expectOne('/api/v1/objectives/obj-1/children/order');
+        expect(request.request.method).toBe('PUT');
+        expect(request.request.body).toEqual({ objectiveIds: ['child-2', 'child-1'] });
+        request.flush(treeDetail({ title: 'Du serveur' }));
+
+        expect(await saving).toBe(true);
+        expect(store.detail()?.title).toBe('Du serveur');
+      });
+
+      it('reloads the objective when saving fails', async () => {
+        await open(treeDetail());
+        store.moveChild('child-2', 'child-1');
+
+        const saving = store.saveChildOrder();
+        http.expectOne('/api/v1/objectives/obj-1/children/order').flush(null, { status: 500, statusText: 'Error' });
+        await settle();
+        http.expectOne('/api/v1/objectives/obj-1').flush(treeDetail());
+
+        expect(await saving).toBe(false);
+        expect(children()).toEqual(['child-1', 'child-2']);
+      });
+    });
+
+    describe('create', () => {
+      const details = { title: 'Nager', category: 'health', completion: 'none', startDate: '2026-10-15' } as const;
+
+      it('adds a top-level objective to the list and opens it', async () => {
+        await load();
+
+        const creating = store.create(details);
+        const request = http.expectOne('/api/v1/objectives');
+        expect(request.request.method).toBe('POST');
+        expect(request.request.body).toEqual(details);
+        request.flush(objectiveDetail({ id: 'new', title: 'Nager' }));
+
+        expect((await creating)?.id).toBe('new');
+        expect(store.objectives().map(({ id }) => id)).toEqual(['obj-1', 'new']);
+        expect(store.detail()?.id).toBe('new');
+      });
+
+      it('keeps a sub-objective out of the top-level list', async () => {
+        await load();
+
+        const creating = store.create({ ...details, parentId: 'obj-1' });
+        http.expectOne('/api/v1/objectives').flush(objectiveDetail({ id: 'new', parentId: 'obj-1' }));
+        await creating;
+
+        expect(store.objectives().map(({ id }) => id)).toEqual(['obj-1']);
+      });
+
+      it('answers null and reports a refusal', async () => {
+        const creating = store.create(details);
+        http.expectOne('/api/v1/objectives').flush({ message: 'Trop de niveaux' }, { status: 400, statusText: 'Bad Request' });
+
+        expect(await creating).toBeNull();
+        expect(store.error()).toBe('Trop de niveaux');
+        expect(store.objectives()).toEqual([]);
+      });
+    });
+
+    describe('changes', () => {
+      beforeEach(async () => {
+        await load();
+        await open();
+      });
+
+      it.each<[string, (store: ObjectivesStore) => Promise<boolean>, string, string, unknown]>([
+        ['update', (s) => s.update('obj-1', { title: 'X' }), 'PATCH', '/obj-1', { title: 'X' }],
+        ['preferences', (s) => s.updatePreferences('obj-1', { onHome: true }), 'PATCH', '/obj-1/preferences', { onHome: true }],
+        [
+          'a session',
+          (s) => s.addSession('obj-1', { date: '2026-10-15', status: 'done', label: 'A', value: 1 }),
+          'POST',
+          '/obj-1/sessions',
+          { date: '2026-10-15', status: 'done', label: 'A', value: 1 },
+        ],
+        ['removing a session', (s) => s.removeSession('obj-1', 's1'), 'DELETE', '/obj-1/sessions/s1', null],
+        ['a check-in', (s) => s.setCheckIn('obj-1', '2026-10-15', true), 'PUT', '/obj-1/check-ins/2026-10-15', {}],
+        ['removing a check-in', (s) => s.setCheckIn('obj-1', '2026-10-15', false), 'DELETE', '/obj-1/check-ins/2026-10-15', null],
+        ['the percentage', (s) => s.setProgress('obj-1', 40), 'PUT', '/obj-1/progress', { percent: 40 }],
+        ['completing', (s) => s.setCompleted('obj-1', true), 'PUT', '/obj-1/completed', { completed: true }],
+      ])('sends %s and applies the answer everywhere', async (_, act, method, path, body) => {
+        const changing = act(store);
+        const request = http.expectOne(`/api/v1/objectives${path}`);
+        expect(request.request.method).toBe(method);
+        expect(request.request.body).toEqual(body);
+        request.flush(objectiveDetail({ title: 'Du serveur' }));
+
+        expect(await changing).toBe(true);
+        expect(store.detail()?.title).toBe('Du serveur');
+        expect(store.find('obj-1')?.title).toBe('Du serveur');
+      });
+
+      it('reports a failed change and keeps the state', async () => {
+        const changing = store.update('obj-1', { title: 'X' });
+        http.expectOne('/api/v1/objectives/obj-1').flush({ message: 'Interdit' }, { status: 403, statusText: 'Forbidden' });
+
+        expect(await changing).toBe(false);
+        expect(store.error()).toBe('Interdit');
+        expect(store.detail()?.title).toBe('Courir 10 km');
+      });
+
+      it('clears the previous error on the next request', async () => {
+        const failing = store.update('obj-1', { title: 'X' });
+        http.expectOne('/api/v1/objectives/obj-1').flush({ message: 'Interdit' }, { status: 403, statusText: 'Forbidden' });
+        await failing;
+
+        const changing = store.update('obj-1', { title: 'Y' });
+        expect(store.error()).toBe('');
+        http.expectOne('/api/v1/objectives/obj-1').flush(objectiveDetail());
+        await changing;
+      });
+
+      it('leaves other objectives alone when a sub-objective changes', async () => {
+        const changing = store.update('child', { title: 'X' });
+        http.expectOne('/api/v1/objectives/child').flush(objectiveDetail({ id: 'child', parentId: 'obj-1', title: 'X' }));
+        await changing;
+
+        expect(store.find('obj-1')?.title).toBe('Courir 10 km');
+        expect(store.objectives()).toHaveLength(1);
+      });
+
+      it('ticks a sub-objective, then reloads its parent, which stays open', async () => {
+        await open(treeDetail());
+
+        const ticking = store.setChildCompleted('child-2', true);
+        const request = http.expectOne('/api/v1/objectives/child-2/completed');
+        expect(request.request.body).toEqual({ completed: true });
+        request.flush(objectiveDetail({ id: 'child-2' }));
+        await settle();
+        http.expectOne('/api/v1/objectives/obj-1').flush(treeDetail({ percent: 100 }));
+
+        expect(await ticking).toBe(true);
+        expect(store.detail()).toMatchObject({ id: 'obj-1', percent: 100 });
+      });
+
+      it('does not reload the parent when ticking fails', async () => {
+        const ticking = store.setChildCompleted('child-2', true);
+        http.expectOne('/api/v1/objectives/child-2/completed').flush(null, { status: 500, statusText: 'Error' });
+
+        expect(await ticking).toBe(false);
+      });
+
+      it('removes an objective from the list and forgets it', async () => {
+        store.markViewed('obj-1');
+
+        const removing = store.remove('obj-1');
+        const request = http.expectOne('/api/v1/objectives/obj-1');
+        expect(request.request.method).toBe('DELETE');
+        request.flush(null);
+
+        expect(await removing).toBe(true);
+        expect(store.detail()).toBeNull();
+        expect(store.objectives()).toEqual([]);
+        expect(TestBed.inject(PlanoDataStore).data().objectives.recentIds).toEqual([]);
+      });
+
+      it('keeps the objective when removing it fails', async () => {
+        const removing = store.remove('obj-1');
+        http.expectOne('/api/v1/objectives/obj-1').flush(null, { status: 500, statusText: 'Error' });
+
+        expect(await removing).toBe(false);
+        expect(store.objectives()).toHaveLength(1);
+        expect(store.detail()).not.toBeNull();
+      });
+
+      it('keeps the open objective when removing another', async () => {
+        const removing = store.remove('other');
+        http.expectOne('/api/v1/objectives/other').flush(null);
+        await removing;
+
+        expect(store.detail()?.id).toBe('obj-1');
+      });
+    });
+
+    describe('in this browser', () => {
+      it('remembers what was viewed, most recent first, once each, five at most', async () => {
+        const items = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => objectiveSummary({ id }));
+        await load(items);
+
+        for (const { id } of items) store.markViewed(id);
+        store.markViewed('d');
+        store.markViewed('d');
+
+        expect(store.recent().map(({ id }) => id)).toEqual(['d', 'f', 'e', 'c', 'b']);
+      });
+
+      it('leaves out of the recents what is no longer visible', async () => {
+        await load([objectiveSummary({ id: 'a' })]);
+        store.markViewed('a');
+        store.markViewed('gone');
+
+        expect(store.recent().map(({ id }) => id)).toEqual(['a']);
+      });
+
+      it('saves display settings without calling the API', () => {
+        store.updateSettings({ showPercentage: false });
+
+        expect(store.settings().showPercentage).toBe(false);
+        expect(TestBed.inject(PlanoDataStore).data().objectives.settings.showPercentage).toBe(false);
+      });
+
+      it('knows who is signed in', () => {
+        expect(store.currentUserId()).toBe(ME);
+      });
+    });
+
+    it('gives its date from the clock', () => {
+      expect(store.today()).toBe('2026-10-15');
+    });
+
+    it('applies a metric answer as it is', async () => {
+      await open(metricDetail());
+      expect(store.detail()?.amount?.current).toBe(6.5);
+    });
   });
 
-  describe('overview queries', () => {
-    it('splits objectives across the four tabs', () => {
-      const ids = (tab: Parameters<ObjectivesStore['query']>[0]) => store.query(tab).map((item) => item.id);
+  describe('importing what this browser stored', () => {
+    let adapter: MemoryPlanoDataAdapter;
 
-      expect(ids('all')).not.toContain('apprendre-guitare');
-      expect(ids('archived')).toEqual(['apprendre-guitare']);
-      // "Économiser" belongs to Camille: shared with me, so not in "Mes objectifs".
-      expect(ids('mine')).not.toContain('economiser-1000');
-      // Exact contents, in any order.
-      expect([...ids('shared')].sort()).toEqual(['courir-10-km', 'economiser-1000']);
+    beforeEach(() => {
+      adapter = new MemoryPlanoDataAdapter(createMockPlanoData());
+      TestBed.configureTestingModule({
+        providers: [...provideObjectivesTesting(), provideSignedIn(), { provide: PLANO_DATA_ADAPTER, useValue: adapter }],
+      });
+      store = TestBed.inject(ObjectivesStore);
+      http = TestBed.inject(HttpTestingController);
     });
 
-    it('includes archived objectives in "Tous" when the setting asks for it', () => {
-      store.updateSettings({ showArchived: true });
-      expect(store.query('all').map((item) => item.id)).toContain('apprendre-guitare');
+    afterEach(() => http.verify());
+
+    const stored = () => adapter.load()?.objectives.items ?? [];
+
+    it('sends everything once before loading, then forgets it', async () => {
+      const count = stored().length;
+      expect(count).toBeGreaterThan(0);
+
+      const loading = store.load();
+      // Nothing is read before the import has reached the server.
+      http.expectNone('/api/v1/objectives');
+      const request = http.expectOne('/api/v1/objectives/import');
+      expect(request.request.method).toBe('POST');
+      const body = request.request.body as { objectives: { localId: string }[] };
+      expect(body.objectives.map(({ localId }) => localId)).toContain('courir-10-km');
+      expect(body.objectives).toHaveLength(count);
+      request.flush({ imported: count });
+      await settle();
+      http.expectOne('/api/v1/objectives').flush([objectiveSummary()]);
+      await loading;
+
+      expect(stored()).toEqual([]);
+      expect(adapter.load()?.objectives.contacts).toEqual([]);
+      expect(adapter.load()?.objectives.recentIds).toEqual([]);
+      expect(store.objectives()).toHaveLength(1);
+
+      // Nothing left: the next load goes straight to the list.
+      const again = store.load();
+      http.expectNone('/api/v1/objectives/import');
+      http.expectOne('/api/v1/objectives').flush([]);
+      await again;
     });
 
-    it('filters by status and category, then sorts', () => {
-      store.filters.set({ statuses: ['active'], categories: ['health'], sort: 'progress', direction: 'desc' });
+    it('keeps everything when the import fails, still loads, and tries again next time', async () => {
+      const count = stored().length;
 
-      expect(store.query('all').map((item) => item.id)).toEqual(['courir-10-km', 'mediter-30-min']);
-      expect(store.activeFilterCount()).toBe(2);
+      const loading = store.load();
+      http.expectOne('/api/v1/objectives/import').flush(null, { status: 500, statusText: 'Error' });
+      await settle();
+      http.expectOne('/api/v1/objectives').flush([]);
+      await loading;
 
-      store.filters.update((filters) => ({ ...filters, statuses: [], categories: [], sort: 'title', direction: 'asc' }));
-      expect(store.query('all')[0].title).toBe('Apprendre l’italien');
+      expect(stored()).toHaveLength(count);
+      // Being stuck on this is not the user's problem to read about.
+      expect(store.error()).toBe('');
 
-      store.filters.update((filters) => ({ ...filters, sort: 'dueDate' }));
-      // By due date, earliest first.
-      expect(store.query('all')[0].id).toBe('mediter-30-jours');
+      const retrying = store.load();
+      http.expectOne('/api/v1/objectives/import').flush({ imported: count });
+      await settle();
+      http.expectOne('/api/v1/objectives').flush([]);
+      await retrying;
 
-      store.resetFilters();
-      // The default is the user's own order: the stored one.
-      expect(store.filters().sort).toBe('manual');
-      expect(store.query('all').map(({ id }) => id)).toEqual(
-        store.objectives().filter(({ archived }) => !archived).map(({ id }) => id),
-      );
+      expect(stored()).toEqual([]);
     });
 
-    it('moves objectives in the custom order, saved with the data, both ways round', () => {
-      const ids = () => store.query('all').map(({ id }) => id);
-      const [first, second, third] = ids();
-      const save = vi.spyOn(TestBed.inject(PLANO_DATA_ADAPTER), 'save');
+    it('imports once when several screens ask at the same time', async () => {
+      const loading = store.load();
+      const agenda = store.loadAgenda();
+      const opening = store.open('obj-1');
 
-      store.moveObjective(third, first);
-
-      expect(ids().slice(0, 3)).toEqual([third, first, second]);
-      expect(save).toHaveBeenCalledTimes(1);
-      expect(save.mock.calls[0][0].objectives.items.slice(0, 3).map(({ id }) => id)).toEqual([third, first, second]);
-      store.filters.update((filters) => ({ ...filters, direction: 'desc' }));
-      expect(ids().slice(-3)).toEqual([second, first, third]);
-
-      // Unknown or identical ids change nothing and save nothing.
-      store.moveObjective('missing', first);
-      store.moveObjective(first, first);
-      expect(save).toHaveBeenCalledTimes(1);
+      const [request] = http.match('/api/v1/objectives/import');
+      http.expectNone('/api/v1/objectives');
+      request.flush({ imported: 1 });
+      await settle();
+      http.expectOne('/api/v1/objectives').flush([]);
+      http.expectOne('/api/v1/objectives/agenda').flush([]);
+      http.expectOne('/api/v1/objectives/obj-1').flush(objectiveDetail());
+      await Promise.all([loading, agenda, opening]);
     });
-
-    it('searches titles, descriptions and category names without caring about accents', () => {
-      expect(store.search('economiser').map((item) => item.id)).toEqual(['economiser-1000']);
-      expect(store.search('sante').length).toBe(3);
-      expect(store.search('   ')).toEqual([]);
-    });
-  });
-
-  describe('mutations', () => {
-    it('creates an objective from a draft and keeps only the fields of its tracking mode', () => {
-      const created = store.create(draft);
-
-      expect(created).toEqual(
-        expect.objectContaining({
-          id: 'courir-un-semi',
-          title: 'Courir un semi',
-          description: 'Avant le printemps',
-          ownerId: 'me',
-          createdOn: '2026-10-15',
-          dueReminder: 'day-before',
-          metric: null,
-          habit: null,
-        }),
-      );
-      expect(created.steps.map((step) => step.label)).toEqual(['10 km', '15 km']);
-      // A second objective with the same title gets a unique id.
-      expect(store.create(draft).id).not.toBe('courir-un-semi');
-    });
-
-    it('creates metric and habit objectives', () => {
-      const metric = store.create({ ...draft, title: 'Épargner', tracking: 'metric' });
-      const habit = store.create({ ...draft, title: 'Lire', tracking: 'habit', habitTargetDays: 0 });
-
-      expect(metric.metric).toEqual({ unit: 'km', target: 21, aggregation: 'max', sessionsTarget: 0 });
-      expect(metric.steps).toEqual([]);
-      // At least one day is required for a habit.
-      expect(habit.habit).toEqual({ targetDays: 1, checkIns: [] });
-    });
-
-    it('completes an objective when its last step is ticked and reopens it when unticked', () => {
-      store.toggleStep('apprendre-guitare', 'song');
-      expect(store.find('apprendre-guitare')).toEqual(
-        expect.objectContaining({ status: 'completed', completedOn: '2026-10-15' }),
-      );
-
-      store.toggleStep('apprendre-guitare', 'song');
-      expect(store.find('apprendre-guitare')?.status).toBe('active');
-    });
-
-    it('adds and removes steps, ignoring blank labels', () => {
-      store.addStep('apprendre-italien', '   ');
-      store.addStep('apprendre-italien', 'Commander au restaurant');
-      const steps = store.find('apprendre-italien')!.steps;
-      expect(steps.length).toBe(6);
-
-      store.removeStep('apprendre-italien', steps[5].id);
-      expect(store.find('apprendre-italien')!.steps.length).toBe(5);
-    });
-
-    it('toggles habit check-ins but refuses future days', () => {
-      const before = store.find('mediter-30-min')!.habit!.checkIns.length;
-      store.toggleCheckIn('mediter-30-min', '2026-10-16');
-      expect(store.find('mediter-30-min')!.habit!.checkIns.length).toBe(before);
-
-      // Today is already checked in the seed: the first toggle unchecks it, the second restores it.
-      store.toggleCheckIn('mediter-30-min', '2026-10-15');
-      expect(store.find('mediter-30-min')!.habit!.checkIns).not.toContain('2026-10-15');
-      store.toggleCheckIn('mediter-30-min', '2026-10-15');
-      expect(store.find('mediter-30-min')!.habit!.checkIns).toContain('2026-10-15');
-      // Toggling a habit on a non-habit objective changes nothing.
-      store.toggleCheckIn('courir-10-km', '2026-10-15');
-      expect(store.find('courir-10-km')!.habit).toBeNull();
-    });
-
-    it('keeps sessions sorted by date and removes them', () => {
-      store.addSession('courir-10-km', { date: '2026-09-01', status: 'done', value: 2, label: 'Reprise' });
-      const sessions = store.find('courir-10-km')!.sessions;
-      expect(sessions[0].label).toBe('Reprise');
-
-      store.removeSession('courir-10-km', sessions[0].id);
-      expect(store.find('courir-10-km')!.sessions[0].label).toBe('Sortie 3 km');
-    });
-
-    it('pauses, resumes, shares and deletes objectives', () => {
-      store.setPaused('courir-10-km', true);
-      expect(store.find('courir-10-km')!.status).toBe('paused');
-      store.setPaused('courir-10-km', false);
-      expect(store.find('courir-10-km')!.status).toBe('active');
-
-      store.share('courir-10-km', ['alex']);
-      expect(store.find('courir-10-km')!.sharedWith).toEqual(['alex']);
-
-      store.remove('courir-10-km');
-      expect(store.find('courir-10-km')).toBeUndefined();
-      expect(store.recent().map((item) => item.id)).not.toContain('courir-10-km');
-    });
-
-    it('adds contacts with initials and ignores blank names', () => {
-      expect(store.addContact('  ')).toBeNull();
-      expect(store.addContact('zoé')).toEqual(
-        expect.objectContaining({ name: 'zoé', initials: 'Z' }),
-      );
-      expect(store.contacts().length).toBe(8);
-    });
-
-    it('keeps the five most recently viewed objectives, newest first', () => {
-      store.markViewed('mediter-30-min');
-      store.markViewed('mediter-30-min');
-      store.markViewed('pompes-50');
-
-      expect(store.recent().map((item) => item.id)).toEqual([
-        'pompes-50', 'mediter-30-min', 'courir-10-km', 'apprendre-italien', 'economiser-1000',
-      ]);
-    });
-  });
-
-  it('persists every change through the data adapter', () => {
-    const adapter = TestBed.inject(PLANO_DATA_ADAPTER) as MemoryPlanoDataAdapter;
-    const save = vi.spyOn(adapter, 'save');
-    store.updateSettings({ defaultView: 'grid' });
-
-    expect(save).toHaveBeenCalledTimes(1);
-    expect(save.mock.calls[0][0].objectives.settings.defaultView).toBe('grid');
-    expect(adapter.load()?.objectives.settings.defaultView).toBe('grid');
   });
 });

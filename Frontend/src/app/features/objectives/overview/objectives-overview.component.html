@@ -70,6 +70,10 @@
 </nav>
 
 <section class="content" [class.grid-view]="gridView()" aria-live="polite">
+  @if (store.error(); as error) {
+    <p class="field-error" role="alert">{{ error }}</p>
+  }
+
   @if (store.activeFilterCount()) {
     <p class="filter-note">
       {{ store.activeFilterCount() }} filtre(s) actif(s)
@@ -81,14 +85,14 @@
     <h2>{{ activeTab() === 'archived' ? 'Archivés' : 'En cours' }}</h2>
     <div class="cards">
       @for (card of inProgress(); track card.objective.id) {
-        <div class="objective-item" [attr.data-objective-id]="card.objective.id" [class.dragging]="draggedObjective() === card.objective.id">
+        <div class="objective-item" [attr.data-objective-id]="card.objective.id" [class.dragging]="drag.dragged() === card.objective.id">
           <app-objective-card [card]="card" [tile]="gridView()" />
           @if (reorderable()) {
             <button
               class="drag-handle"
               type="button"
               [attr.aria-label]="'Déplacer l’objectif ' + card.objective.title + ' (flèches pour changer sa place)'"
-              (pointerdown)="startDrag(card.objective.id, $event)"
+              (pointerdown)="drag.start(card.objective.id, $event)"
               (keydown)="moveWithKeyboard(card.objective.id, $event)"
               (click)="$event.preventDefault()"
             >⠿</button>
@@ -109,14 +113,14 @@
     </div>
     <div class="cards">
       @for (card of visibleCompleted(); track card.objective.id) {
-        <div class="objective-item" [attr.data-objective-id]="card.objective.id" [class.dragging]="draggedObjective() === card.objective.id">
+        <div class="objective-item" [attr.data-objective-id]="card.objective.id" [class.dragging]="drag.dragged() === card.objective.id">
           <app-objective-card [card]="card" [tile]="gridView()" />
           @if (reorderable()) {
             <button
               class="drag-handle"
               type="button"
               [attr.aria-label]="'Déplacer l’objectif ' + card.objective.title + ' (flèches pour changer sa place)'"
-              (pointerdown)="startDrag(card.objective.id, $event)"
+              (pointerdown)="drag.start(card.objective.id, $event)"
               (keydown)="moveWithKeyboard(card.objective.id, $event)"
               (click)="$event.preventDefault()"
             >⠿</button>
@@ -126,7 +130,7 @@
     </div>
   }
 
-  @if (!inProgress().length && !completed().length) {
+  @if (!inProgress().length && !completed().length && !store.loading()) {
     <p class="empty-state">Aucun objectif ne correspond à cette vue.</p>
   }
 </section>

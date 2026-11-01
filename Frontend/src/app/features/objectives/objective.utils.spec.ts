@@ -10,18 +10,17 @@ import {
 } from '../../core/time/dates';
 import {
   categoryMeta,
+  dueCaption,
   formatDuration,
   longestStreak,
-  metricCurrent,
-  objectiveProgress,
-  objectiveTint,
-  progressAmounts,
-  progressLabel,
-  progressUnit,
   objectiveReminderLabel,
+  objectiveTint,
+  progressText,
   slugify,
-  withDerivedStatus,
+  timelapseView,
+  toImportRequest,
 } from './objective.utils';
+import { objectiveSummary } from './testing/objectives-fixtures';
 
 function seeded(id: string): Objective {
   const objective = createMockPlanoData().objectives.items.find((item) => item.id === id);
@@ -61,82 +60,208 @@ describe('objective utils', () => {
     });
   });
 
-  describe('progress', () => {
-    it('keeps the best session for "max" metrics and adds sessions for "sum" metrics', () => {
-      // Only sessions with status "done" count; planned 7–8 km runs are ignored.
-      expect(metricCurrent(seeded('courir-10-km'))).toBe(6.5);
-      expect(metricCurrent(seeded('economiser-1000'))).toBe(450);
-      expect(objectiveProgress(seeded('courir-10-km'))).toBe(65);
+  describe('labels', () => {
+    it('falls back to the last category for an unknown one', () => {
+      expect(categoryMeta('finance').label).toBe('Finances');
+      expect(categoryMeta('nope' as never).value).toBe('other');
     });
 
-    it('derives progress from steps and habit check-ins', () => {
-      expect(objectiveProgress(seeded('apprendre-italien'))).toBe(40);
-      expect(progressLabel(seeded('apprendre-italien'))).toBe('2 / 5 étapes');
-      expect(objectiveProgress(seeded('mediter-30-jours'))).toBe(100);
+    it('tints by category, or in the brand colour when turned off', () => {
+      expect(objectiveTint('finance', true)).toBe('#e65591');
+      expect(objectiveTint('finance', false)).toBe('#3264ed');
     });
 
-    it('caps progress at 100 % and treats a missing target as 0 %', () => {
-      const overDone = { ...seeded('economiser-1000'), metric: { unit: '€', target: 100, aggregation: 'sum' as const, sessionsTarget: 0 } };
-      expect(objectiveProgress(overDone)).toBe(100);
-      expect(objectiveProgress({ ...seeded('apprendre-italien'), steps: [] })).toBe(0);
+    it('describes reminders', () => {
+      expect(objectiveReminderLabel({ frequency: 'none', time: '09:00', weekday: 0 })).toBe('Aucun rappel');
+      expect(objectiveReminderLabel({ frequency: 'daily', time: '07:30', weekday: 0 })).toBe('Chaque jour à 07:30');
+      expect(objectiveReminderLabel({ frequency: 'weekly', time: '09:00', weekday: 2 })).toBe('Chaque mercredi à 09:00');
+      expect(objectiveReminderLabel({ frequency: 'weekly', time: '09:00', weekday: 9 })).toBe('Chaque lundi à 09:00');
     });
 
-    it('reports amounts and units for every tracking mode, missing details counting as zero', () => {
-      const steps = seeded('apprendre-italien');
-      const habit = seeded('mediter-30-jours');
-      const metric = seeded('courir-10-km');
-
-      expect(progressAmounts(steps)).toEqual({ current: 2, target: 5 });
-      expect(progressUnit(steps)).toBe('étapes');
-      expect(progressAmounts(habit)).toEqual({
-        current: habit.habit!.checkIns.length,
-        target: habit.habit!.targetDays,
-      });
-      expect(progressUnit(habit)).toBe('jours');
-      expect(progressAmounts(metric)).toEqual({ current: 6.5, target: 10 });
-      expect(progressUnit(metric)).toBe('km');
-
-      // Objectives saved without their tracking details must not crash the screens.
-      expect(progressAmounts({ ...habit, habit: null })).toEqual({ current: 0, target: 0 });
-      // Without a metric, done sessions are summed (the default aggregation) against no target.
-      expect(progressAmounts({ ...metric, metric: null })).toEqual({ current: 38.5, target: 0 });
-      expect(objectiveProgress({ ...metric, metric: null })).toBe(0);
-      expect(progressUnit({ ...metric, metric: null })).toBe('');
-      expect(objectiveProgress({ ...habit, habit: null })).toBe(0);
-    });
-
-    it('completes, reopens or leaves objectives depending on their progress', () => {
-      const run = seeded('courir-10-km');
-      const finished = { ...run, sessions: [...run.sessions, { id: 'x', date: '2026-10-15', status: 'done' as const, value: 10, label: '' }] };
-
-      expect(withDerivedStatus(finished, '2026-10-15')).toEqual(
-        expect.objectContaining({ status: 'completed', completedOn: '2026-10-15' }),
-      );
-      expect(
-        withDerivedStatus({ ...run, status: 'completed', completedOn: '2026-10-01' }, '2026-10-15'),
-      ).toEqual(expect.objectContaining({ status: 'active', completedOn: null }));
-      // A paused objective is never auto-completed.
-      expect(withDerivedStatus({ ...finished, status: 'paused' }, '2026-10-15').status).toBe('paused');
-      expect(withDerivedStatus(run, '2026-10-15')).toBe(run);
+    it('slugifies titles, with a fallback', () => {
+      expect(slugify('  Économiser 1 000 € ! ')).toBe('economiser-1-000');
+      expect(slugify('***')).toBe('objectif');
+      expect(normalizeText('ÉTÉ')).toBe('ete');
     });
   });
 
-  describe('labels', () => {
-    it('describes reminders in French', () => {
-      expect(objectiveReminderLabel({ frequency: 'none', time: '09:00', weekday: 0 })).toBe('Aucun rappel');
-      expect(objectiveReminderLabel({ frequency: 'daily', time: '08:00', weekday: 0 })).toBe('Chaque jour à 08:00');
-      expect(objectiveReminderLabel({ frequency: 'weekly', time: '09:00', weekday: 0 })).toBe('Chaque lundi à 09:00');
+  describe('progressText', () => {
+    it('is empty without a completion bar', () => {
+      expect(progressText(objectiveSummary(), true)).toBe('');
     });
 
-    it('normalizes text for search and slugs', () => {
-      expect(normalizeText('  Économiser ')).toBe('economiser');
-      expect(slugify('Apprendre l’italien !')).toBe('apprendre-l-italien');
-      expect(slugify('!!!')).toBe('objectif');
+    it('shows a percentage, or the amount when asked to', () => {
+      const objective = objectiveSummary({ percent: 65, amount: { current: 6.5, target: 10, unit: 'km' } });
+      expect(progressText(objective, true)).toBe('65 %');
+      expect(progressText(objective, false)).toBe('6,5 / 10 km');
     });
 
-    it('falls back to the brand colour when category colours are off', () => {
-      expect(objectiveTint('finance', true)).toBe(categoryMeta('finance').color);
-      expect(objectiveTint('finance', false)).toBe('#3264ed');
+    it('falls back to the percentage for bars without an amount', () => {
+      expect(progressText(objectiveSummary({ percent: 40 }), false)).toBe('40 %');
+    });
+  });
+
+  describe('dueCaption', () => {
+    it('gives the deadline, the absence of one, or the day it was completed', () => {
+      expect(dueCaption(objectiveSummary({ dueDate: '2026-11-30' }))).toBe('Échéance : 30 nov. 2026');
+      expect(dueCaption(objectiveSummary())).toBe('Sans échéance');
+      expect(
+        dueCaption(objectiveSummary({ status: 'completed', dueDate: '2026-11-30', completedAt: '2026-08-30T12:00:00.000Z' })),
+      ).toBe('Terminé le 30 août 2026');
+    });
+  });
+
+  describe('timelapseView', () => {
+    const bar = (changes: Parameters<typeof objectiveSummary>[0]) =>
+      objectiveSummary({ timelapse: 'elapsed', startDate: '2026-10-01', dueDate: '2026-10-11', ...changes });
+
+    it('has no bar when turned off or without a deadline', () => {
+      expect(timelapseView(bar({ timelapse: 'off' }), '2026-10-05')).toBeNull();
+      expect(timelapseView(bar({ dueDate: null }), '2026-10-05')).toBeNull();
+    });
+
+    it('fills up with the time elapsed', () => {
+      expect(timelapseView(bar({}), '2026-10-01')).toEqual({ percent: 0, label: '10 jours restants', overdue: false });
+      expect(timelapseView(bar({}), '2026-10-06')).toEqual({ percent: 50, label: '5 jours restants', overdue: false });
+    });
+
+    it('starts full and empties when reversed', () => {
+      expect(timelapseView(bar({ timelapse: 'remaining' }), '2026-10-01')?.percent).toBe(100);
+      expect(timelapseView(bar({ timelapse: 'remaining' }), '2026-10-06')?.percent).toBe(50);
+      expect(timelapseView(bar({ timelapse: 'remaining' }), '2026-10-11')?.percent).toBe(0);
+    });
+
+    it('counts one day in the singular, and names the last one', () => {
+      expect(timelapseView(bar({}), '2026-10-10')?.label).toBe('1 jour restant');
+      expect(timelapseView(bar({}), '2026-10-11')?.label).toBe('Dernier jour');
+    });
+
+    it('stays empty before the start', () => {
+      expect(timelapseView(bar({}), '2026-09-25')?.percent).toBe(0);
+    });
+
+    it('turns overdue past the deadline, full whichever the direction', () => {
+      for (const timelapse of ['elapsed', 'remaining'] as const) {
+        expect(timelapseView(bar({ timelapse }), '2026-10-13')).toEqual({
+          percent: 100,
+          label: '2 jours de retard',
+          overdue: true,
+        });
+      }
+      expect(timelapseView(bar({}), '2026-10-12')?.label).toBe('1 jour de retard');
+    });
+
+    it('is never late once complete', () => {
+      expect(timelapseView(bar({ status: 'completed' }), '2026-10-20')).toEqual({
+        percent: 100,
+        label: 'Terminé',
+        overdue: false,
+      });
+    });
+
+    it('copes with a deadline on the start day', () => {
+      expect(timelapseView(bar({ dueDate: '2026-10-01' }), '2026-10-01')).toEqual({
+        percent: 0,
+        label: 'Dernier jour',
+        overdue: false,
+      });
+    });
+  });
+
+  describe('toImportRequest', () => {
+    const today = '2026-10-15';
+
+    it('maps a numeric objective, leaving out what was made up in the browser', () => {
+      const request = toImportRequest(seeded('courir-10-km'), today);
+
+      expect(request).toMatchObject({
+        localId: 'courir-10-km',
+        title: 'Courir 10 km',
+        tracking: 'metric',
+        createdOn: '2026-09-14',
+        metric: { unit: 'km', target: 10, aggregation: 'max' },
+        steps: [],
+        habit: null,
+      });
+      expect(request.sessions[0]).toEqual({
+        date: '2026-09-21',
+        status: 'done',
+        label: 'Sortie 3 km',
+        value: 3,
+        durationMinutes: 20,
+      });
+      expect(request).not.toHaveProperty('sharedWith');
+      expect(request).not.toHaveProperty('shareCode');
+      expect(request).not.toHaveProperty('ownerId');
+    });
+
+    it('maps steps and habits', () => {
+      const steps = toImportRequest(seeded('apprendre-italien'), today);
+      expect(steps.steps[0]).toMatchObject({ label: 'Apprendre 100 mots', done: true });
+      expect(steps.metric).toBeNull();
+
+      const habit = toImportRequest(seeded('mediter-30-min'), today);
+      expect(habit.habit?.targetDays).toBeGreaterThan(0);
+      expect(habit.habit?.checkIns.length).toBeGreaterThan(0);
+    });
+
+    it('makes valid what old data may hold, so one objective never blocks the others', () => {
+      const broken = {
+        ...seeded('courir-10-km'),
+        id: '',
+        title: `  ${'x'.repeat(100)}  `,
+        createdOn: 'hier',
+        dueDate: '30/11/2026',
+        completedOn: '',
+        description: 'd'.repeat(600),
+        plan: 'p'.repeat(200),
+        metric: { unit: '', target: 0, aggregation: 'sum', sessionsTarget: 0 },
+        reminder: undefined,
+        dueReminder: undefined,
+        sessions: [
+          { id: 's1', date: 'jamais', status: 'done', label: 'Sans date', value: 1 },
+          { id: 's2', date: '2026-10-01', status: 'done', label: 'l'.repeat(80), value: -3 },
+        ],
+      } as unknown as Objective;
+
+      const request = toImportRequest(broken, today);
+
+      expect(request.title).toHaveLength(80);
+      expect(request.localId).toBe('x'.repeat(100));
+      expect(request.createdOn).toBe(today);
+      expect(request.dueDate).toBeNull();
+      expect(request.completedOn).toBeNull();
+      expect(request.description).toHaveLength(500);
+      expect(request.plan).toHaveLength(120);
+      expect(request.metric).toEqual({ unit: '-', target: 1, aggregation: 'sum' });
+      expect(request.reminder).toEqual({ frequency: 'none', time: '09:00', weekday: 0 });
+      expect(request.dueReminder).toBe('none');
+      expect(request.sessions).toEqual([
+        { date: '2026-10-01', status: 'done', label: 'l'.repeat(60), value: 0, durationMinutes: null },
+      ]);
+    });
+
+    it('never sends a blank title or step', () => {
+      const request = toImportRequest(
+        {
+          ...seeded('apprendre-italien'),
+          title: '   ',
+          steps: [
+            { id: 'a', label: '  ', done: false, completedOn: null },
+            { id: 'b', label: ' Un ', done: false, completedOn: 'hier' },
+          ],
+        },
+        today,
+      );
+
+      expect(request.title).toBe('Objectif');
+      expect(request.steps).toEqual([{ label: 'Un', done: false, completedOn: null }]);
+    });
+
+    it('gives a habit without settings a valid target', () => {
+      const request = toImportRequest({ ...seeded('mediter-30-min'), habit: null }, today);
+
+      expect(request.habit).toEqual({ targetDays: 1, checkIns: [] });
     });
   });
 });

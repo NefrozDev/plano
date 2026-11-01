@@ -30,25 +30,30 @@ export class ObjectiveDetailLayoutComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly confirm = inject(ConfirmService);
-  private readonly store = inject(ObjectivesStore);
   private readonly context = inject(ObjectiveContext);
+  readonly store = inject(ObjectivesStore);
 
   readonly objective = this.context.objective;
+  readonly notFound = signal(false);
   readonly menuOpen = signal(false);
   readonly showTitle = signal(true);
-  readonly isOwner = computed(() => this.objective()?.ownerId === this.store.currentUserId());
+  readonly isOwner = computed(() => this.objective()?.role === 'owner');
+  /** One level up the tree, or the overview from the top. */
+  readonly backLink = computed(() => {
+    const parent = this.objective()?.breadcrumb.at(-1);
+    return parent ? ['/objectives', parent.id] : ['/objectives'];
+  });
   readonly tabs = computed<readonly DetailTab[]>(() => {
     const objective = this.objective();
     if (!objective) return [];
-    const extra: Record<typeof objective.tracking, Omit<DetailTab, 'link'>[]> = {
-      metric: [
-        { label: 'Calendrier', path: 'calendar' },
-        { label: 'Statistiques', path: 'stats' },
-      ],
-      steps: [{ label: 'Étapes', path: 'steps' }],
-      habit: [{ label: 'Habitude', path: 'habit' }],
-    };
-    return [{ label: 'Aperçu', path: '' }, ...extra[objective.tracking]].map((tab) => ({
+    const extra: Omit<DetailTab, 'link'>[] = [];
+    if (objective.completion === 'metric') {
+      extra.push({ label: 'Calendrier', path: 'calendar' }, { label: 'Statistiques', path: 'stats' });
+    } else if (objective.completion === 'habit') {
+      extra.push({ label: 'Habitude', path: 'habit' });
+    }
+    if (!extra.length) return [];
+    return [{ label: 'Aperçu', path: '' }, ...extra].map((tab) => ({
       ...tab,
       link: ['/objectives', objective.id, ...(tab.path ? [tab.path] : [])],
     }));
@@ -59,7 +64,7 @@ export class ObjectiveDetailLayoutComponent {
       const id = params.get('id') ?? '';
       this.context.id.set(id);
       this.menuOpen.set(false);
-      if (this.store.find(id)) this.store.markViewed(id);
+      void this.open(id);
     });
   }
 
@@ -71,14 +76,14 @@ export class ObjectiveDetailLayoutComponent {
   togglePause(): void {
     const objective = this.objective();
     if (!objective) return;
-    this.store.setPaused(objective.id, objective.status !== 'paused');
+    void this.store.update(objective.id, { paused: objective.status !== 'paused' });
     this.menuOpen.set(false);
   }
 
   toggleArchive(): void {
     const objective = this.objective();
     if (!objective) return;
-    this.store.update(objective.id, { archived: !objective.archived });
+    void this.store.update(objective.id, { archived: !objective.archived });
     this.menuOpen.set(false);
   }
 
@@ -86,14 +91,26 @@ export class ObjectiveDetailLayoutComponent {
     const objective = this.objective();
     if (!objective) return;
     this.menuOpen.set(false);
+    const below = objective.descendantCount;
     const confirmed = await this.confirm.ask({
       heading: 'Supprimer l’objectif ?',
-      message: `« ${objective.title} » sera supprimé définitivement.`,
+      message: below
+        ? `« ${objective.title} » et ${below > 1 ? `ses ${below} sous-objectifs seront supprimés` : 'son sous-objectif seront supprimés'} définitivement.`
+        : `« ${objective.title} » sera supprimé définitivement.`,
       confirmLabel: 'Supprimer',
       tone: 'danger',
     });
     if (!confirmed) return;
-    this.store.remove(objective.id);
-    void this.router.navigateByUrl('/objectives');
+    const back = this.backLink();
+    if (await this.store.remove(objective.id)) void this.router.navigate(back);
+  }
+
+  private async open(id: string): Promise<void> {
+    this.notFound.set(false);
+    const found = await this.store.open(id);
+    // Another objective may have been opened in the meantime.
+    if (this.context.id() !== id) return;
+    this.notFound.set(!found);
+    if (found && !this.objective()?.parentId) this.store.markViewed(id);
   }
 }

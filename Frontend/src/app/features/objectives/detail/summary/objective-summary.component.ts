@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DOCUMENT,
   ElementRef,
   computed,
   effect,
@@ -11,25 +12,27 @@ import {
 import { RouterLink } from '@angular/router';
 import type {
   DueReminder,
-  Objective,
-  ObjectiveContact,
+  ObjectiveDetail,
   ObjectiveReminder,
+  ObjectiveSummary,
 } from '@plano/common';
-import { daysBetween, formatDate, formatShortDate } from '../../../../core/time/dates';
+import { daysBetween, formatShortDate, toIsoDate } from '../../../../core/time/dates';
 import {
   DUE_REMINDER_LABELS,
   WEEKDAY_LABELS,
+  dueCaption,
   formatNumber,
   longestStreak,
-  metricCurrent,
-  objectiveProgress,
-  objectiveTint,
-  progressLabel,
   objectiveReminderLabel,
+  objectiveTint,
+  progressText,
+  timelapseView,
 } from '../../objective.utils';
-import { AvatarStackComponent } from '../../../../shared/ui/avatar-stack.component';
 import { ObjectivesStore } from '../../objectives.store';
+import { DragReorder } from '../../ui/drag-reorder';
+import { ObjectiveCardComponent, ObjectiveCardView } from '../../ui/objective-card.component';
 import { ObjectiveIconComponent } from '../../ui/objective-icon.component';
+import { TimelapseBarComponent } from '../../ui/timelapse-bar.component';
 import { ObjectiveContext } from '../objective-context';
 
 type EditableRow = 'description' | 'plan' | 'reminder';
@@ -41,10 +44,15 @@ interface StatTile {
 
 @Component({
   selector: 'app-objective-summary',
-  imports: [RouterLink, AvatarStackComponent, ObjectiveIconComponent],
+  imports: [RouterLink, ObjectiveCardComponent, ObjectiveIconComponent, TimelapseBarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-summary.component.html',
   styleUrl: './objective-summary.component.scss',
+  host: {
+    '(pointermove)': 'drag.over($event)',
+    '(pointerup)': 'drag.end()',
+    '(pointercancel)': 'drag.end()',
+  },
 })
 export class ObjectiveSummaryComponent {
   private readonly store = inject(ObjectivesStore);
@@ -57,22 +65,35 @@ export class ObjectiveSummaryComponent {
   readonly openRow = signal<EditableRow | null>(null);
   readonly weekdays = WEEKDAY_LABELS;
   readonly dueReminders = Object.entries(DUE_REMINDER_LABELS) as [DueReminder, string][];
+  readonly drag = new DragReorder(
+    inject(DOCUMENT),
+    (element) => element?.closest<HTMLElement>('.child-item')?.dataset['childId'],
+    (id, targetId) => this.store.moveChild(id, targetId),
+    () => void this.store.saveChildOrder(),
+  );
+  /** The sub-objective being ticked, so a double tap sends one request. */
+  readonly toggling = signal('');
+
+  readonly isOwner = computed(() => this.objective()?.role === 'owner');
+  readonly canContribute = computed(() => {
+    const role = this.objective()?.role;
+    return role === 'owner' || role === 'contributor';
+  });
+  private readonly childIds = computed(() => this.objective()?.children.map(({ id }) => id) ?? []);
 
   readonly view = computed(() => {
     const objective = this.objective();
     if (!objective) return null;
-    const settings = this.store.settings();
-    const progress = objectiveProgress(objective);
-    const people = this.people(objective);
+    const { showPercentage, categoryColors } = this.store.settings();
     return {
-      progress,
-      progressText: settings.showPercentage ? `${progress} %` : progressLabel(objective),
-      tint: objectiveTint(objective.category, settings.categoryColors),
-      due: objective.dueDate ? `Échéance : ${formatDate(objective.dueDate)}` : 'Sans échéance',
+      progressText: progressText(objective, showPercentage),
+      tint: objectiveTint(objective.category, categoryColors),
+      due: dueCaption(objective),
+      timelapse: timelapseView(objective, this.store.today()),
       tiles: [...this.trackingTiles(objective), this.deadlineTile(objective)],
       reminder: objectiveReminderLabel(objective.reminder),
       dueReminder: DUE_REMINDER_LABELS[objective.dueReminder],
-      people,
+      children: objective.children.map((child) => this.toCard(child)),
     };
   });
 
@@ -89,66 +110,95 @@ export class ObjectiveSummaryComponent {
     if (!this.editingTitle()) return;
     const objective = this.objective();
     const title = value.trim();
-    if (objective && title) this.store.update(objective.id, { title });
+    if (objective && title && title !== objective.title) void this.store.update(objective.id, { title });
     this.editingTitle.set(false);
   }
 
   updateText(field: 'description' | 'plan', value: string): void {
     const objective = this.objective();
-    if (objective) this.store.update(objective.id, { [field]: value.trim() });
+    if (objective) void this.store.update(objective.id, { [field]: value.trim() });
   }
 
   updateReminder(changes: Partial<ObjectiveReminder>): void {
     const objective = this.objective();
-    if (objective) this.store.update(objective.id, { reminder: { ...objective.reminder, ...changes } });
+    if (objective) {
+      void this.store.updatePreferences(objective.id, { reminder: { ...objective.reminder, ...changes } });
+    }
   }
 
   updateDueReminder(dueReminder: DueReminder): void {
     const objective = this.objective();
-    if (objective) this.store.update(objective.id, { dueReminder });
+    if (objective) void this.store.updatePreferences(objective.id, { dueReminder });
   }
 
-  private people(objective: Objective): ObjectiveContact[] {
-    const me = this.store.currentUserId();
-    const ids = [objective.ownerId, ...objective.sharedWith].filter((id) => id !== me);
-    return [...new Set(ids)]
-      .map((id) => this.store.contact(id))
-      .filter((contact): contact is ObjectiveContact => !!contact);
+  setProgress(percent: number): void {
+    const objective = this.objective();
+    if (objective) void this.store.setProgress(objective.id, percent);
   }
 
-  private trackingTiles(objective: Objective): StatTile[] {
-    switch (objective.tracking) {
+  toggleCompleted(): void {
+    const objective = this.objective();
+    if (objective) void this.store.setCompleted(objective.id, objective.status !== 'completed');
+  }
+
+  async toggleChild(child: ObjectiveSummary): Promise<void> {
+    if (this.toggling()) return;
+    this.toggling.set(child.id);
+    await this.store.setChildCompleted(child.id, child.status !== 'completed');
+    this.toggling.set('');
+  }
+
+  moveChildWithKeyboard(id: string, event: KeyboardEvent): void {
+    this.drag.keydown(id, event, this.childIds());
+  }
+
+  private toCard(child: ObjectiveSummary): ObjectiveCardView {
+    const { showPercentage, categoryColors } = this.store.settings();
+    return {
+      objective: child,
+      progressText: progressText(child, showPercentage),
+      caption: dueCaption(child),
+      tint: objectiveTint(child.category, categoryColors),
+      timelapse: timelapseView(child, this.store.today()),
+    };
+  }
+
+  private trackingTiles(objective: ObjectiveDetail): StatTile[] {
+    switch (objective.completion) {
       case 'metric': {
         const metric = objective.metric;
         const done = objective.sessions.filter((session) => session.status === 'done').length;
         return [
           {
-            value: `${formatNumber(metricCurrent(objective))} ${metric?.unit ?? ''}`,
-            label: metric?.aggregation === 'max' ? 'Meilleure séance' : 'Cumulé',
+            value: `${formatNumber(objective.amount?.current ?? 0)} ${metric?.unit ?? ''}`,
+            label: metric?.aggregation === 'max' ? 'Meilleure valeur' : 'Cumulé',
           },
-          { value: metric?.sessionsTarget ? `${done} / ${metric.sessionsTarget}` : `${done}`, label: 'Séances' },
-        ];
-      }
-      case 'steps': {
-        const done = objective.steps.filter((step) => step.done).length;
-        return [
-          { value: `${done} / ${objective.steps.length}`, label: 'Étapes' },
-          { value: `${objective.steps.length - done}`, label: 'Restantes' },
+          { value: `${done}`, label: 'Séances' },
         ];
       }
       case 'habit': {
-        const checkIns = objective.habit?.checkIns ?? [];
+        const mine = objective.checkIns
+          .filter(({ userId }) => userId === this.store.currentUserId())
+          .map(({ date }) => date);
         return [
-          { value: `${checkIns.length}`, label: 'Jours réussis' },
-          { value: `${longestStreak(checkIns)} j`, label: 'Meilleure série' },
+          { value: `${mine.length}`, label: 'Jours réussis' },
+          { value: `${longestStreak(mine)} j`, label: 'Meilleure série' },
         ];
       }
+      case 'children':
+        return [
+          { value: `${objective.completedChildCount} / ${objective.childCount}`, label: 'Terminés' },
+          { value: `${objective.childCount - objective.completedChildCount}`, label: 'Restants' },
+        ];
+      case 'manual':
+      case 'none':
+        return [];
     }
   }
 
-  private deadlineTile(objective: Objective): StatTile {
-    if (objective.status === 'completed' && objective.completedOn) {
-      return { value: 'Terminé', label: formatShortDate(objective.completedOn) };
+  private deadlineTile(objective: ObjectiveDetail): StatTile {
+    if (objective.status === 'completed' && objective.completedAt) {
+      return { value: 'Terminé', label: formatShortDate(toIsoDate(new Date(objective.completedAt))) };
     }
     if (!objective.dueDate) return { value: '—', label: 'Sans échéance' };
     const days = daysBetween(this.store.today(), objective.dueDate);

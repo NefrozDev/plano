@@ -1,38 +1,47 @@
 @if (objective(); as objective) {
   <app-page-header
     [heading]="objective.title"
-    backLink="/objectives"
-    backLabel="Retour aux objectifs"
+    [backLink]="backLink()"
+    backLabel="Retour"
     [showHeading]="showTitle()"
   >
-    <div class="menu-anchor">
-      <button
-        class="more-button"
-        type="button"
-        aria-label="Actions de l’objectif"
-        [attr.aria-expanded]="menuOpen()"
-        (click)="menuOpen.set(!menuOpen())"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="19" cy="12" r="1.4" /></svg>
-      </button>
-      @if (menuOpen()) {
-        <div class="menu">
-          <a [routerLink]="['/objectives', objective.id, 'share']">Partager</a>
-          @if (objective.status !== 'completed') {
-            <button type="button" (click)="togglePause()">
-              {{ objective.status === 'paused' ? 'Reprendre' : 'Mettre en pause' }}
+    @if (isOwner()) {
+      <div class="menu-anchor">
+        <button
+          class="more-button"
+          type="button"
+          aria-label="Actions de l’objectif"
+          [attr.aria-expanded]="menuOpen()"
+          (click)="menuOpen.set(!menuOpen())"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="19" cy="12" r="1.4" /></svg>
+        </button>
+        @if (menuOpen()) {
+          <div class="menu">
+            <a [routerLink]="['/objectives', objective.id, 'edit']">Modifier</a>
+            @if (objective.status !== 'completed') {
+              <button type="button" (click)="togglePause()">
+                {{ objective.status === 'paused' ? 'Reprendre' : 'Mettre en pause' }}
+              </button>
+            }
+            <button type="button" (click)="toggleArchive()">
+              {{ objective.archived ? 'Désarchiver' : 'Archiver' }}
             </button>
-          }
-          <button type="button" (click)="toggleArchive()">
-            {{ objective.archived ? 'Désarchiver' : 'Archiver' }}
-          </button>
-          @if (isOwner()) {
             <button class="danger" type="button" (click)="remove()">Supprimer</button>
-          }
-        </div>
-      }
-    </div>
+          </div>
+        }
+      </div>
+    }
   </app-page-header>
+
+  @if (objective.breadcrumb.length) {
+    <nav class="breadcrumb" aria-label="Objectifs parents">
+      @for (crumb of objective.breadcrumb; track crumb.id) {
+        <a [routerLink]="['/objectives', crumb.id]">{{ crumb.title }}</a>
+        <span aria-hidden="true">›</span>
+      }
+    </nav>
+  }
 
   @if (tabs().length) {
     <nav class="tabs" aria-label="Vues de l’objectif">
@@ -47,13 +56,19 @@
     </nav>
   }
 
+  @if (store.error(); as error) {
+    <p class="field-error action-error" role="alert">{{ error }}</p>
+  }
+
   <div class="tab-content">
     <router-outlet (activate)="onActivate($event)" />
   </div>
-} @else {
+} @else if (notFound()) {
   <app-page-header heading="Objectif" backLink="/objectives" backLabel="Retour aux objectifs" />
   <p class="not-found">
     Cet objectif n’existe pas ou a été supprimé.
     <a routerLink="/objectives">Retour aux objectifs</a>
   </p>
+} @else {
+  <app-page-header heading="Objectif" backLink="/objectives" backLabel="Retour aux objectifs" />
 }

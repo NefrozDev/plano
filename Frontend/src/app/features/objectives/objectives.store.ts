@@ -1,32 +1,25 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import type {
+  AddObjectiveSessionRequest,
+  CreateObjectiveRequest,
   IsoDate,
-  Objective,
+  ObjectiveAgendaItem,
   ObjectiveCategory,
-  ObjectiveContact,
-  ObjectiveMetric,
-  ObjectiveReminder,
-  ObjectiveSession,
+  ObjectiveDetail,
   ObjectiveSettings,
   ObjectiveStatus,
-  ObjectiveTracking,
+  ObjectiveSummary,
   ObjectivesData,
+  UpdateObjectivePreferencesRequest,
+  UpdateObjectiveRequest,
 } from '@plano/common';
+import { Observable, firstValueFrom } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
-import { createPerson } from '../../core/people/people';
-import {
-  APP_CLOCK,
-  compareDueDates,
-  createId,
-  normalizeText,
-  toIsoDate,
-} from '../../core/time/dates';
-import {
-  categoryMeta,
-  objectiveProgress,
-  slugify,
-  withDerivedStatus,
-} from './objective.utils';
+import { httpErrorMessage } from '../../core/http/http-error-message';
+import { APP_CLOCK, compareDueDates, normalizeText, toIsoDate } from '../../core/time/dates';
+import { ObjectivesApiService } from './objectives-api.service';
+import { categoryMeta, toImportRequest } from './objective.utils';
 
 export type ObjectiveTab = 'all' | 'mine' | 'shared' | 'archived';
 
@@ -39,19 +32,6 @@ export interface ObjectiveFilters {
   direction: 'asc' | 'desc';
 }
 
-export interface ObjectiveDraft {
-  title: string;
-  category: ObjectiveCategory;
-  tracking: ObjectiveTracking;
-  dueDate: IsoDate | null;
-  description: string;
-  plan: string;
-  reminder: ObjectiveReminder;
-  metric: Omit<ObjectiveMetric, 'sessionsTarget'> | null;
-  steps: readonly string[];
-  habitTargetDays: number;
-}
-
 export const DEFAULT_OBJECTIVE_FILTERS: ObjectiveFilters = {
   statuses: [],
   categories: [],
@@ -59,22 +39,43 @@ export const DEFAULT_OBJECTIVE_FILTERS: ObjectiveFilters = {
   direction: 'asc',
 };
 
+const FAILURE_MESSAGE = 'L’action a échoué. Veuillez réessayer.';
 const MAX_RECENT = 5;
 
+/**
+ * Client state of the objectives feature, backed by the objectives API: every
+ * change comes back as the objective's new state, computed by the server. Only
+ * the display settings and recent searches stay in this browser. Failures are
+ * exposed as `error` for the screens to display.
+ */
 @Injectable({ providedIn: 'root' })
 export class ObjectivesStore {
+  private readonly api = inject(ObjectivesApiService);
   private readonly appData = inject(PlanoDataStore);
+  private readonly auth = inject(AuthService);
   private readonly clock = inject(APP_CLOCK);
   private readonly data = computed(() => this.appData.data().objectives);
 
-  readonly objectives = computed(() => this.data().items);
-  readonly contacts = computed(() => this.data().contacts);
+  private readonly objectivesState = signal<readonly ObjectiveSummary[]>([]);
+  private readonly detailState = signal<ObjectiveDetail | null>(null);
+  private readonly agendaState = signal<readonly ObjectiveAgendaItem[]>([]);
+  private importing: Promise<void> | null = null;
+
+  /** The top of what the user can see, in their own order. */
+  readonly objectives = this.objectivesState.asReadonly();
+  /** The objective open in the detail screen, at any level. */
+  readonly detail = this.detailState.asReadonly();
+  /** Dated items across every visible objective, for the agenda. */
+  readonly agenda = this.agendaState.asReadonly();
+  readonly loading = signal(false);
+  /** Message of the last failed request, until cleared. */
+  readonly error = signal('');
   readonly settings = computed(() => this.data().settings);
-  readonly currentUserId = computed(() => this.data().currentUserId);
+  readonly currentUserId = computed(() => this.auth.user()?.id ?? '');
   readonly recent = computed(() =>
     this.data()
       .recentIds.map((id) => this.find(id))
-      .filter((objective): objective is Objective => !!objective),
+      .filter((objective): objective is ObjectiveSummary => !!objective),
   );
   /** Session-only filters, shared by the overview and the filter screen. */
   readonly filters = signal<ObjectiveFilters>(DEFAULT_OBJECTIVE_FILTERS);
@@ -86,30 +87,51 @@ export class ObjectivesStore {
     return toIsoDate(this.clock());
   }
 
-  find(id: string): Objective | undefined {
+  find(id: string): ObjectiveSummary | undefined {
     return this.objectives().find((objective) => objective.id === id);
   }
 
-  contact(id: string): ObjectiveContact | undefined {
-    return this.contacts().find((contact) => contact.id === id);
+  async load(): Promise<void> {
+    this.loading.set(true);
+    if (this.data().items.length) await this.importLocal();
+    await this.run(this.api.findAll(), (objectives) => this.objectivesState.set(objectives));
+    this.loading.set(false);
+  }
+
+  /** Loads an objective for the detail screen; false when it is missing or hidden. */
+  async open(id: string): Promise<boolean> {
+    this.loading.set(true);
+    if (this.detailState()?.id !== id) this.detailState.set(null);
+    if (this.data().items.length) await this.importLocal();
+    const found = await this.run(this.api.findOne(id), (detail) => this.detailState.set(detail));
+    this.loading.set(false);
+    return found;
+  }
+
+  async loadAgenda(): Promise<void> {
+    if (this.data().items.length) await this.importLocal();
+    try {
+      this.agendaState.set(await firstValueFrom(this.api.findAgenda()));
+    } catch {
+      // The agenda still shows everything else; the next visit catches up.
+    }
   }
 
   /** Objectives for an overview tab, after filters and sorting. */
-  query(tab: ObjectiveTab): Objective[] {
-    const me = this.currentUserId();
+  query(tab: ObjectiveTab): ObjectiveSummary[] {
     const { statuses, categories, sort, direction } = this.filters();
     const showArchived = this.settings().showArchived;
-    const inTab = (objective: Objective): boolean => {
+    const inTab = (objective: ObjectiveSummary): boolean => {
       if (tab === 'archived') return objective.archived;
       if (objective.archived && !(tab === 'all' && showArchived)) return false;
-      if (tab === 'mine') return objective.ownerId === me;
-      if (tab === 'shared') return objective.ownerId !== me || objective.sharedWith.length > 0;
+      if (tab === 'mine') return objective.role === 'owner';
+      if (tab === 'shared') return objective.role !== 'owner';
       return true;
     };
     const factor = direction === 'asc' ? 1 : -1;
-    const compare = (first: Objective, second: Objective): number => {
+    const compare = (first: ObjectiveSummary, second: ObjectiveSummary): number => {
       if (sort === 'manual') return 0;
-      if (sort === 'progress') return objectiveProgress(first) - objectiveProgress(second);
+      if (sort === 'progress') return (first.percent ?? -1) - (second.percent ?? -1);
       if (sort === 'title') return first.title.localeCompare(second.title, 'fr');
       // Objectives without a due date always sort last.
       return compareDueDates(first.dueDate, second.dueDate);
@@ -123,147 +145,113 @@ export class ObjectivesStore {
     return sort === 'manual' && factor < 0 ? sorted.reverse() : sorted;
   }
 
-  /** Moves an objective onto another one's place in the user's own order. */
+  search(query: string): ObjectiveSummary[] {
+    const needle = normalizeText(query);
+    if (!needle) return [];
+    return this.objectives().filter((objective) =>
+      [objective.title, categoryMeta(objective.category).label].some((text) =>
+        normalizeText(text).includes(needle),
+      ),
+    );
+  }
+
+  /** Moves an objective onto another one's place, locally: call saveOrder() on drop. */
   moveObjective(id: string, targetId: string): void {
     const items = [...this.objectives()];
     const from = items.findIndex((objective) => objective.id === id);
     const to = items.findIndex((objective) => objective.id === targetId);
-    // Checked before updating: every update is written to storage.
     if (from < 0 || to < 0 || from === to) return;
     const [moved] = items.splice(from, 1);
     items.splice(to, 0, moved);
-    this.appData.update((data) => ({ ...data, objectives: { ...data.objectives, items } }));
+    this.objectivesState.set(items);
   }
 
-  search(query: string): Objective[] {
-    const needle = normalizeText(query);
-    if (!needle) return [];
-    return this.objectives().filter((objective) =>
-      [objective.title, objective.description, categoryMeta(objective.category).label]
-        .some((text) => normalizeText(text).includes(needle)),
-    );
+  /** Saves the user's order; on failure, the order the server still has comes back. */
+  async saveOrder(): Promise<boolean> {
+    const saved = await this.run(this.api.reorder(this.objectives().map(({ id }) => id)), () => undefined);
+    if (!saved) await this.load();
+    return saved;
   }
 
-  create(draft: ObjectiveDraft): Objective {
-    const base = slugify(draft.title);
-    const id = this.find(base) ? `${base}-${createId('x').slice(2)}` : base;
-    const objective: Objective = {
-      id,
-      title: draft.title.trim(),
-      category: draft.category,
-      tracking: draft.tracking,
-      status: 'active',
-      archived: false,
-      ownerId: this.currentUserId(),
-      sharedWith: [],
-      shareCode: `${id}-${createId('s').slice(2, 8)}`,
-      createdOn: this.today(),
-      dueDate: draft.dueDate,
-      completedOn: null,
-      description: draft.description.trim(),
-      plan: draft.plan.trim(),
-      reminder: draft.reminder,
-      dueReminder: this.settings().defaultDueReminder,
-      metric: draft.tracking === 'metric' && draft.metric
-        ? { ...draft.metric, sessionsTarget: 0 }
-        : null,
-      sessions: [],
-      steps: draft.tracking === 'steps'
-        ? draft.steps
-            .map((label) => label.trim())
-            .filter(Boolean)
-            .map((label) => ({ id: createId('step'), label, done: false, completedOn: null }))
-        : [],
-      habit: draft.tracking === 'habit'
-        ? { targetDays: Math.max(1, draft.habitTargetDays), checkIns: [] }
-        : null,
-    };
-    this.updateData((data) => ({ ...data, items: [objective, ...data.items] }));
-    return objective;
+  /** Same for the sub-objectives of the open objective, which everyone sees in one order. */
+  moveChild(id: string, targetId: string): void {
+    const detail = this.detailState();
+    if (!detail) return;
+    const children = [...detail.children];
+    const from = children.findIndex((child) => child.id === id);
+    const to = children.findIndex((child) => child.id === targetId);
+    if (from < 0 || to < 0 || from === to) return;
+    const [moved] = children.splice(from, 1);
+    children.splice(to, 0, moved);
+    this.detailState.set({ ...detail, children });
   }
 
-  update(id: string, changes: Partial<Omit<Objective, 'id'>>): void {
-    this.updateObjective(id, (objective) => ({ ...objective, ...changes }));
+  async saveChildOrder(): Promise<boolean> {
+    const detail = this.detailState();
+    if (!detail) return false;
+    const saved = await this.apply(this.api.reorderChildren(detail.id, detail.children.map(({ id }) => id)));
+    if (!saved) await this.open(detail.id);
+    return saved;
   }
 
-  remove(id: string): void {
-    this.updateData((data) => ({
-      ...data,
-      items: data.items.filter((objective) => objective.id !== id),
-      recentIds: data.recentIds.filter((recentId) => recentId !== id),
-    }));
-  }
-
-  setPaused(id: string, paused: boolean): void {
-    // Resuming goes through `withDerivedStatus`, which completes it if already at 100 %.
-    this.update(id, { status: paused ? 'paused' : 'active' });
-  }
-
-  toggleStep(id: string, stepId: string): void {
-    const today = this.today();
-    this.updateObjective(id, (objective) => ({
-      ...objective,
-      steps: objective.steps.map((step) =>
-        step.id === stepId
-          ? { ...step, done: !step.done, completedOn: step.done ? null : today }
-          : step,
-      ),
-    }));
-  }
-
-  addStep(id: string, label: string): void {
-    const trimmed = label.trim();
-    if (!trimmed) return;
-    this.updateObjective(id, (objective) => ({
-      ...objective,
-      steps: [...objective.steps, { id: createId('step'), label: trimmed, done: false, completedOn: null }],
-    }));
-  }
-
-  removeStep(id: string, stepId: string): void {
-    this.updateObjective(id, (objective) => ({
-      ...objective,
-      steps: objective.steps.filter((step) => step.id !== stepId),
-    }));
-  }
-
-  toggleCheckIn(id: string, date: IsoDate): void {
-    if (date > this.today()) return;
-    this.updateObjective(id, (objective) => {
-      if (!objective.habit) return objective;
-      const checkIns = objective.habit.checkIns.includes(date)
-        ? objective.habit.checkIns.filter((checkIn) => checkIn !== date)
-        : [...objective.habit.checkIns, date].sort((first, second) => first.localeCompare(second));
-      return { ...objective, habit: { ...objective.habit, checkIns } };
+  async create(details: CreateObjectiveRequest): Promise<ObjectiveDetail | null> {
+    let created: ObjectiveDetail | null = null;
+    await this.run(this.api.create(details), (detail) => {
+      created = detail;
+      this.detailState.set(detail);
+      if (!detail.parentId) this.objectivesState.update((items) => [...items, detail]);
     });
+    return created;
   }
 
-  addSession(id: string, session: Omit<ObjectiveSession, 'id'>): void {
-    this.updateObjective(id, (objective) => ({
-      ...objective,
-      sessions: [...objective.sessions, { ...session, id: createId('session') }]
-        .sort((first, second) => first.date.localeCompare(second.date)),
-    }));
+  update(id: string, changes: UpdateObjectiveRequest): Promise<boolean> {
+    return this.apply(this.api.update(id, changes));
   }
 
-  removeSession(id: string, sessionId: string): void {
-    this.updateObjective(id, (objective) => ({
-      ...objective,
-      sessions: objective.sessions.filter((session) => session.id !== sessionId),
-    }));
+  async remove(id: string): Promise<boolean> {
+    const removed = await this.run(this.api.remove(id), () => {
+      if (this.detailState()?.id === id) this.detailState.set(null);
+      this.objectivesState.update((items) => items.filter((objective) => objective.id !== id));
+    });
+    if (removed) {
+      this.updateData((data) => ({ ...data, recentIds: data.recentIds.filter((recentId) => recentId !== id) }));
+    }
+    return removed;
   }
 
-  share(id: string, contactIds: readonly string[]): void {
-    this.update(id, { sharedWith: [...contactIds] });
+  updatePreferences(id: string, changes: UpdateObjectivePreferencesRequest): Promise<boolean> {
+    return this.apply(this.api.updatePreferences(id, changes));
   }
 
-  addContact(name: string): ObjectiveContact | null {
-    const contact: ObjectiveContact | null = createPerson(name);
-    if (!contact) return null;
-    this.updateData((data) => ({ ...data, contacts: [...data.contacts, contact] }));
-    return contact;
+  addSession(id: string, details: AddObjectiveSessionRequest): Promise<boolean> {
+    return this.apply(this.api.addSession(id, details));
   }
 
+  removeSession(id: string, sessionId: string): Promise<boolean> {
+    return this.apply(this.api.removeSession(id, sessionId));
+  }
+
+  setCheckIn(id: string, date: IsoDate, checked: boolean): Promise<boolean> {
+    return this.apply(this.api.setCheckIn(id, date, checked));
+  }
+
+  setProgress(id: string, percent: number): Promise<boolean> {
+    return this.apply(this.api.setProgress(id, percent));
+  }
+
+  setCompleted(id: string, completed: boolean): Promise<boolean> {
+    return this.apply(this.api.setCompleted(id, completed));
+  }
+
+  /** Ticks a sub-objective from its parent, whose state then changes too. */
+  async setChildCompleted(childId: string, completed: boolean): Promise<boolean> {
+    const parentId = this.detailState()?.id;
+    const done = await this.run(this.api.setCompleted(childId, completed), () => undefined);
+    if (done && parentId) await this.run(this.api.findOne(parentId), (detail) => this.detailState.set(detail));
+    return done;
+  }
+
+  /** Remembers a top-level objective for the search screen. */
   markViewed(id: string): void {
     if (this.data().recentIds[0] === id) return;
     this.updateData((data) => ({
@@ -280,14 +268,48 @@ export class ObjectivesStore {
     this.filters.set(DEFAULT_OBJECTIVE_FILTERS);
   }
 
-  private updateObjective(id: string, change: (objective: Objective) => Objective): void {
-    const today = this.today();
-    this.updateData((data) => ({
-      ...data,
-      items: data.items.map((objective) =>
-        objective.id === id ? withDerivedStatus(change(objective), today) : objective,
-      ),
-    }));
+  /**
+   * Sends what this browser still holds to the API, then forgets it. On failure
+   * it stays here and goes again on the next load. Runs once at a time, whichever
+   * screen asks first.
+   */
+  private importLocal(): Promise<void> {
+    const { items } = this.data();
+    this.importing ??= (async () => {
+      try {
+        const today = this.today();
+        await firstValueFrom(
+          this.api.importLocal({ objectives: items.map((objective) => toImportRequest(objective, today)) }),
+        );
+        this.updateData((data) => ({ ...data, items: [], contacts: [], recentIds: [] }));
+      } catch {
+        // Nothing is lost: the objectives are still in this browser.
+      } finally {
+        this.importing = null;
+      }
+    })();
+    return this.importing;
+  }
+
+  /** Runs a change that answers with the objective's new state. */
+  private apply(request: Observable<ObjectiveDetail>): Promise<boolean> {
+    return this.run(request, (detail) => {
+      this.detailState.set(detail);
+      this.objectivesState.update((items) =>
+        items.map((objective) => (objective.id === detail.id ? detail : objective)),
+      );
+    });
+  }
+
+  private async run<T>(request: Observable<T>, apply: (result: T) => void): Promise<boolean> {
+    this.error.set('');
+    try {
+      apply(await firstValueFrom(request));
+      return true;
+    } catch (error) {
+      this.error.set(httpErrorMessage(error, { fallback: FAILURE_MESSAGE, useServerMessage: true }));
+      return false;
+    }
   }
 
   private updateData(change: (data: ObjectivesData) => ObjectivesData): void {

@@ -4,7 +4,7 @@ import type { AgendaEvent } from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../../core/data/plano-data.adapter';
 import { personColor } from '../../core/people/people';
 import { CONTACTS, contact } from '../../testing/contacts';
-import { flushListReminders, providePlanoTesting, settle } from '../../testing/plano-testing';
+import { flushListReminders, flushObjectiveAgenda, providePlanoTesting, settle } from '../../testing/plano-testing';
 import { AgendaEventDraft, AgendaStore, toAgendaContact } from './agenda.store';
 
 describe('AgendaStore', () => {
@@ -21,6 +21,26 @@ describe('AgendaStore', () => {
     store = TestBed.inject(AgendaStore);
     store.loadTasks();
     flushListReminders();
+    flushObjectiveAgenda([
+      {
+        kind: 'session',
+        key: 'session:run-12',
+        objectiveId: 'courir-10-km',
+        objectiveTitle: 'Courir 10 km',
+        category: 'health',
+        date: '2026-10-17',
+        label: 'Sortie 7 km',
+      },
+      {
+        kind: 'deadline',
+        key: 'deadline:lire',
+        objectiveId: 'lire',
+        objectiveTitle: 'Lire 12 livres',
+        category: 'learning',
+        date: '2026-10-17',
+        label: 'Lire 12 livres',
+      },
+    ]);
     await settle();
   });
 
@@ -35,9 +55,20 @@ describe('AgendaStore', () => {
       );
     });
 
-    it('shows planned objective sessions as all-day tasks, first', () => {
-      expect(titles('2026-10-17')).toEqual(['Sortie 7 km', 'Cinéma']);
-      expect(store.itemsOn('2026-10-17')[0].link).toEqual(['/objectives', 'courir-10-km', 'calendar']);
+    it('shows planned objective sessions and deadlines as all-day tasks, first', () => {
+      expect(titles('2026-10-17')).toEqual(['Sortie 7 km', 'Échéance : Lire 12 livres', 'Cinéma']);
+      const [session, deadline] = store.itemsOn('2026-10-17');
+      expect(session).toEqual(
+        expect.objectContaining({
+          key: 'objective:session:run-12',
+          allDay: true,
+          subtitle: 'Objectif · Courir 10 km',
+          link: ['/objectives', 'courir-10-km', 'calendar'],
+        }),
+      );
+      expect(deadline).toEqual(
+        expect.objectContaining({ subtitle: 'Objectif · Lire 12 livres', link: ['/objectives', 'lire'] }),
+      );
     });
 
     it('applies calendar and display filters', () => {

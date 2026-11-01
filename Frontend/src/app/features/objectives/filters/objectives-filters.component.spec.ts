@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ObjectivesStore } from '../objectives.store';
-import { provideObjectivesTesting } from '../objectives.testing';
+import { flushObjectives, provideObjectivesTesting } from '../objectives.testing';
+import { objectiveSummary } from '../testing/objectives-fixtures';
 import { ObjectivesFiltersComponent } from './objectives-filters.component';
 
 describe('ObjectivesFiltersComponent', () => {
@@ -11,7 +12,7 @@ describe('ObjectivesFiltersComponent', () => {
   const checkboxes = (fieldset: number): HTMLInputElement[] =>
     Array.from(element.querySelectorAll('fieldset')[fieldset].querySelectorAll('input'));
 
-  beforeEach(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [ObjectivesFiltersComponent],
       providers: provideObjectivesTesting(),
@@ -19,13 +20,18 @@ describe('ObjectivesFiltersComponent', () => {
     fixture = TestBed.createComponent(ObjectivesFiltersComponent);
     element = fixture.nativeElement as HTMLElement;
     store = TestBed.inject(ObjectivesStore);
+    await flushObjectives([
+      objectiveSummary({ id: 'a' }),
+      objectiveSummary({ id: 'b', status: 'paused', category: 'finance' }),
+      objectiveSummary({ id: 'c', category: 'learning' }),
+    ]);
     fixture.detectChanges();
   });
 
   it('starts unfiltered and previews the number of results', () => {
     expect(checkboxes(0)[0].checked).toBe(true);
     expect(checkboxes(1)[0].checked).toBe(true);
-    expect(element.querySelector('.actions a')?.textContent?.trim()).toBe('Afficher 7 objectif(s)');
+    expect(element.querySelector('.actions a')?.textContent?.trim()).toBe('Afficher 3 objectif(s)');
   });
 
   it('toggles statuses and categories', () => {
@@ -37,7 +43,7 @@ describe('ObjectivesFiltersComponent', () => {
       expect.objectContaining({ statuses: ['active'], categories: ['health'] }),
     );
     expect(checkboxes(0)[0].checked).toBe(false);
-    expect(element.querySelector('.actions a')?.textContent).toContain('Afficher 2');
+    expect(element.querySelector('.actions a')?.textContent).toContain('Afficher 1');
 
     checkboxes(1)[1].click();
     fixture.detectChanges();

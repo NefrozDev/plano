@@ -16,6 +16,7 @@ import { initialsOf, personColor } from '../../core/people/people';
 import { APP_CLOCK, createId, normalizeText, toIsoDate, toTimeOfDay } from '../../core/time/dates';
 import { ListsStore } from '../lists/lists.store';
 import { categoryMeta } from '../objectives/objective.utils';
+import { ObjectivesStore } from '../objectives/objectives.store';
 import {
   AgendaItem,
   EVENT_COLORS,
@@ -56,6 +57,7 @@ export class AgendaStore {
   private readonly appData = inject(PlanoDataStore);
   private readonly clock = inject(APP_CLOCK);
   private readonly lists = inject(ListsStore);
+  private readonly objectives = inject(ObjectivesStore);
   private readonly friends = inject(FriendsService);
   private readonly data = computed(() => this.appData.data().agenda);
   private readonly invitableState = signal<readonly Contact[]>([]);
@@ -83,9 +85,10 @@ export class AgendaStore {
       .filter((event): event is AgendaEvent => !!event),
   );
 
-  /** Fetches the dated items of other features served by the API (list reminders). */
+  /** Fetches the dated items of other features served by the API (reminders, objectives). */
   loadTasks(): void {
     void this.lists.loadReminders();
+    void this.objectives.loadAgenda();
   }
 
   today(): IsoDate {
@@ -269,7 +272,6 @@ export class AgendaStore {
 
   /** Dated items owned by other features, so the agenda shows the whole day. */
   private taskItems(from: IsoDate, to: IsoDate): AgendaItem[] {
-    const data = this.appData.data();
     const inRange = (date: IsoDate): boolean => date >= from && date <= to;
 
     const listTasks = this.lists
@@ -291,29 +293,26 @@ export class AgendaStore {
         queryParams: {},
       }));
 
-    const sessionTasks = data.objectives.items
-      .filter((objective) => !objective.archived)
-      .flatMap((objective) =>
-        objective.sessions
-          .filter((session) => session.status === 'planned' && inRange(session.date))
-          .map((session): AgendaItem => ({
-            key: `objective:${objective.id}:${session.id}`,
-            kind: 'task',
-            eventId: null,
-            title: session.label || objective.title,
-            subtitle: `Objectif · ${objective.title}`,
-            color: categoryMeta(objective.category).color,
-            allDay: true,
-            start: toLocalDateTime(session.date, '00:00'),
-            end: toLocalDateTime(session.date, '23:59'),
-            participantIds: [],
-            done: false,
-            link: ['/objectives', objective.id, 'calendar'],
-            queryParams: {},
-          })),
-      );
+    const objectiveTasks = this.objectives
+      .agenda()
+      .filter((item) => inRange(item.date))
+      .map((item): AgendaItem => ({
+        key: `objective:${item.key}`,
+        kind: 'task',
+        eventId: null,
+        title: item.kind === 'deadline' ? `Échéance : ${item.label}` : item.label,
+        subtitle: `Objectif · ${item.objectiveTitle}`,
+        color: categoryMeta(item.category).color,
+        allDay: true,
+        start: toLocalDateTime(item.date, '00:00'),
+        end: toLocalDateTime(item.date, '23:59'),
+        participantIds: [],
+        done: false,
+        link: ['/objectives', item.objectiveId, ...(item.kind === 'session' ? ['calendar'] : [])],
+        queryParams: {},
+      }));
 
-    return [...listTasks, ...sessionTasks];
+    return [...listTasks, ...objectiveTasks];
   }
 
   private updateData(change: (data: AgendaData) => AgendaData): void {

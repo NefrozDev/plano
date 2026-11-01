@@ -1,5 +1,5 @@
 @if (objective(); as objective) {
-  @if (objective.habit) {
+  @if (objective.completion === 'habit') {
     <div class="heading">
       <h2>Suivi de l’habitude</h2>
       <div class="month-nav">
@@ -21,7 +21,7 @@
             [class.outside]="!day.inMonth"
             [class.checked]="day.inMonth && isChecked(day.date)"
             [class.today]="day.date === today"
-            [disabled]="!day.inMonth || day.date > today || objective.status === 'paused'"
+            [disabled]="!canContribute() || !day.inMonth || day.date > today || objective.status === 'paused'"
             [attr.aria-pressed]="isChecked(day.date)"
             [attr.aria-label]="dayLabel(day.date)"
             (click)="toggle(day.date)"
@@ -30,7 +30,11 @@
       }
     </div>
     <p class="hint">
-      {{ objective.status === 'paused' ? 'Reprenez l’objectif pour cocher des jours.' : 'Touchez un jour pour le marquer comme réussi.' }}
+      @if (!canContribute()) {
+        Vous consultez cette habitude sans y participer.
+      } @else {
+        {{ objective.status === 'paused' ? 'Reprenez l’objectif pour cocher des jours.' : 'Touchez un jour pour le marquer comme réussi.' }}
+      }
     </p>
 
     <section class="stats" aria-label="Statistiques du mois">
@@ -40,7 +44,7 @@
     </section>
 
     <section class="reminder">
-      <h3>Rappel</h3>
+      <h3>Mon rappel</h3>
       <label>
         <span>Fréquence</span>
         <select (change)="updateReminder({ frequency: $any($event.target).value })">

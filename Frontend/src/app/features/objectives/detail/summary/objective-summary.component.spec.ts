@@ -1,163 +1,473 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { MockInstance } from 'vitest';
+import type { ObjectiveDetail } from '@plano/common';
 import { ObjectivesStore } from '../../objectives.store';
-import { provideObjectiveContext, provideObjectivesTesting } from '../../objectives.testing';
-import { ObjectiveContext } from '../objective-context';
+import {
+  openObjective,
+  provideObjectiveContext,
+  provideObjectivesTesting,
+  provideSignedIn,
+  settleObjectives,
+} from '../../objectives.testing';
+import {
+  habitDetail,
+  metricDetail,
+  objectiveDetail,
+  objectiveSummary,
+  treeDetail,
+} from '../../testing/objectives-fixtures';
 import { ObjectiveSummaryComponent } from './objective-summary.component';
 
 describe('ObjectiveSummaryComponent', () => {
   let fixture: ComponentFixture<ObjectiveSummaryComponent>;
+  let component: ObjectiveSummaryComponent;
   let element: HTMLElement;
   let store: ObjectivesStore;
+  let http: HttpTestingController;
 
   const tiles = (): string[] =>
     Array.from(element.querySelectorAll('.tile')).map(
       (tile) => `${tile.querySelector('strong')?.textContent} ${tile.querySelector('span')?.textContent}`,
     );
-  const show = (id: string): void => {
-    TestBed.inject(ObjectiveContext).id.set(id);
+  /** Answers the request a change just made, and returns its body. */
+  const answer = async (url: string, detail: ObjectiveDetail = objectiveDetail()): Promise<unknown> => {
+    const request = http.expectOne(`/api/v1/objectives/obj-1${url}`);
+    request.flush(detail);
+    await settleObjectives();
     fixture.detectChanges();
+    return request.request.body;
   };
+
+  async function show(detail: ObjectiveDetail): Promise<void> {
+    await openObjective(detail);
+    fixture.detectChanges();
+  }
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [ObjectiveSummaryComponent],
-      providers: [...provideObjectivesTesting(), provideObjectiveContext('courir-10-km')],
+      providers: [...provideObjectivesTesting(), provideObjectiveContext('obj-1'), provideSignedIn()],
     });
+    http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ObjectiveSummaryComponent);
+    component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
     store = TestBed.inject(ObjectivesStore);
     fixture.detectChanges();
   });
 
-  it('shows the hero, key figures and people for a metric objective', () => {
-    expect(element.querySelector('h2')?.textContent).toContain('Courir 10 km');
-    expect(element.querySelector('.due')?.textContent).toBe('Échéance : 30 nov. 2026');
-    expect(element.querySelector('.percent')?.textContent).toBe('65 %');
-    expect(element.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('65');
-    expect(tiles()).toEqual(['6,5 km Meilleure séance', '8 / 24 Séances', '46 jours Restants']);
-    // Six people: four avatars and a "+2" bubble.
-    expect(element.querySelectorAll('.avatar').length).toBe(5);
-    expect(element.querySelector('.avatar.more')?.textContent).toBe('+2');
+  afterEach(() => http.verify());
+
+  it('renders nothing until the objective is there', () => {
+    expect(element.querySelector('.hero')).toBeNull();
+    expect(component.view()).toBeNull();
   });
 
-  it('adapts key figures to steps, habits, completion and deadlines', () => {
-    show('apprendre-italien');
-    expect(tiles().slice(0, 2)).toEqual(['2 / 5 Étapes', '3 Restantes']);
+  describe('bars', () => {
+    it('shows the completion bar', async () => {
+      await show(metricDetail({ dueDate: '2026-11-30' }));
 
-    show('mediter-30-min');
-    expect(tiles().slice(0, 2)).toEqual(['34 Jours réussis', '3 j Meilleure série']);
+      expect(element.querySelector('h2')?.textContent).toContain('Courir 10 km');
+      expect(element.querySelector('.due')?.textContent).toBe('Échéance : 30 nov. 2026');
+      expect(element.querySelector('.percent')?.textContent).toBe('65 %');
+      expect(element.querySelector('.hero > [role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('65');
+    });
 
-    show('mediter-30-jours');
-    expect(tiles()[2]).toBe('Terminé 30 août');
+    it('shows progress as amounts when percentages are turned off', async () => {
+      store.updateSettings({ showPercentage: false });
+      await show(metricDetail());
 
-    store.update('courir-10-km', { dueDate: '2026-10-14' });
-    show('courir-10-km');
-    expect(tiles()[2]).toBe('1 jour De retard');
+      expect(element.querySelector('.percent')?.textContent).toBe('6,5 / 10 km');
+    });
 
-    store.update('courir-10-km', { dueDate: null });
-    fixture.detectChanges();
-    expect(tiles()[2]).toBe('— Sans échéance');
-    expect(element.querySelector('.due')?.textContent).toBe('Sans échéance');
+    it('shows no bar at all without one', async () => {
+      await show(objectiveDetail());
+
+      expect(element.querySelector('.percent')).toBeNull();
+      expect(element.querySelector('[role="progressbar"]')).toBeNull();
+    });
+
+    it('shows the timelapse bar, red and late past the deadline', async () => {
+      await show(objectiveDetail({ timelapse: 'elapsed', startDate: '2026-10-01', dueDate: '2026-10-11' }));
+
+      const bar = element.querySelector('app-timelapse-bar') as HTMLElement;
+      expect(bar.textContent).toContain('4 jours de retard');
+      expect(bar.classList).toContain('overdue');
+      expect(bar.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('100');
+    });
+
+    it('shows paused and archived objectives as such', async () => {
+      await show(objectiveDetail({ status: 'paused' }));
+      expect(element.querySelector('.pill')?.textContent).toBe('En pause');
+
+      await show(objectiveDetail({ archived: true }));
+      expect(element.querySelector('.pill')?.textContent).toBe('Archivé');
+    });
   });
 
-  it('renames the objective inline and lets Escape cancel', () => {
-    (element.querySelector('h2 button') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    TestBed.tick();
-    const input = element.querySelector('.title-input') as HTMLInputElement;
-    expect(document.activeElement).toBe(input);
+  describe('key figures', () => {
+    it('adapts them to the completion mode and deadline', async () => {
+      await show(metricDetail({ dueDate: '2026-11-30' }));
+      expect(tiles()).toEqual(['6,5 km Meilleure valeur', '2 Séances', '46 jours Restants']);
 
-    input.value = '  Courir 12 km ';
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-    fixture.detectChanges();
-    expect(store.find('courir-10-km')?.title).toBe('Courir 12 km');
+      await show(metricDetail({ metric: { unit: 'km', target: 10, aggregation: 'sum' } }));
+      expect(tiles()[0]).toBe('6,5 km Cumulé');
 
-    (element.querySelector('h2 button') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    const second = element.querySelector('.title-input') as HTMLInputElement;
-    second.value = 'Ignoré';
-    second.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    fixture.detectChanges();
-    // The trailing blur after Escape must not save the draft.
-    fixture.componentInstance.saveTitle('Ignoré');
-    expect(store.find('courir-10-km')?.title).toBe('Courir 12 km');
+      await show(habitDetail());
+      expect(tiles().slice(0, 2)).toEqual(['3 Jours réussis', '2 j Meilleure série']);
+
+      await show(treeDetail());
+      expect(tiles().slice(0, 2)).toEqual(['1 / 2 Terminés', '1 Restants']);
+    });
+
+    it('counts only the signed-in person’s days', async () => {
+      await show(
+        habitDetail({
+          checkIns: [
+            { date: '2026-10-05', userId: 'user-ada' },
+            { date: '2026-10-05', userId: 'user-bob' },
+            { date: '2026-10-06', userId: 'user-bob' },
+          ],
+        }),
+      );
+      expect(tiles()[0]).toBe('1 Jours réussis');
+    });
+
+    it('gives the state of the deadline', async () => {
+      await show(metricDetail({ dueDate: '2026-10-14' }));
+      expect(tiles()[2]).toBe('1 jour De retard');
+
+      await show(metricDetail({ dueDate: '2026-10-16' }));
+      expect(tiles()[2]).toBe('1 jour Restants');
+
+      await show(metricDetail());
+      expect(tiles()[2]).toBe('— Sans échéance');
+      expect(element.querySelector('.due')?.textContent).toBe('Sans échéance');
+
+      await show(metricDetail({ status: 'completed', completedAt: '2026-08-30T12:00:00.000Z' }));
+      expect(tiles()[2]).toBe('Terminé 30 août');
+    });
+
+    it('hides the section when there is only a deadline to tell', async () => {
+      await show(objectiveDetail());
+      expect(element.querySelector('.tiles')).toBeNull();
+    });
   });
 
-  it('edits description and plan from expandable rows', () => {
-    const rows = element.querySelectorAll<HTMLButtonElement>('button.row');
-    rows[0].click();
-    fixture.detectChanges();
-    const textarea = element.querySelector('textarea') as HTMLTextAreaElement;
-    textarea.value = ' Nouvelle description ';
-    textarea.dispatchEvent(new Event('change'));
+  describe('manual progress', () => {
+    const slider = () => element.querySelector('.manual input') as HTMLInputElement | null;
 
-    rows[1].click();
-    fixture.detectChanges();
-    expect(element.querySelector('textarea')).toBeNull();
-    const plan = element.querySelector('input.editor') as HTMLInputElement;
-    plan.value = '4 sorties par semaine';
-    plan.dispatchEvent(new Event('change'));
+    it('moves the bar for those who can contribute', async () => {
+      await show(objectiveDetail({ completion: 'manual', percent: 30, manualProgress: 30 }));
+      const input = slider() as HTMLInputElement;
+      expect(input.value).toBe('30');
 
-    expect(store.find('courir-10-km')).toEqual(
-      expect.objectContaining({
-        description: 'Nouvelle description',
-        plan: '4 sorties par semaine',
-      }),
-    );
+      input.value = '55';
+      input.dispatchEvent(new Event('change'));
+
+      expect(await answer('/progress')).toEqual({ percent: 55 });
+    });
+
+    it('is locked while paused, and hidden from viewers and other modes', async () => {
+      await show(objectiveDetail({ completion: 'manual', percent: 30, status: 'paused' }));
+      expect(slider()?.disabled).toBe(true);
+
+      await show(objectiveDetail({ completion: 'manual', percent: 30, role: 'viewer' }));
+      expect(slider()).toBeNull();
+
+      await show(metricDetail());
+      expect(slider()).toBeNull();
+    });
   });
 
-  it('edits reminders', () => {
-    fixture.componentInstance.toggleRow('reminder');
-    fixture.detectChanges();
-    const selects = element.querySelectorAll<HTMLSelectElement>('.reminder-editor select');
-    // Weekly reminder: frequency, weekday and due-date selects are visible.
-    expect(selects.length).toBe(3);
-    expect(selects[1].value).toBe('0');
+  describe('marking complete', () => {
+    const button = () => element.querySelector('.complete-button') as HTMLButtonElement | null;
 
-    selects[1].value = '2';
-    selects[1].dispatchEvent(new Event('change'));
-    selects[2].value = 'week-before';
-    selects[2].dispatchEvent(new Event('change'));
-    const time = element.querySelector('.reminder-editor input') as HTMLInputElement;
-    time.value = '07:30';
-    time.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
+    it('completes and reopens an objective without a bar', async () => {
+      await show(objectiveDetail());
+      expect(button()?.textContent).toBe('Marquer comme terminé');
 
-    expect(store.find('courir-10-km')?.reminder).toEqual({ frequency: 'weekly', time: '07:30', weekday: 2 });
-    expect(element.textContent).toContain('Chaque mercredi à 07:30 · Échéance : 1 semaine avant');
+      button()?.click();
+      expect(await answer('/completed', objectiveDetail({ status: 'completed' }))).toEqual({ completed: true });
+      expect(button()?.textContent).toBe('Rouvrir');
 
-    fixture.componentInstance.updateReminder({ frequency: 'none' });
-    fixture.detectChanges();
-    expect(element.querySelector('.reminder-editor input')).toBeNull();
+      button()?.click();
+      expect(await answer('/completed')).toEqual({ completed: false });
+    });
+
+    it('is not offered to viewers, on paused objectives, or when a bar decides', async () => {
+      await show(objectiveDetail({ role: 'viewer' }));
+      expect(button()).toBeNull();
+
+      await show(objectiveDetail({ status: 'paused' }));
+      expect(button()).toBeNull();
+
+      await show(metricDetail());
+      expect(button()).toBeNull();
+    });
   });
 
-  it('shows progress as amounts when percentages are turned off', () => {
-    store.updateSettings({ showPercentage: false });
-    fixture.detectChanges();
+  describe('sub-objectives', () => {
+    const titles = () =>
+      Array.from(element.querySelectorAll('.child-item app-objective-card strong')).map((node) => node.textContent);
 
-    expect(element.querySelector('.percent')?.textContent).toBe('6,5 / 10 km');
+    it('lists them with their state, linked to their own page', async () => {
+      await show(treeDetail());
+
+      expect(titles()).toEqual(['Réserver', 'Faire les valises']);
+      expect(element.querySelector('.heading span')?.textContent).toBe('1 / 2');
+      expect(element.querySelector('.child-item a')?.getAttribute('href')).toBe('/objectives/child-1');
+    });
+
+    it('offers the owner to add one under this objective', async () => {
+      await show(objectiveDetail());
+
+      const add = element.querySelector('.add-child') as HTMLAnchorElement;
+      expect(add.getAttribute('href')).toBe('/objectives/new?parent=obj-1');
+      expect(element.querySelector('.heading span')).toBeNull();
+    });
+
+    it('hides the section from others when there are none', async () => {
+      await show(objectiveDetail({ role: 'contributor' }));
+      expect(element.querySelector('.children')).toBeNull();
+    });
+
+    it('shows them to others, without adding or moving', async () => {
+      await show(treeDetail({ role: 'viewer' }));
+
+      expect(titles()).toHaveLength(2);
+      expect(element.querySelector('.add-child')).toBeNull();
+      expect(element.querySelector('.drag-handle')).toBeNull();
+      expect(element.querySelector('.toggle')).toBeNull();
+    });
+
+    it('ticks one without a bar from here, then reloads the parent', async () => {
+      await show(treeDetail());
+      const toggles = element.querySelectorAll<HTMLButtonElement>('.toggle');
+      expect(toggles[0].getAttribute('aria-pressed')).toBe('true');
+      expect(toggles[0].getAttribute('aria-label')).toBe('Rouvrir Réserver');
+      expect(toggles[1].getAttribute('aria-label')).toBe('Terminer Faire les valises');
+
+      toggles[1].click();
+      const request = http.expectOne('/api/v1/objectives/child-2/completed');
+      expect(request.request.body).toEqual({ completed: true });
+      // A second tap while it is on its way sends nothing.
+      toggles[1].click();
+      request.flush(objectiveDetail({ id: 'child-2' }));
+      await settleObjectives();
+      http.expectOne('/api/v1/objectives/obj-1').flush(treeDetail({ percent: 100 }));
+      await settleObjectives();
+      fixture.detectChanges();
+
+      expect(element.querySelector('.percent')?.textContent).toBe('100 %');
+      expect(component.toggling()).toBe('');
+    });
+
+    it('reopens a ticked one', async () => {
+      await show(treeDetail());
+      element.querySelector<HTMLButtonElement>('.toggle')?.click();
+
+      const request = http.expectOne('/api/v1/objectives/child-1/completed');
+      expect(request.request.body).toEqual({ completed: false });
+      request.flush(objectiveDetail({ id: 'child-1' }));
+      await settleObjectives();
+      http.expectOne('/api/v1/objectives/obj-1').flush(treeDetail());
+      await settleObjectives();
+    });
+
+    it('offers no tick for one with its own bar, or paused', async () => {
+      await show(
+        treeDetail({
+          children: [
+            objectiveSummary({ id: 'bar', parentId: 'obj-1', completion: 'manual', percent: 10 }),
+            objectiveSummary({ id: 'paused', parentId: 'obj-1', status: 'paused' }),
+          ],
+        }),
+      );
+      const toggles = element.querySelectorAll<HTMLButtonElement>('.toggle');
+
+      expect(toggles).toHaveLength(1);
+      expect(toggles[0].disabled).toBe(true);
+    });
+
+    describe('moving', () => {
+      const handle = (id: string) =>
+        element.querySelector(`.child-item[data-child-id="${id}"] .drag-handle`) as HTMLButtonElement;
+      const pointer = (type: string, target: Element, x = 0, y = 0) =>
+        target.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x, clientY: y, bubbles: true, cancelable: true }));
+      let under: Element | null = null;
+      let elementFromPoint: MockInstance<Document['elementFromPoint']>;
+
+      beforeEach(() => {
+        under = null;
+        elementFromPoint = vi.spyOn(document, 'elementFromPoint').mockImplementation(() => under);
+      });
+      afterEach(() => elementFromPoint.mockRestore());
+
+      it('drags one onto another, and saves on release', async () => {
+        await show(treeDetail());
+        const grip = handle('child-2');
+        grip.setPointerCapture = vi.fn();
+
+        pointer('pointerdown', grip);
+        under = element.querySelector('.child-item[data-child-id="child-1"] strong');
+        pointer('pointermove', grip, 10, 20);
+        fixture.detectChanges();
+        expect(titles()).toEqual(['Faire les valises', 'Réserver']);
+        http.expectNone('/api/v1/objectives/obj-1/children/order');
+
+        pointer('pointerup', grip);
+        expect(await answer('/children/order', treeDetail())).toEqual({ objectiveIds: ['child-2', 'child-1'] });
+      });
+
+      it('moves one with the arrow keys', async () => {
+        await show(treeDetail());
+
+        handle('child-1').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true }));
+        fixture.detectChanges();
+
+        expect(await answer('/children/order', treeDetail())).toEqual({ objectiveIds: ['child-2', 'child-1'] });
+      });
+
+      it('offers no grip for a single one', async () => {
+        await show(treeDetail({ children: [objectiveSummary({ id: 'only', parentId: 'obj-1' })] }));
+        expect(element.querySelector('.drag-handle')).toBeNull();
+      });
+    });
   });
 
-  it('marks paused objectives and handles objectives without sharing', () => {
-    store.update('apprendre-italien', { status: 'paused' });
-    show('apprendre-italien');
+  describe('owner’s edits', () => {
+    it('renames inline and lets Escape cancel', async () => {
+      await show(objectiveDetail());
+      (element.querySelector('h2 button') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      TestBed.tick();
+      const input = element.querySelector('.title-input') as HTMLInputElement;
+      expect(document.activeElement).toBe(input);
 
-    expect(element.querySelector('.pill')?.textContent).toBe('En pause');
-    expect(element.textContent).toContain('Personne pour l’instant');
+      input.value = '  Courir 12 km ';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      fixture.detectChanges();
+      expect(await answer('', objectiveDetail({ title: 'Courir 12 km' }))).toEqual({ title: 'Courir 12 km' });
+
+      (element.querySelector('h2 button') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      const second = element.querySelector('.title-input') as HTMLInputElement;
+      second.value = 'Ignoré';
+      second.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      fixture.detectChanges();
+      // The trailing blur after Escape must not save the draft.
+      component.saveTitle('Ignoré');
+      http.expectNone('/api/v1/objectives/obj-1');
+    });
+
+    it('sends nothing for a blank or unchanged title', async () => {
+      await show(objectiveDetail());
+
+      component.editingTitle.set(true);
+      component.saveTitle('   ');
+      component.editingTitle.set(true);
+      component.saveTitle('Courir 10 km');
+
+      http.expectNone('/api/v1/objectives/obj-1');
+      expect(component.editingTitle()).toBe(false);
+    });
+
+    it('edits description and plan from expandable rows', async () => {
+      await show(objectiveDetail());
+      const rows = element.querySelectorAll<HTMLButtonElement>('button.row');
+
+      rows[0].click();
+      fixture.detectChanges();
+      const textarea = element.querySelector('textarea') as HTMLTextAreaElement;
+      textarea.value = ' Nouvelle description ';
+      textarea.dispatchEvent(new Event('change'));
+      expect(await answer('')).toEqual({ description: 'Nouvelle description' });
+
+      element.querySelectorAll<HTMLButtonElement>('button.row')[1].click();
+      fixture.detectChanges();
+      expect(element.querySelector('textarea')).toBeNull();
+      const plan = element.querySelector('input.editor') as HTMLInputElement;
+      plan.value = '4 sorties par semaine';
+      plan.dispatchEvent(new Event('change'));
+      expect(await answer('')).toEqual({ plan: '4 sorties par semaine' });
+    });
+
+    it('closes an open row', async () => {
+      await show(objectiveDetail());
+
+      component.toggleRow('plan');
+      component.toggleRow('plan');
+
+      expect(component.openRow()).toBeNull();
+    });
   });
 
-  it('ignores edits once the objective has been deleted', () => {
-    store.remove('courir-10-km');
-    fixture.detectChanges();
-    const component = fixture.componentInstance;
+  describe('for those who do not own it', () => {
+    it('offers no renaming, and shows texts without editing them', async () => {
+      await show(objectiveDetail({ role: 'contributor', description: 'Une fois', plan: 'Souvent' }));
+
+      expect(element.querySelector('h2 button')).toBeNull();
+      const rows = element.querySelectorAll<HTMLButtonElement>('button.row');
+      expect(rows[0].disabled).toBe(true);
+      expect(rows[0].textContent).toContain('Une fois');
+      expect(rows[1].disabled).toBe(true);
+      // Their reminders remain theirs to set.
+      expect(rows[2].disabled).toBe(false);
+    });
+
+    it('hides empty texts', async () => {
+      await show(objectiveDetail({ role: 'viewer' }));
+
+      const rows = element.querySelectorAll('button.row');
+      expect(rows).toHaveLength(1);
+      expect(rows[0].textContent).toContain('Mes rappels');
+    });
+  });
+
+  describe('reminders', () => {
+    const weekly = { frequency: 'weekly', time: '09:00', weekday: 0 } as const;
+
+    it('keeps them to the signed-in person', async () => {
+      await show(objectiveDetail({ reminder: weekly, dueReminder: 'day-before' }));
+      expect(element.textContent).toContain('Chaque lundi à 09:00 · Échéance : 1 jour avant');
+      component.toggleRow('reminder');
+      fixture.detectChanges();
+      const selects = element.querySelectorAll<HTMLSelectElement>('.reminder-editor select');
+      // Weekly reminder: frequency, weekday and due-date selects are visible.
+      expect(selects.length).toBe(3);
+
+      selects[1].value = '2';
+      selects[1].dispatchEvent(new Event('change'));
+      expect(await answer('/preferences', objectiveDetail({ reminder: { ...weekly, weekday: 2 } }))).toEqual({
+        reminder: { ...weekly, weekday: 2 },
+      });
+
+      element.querySelectorAll<HTMLSelectElement>('.reminder-editor select')[2].value = 'week-before';
+      element.querySelectorAll<HTMLSelectElement>('.reminder-editor select')[2].dispatchEvent(new Event('change'));
+      expect(await answer('/preferences', objectiveDetail({ reminder: weekly }))).toEqual({ dueReminder: 'week-before' });
+
+      const time = element.querySelector('.reminder-editor input') as HTMLInputElement;
+      time.value = '07:30';
+      time.dispatchEvent(new Event('change'));
+      expect(await answer('/preferences', objectiveDetail())).toEqual({ reminder: { ...weekly, time: '07:30' } });
+
+      expect(element.querySelector('.reminder-editor input')).toBeNull();
+    });
+  });
+
+  it('ignores edits once the objective is gone', async () => {
     component.editingTitle.set(true);
     component.saveTitle('Fantôme');
     component.updateText('plan', 'x');
     component.updateReminder({ time: '10:00' });
     component.updateDueReminder('none');
+    component.setProgress(10);
+    component.toggleCompleted();
 
+    http.expectNone({ method: 'PATCH' });
+    http.expectNone({ method: 'PUT' });
     expect(component.view()).toBeNull();
-    expect(element.querySelector('.hero')).toBeNull();
-    expect(store.objectives().length).toBe(7);
   });
 });

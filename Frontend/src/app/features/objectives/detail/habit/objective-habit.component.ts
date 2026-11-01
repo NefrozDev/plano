@@ -24,11 +24,22 @@ export class ObjectiveHabitComponent {
   readonly objective = inject(ObjectiveContext).objective;
   readonly today = this.store.today();
   readonly weekdays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'] as const;
-  readonly month = signal(this.initialMonth());
 
+  /** The signed-in person's own days: everyone checks in for themselves. */
+  private readonly checkIns = computed(() => {
+    const me = this.store.currentUserId();
+    return new Set(
+      (this.objective()?.checkIns ?? []).filter(({ userId }) => userId === me).map(({ date }) => date),
+    );
+  });
+  readonly canContribute = computed(() => {
+    const role = this.objective()?.role;
+    return role === 'owner' || role === 'contributor';
+  });
+
+  readonly month = signal(this.initialMonth());
   readonly monthLabel = computed(() => formatMonth(this.month().year, this.month().month));
   readonly weeks = computed(() => monthGrid(this.month().year, this.month().month));
-  private readonly checkIns = computed(() => new Set(this.objective()?.habit?.checkIns ?? []));
 
   readonly stats = computed(() => {
     const objective = this.objective();
@@ -37,8 +48,8 @@ export class ObjectiveHabitComponent {
     const monthEnd = toIsoDate(new Date(year, month + 1, 0));
     const successes = [...this.checkIns()].filter((date) => date >= monthStart && date <= monthEnd).length;
     // Only days the habit could actually be tracked count towards the rate.
-    const createdOn = objective?.createdOn ?? monthStart;
-    const from = createdOn > monthStart ? createdOn : monthStart;
+    const startDate = objective?.startDate ?? monthStart;
+    const from = startDate > monthStart ? startDate : monthStart;
     const to = this.today < monthEnd ? this.today : monthEnd;
     const trackedDays = Math.max(0, daysBetween(from, to) + 1);
     return {
@@ -65,17 +76,19 @@ export class ObjectiveHabitComponent {
 
   toggle(date: IsoDate): void {
     const objective = this.objective();
-    if (objective) this.store.toggleCheckIn(objective.id, date);
+    if (objective) void this.store.setCheckIn(objective.id, date, !this.isChecked(date));
   }
 
   updateReminder(changes: Partial<ObjectiveReminder>): void {
     const objective = this.objective();
-    if (objective) this.store.update(objective.id, { reminder: { ...objective.reminder, ...changes } });
+    if (objective) {
+      void this.store.updatePreferences(objective.id, { reminder: { ...objective.reminder, ...changes } });
+    }
   }
 
   /** Completed habits open on their last tracked month rather than an empty current one. */
   private initialMonth(): { year: number; month: number } {
-    const last = this.objective()?.habit?.checkIns.at(-1);
+    const last = [...this.checkIns()].sort().at(-1);
     const reference = parseIsoDate(last && last < this.today.slice(0, 7) ? last : this.today);
     return { year: reference.getFullYear(), month: reference.getMonth() };
   }

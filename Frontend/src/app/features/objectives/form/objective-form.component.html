@@ -1,0 +1,221 @@
+<app-page-header [heading]="heading" [backLink]="backLink" backLabel="Annuler" variant="close" />
+
+@if (missing()) {
+  <p class="empty">Cet objectif n’existe pas ou a été supprimé.</p>
+} @else {
+  <form class="objective-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="body">
+      <label class="field">
+        <span class="question">Quel est votre objectif ?</span>
+        <input
+          class="form-control"
+          appAutofocus
+          formControlName="title"
+          maxlength="80"
+          placeholder="Ex. : Courir 10 km, Lire 12 livres…"
+          [attr.aria-invalid]="showError('title')"
+        />
+        @if (showError('title')) {
+          <span class="field-error">Donnez un nom à votre objectif.</span>
+        }
+      </label>
+
+      <fieldset>
+        <legend>Catégorie</legend>
+        <div class="categories">
+          @for (category of categories; track category.value) {
+            <label class="choice" [class.selected]="form.controls.category.value === category.value">
+              <input type="radio" formControlName="category" [value]="category.value" />
+              <app-objective-icon [category]="category.value" [color]="category.color" />
+              <span [attr.title]="category.label">{{ category.label }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <div class="inline-fields">
+        <label class="field">
+          <span>Début</span>
+          <input class="form-control" type="date" formControlName="startDate" />
+        </label>
+        <label class="field">
+          <span>Échéance <small>(optionnel)</small></span>
+          <input
+            class="form-control"
+            type="date"
+            formControlName="dueDate"
+            [attr.aria-invalid]="dueDateTooEarly() || dueDateInPast() || dueDateMissing()"
+          />
+        </label>
+      </div>
+      @if (dueDateInPast()) {
+        <p class="field-error">L’échéance ne peut pas être dans le passé.</p>
+      } @else if (dueDateTooEarly()) {
+        <p class="field-error">L’échéance ne peut pas précéder le début.</p>
+      } @else if (dueDateMissing()) {
+        <p class="field-error">Une barre de temps a besoin d’une échéance.</p>
+      }
+
+      <section class="option">
+        <app-switch-row
+          label="Barre de progression"
+          hint="Suivre l’avancement de l’objectif"
+          [checked]="barOn()"
+          (toggled)="toggleBar()"
+        />
+        @if (barOn()) {
+          <div class="option-body">
+            <div class="modes" role="radiogroup" aria-label="Ce qui fait avancer la barre">
+              @for (mode of barModes; track mode[0]) {
+                <label class="mode" [class.selected]="form.controls.completion.value === mode[0]">
+                  <input
+                    type="radio"
+                    name="completion"
+                    [checked]="form.controls.completion.value === mode[0]"
+                    (change)="selectBarMode(mode[0])"
+                  />
+                  <span><strong>{{ mode[1].label }}</strong><small>{{ mode[1].hint }}</small></span>
+                </label>
+              }
+            </div>
+
+            @switch (form.controls.completion.value) {
+              @case ('metric') {
+                <div class="inline-fields">
+                  <label class="field">
+                    <span>Cible</span>
+                    <input class="form-control" type="number" min="0.1" step="0.1" formControlName="target" [attr.aria-invalid]="showError('target')" />
+                  </label>
+                  <label class="field">
+                    <span>Unité</span>
+                    <input class="form-control" formControlName="unit" maxlength="12" placeholder="km, €, livres…" [attr.aria-invalid]="showError('unit')" />
+                  </label>
+                </div>
+                @if (showError('target') || showError('unit')) {
+                  <p class="field-error">Indiquez une cible positive et une unité.</p>
+                }
+                <label class="field">
+                  <span>Calcul de la progression</span>
+                  <select class="form-control" formControlName="aggregation">
+                    <option value="sum">Cumul (ex. : montant épargné)</option>
+                    <option value="max">Meilleure valeur (ex. : distance courue)</option>
+                  </select>
+                </label>
+              }
+              @case ('habit') {
+                <label class="field">
+                  <span>Nombre de jours à réussir</span>
+                  <input class="form-control" type="number" min="1" max="3660" formControlName="habitTargetDays" [attr.aria-invalid]="showError('habitTargetDays')" />
+                  @if (showError('habitTargetDays')) {
+                    <span class="field-error">Choisissez entre 1 et 3660 jours.</span>
+                  }
+                </label>
+              }
+            }
+          </div>
+        }
+      </section>
+
+      <section class="option">
+        <app-switch-row
+          label="Barre de temps"
+          hint="Voir le temps qui passe jusqu’à l’échéance"
+          [checked]="timelapseOn()"
+          (toggled)="timelapseOn.set(!timelapseOn())"
+        />
+        @if (timelapseOn()) {
+          <div class="option-body modes" role="radiogroup" aria-label="Sens de la barre de temps">
+            <label class="mode" [class.selected]="form.controls.timelapse.value === 'elapsed'">
+              <input type="radio" formControlName="timelapse" value="elapsed" />
+              <span><strong>Temps écoulé</strong><small>Se remplit à mesure que le temps passe</small></span>
+            </label>
+            <label class="mode" [class.selected]="form.controls.timelapse.value === 'remaining'">
+              <input type="radio" formControlName="timelapse" value="remaining" />
+              <span><strong>Temps restant</strong><small>Part pleine et se vide jusqu’à l’échéance</small></span>
+            </label>
+          </div>
+        }
+      </section>
+
+      @if (!objectiveId) {
+        <section class="option">
+          <app-switch-row
+            label="Sous-objectifs"
+            hint="Découper l’objectif ; chacun aura ses propres réglages"
+            [checked]="childrenOn()"
+            (toggled)="childrenOn.set(!childrenOn())"
+          />
+          @if (childrenOn()) {
+            <div class="option-body" formArrayName="children">
+              @for (control of form.controls.children.controls; track control; let index = $index) {
+                <div class="child-field">
+                  <input class="form-control" [formControlName]="index" maxlength="80" [attr.aria-label]="'Sous-objectif ' + (index + 1)" placeholder="Ex. : Réserver les billets" />
+                  <button type="button" [attr.aria-label]="'Retirer le sous-objectif ' + (index + 1)" [disabled]="form.controls.children.length === 1" (click)="removeChildField(index)">×</button>
+                </div>
+              }
+              <button class="link-button" type="button" (click)="addChildField()">＋ Ajouter un sous-objectif</button>
+            </div>
+          }
+        </section>
+
+        <section class="option">
+          <div class="inline-fields">
+            <label class="field">
+              <span>Rappel</span>
+              <select class="form-control" formControlName="reminderFrequency">
+                <option value="none">Aucun</option>
+                <option value="daily">Chaque jour</option>
+                <option value="weekly">Chaque semaine</option>
+              </select>
+            </label>
+            @if (form.controls.reminderFrequency.value !== 'none') {
+              <label class="field">
+                <span>Heure</span>
+                <input class="form-control" type="time" formControlName="reminderTime" />
+              </label>
+            }
+          </div>
+          @if (form.controls.reminderFrequency.value === 'weekly') {
+            <label class="field">
+              <span>Jour</span>
+              <select class="form-control" formControlName="reminderWeekday">
+                @for (day of weekdays; track day; let index = $index) {
+                  <option [ngValue]="index">{{ day }}</option>
+                }
+              </select>
+            </label>
+          }
+        </section>
+      }
+
+      @if (showWeight()) {
+        <label class="field weight">
+          <span>Poids dans l’objectif parent</span>
+          <input class="form-control" type="number" min="1" max="100" formControlName="weight" [attr.aria-invalid]="showError('weight')" />
+          @if (showError('weight')) {
+            <span class="field-error">Choisissez un poids entre 1 et 100.</span>
+          }
+        </label>
+      }
+
+      <label class="field">
+        <span>Description <small>(optionnel)</small></span>
+        <textarea class="form-control" rows="3" formControlName="description" maxlength="500" placeholder="Décrivez votre objectif…"></textarea>
+      </label>
+      <label class="field">
+        <span>Plan <small>(optionnel)</small></span>
+        <input class="form-control" formControlName="plan" maxlength="120" placeholder="Ex. : 3 entraînements par semaine" />
+      </label>
+
+      @if (store.error(); as error) {
+        <p class="field-error" role="alert">{{ error }}</p>
+      }
+    </div>
+
+    <div class="actions">
+      <button class="primary-button" type="submit" [disabled]="saving()">
+        {{ objectiveId ? 'Enregistrer' : 'Créer l’objectif' }}
+      </button>
+    </div>
+  </form>
+}

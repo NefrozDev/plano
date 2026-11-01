@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import type { IsoDate, Objective } from '@plano/common';
+import type { IsoDate, ObjectiveDetail } from '@plano/common';
 import { daysBetween, formatDate, formatShortDate } from '../../../../core/time/dates';
 import {
   formatDuration,
   formatNumber,
-  metricCurrent,
   objectiveTint,
 } from '../../objective.utils';
 import { ObjectivesStore } from '../../objectives.store';
@@ -170,7 +169,7 @@ export class ObjectiveStatsComponent {
     if (this.activeIndex() === null) this.activeIndex.set((this.chart()?.points.length ?? 1) - 1);
   }
 
-  private buildTiles(objective: Objective): { value: string; label: string }[] {
+  private buildTiles(objective: ObjectiveDetail): { value: string; label: string }[] {
     const unit = objective.metric?.unit ?? '';
     const done = objective.sessions.filter((session) => session.status === 'done');
     const missed = objective.sessions.filter((session) => session.status === 'missed').length;
@@ -179,8 +178,8 @@ export class ObjectiveStatsComponent {
     const attendance = done.length + missed ? Math.round((done.length / (done.length + missed)) * 100) : 0;
     return [
       {
-        value: `${formatNumber(metricCurrent(objective))} ${unit}`,
-        label: objective.metric?.aggregation === 'max' ? 'Meilleure séance' : 'Total cumulé',
+        value: `${formatNumber(objective.amount?.current ?? 0)} ${unit}`,
+        label: objective.metric?.aggregation === 'max' ? 'Meilleure valeur' : 'Total cumulé',
       },
       minutes
         ? { value: formatDuration(minutes), label: 'Temps total' }

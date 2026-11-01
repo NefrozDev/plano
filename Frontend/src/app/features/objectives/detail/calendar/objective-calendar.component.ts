@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import type { IsoDate, ObjectiveSession, ObjectiveSessionStatus } from '@plano/common';
+import type { IsoDate, ObjectiveSessionEntry, ObjectiveSessionStatus } from '@plano/common';
 import {
   formatDay,
   formatMonth,
@@ -38,11 +38,15 @@ export class ObjectiveCalendarComponent {
   readonly selected = signal<IsoDate>(this.today);
   readonly formOpen = signal(false);
   readonly formError = signal('');
+  readonly canContribute = computed(() => {
+    const role = this.objective()?.role;
+    return role === 'owner' || role === 'contributor';
+  });
 
   readonly monthLabel = computed(() => formatMonth(this.month().year, this.month().month));
   readonly weeks = computed(() => monthGrid(this.month().year, this.month().month));
   private readonly sessionsByDate = computed(() => {
-    const byDate = new Map<IsoDate, ObjectiveSession[]>();
+    const byDate = new Map<IsoDate, ObjectiveSessionEntry[]>();
     for (const session of this.objective()?.sessions ?? []) {
       byDate.set(session.date, [...(byDate.get(session.date) ?? []), session]);
     }
@@ -80,7 +84,7 @@ export class ObjectiveCalendarComponent {
     if (year !== this.month().year || month !== this.month().month) this.month.set({ year, month });
   }
 
-  formatValue(session: ObjectiveSession): string {
+  formatValue(session: ObjectiveSessionEntry): string {
     return `${formatNumber(session.value)} ${this.objective()?.metric?.unit ?? ''}`;
   }
 
@@ -88,7 +92,16 @@ export class ObjectiveCalendarComponent {
     return this.selected() > this.today ? 'planned' : 'done';
   }
 
-  addSession(label: string, value: number, duration: number, status: ObjectiveSessionStatus): void {
+  /** Contributors take back their own sessions; the owner can remove any. */
+  canRemove(session: ObjectiveSessionEntry): boolean {
+    const objective = this.objective();
+    return (
+      objective?.role === 'owner' ||
+      (objective?.role === 'contributor' && session.author?.id === this.store.currentUserId())
+    );
+  }
+
+  async addSession(label: string, value: number, duration: number, status: ObjectiveSessionStatus): Promise<void> {
     const objective = this.objective();
     if (!objective) return;
     const counts = status === 'done' || status === 'planned';
@@ -100,20 +113,21 @@ export class ObjectiveCalendarComponent {
       this.formError.set('Une séance future ne peut pas être déjà réalisée.');
       return;
     }
-    this.store.addSession(objective.id, {
+    const added = await this.store.addSession(objective.id, {
       date: this.selected(),
       status,
       label: label.trim() || SESSION_STATUS_LABELS[status],
       value: counts ? value : 0,
       ...(duration > 0 ? { durationMinutes: Math.round(duration) } : {}),
     });
+    if (!added) return;
     this.formError.set('');
     this.formOpen.set(false);
   }
 
   removeSession(sessionId: string): void {
     const objective = this.objective();
-    if (objective) this.store.removeSession(objective.id, sessionId);
+    if (objective) void this.store.removeSession(objective.id, sessionId);
   }
 
   private monthOf(date: IsoDate): { year: number; month: number } {

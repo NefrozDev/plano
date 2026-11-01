@@ -1,5 +1,5 @@
 @if (objective(); as objective) {
-  @if (objective.tracking === 'metric') {
+  @if (objective.completion === 'metric') {
     <div class="month-nav">
       <button type="button" aria-label="Mois précédent" (click)="shiftMonth(-1)">‹</button>
       <h2 aria-live="polite">{{ monthLabel() }}</h2>
@@ -42,17 +42,21 @@
       @for (session of selectedSessions(); track session.id) {
         <div class="session">
           <i [class]="'marker ' + session.status" aria-hidden="true"></i>
-          <span><strong>{{ session.label }}</strong><small>{{ statusLabels[session.status] }}</small></span>
+          <span><strong>{{ session.label }}</strong><small>{{ statusLabels[session.status] }}@if (session.author; as author) { · {{ author.name }} }</small></span>
           @if (session.status === 'done' || session.status === 'planned') {
             <b>{{ formatValue(session) }}</b>
           }
-          <button type="button" [attr.aria-label]="'Supprimer ' + session.label" (click)="removeSession(session.id)">×</button>
+          @if (canRemove(session)) {
+            <button type="button" [attr.aria-label]="'Supprimer ' + session.label" (click)="removeSession(session.id)">×</button>
+          }
         </div>
       } @empty {
         <p class="empty">Aucune séance ce jour-là.</p>
       }
 
-      @if (formOpen()) {
+      @if (!canContribute()) {
+        <!-- Viewers only read. -->
+      } @else if (formOpen()) {
         <form
           class="session-form"
           (submit)="$event.preventDefault(); addSession(label.value, value.valueAsNumber, duration.valueAsNumber, $any(statusSelect.value))"

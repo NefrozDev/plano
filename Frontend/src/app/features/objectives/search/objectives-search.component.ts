@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import type { Objective, ObjectiveCategory } from '@plano/common';
+import type { ObjectiveCategory, ObjectiveSummary } from '@plano/common';
 import { SearchFieldComponent } from '../../../shared/ui/search-field.component';
-import { formatDate } from '../../../core/time/dates';
-import { objectiveTint } from '../objective.utils';
+import { dueCaption, objectiveTint } from '../objective.utils';
 import { DEFAULT_OBJECTIVE_FILTERS, ObjectivesStore } from '../objectives.store';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
@@ -29,12 +28,16 @@ export class ObjectivesSearchComponent {
     { category: 'development', label: 'Développement personnel' },
   ];
 
-  tint(objective: Objective): string {
+  tint(objective: ObjectiveSummary): string {
     return objectiveTint(objective.category, this.store.settings().categoryColors);
   }
 
-  caption(objective: Objective): string {
-    return objective.dueDate ? `Échéance : ${formatDate(objective.dueDate)}` : 'Sans échéance';
+  caption(objective: ObjectiveSummary): string {
+    return dueCaption(objective);
+  }
+
+  constructor() {
+    void this.store.load();
   }
 
   /** A suggestion is a shortcut to the overview filtered on one category. */

@@ -15,7 +15,7 @@ export const OBJECTIVES_ROUTES: Routes = [
       {
         path: 'new',
         loadComponent: () =>
-          import('./create/objective-create.component').then((m) => m.ObjectiveCreateComponent),
+          import('./form/objective-form.component').then((m) => m.ObjectiveFormComponent),
         title: 'Nouvel objectif | Plano',
       },
       {
@@ -37,10 +37,10 @@ export const OBJECTIVES_ROUTES: Routes = [
         title: 'Paramètres des objectifs | Plano',
       },
       {
-        path: ':id/share',
+        path: ':id/edit',
         loadComponent: () =>
-          import('./share/objective-share.component').then((m) => m.ObjectiveShareComponent),
-        title: 'Partager un objectif | Plano',
+          import('./form/objective-form.component').then((m) => m.ObjectiveFormComponent),
+        title: 'Modifier un objectif | Plano',
       },
       {
         path: ':id',
@@ -62,11 +62,6 @@ export const OBJECTIVES_ROUTES: Routes = [
             path: 'stats',
             loadComponent: () =>
               import('./detail/stats/objective-stats.component').then((m) => m.ObjectiveStatsComponent),
-          },
-          {
-            path: 'steps',
-            loadComponent: () =>
-              import('./detail/steps/objective-steps.component').then((m) => m.ObjectiveStepsComponent),
           },
           {
             path: 'habit',

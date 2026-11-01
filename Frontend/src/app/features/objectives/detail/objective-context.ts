@@ -10,5 +10,9 @@ export class ObjectiveContext {
   private readonly store = inject(ObjectivesStore);
 
   readonly id = signal('');
-  readonly objective = computed(() => this.store.find(this.id()));
+  /** The open objective, once the store holds this one. */
+  readonly objective = computed(() => {
+    const detail = this.store.detail();
+    return detail?.id === this.id() ? detail : undefined;
+  });
 }

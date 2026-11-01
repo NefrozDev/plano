@@ -6,7 +6,7 @@ import { FriendNotificationsService } from '../../core/friends/friend-notificati
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
 import { addDays, compareDueDates, formatDate, parseIsoDate, startOfWeek } from '../../core/time/dates';
-import { objectiveProgress, objectiveTint } from '../objectives/objective.utils';
+import { objectiveTint } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaStore } from '../agenda/agenda.store';
 import { ListsStore } from '../lists/lists.store';
@@ -61,7 +61,7 @@ export class DashboardComponent {
         id: objective.id,
         title: objective.title,
         category: objective.category,
-        progress: objectiveProgress(objective),
+        progress: objective.percent ?? 0,
         due: objective.dueDate ? `échéance : ${formatDate(objective.dueDate)}` : 'sans échéance',
         tint: objectiveTint(objective.category, this.objectivesStore.settings().categoryColors),
       })),
@@ -75,6 +75,7 @@ export class DashboardComponent {
     // The week strip's event dots include list reminders served by the API.
     this.agendaStore.loadTasks();
     void this.listsStore.loadHome();
+    void this.objectivesStore.load();
   }
 
   /** Ticks an item of a pinned list; it then leaves the card. */

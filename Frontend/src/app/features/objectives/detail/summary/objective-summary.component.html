@@ -21,71 +21,158 @@
       } @else {
         <h2>
           {{ objective.title }}
-          <button type="button" aria-label="Renommer l’objectif" (click)="editingTitle.set(true)">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16Z" /><path d="m13.5 6.5 4 4" /></svg>
-          </button>
+          @if (isOwner()) {
+            <button type="button" aria-label="Renommer l’objectif" (click)="editingTitle.set(true)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16Z" /><path d="m13.5 6.5 4 4" /></svg>
+            </button>
+          }
         </h2>
       }
       <p class="due">{{ view.due }}</p>
       @if (objective.status === 'paused' || objective.archived) {
         <p class="pill">{{ objective.archived ? 'Archivé' : 'En pause' }}</p>
       }
-      <strong class="percent">{{ view.progressText }}</strong>
-      <span class="caption">Progression</span>
-      <div
-        class="progress"
-        role="progressbar"
-        aria-label="Progression de l’objectif"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        [attr.aria-valuenow]="view.progress"
-      ><i [style.width.%]="view.progress"></i></div>
-    </section>
 
-    <section class="tiles" aria-label="Chiffres clés">
-      @for (tile of view.tiles; track tile.label) {
-        <div class="tile"><strong>{{ tile.value }}</strong><span>{{ tile.label }}</span></div>
+      @if (objective.percent !== null) {
+        <strong class="percent">{{ view.progressText }}</strong>
+        <span class="caption">Progression</span>
+        <div
+          class="progress"
+          role="progressbar"
+          aria-label="Progression de l’objectif"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuenow]="objective.percent"
+        ><i [style.width.%]="objective.percent"></i></div>
+      }
+
+      @if (view.timelapse; as timelapse) {
+        <app-timelapse-bar class="timelapse" [view]="timelapse" />
+      }
+
+      @if (objective.completion === 'manual' && canContribute()) {
+        <label class="manual">
+          <span>Avancement</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="5"
+            [value]="objective.manualProgress"
+            [disabled]="objective.status === 'paused'"
+            (change)="setProgress(+$any($event.target).value)"
+          />
+        </label>
+      }
+
+      @if (objective.completion === 'none' && canContribute() && objective.status !== 'paused') {
+        <button
+          class="complete-button"
+          type="button"
+          [class.done]="objective.status === 'completed'"
+          (click)="toggleCompleted()"
+        >{{ objective.status === 'completed' ? 'Rouvrir' : 'Marquer comme terminé' }}</button>
       }
     </section>
 
-    <section class="rows">
-      <div class="row-block">
-        <button class="row" type="button" [attr.aria-expanded]="openRow() === 'description'" (click)="toggleRow('description')">
-          <span><b>Description</b><small>{{ objective.description || 'Ajouter une description' }}</small></span>
-          <i aria-hidden="true">›</i>
-        </button>
-        @if (openRow() === 'description') {
-          <textarea
-            class="editor"
-            rows="3"
-            maxlength="200"
-            aria-label="Description"
-            [value]="objective.description"
-            (change)="updateText('description', $any($event.target).value)"
-          ></textarea>
+    @if (view.tiles.length > 1) {
+      <section class="tiles" aria-label="Chiffres clés">
+        @for (tile of view.tiles; track tile.label) {
+          <div class="tile"><strong>{{ tile.value }}</strong><span>{{ tile.label }}</span></div>
         }
-      </div>
+      </section>
+    }
 
-      <div class="row-block">
-        <button class="row" type="button" [attr.aria-expanded]="openRow() === 'plan'" (click)="toggleRow('plan')">
-          <span><b>Plan</b><small>{{ objective.plan || 'Définir un plan' }}</small></span>
-          <i aria-hidden="true">›</i>
-        </button>
-        @if (openRow() === 'plan') {
-          <input
-            class="editor"
-            maxlength="120"
-            aria-label="Plan"
-            placeholder="Ex. : 3 entraînements par semaine"
-            [value]="objective.plan"
-            (change)="updateText('plan', $any($event.target).value)"
-          />
+    @if (objective.children.length || isOwner()) {
+      <section class="children" aria-labelledby="children-title">
+        <div class="heading">
+          <h3 id="children-title">Sous-objectifs</h3>
+          @if (objective.childCount) {
+            <span>{{ objective.completedChildCount }} / {{ objective.childCount }}</span>
+          }
+        </div>
+        @for (card of view.children; track card.objective.id) {
+          <div
+            class="child-item"
+            [attr.data-child-id]="card.objective.id"
+            [class.dragging]="drag.dragged() === card.objective.id"
+          >
+            @if (card.objective.completion === 'none' && canContribute()) {
+              <button
+                class="toggle"
+                type="button"
+                [class.done]="card.objective.status === 'completed'"
+                [disabled]="card.objective.status === 'paused' || toggling() === card.objective.id"
+                [attr.aria-pressed]="card.objective.status === 'completed'"
+                [attr.aria-label]="(card.objective.status === 'completed' ? 'Rouvrir ' : 'Terminer ') + card.objective.title"
+                (click)="toggleChild(card.objective)"
+              ><i aria-hidden="true"></i></button>
+            }
+            <app-objective-card [card]="card" />
+            @if (isOwner() && objective.children.length > 1) {
+              <button
+                class="drag-handle"
+                type="button"
+                [attr.aria-label]="'Déplacer ' + card.objective.title + ' (flèches pour changer sa place)'"
+                (pointerdown)="drag.start(card.objective.id, $event)"
+                (keydown)="moveChildWithKeyboard(card.objective.id, $event)"
+                (click)="$event.preventDefault()"
+              >⠿</button>
+            }
+          </div>
         }
-      </div>
+        @if (isOwner()) {
+          <a class="add-child" routerLink="/objectives/new" [queryParams]="{ parent: objective.id }">＋ Ajouter un sous-objectif</a>
+        }
+      </section>
+    }
+
+    <section class="rows">
+      @if (objective.description || isOwner()) {
+        <div class="row-block">
+          <button class="row" type="button" [disabled]="!isOwner()" [attr.aria-expanded]="openRow() === 'description'" (click)="toggleRow('description')">
+            <span><b>Description</b><small>{{ objective.description || 'Ajouter une description' }}</small></span>
+            @if (isOwner()) {
+              <i aria-hidden="true">›</i>
+            }
+          </button>
+          @if (openRow() === 'description') {
+            <textarea
+              class="editor"
+              rows="3"
+              maxlength="500"
+              aria-label="Description"
+              [value]="objective.description"
+              (change)="updateText('description', $any($event.target).value)"
+            ></textarea>
+          }
+        </div>
+      }
+
+      @if (objective.plan || isOwner()) {
+        <div class="row-block">
+          <button class="row" type="button" [disabled]="!isOwner()" [attr.aria-expanded]="openRow() === 'plan'" (click)="toggleRow('plan')">
+            <span><b>Plan</b><small>{{ objective.plan || 'Définir un plan' }}</small></span>
+            @if (isOwner()) {
+              <i aria-hidden="true">›</i>
+            }
+          </button>
+          @if (openRow() === 'plan') {
+            <input
+              class="editor"
+              maxlength="120"
+              aria-label="Plan"
+              placeholder="Ex. : 3 entraînements par semaine"
+              [value]="objective.plan"
+              (change)="updateText('plan', $any($event.target).value)"
+            />
+          }
+        </div>
+      }
 
       <div class="row-block">
         <button class="row" type="button" [attr.aria-expanded]="openRow() === 'reminder'" (click)="toggleRow('reminder')">
-          <span><b>Rappels</b><small>{{ view.reminder }} · Échéance : {{ view.dueReminder }}</small></span>
+          <span><b>Mes rappels</b><small>{{ view.reminder }} · Échéance : {{ view.dueReminder }}</small></span>
           <i aria-hidden="true">›</i>
         </button>
         @if (openRow() === 'reminder') {
@@ -121,18 +208,6 @@
           </div>
         }
       </div>
-
-      <a class="row" [routerLink]="['/objectives', objective.id, 'share']">
-        <span>
-          <b>Partagé avec</b>
-          @if (view.people.length) {
-            <app-avatar-stack [people]="view.people" />
-          } @else {
-            <small>Personne pour l’instant</small>
-          }
-        </span>
-        <i aria-hidden="true">›</i>
-      </a>
     </section>
   }
 }

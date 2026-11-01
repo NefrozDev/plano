@@ -10,6 +10,7 @@ import { APP_CLOCK } from '../../core/time/dates';
 import { AgendaStore } from '../agenda/agenda.store';
 import { TEST_TODAY, flushListReminders, provideSeedData, settle } from '../../testing/plano-testing';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
+import { objectiveSummary } from '../objectives/testing/objectives-fixtures';
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
@@ -249,14 +250,22 @@ describe('DashboardComponent', () => {
     expect(new Set(headings).size).toBe(1);
   });
 
-  it('shows the two active objectives due first, linked to their pages', () => {
+  it('shows the two active objectives due first, linked to their pages', async () => {
     const fixture = TestBed.createComponent(DashboardComponent);
+    http.expectOne('/api/v1/objectives').flush([
+      objectiveSummary({ id: 'later', title: 'Plus tard', dueDate: '2026-12-01' }),
+      objectiveSummary({ id: 'run', title: 'Courir', percent: 65, dueDate: '2026-11-30' }),
+      objectiveSummary({ id: 'med', title: 'Méditer', dueDate: '2026-10-30' }),
+      objectiveSummary({ id: 'done', title: 'Fini', status: 'completed', dueDate: '2026-10-01' }),
+      objectiveSummary({ id: 'old', title: 'Rangé', archived: true, dueDate: '2026-10-01' }),
+    ]);
+    await settle();
     fixture.detectChanges();
     const goals = (fixture.nativeElement as HTMLElement).querySelectorAll('.goals-card .goal');
 
     expect(goals.length).toBe(2);
-    expect(goals[0].textContent).toContain('Méditer 30 min par jour');
-    expect(goals[1].getAttribute('href')).toBe('/objectives/courir-10-km');
+    expect(goals[0].textContent).toContain('Méditer');
+    expect(goals[1].getAttribute('href')).toBe('/objectives/run');
     expect(goals[1].textContent).toContain('65%');
   });
 });

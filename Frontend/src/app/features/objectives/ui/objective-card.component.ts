@@ -1,19 +1,22 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { Objective } from '@plano/common';
+import type { ObjectiveSummary } from '@plano/common';
+import type { TimelapseView } from '../objective.utils';
 import { ObjectiveIconComponent } from './objective-icon.component';
+import { TimelapseBarComponent } from './timelapse-bar.component';
 
 export interface ObjectiveCardView {
-  objective: Objective;
-  progress: number;
+  objective: ObjectiveSummary;
+  /** Empty for an objective without a completion bar. */
   progressText: string;
   caption: string;
   tint: string;
+  timelapse: TimelapseView | null;
 }
 
 @Component({
   selector: 'app-objective-card',
-  imports: [RouterLink, ObjectiveIconComponent],
+  imports: [RouterLink, ObjectiveIconComponent, TimelapseBarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.tile]': 'tile()' },
   template: `
@@ -28,9 +31,9 @@ export interface ObjectiveCardView {
         [color]="card().tint"
         [completed]="card().objective.status === 'completed'"
       />
-      @if (tile()) {
+      @if (tile() && card().objective.percent !== null) {
         <!-- Thin progress line that thickens into a ring around the bubble holding the value. -->
-        <span class="meter" [style.--objective-progress]="card().progress + '%'">
+        <span class="meter" [style.--objective-progress]="card().objective.percent + '%'">
           <span class="meter-track" aria-hidden="true"><span class="meter-fill"></span></span>
           <span class="meter-bubble"><span class="visually-hidden">Progression : </span>{{ card().progressText }}</span>
         </span>
@@ -42,12 +45,18 @@ export interface ObjectiveCardView {
           @if (card().objective.status === 'paused') {
             <em>En pause</em>
           }
+          @if (card().objective.archived) {
+            <em>Archivé</em>
+          }
         </small>
-        @if (!tile()) {
-          <i class="progress" aria-hidden="true"><b [style.width.%]="card().progress"></b></i>
+        @if (!tile() && card().objective.percent !== null) {
+          <i class="progress" aria-hidden="true"><b [style.width.%]="card().objective.percent"></b></i>
+        }
+        @if (card().timelapse; as timelapse) {
+          <app-timelapse-bar [view]="timelapse" />
         }
       </span>
-      @if (!tile()) {
+      @if (!tile() && card().objective.percent !== null) {
         <span class="value">
           <span class="visually-hidden">Progression : </span>{{ card().progressText }}
         </span>
@@ -55,7 +64,7 @@ export interface ObjectiveCardView {
     </a>
   `,
   styles: `
-    :host { display: block; }
+    :host { display: block; min-width: 0; }
     .card { --fill: var(--tint); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .8rem; align-items: center; padding: .85rem .9rem; border: 1px solid #edf0f5; border-radius: .9rem; background: white; box-shadow: 0 .2rem .6rem rgb(31 41 55 / 6%); color: var(--color-text); text-decoration: none; }
     .card.completed { --fill: #22a95a; border-color: #d5f3e1; background: #f3fcf6; }
     .copy { display: grid; gap: .3rem; min-width: 0; }

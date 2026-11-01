@@ -21,6 +21,10 @@ export class ObjectivesFiltersComponent {
   readonly filters = this.store.filters;
   readonly resultCount = computed(() => this.store.query('all').length);
 
+  constructor() {
+    void this.store.load();
+  }
+
   toggleStatus(status: ObjectiveStatus): void {
     this.filters.update((filters) => ({ ...filters, statuses: toggled(filters.statuses, status) }));
   }
