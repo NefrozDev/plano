@@ -318,6 +318,8 @@ export interface ImportObjectiveRequest {
 
 export interface ImportObjectivesRequest {
   objectives: ImportObjectiveRequest[];
+  /** Place of the first one in the user's order, when sent in several requests. */
+  offset?: number;
 }
 
 export interface ImportObjectivesResponse {

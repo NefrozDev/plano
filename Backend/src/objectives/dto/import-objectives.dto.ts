@@ -155,4 +155,10 @@ export class ImportObjectivesDto implements ImportObjectivesRequest {
   @ValidateNested({ each: true })
   @Type(() => ImportedObjectiveDto)
   objectives!: ImportedObjectiveDto[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100_000)
+  offset?: number;
 }

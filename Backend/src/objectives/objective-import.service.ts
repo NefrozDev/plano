@@ -42,7 +42,7 @@ export class ObjectiveImportService {
 
   async import(
     userId: string,
-    { objectives }: ImportObjectivesDto,
+    { objectives, offset = 0 }: ImportObjectivesDto,
   ): Promise<ImportObjectivesResponse> {
     return this.writer.inTransaction(async (manager) => {
       const ids = objectives.map(({ localId }) => stableId(userId, localId));
@@ -62,7 +62,7 @@ export class ObjectiveImportService {
           userId,
           objective,
           ids[position],
-          position,
+          offset + position,
           manager,
         );
         await this.writer.settle(ids[position], userId, manager);

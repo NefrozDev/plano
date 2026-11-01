@@ -747,9 +747,10 @@ describe('ObjectivesStore', () => {
       http.expectNone('/api/v1/objectives');
       const request = http.expectOne('/api/v1/objectives/import');
       expect(request.request.method).toBe('POST');
-      const body = request.request.body as { objectives: { localId: string }[] };
+      const body = request.request.body as { objectives: { localId: string }[]; offset: number };
       expect(body.objectives.map(({ localId }) => localId)).toContain('courir-10-km');
       expect(body.objectives).toHaveLength(count);
+      expect(body.offset).toBe(0);
       request.flush({ imported: count });
       await settle();
       http.expectOne('/api/v1/objectives').flush([objectiveSummary()]);
@@ -787,6 +788,40 @@ describe('ObjectivesStore', () => {
       await retrying;
 
       expect(stored()).toEqual([]);
+    });
+
+    it('sends a lot in several requests, each knowing its place, and keeps it all if one fails', async () => {
+      const data = createMockPlanoData();
+      const [first] = data.objectives.items;
+      const big = (id: string) => ({
+        ...first,
+        id,
+        sessions: Array.from({ length: 400 }, (_, index) => ({
+          id: `s${index}`,
+          date: '2026-10-01',
+          status: 'done' as const,
+          label: 'Une séance de course',
+          value: 1,
+        })),
+      });
+      adapter.save({ ...data, objectives: { ...data.objectives, items: [big('a'), big('b')] } });
+      const stored = TestBed.inject(PlanoDataStore);
+      stored.update((current) => ({ ...current, objectives: { ...current.objectives, items: [big('a'), big('b')] } }));
+
+      const loading = store.load();
+      const firstBatch = http.expectOne('/api/v1/objectives/import');
+      expect(firstBatch.request.body).toMatchObject({ offset: 0, objectives: [{ localId: 'a' }] });
+      firstBatch.flush({ imported: 1 });
+      await settle();
+      const secondBatch = http.expectOne('/api/v1/objectives/import');
+      expect(secondBatch.request.body).toMatchObject({ offset: 1, objectives: [{ localId: 'b' }] });
+      secondBatch.flush(null, { status: 500, statusText: 'Error' });
+      await settle();
+      http.expectOne('/api/v1/objectives').flush([]);
+      await loading;
+
+      // Half done: everything stays, and the next try skips what the API already has.
+      expect(stored.data().objectives.items).toHaveLength(2);
     });
 
     it('imports once when several screens ask at the same time', async () => {

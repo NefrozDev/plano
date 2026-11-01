@@ -26,7 +26,7 @@ import { httpErrorMessage } from '../../core/http/http-error-message';
 import { LiveUpdatesService } from '../../core/live/live-updates.service';
 import { APP_CLOCK, compareDueDates, normalizeText, toIsoDate } from '../../core/time/dates';
 import { ObjectivesApiService } from './objectives-api.service';
-import { categoryMeta, toImportRequest } from './objective.utils';
+import { categoryMeta, importBatches, toImportRequest } from './objective.utils';
 
 export type ObjectiveTab = 'all' | 'mine' | 'shared' | 'archived';
 
@@ -410,9 +410,12 @@ export class ObjectivesStore {
     this.importing ??= (async () => {
       try {
         const today = this.today();
-        await firstValueFrom(
-          this.api.importLocal({ objectives: items.map((objective) => toImportRequest(objective, today)) }),
-        );
+        let offset = 0;
+        // Sending a batch twice is harmless: the API recognises what it already has.
+        for (const objectives of importBatches(items.map((objective) => toImportRequest(objective, today)))) {
+          await firstValueFrom(this.api.importLocal({ objectives, offset }));
+          offset += objectives.length;
+        }
         this.updateData((data) => ({ ...data, items: [], contacts: [], recentIds: [] }));
       } catch {
         // Nothing is lost: the objectives are still in this browser.

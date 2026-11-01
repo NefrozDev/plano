@@ -224,6 +224,24 @@ describe('ObjectiveImportService', () => {
     ).toEqual(['B', 'A', 'C']);
   });
 
+  it('keeps the browser’s order across several requests', async () => {
+    await bed.importer.import(bed.ada, {
+      objectives: [
+        local({ localId: 'a', title: 'A' }),
+        local({ localId: 'b', title: 'B' }),
+      ],
+      offset: 0,
+    });
+    await bed.importer.import(bed.ada, {
+      objectives: [local({ localId: 'c', title: 'C' })],
+      offset: 2,
+    });
+
+    expect(
+      (await bed.objectives.findAll(bed.ada)).map(({ title }) => title),
+    ).toEqual(['A', 'B', 'C']);
+  });
+
   it('accepts an empty import', async () => {
     expect(await bed.importer.import(bed.ada, { objectives: [] })).toEqual({
       imported: 0,

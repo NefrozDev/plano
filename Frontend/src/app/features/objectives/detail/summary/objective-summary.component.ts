@@ -243,7 +243,7 @@ export class ObjectiveSummaryComponent {
       case 'children':
         return [
           { value: `${objective.completedChildCount} / ${objective.childCount}`, label: 'Terminés' },
-          { value: `${objective.childCount - objective.completedChildCount}`, label: 'Restants' },
+          { value: `${objective.childCount - objective.completedChildCount}`, label: 'À faire' },
         ];
       case 'manual':
       case 'none':

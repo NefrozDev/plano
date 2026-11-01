@@ -13,6 +13,7 @@ import {
   categoryMeta,
   dueCaption,
   formatDuration,
+  importBatches,
   longestStreak,
   objectiveReminderLabel,
   objectiveTint,
@@ -214,6 +215,50 @@ describe('objective utils', () => {
         label: 'Dernier jour',
         overdue: false,
       });
+    });
+  });
+
+  describe('importBatches', () => {
+    const today = '2026-10-15';
+    const sized = (id: string, sessions: number) =>
+      toImportRequest(
+        {
+          ...seeded('courir-10-km'),
+          id,
+          sessions: Array.from({ length: sessions }, (_, index) => ({
+            id: `s${index}`,
+            date: '2026-10-01',
+            status: 'done' as const,
+            label: 'Une séance de course',
+            value: 1,
+          })),
+        },
+        today,
+      );
+
+    it('has nothing to send for nothing', () => {
+      expect(importBatches([])).toEqual([]);
+    });
+
+    it('keeps small objectives together', () => {
+      const batches = importBatches([sized('a', 1), sized('b', 1)]);
+
+      expect(batches.map((batch) => batch.map(({ localId }) => localId))).toEqual([['a', 'b']]);
+    });
+
+    it('splits what would be too large, keeping the order', () => {
+      const batches = importBatches([sized('a', 250), sized('b', 250), sized('c', 250), sized('d', 1)]);
+
+      expect(batches.map((batch) => batch.map(({ localId }) => localId))).toEqual([['a', 'b'], ['c', 'd']]);
+      for (const batch of batches) {
+        expect(JSON.stringify(batch).length).toBeLessThan(100_000);
+      }
+    });
+
+    it('sends alone an objective too large for any request', () => {
+      const batches = importBatches([sized('a', 1), sized('big', 2000), sized('b', 1)]);
+
+      expect(batches.map((batch) => batch.map(({ localId }) => localId))).toEqual([['a'], ['big'], ['b']]);
     });
   });
 

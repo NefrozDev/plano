@@ -118,7 +118,12 @@ describe('ObjectiveSummaryComponent', () => {
       expect(tiles().slice(0, 2)).toEqual(['3 Jours réussis', '2 j Meilleure série']);
 
       await show(treeDetail());
-      expect(tiles().slice(0, 2)).toEqual(['1 / 2 Terminés', '1 Restants']);
+      expect(tiles().slice(0, 2)).toEqual(['1 / 2 Terminés', '1 À faire']);
+
+      // Tiles are tracked by their label: a deadline among them must not collide.
+      await show(treeDetail({ dueDate: '2026-11-30' }));
+      const labels = tiles().map((tile) => tile.split(' ').at(-1));
+      expect(new Set(labels).size).toBe(labels.length);
     });
 
     it('counts only the signed-in person’s days', async () => {

@@ -201,6 +201,28 @@ export function slugify(value: string): string {
   return normalizeText(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'objectif';
 }
 
+/** Well under the 100 KB a request to the API can hold, accents counting double. */
+const IMPORT_BATCH_CHARACTERS = 60_000;
+
+/**
+ * Splits what a browser holds into requests the API accepts, keeping the order.
+ * An objective too large for any request goes alone, and is refused alone.
+ */
+export function importBatches(objectives: readonly ImportObjectiveRequest[]): ImportObjectiveRequest[][] {
+  const batches: ImportObjectiveRequest[][] = [];
+  let size = 0;
+  for (const objective of objectives) {
+    const length = JSON.stringify(objective).length;
+    if (!batches.length || size + length > IMPORT_BATCH_CHARACTERS) {
+      batches.push([]);
+      size = 0;
+    }
+    batches[batches.length - 1].push(objective);
+    size += length;
+  }
+  return batches;
+}
+
 const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function validDate(date: string | null | undefined): IsoDate | null {
