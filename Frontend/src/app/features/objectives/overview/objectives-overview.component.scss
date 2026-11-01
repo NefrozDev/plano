@@ -21,7 +21,7 @@
 .cards { display: grid; gap: .7rem; }
 .grid-view .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .objective-item { position: relative; display: flex; gap: .25rem; align-items: center; }
-.objective-item > app-objective-card { flex: 1; min-width: 0; }
+.objective-item > app-objective-swipe-card { flex: 1; min-width: 0; }
 .objective-item.dragging { opacity: .65; }
 .grid-view .drag-handle { position: absolute; top: .3rem; right: .3rem; height: 2rem; background: rgb(255 255 255 / 80%); }
 .filter-note { display: flex; justify-content: space-between; margin: .5rem 0 0; padding: .55rem .75rem; border-radius: .6rem; background: #eef4ff; color: #3c4658; font-size: .74rem; }

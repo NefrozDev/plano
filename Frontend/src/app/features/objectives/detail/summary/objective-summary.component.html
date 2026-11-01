@@ -126,7 +126,7 @@
                 (click)="toggleChild(card.objective)"
               ><i aria-hidden="true"></i></button>
             }
-            <app-objective-card [card]="card" />
+            <app-objective-swipe-card [card]="card" (refused)="notice.set($event)" />
             @if (isOwner() && objective.children.length > 1) {
               <button
                 class="drag-handle"
@@ -275,3 +275,5 @@
     </section>
   }
 }
+
+<app-toast tone="info" [message]="notice()" (dismissed)="notice.set('')" />

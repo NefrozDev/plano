@@ -13,6 +13,7 @@ import { RouterLink } from '@angular/router';
 import { toPerson } from '../../../../core/people/people';
 import { AvatarStackComponent } from '../../../../shared/ui/avatar-stack.component';
 import { SwitchRowComponent } from '../../../../shared/ui/switch-row.component';
+import { ToastComponent } from '../../../../shared/ui/toast.component';
 import type {
   DueReminder,
   ObjectiveDetail,
@@ -35,7 +36,8 @@ import {
 } from '../../objective.utils';
 import { ObjectivesStore } from '../../objectives.store';
 import { DragReorder } from '../../ui/drag-reorder';
-import { ObjectiveCardComponent, ObjectiveCardView } from '../../ui/objective-card.component';
+import type { ObjectiveCardView } from '../../ui/objective-card.component';
+import { ObjectiveSwipeCardComponent } from '../../ui/objective-swipe-card.component';
 import { ObjectiveIconComponent } from '../../ui/objective-icon.component';
 import { TimelapseBarComponent } from '../../ui/timelapse-bar.component';
 import { ObjectiveContext } from '../objective-context';
@@ -59,9 +61,10 @@ interface StatTile {
   imports: [
     RouterLink,
     AvatarStackComponent,
-    ObjectiveCardComponent,
     ObjectiveIconComponent,
+    ObjectiveSwipeCardComponent,
     SwitchRowComponent,
+    ToastComponent,
     TimelapseBarComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -92,6 +95,8 @@ export class ObjectiveSummaryComponent {
   );
   /** The sub-objective being ticked, so a double tap sends one request. */
   readonly toggling = signal('');
+  /** Why a sub-objective did not slide; empty when there is nothing to say. */
+  readonly notice = signal('');
 
   readonly isOwner = computed(() => this.objective()?.role === 'owner');
   readonly canContribute = computed(() => {

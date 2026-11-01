@@ -86,7 +86,7 @@
     <div class="cards">
       @for (card of inProgress(); track card.objective.id) {
         <div class="objective-item" [attr.data-objective-id]="card.objective.id" [class.dragging]="drag.dragged() === card.objective.id">
-          <app-objective-card [card]="card" [tile]="gridView()" />
+          <app-objective-swipe-card [card]="card" [tile]="gridView()" (refused)="notice.set($event)" />
           @if (reorderable()) {
             <button
               class="drag-handle"
@@ -114,7 +114,7 @@
     <div class="cards">
       @for (card of visibleCompleted(); track card.objective.id) {
         <div class="objective-item" [attr.data-objective-id]="card.objective.id" [class.dragging]="drag.dragged() === card.objective.id">
-          <app-objective-card [card]="card" [tile]="gridView()" />
+          <app-objective-swipe-card [card]="card" [tile]="gridView()" (refused)="notice.set($event)" />
           @if (reorderable()) {
             <button
               class="drag-handle"
@@ -140,3 +140,5 @@
 </a>
 
 <app-bottom-nav active="objectives" />
+
+<app-toast tone="info" [message]="notice()" (dismissed)="notice.set('')" />

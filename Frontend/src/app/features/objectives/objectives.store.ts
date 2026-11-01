@@ -241,12 +241,15 @@ export class ObjectivesStore {
   }
 
   async remove(id: string): Promise<boolean> {
+    const detail = this.detailState();
+    const parentId = detail?.children.some((child) => child.id === id) ? detail.id : null;
     const removed = await this.run(this.api.remove(id), () => {
       if (this.detailState()?.id === id) this.detailState.set(null);
       this.objectivesState.update((items) => items.filter((objective) => objective.id !== id));
     });
     if (removed) {
       this.updateData((data) => ({ ...data, recentIds: data.recentIds.filter((recentId) => recentId !== id) }));
+      if (parentId) await this.apply(this.api.findOne(parentId));
     }
     return removed;
   }

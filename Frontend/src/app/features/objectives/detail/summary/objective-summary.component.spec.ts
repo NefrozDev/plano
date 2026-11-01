@@ -2,6 +2,8 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { MockInstance } from 'vitest';
 import type { ObjectiveDetail } from '@plano/common';
+import { ConfirmService } from '../../../../shared/ui/confirm.service';
+import { NOT_OWNER_NOTICE } from '../../ui/objective-swipe-card.component';
 import { ObjectivesStore } from '../../objectives.store';
 import {
   openObjective,
@@ -62,6 +64,70 @@ describe('ObjectiveSummaryComponent', () => {
   it('renders nothing until the objective is there', () => {
     expect(element.querySelector('.hero')).toBeNull();
     expect(component.view()).toBeNull();
+  });
+
+  describe('swiping a sub-objective', () => {
+    const swipeLeft = (id: string) => {
+      const slide = element.querySelector(`.child-item[data-child-id="${id}"] .slide`) as HTMLElement;
+      slide.setPointerCapture = vi.fn();
+      const pointer = (type: string, clientX: number) =>
+        slide.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX, bubbles: true, cancelable: true }));
+      pointer('pointerdown', 200);
+      pointer('pointermove', 100);
+      pointer('pointerup', 100);
+      fixture.detectChanges();
+    };
+    const children = () =>
+      Array.from(element.querySelectorAll<HTMLElement>('.child-item')).map((item) => item.dataset['childId']);
+    const withChildren = (role: ObjectiveDetail['role']) =>
+      objectiveDetail({
+        role,
+        children: [objectiveSummary({ id: 'a', title: 'A', role }), objectiveSummary({ id: 'b', title: 'B', role })],
+        childCount: 2,
+      });
+
+    it('deletes it once confirmed and shows the parent as the server now has it', async () => {
+      await show(withChildren('owner'));
+      const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
+
+      swipeLeft('a');
+      await settleObjectives();
+      expect(confirm).toHaveBeenCalledTimes(1);
+      const removal = http.expectOne('/api/v1/objectives/a');
+      expect(removal.request.method).toBe('DELETE');
+      removal.flush(null);
+      await settleObjectives();
+
+      const reload = http.expectOne('/api/v1/objectives/obj-1');
+      expect(reload.request.method).toBe('GET');
+      reload.flush(objectiveDetail({ role: 'owner', children: [objectiveSummary({ id: 'b', title: 'B' })], childCount: 1, percent: 40 }));
+      await settleObjectives();
+      fixture.detectChanges();
+
+      expect(children()).toEqual(['b']);
+      expect(store.detail()?.percent).toBe(40);
+    });
+
+    it('sends nothing when the question is declined', async () => {
+      await show(withChildren('owner'));
+      vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
+
+      swipeLeft('a');
+      await settleObjectives();
+
+      expect(children()).toEqual(['a', 'b']);
+      http.expectNone('/api/v1/objectives/a');
+    });
+
+    it('tells a contributor only the owner can delete it', async () => {
+      await show(withChildren('contributor'));
+      const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask');
+
+      swipeLeft('a');
+
+      expect(confirm).not.toHaveBeenCalled();
+      expect(element.querySelector('.toast')?.textContent).toContain(NOT_OWNER_NOTICE);
+    });
   });
 
   describe('bars', () => {

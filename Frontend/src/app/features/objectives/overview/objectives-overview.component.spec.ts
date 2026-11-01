@@ -6,6 +6,8 @@ import { ObjectiveNotificationsService } from '../objective-notifications.servic
 import { ObjectivesStore } from '../objectives.store';
 import { flushObjectives, provideObjectivesTesting, settleObjectives } from '../objectives.testing';
 import { objectiveSummary } from '../testing/objectives-fixtures';
+import { ConfirmService } from '../../../shared/ui/confirm.service';
+import { NOT_OWNER_NOTICE } from '../ui/objective-swipe-card.component';
 import { ObjectivesOverviewComponent } from './objectives-overview.component';
 
 const OBJECTIVES = [
@@ -168,6 +170,56 @@ describe('ObjectivesOverviewComponent', () => {
     fixture.detectChanges();
 
     expect(element.querySelector('.overview-menu a')?.getAttribute('href')).toBe('/objectives/settings');
+  });
+
+  describe('swipe to delete', () => {
+    const swipeLeft = (id: string) => {
+      const slide = element.querySelector(`.objective-item[data-objective-id="${id}"] .slide`) as HTMLElement;
+      slide.setPointerCapture = vi.fn();
+      const pointer = (type: string, clientX: number) =>
+        slide.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX, bubbles: true, cancelable: true }));
+      pointer('pointerdown', 200);
+      pointer('pointermove', 100);
+      pointer('pointerup', 100);
+    };
+
+    it('removes the card once confirmed, and only that one', async () => {
+      const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
+
+      swipeLeft('read');
+      await settleObjectives();
+
+      expect(confirm).toHaveBeenCalledTimes(1);
+      const request = http.expectOne('/api/v1/objectives/read');
+      expect(request.request.method).toBe('DELETE');
+      request.flush(null);
+      await settleObjectives();
+      fixture.detectChanges();
+      expect(cardTitles()).toEqual(['Courir', 'Voyage', 'Fini']);
+    });
+
+    it('explains in a toast why someone else’s card does not slide, until dismissed', async () => {
+      const reloading = store.load();
+      http.expectOne('/api/v1/objectives').flush([objectiveSummary({ id: 'theirs', role: 'viewer' })]);
+      await reloading;
+      fixture.detectChanges();
+      const confirm = vi.spyOn(TestBed.inject(ConfirmService), 'ask');
+      expect(element.querySelector('.toast')).toBeNull();
+
+      swipeLeft('theirs');
+      fixture.detectChanges();
+
+      expect(confirm).not.toHaveBeenCalled();
+      const toast = element.querySelector('.toast') as HTMLButtonElement;
+      expect(toast.textContent).toContain(NOT_OWNER_NOTICE);
+      // Stacked above the bottom navigation, which otherwise hides it.
+      const stack = (selector: string) => Number(getComputedStyle(element.querySelector(selector) as Element).zIndex);
+      expect(stack('app-toast')).toBeGreaterThan(stack('app-bottom-nav'));
+
+      toast.click();
+      fixture.detectChanges();
+      expect(element.querySelector('.toast')).toBeNull();
+    });
   });
 
   describe('custom order', () => {

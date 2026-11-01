@@ -38,7 +38,7 @@ app-avatar-stack { --avatar-size: 1.75rem; }
 .heading h3 { margin: 0; font-size: .85rem; font-weight: 750; }
 .heading span { color: #7b8292; font-size: .72rem; font-weight: 650; }
 .child-item { display: flex; gap: .3rem; align-items: center; }
-.child-item > app-objective-card { flex: 1; min-width: 0; }
+.child-item > app-objective-swipe-card { flex: 1; min-width: 0; }
 .child-item.dragging { opacity: .65; }
 .toggle { display: grid; width: 2rem; height: 2rem; flex: none; padding: 0; place-items: center; border: 0; background: transparent; cursor: pointer; }
 .toggle i { display: block; width: 1.25rem; height: 1.25rem; border: 2px solid #c9d1de; border-radius: 50%; }

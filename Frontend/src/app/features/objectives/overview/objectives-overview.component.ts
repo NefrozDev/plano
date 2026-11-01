@@ -1,17 +1,19 @@
 import { ChangeDetectionStrategy, Component, DOCUMENT, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
+import { ToastComponent } from '../../../shared/ui/toast.component';
 import type { ObjectiveSummary } from '@plano/common';
 import { FriendNotificationsService } from '../../../core/friends/friend-notifications.service';
 import { ObjectiveNotificationsService } from '../objective-notifications.service';
 import { dueCaption, objectiveTint, progressText, sharingLabel, timelapseView } from '../objective.utils';
 import { ObjectiveTab, ObjectivesStore } from '../objectives.store';
 import { DragReorder } from '../ui/drag-reorder';
-import { ObjectiveCardComponent, ObjectiveCardView } from '../ui/objective-card.component';
+import type { ObjectiveCardView } from '../ui/objective-card.component';
+import { ObjectiveSwipeCardComponent } from '../ui/objective-swipe-card.component';
 
 @Component({
   selector: 'app-objectives-overview',
-  imports: [RouterLink, ObjectiveCardComponent, BottomNavComponent],
+  imports: [RouterLink, ObjectiveSwipeCardComponent, BottomNavComponent, ToastComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-overview.component.html',
   styleUrl: './objectives-overview.component.scss',
@@ -42,6 +44,8 @@ export class ObjectivesOverviewComponent {
   ];
   readonly activeTab = signal<ObjectiveTab>('all');
   readonly menuOpen = signal(false);
+  /** Why a card did not slide; empty when there is nothing to say. */
+  readonly notice = signal('');
   readonly showAllCompleted = signal(false);
   readonly gridView = computed(() => this.store.settings().defaultView === 'grid');
 
