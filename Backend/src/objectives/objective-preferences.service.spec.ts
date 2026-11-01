@@ -78,6 +78,73 @@ describe('ObjectivePreferencesService', () => {
     });
   });
 
+  describe('home', () => {
+    const pin = (id: string, userId = bed.ada) =>
+      bed.objectivePreferences.update(id, userId, { onHome: true });
+    const home = async (userId = bed.ada) =>
+      (await bed.objectivePreferences.home(userId)).map(({ title }) => title);
+
+    it('is empty until something is pinned', async () => {
+      await create('A');
+
+      expect(await home()).toEqual([]);
+    });
+
+    it('shows what was pinned, in the person’s order, at any level', async () => {
+      const a = await create('A');
+      const b = await create('B');
+      const child = await bed.objectives.create(
+        bed.ada,
+        objectiveDetails({ title: 'Sous', parentId: a.id }),
+      );
+      await create('C');
+      for (const { id } of [a, b, child]) await pin(id);
+
+      await bed.objectivePreferences.reorder(bed.ada, [b.id, a.id]);
+
+      // A sub-objective has no place of its own: it comes after.
+      expect(await home()).toEqual(['B', 'A', 'Sous']);
+    });
+
+    it('leaves out what was unpinned or archived', async () => {
+      const a = await create('A');
+      const b = await create('B');
+      await pin(a.id);
+      await pin(b.id);
+
+      await bed.objectivePreferences.update(a.id, bed.ada, { onHome: false });
+      await bed.objectives.update(b.id, bed.ada, { archived: true });
+
+      expect(await home()).toEqual([]);
+    });
+
+    it('belongs to each person', async () => {
+      const a = await create('A');
+      await bed.members.add(a.id, bed.ada, {
+        userId: bed.bob,
+        role: 'viewer',
+      });
+
+      await pin(a.id, bed.bob);
+
+      expect(await home(bed.bob)).toEqual(['A']);
+      expect(await home(bed.ada)).toEqual([]);
+    });
+
+    it('drops what the person can no longer open', async () => {
+      const a = await create('A');
+      await bed.members.add(a.id, bed.ada, {
+        userId: bed.bob,
+        role: 'viewer',
+      });
+      await pin(a.id, bed.bob);
+
+      await bed.members.remove(a.id, bed.bob, bed.ada);
+
+      expect(await home(bed.bob)).toEqual([]);
+    });
+  });
+
   describe('update', () => {
     it('pins to the home page and changes nothing else', async () => {
       const a = await bed.objectives.create(

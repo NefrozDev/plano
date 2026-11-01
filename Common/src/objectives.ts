@@ -27,6 +27,8 @@ export type ObjectiveRole = 'owner' | 'contributor' | 'viewer';
 export type ObjectiveMemberRole = Exclude<ObjectiveRole, 'owner'>;
 /** What the people on an objective can do with it, as far as the user can see. */
 export type ObjectiveSharing = 'private' | 'shared' | 'common';
+/** What the others hear about, in a toast and a badge. */
+export type ObjectiveNewsKind = 'invited' | 'contribution' | 'completed';
 
 export interface ObjectiveMetricSettings {
   unit: string;

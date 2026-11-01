@@ -13,6 +13,7 @@ import type { AddObjectiveMemberDto } from './dto/objective.dto';
 import { ObjectiveMember } from './entities/objective-member.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveAccessService } from './objective-access.service';
+import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
 
@@ -24,6 +25,7 @@ export class ObjectiveMembersService {
     private readonly writer: ObjectiveWriterService,
     private readonly view: ObjectiveViewService,
     private readonly contacts: ContactsService,
+    private readonly changes: ObjectiveChangesService,
   ) {}
 
   async add(
@@ -34,6 +36,7 @@ export class ObjectiveMembersService {
     await this.writer.change(id, userId, 'own', (_, manager) =>
       this.addTo(id, userId, details, manager),
     );
+    await this.changes.invited(id, userId, [details.userId]);
     return this.detail(id, userId);
   }
 

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { ObjectiveDetail } from '@plano/common';
+import type { ObjectiveDetail, ObjectiveSummary } from '@plano/common';
 import { DataSource, In } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
 import type { UpdateObjectivePreferencesDto } from './dto/objective.dto';
@@ -49,6 +49,26 @@ export class ObjectivePreferencesService {
           first.index - second.index,
       )
       .map(({ access }) => access);
+  }
+
+  /** What the person pinned to their home page, at any level, in their order. */
+  async home(userId: string): Promise<ObjectiveSummary[]> {
+    const pinned = await this.dataSource.manager.find(ObjectivePreference, {
+      where: { userId, onHome: true },
+      relations: { objective: true },
+    });
+    const trees = await this.access.loadTrees([
+      ...new Set(pinned.map(({ objective }) => objective.rootId)),
+    ]);
+    const accesses = pinned.flatMap(({ objective }): ObjectiveAccess[] => {
+      const tree = trees.get(objective.rootId);
+      const node = tree?.node(objective.id);
+      const role = node && tree?.roleOf(node.id, userId);
+      return tree && node && role && !node.archived
+        ? [{ tree, node, role }]
+        : [];
+    });
+    return this.view.summaries(await this.arrange(userId, accesses), userId);
   }
 
   /**

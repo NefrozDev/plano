@@ -9,6 +9,7 @@ import {
   type ListsTestBed,
 } from '../../lists/testing/lists-test-bed';
 import { ObjectiveAccessService } from '../objective-access.service';
+import { ObjectiveChangesService } from '../objective-changes.service';
 import { ObjectiveImportService } from '../objective-import.service';
 import { ObjectiveMembersService } from '../objective-members.service';
 import { ObjectivePreferencesService } from '../objective-preferences.service';
@@ -39,7 +40,13 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     new FriendsService(bed.dataSource, writeLock, bed.live),
   );
   const access = new ObjectiveAccessService(bed.dataSource, contacts);
-  const writer = new ObjectiveWriterService(bed.dataSource, writeLock, access);
+  const changes = new ObjectiveChangesService(bed.dataSource, access, bed.live);
+  const writer = new ObjectiveWriterService(
+    bed.dataSource,
+    writeLock,
+    access,
+    changes,
+  );
   const view = new ObjectiveViewService(bed.dataSource);
   const objectivePreferences = new ObjectivePreferencesService(
     bed.dataSource,
@@ -47,7 +54,13 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     access,
     view,
   );
-  const members = new ObjectiveMembersService(access, writer, view, contacts);
+  const members = new ObjectiveMembersService(
+    access,
+    writer,
+    view,
+    contacts,
+    changes,
+  );
   return {
     ...bed,
     access,
@@ -59,6 +72,7 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
       view,
       objectivePreferences,
       members,
+      changes,
     ),
     tracking: new ObjectiveTrackingService(access, writer, view),
     importer: new ObjectiveImportService(writer),

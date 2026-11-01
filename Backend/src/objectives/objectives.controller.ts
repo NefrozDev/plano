@@ -69,6 +69,12 @@ export class ObjectivesController {
     return this.agenda.find(userId);
   }
 
+  /** What the user pinned to their home page, in their order. */
+  @Get('home')
+  findHome(@CurrentUser('id') userId: string): Promise<ObjectiveSummary[]> {
+    return this.preferences.home(userId);
+  }
+
   /** The user's own order; it changes nothing for anyone else. */
   @Put('order')
   @HttpCode(HttpStatus.NO_CONTENT)

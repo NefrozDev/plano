@@ -1,4 +1,5 @@
 import type { PublicUser } from './friends';
+import type { ObjectiveNewsKind } from './objectives';
 
 /**
  * Pushed to every open app of the users concerned (GET /live/stream, Server-Sent
@@ -14,4 +15,16 @@ export type LiveEvent =
   /** `user` accepted the request: you are friends now. */
   | { type: 'friend.accepted'; user: PublicUser }
   /** A request was declined or cancelled, or a friendship ended. */
-  | { type: 'friends.changed' };
+  | { type: 'friends.changed' }
+  /** Something the user can open changed. Only ever an id they may know. */
+  | { type: 'objective.changed'; objectiveId: string }
+  /** It was deleted, or the user lost access to it. */
+  | { type: 'objective.removed'; objectiveId: string }
+  /** Worth telling: the user was invited, `actor` contributed, or it was completed. */
+  | {
+      type: 'objective.news';
+      objectiveId: string;
+      kind: ObjectiveNewsKind;
+      title: string;
+      actor: string;
+    };

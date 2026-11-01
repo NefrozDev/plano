@@ -15,6 +15,7 @@ import type {
 import { ObjectivePreference } from './entities/objective-preference.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveAccessService } from './objective-access.service';
+import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { MAX_OBJECTIVE_LEVELS, MAX_TREE_NODES } from './objective-tree';
@@ -69,6 +70,7 @@ export class ObjectivesService {
     private readonly view: ObjectiveViewService,
     private readonly preferences: ObjectivePreferencesService,
     private readonly members: ObjectiveMembersService,
+    private readonly changes: ObjectiveChangesService,
   ) {}
 
   /** The top of what the user can see, in their own order. */
@@ -91,7 +93,7 @@ export class ObjectivesService {
     userId: string,
     details: CreateObjectiveDto,
   ): Promise<ObjectiveDetail> {
-    const id = await this.writer.inTransaction(async (manager) => {
+    const { id, before } = await this.writer.inTransaction(async (manager) => {
       const {
         parentId,
         children,
@@ -168,8 +170,17 @@ export class ObjectivesService {
         await this.members.addTo(node.id, userId, member, manager);
       }
       await this.writer.settle(node.rootId, userId, manager);
-      return node.id;
+      return {
+        id: node.id,
+        before: (await this.access.loadTree(node.rootId, manager))!,
+      };
     });
+    await this.changes.published({ before, objectiveId: id, actorId: userId });
+    await this.changes.invited(
+      id,
+      userId,
+      (details.members ?? []).map((member) => member.userId),
+    );
     return this.findOne(id, userId);
   }
 

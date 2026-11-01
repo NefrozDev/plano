@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { ObjectiveNewsKind } from '@plano/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
 import type { Objective } from './entities/objective.entity';
@@ -7,6 +8,7 @@ import {
   ObjectiveAccessService,
   ObjectivePermission,
 } from './objective-access.service';
+import { ObjectiveChangesService } from './objective-changes.service';
 import type { ObjectiveTree } from './objective-tree';
 
 /**
@@ -45,26 +47,45 @@ export class ObjectiveWriterService {
     private readonly dataSource: DataSource,
     private readonly writeLock: DatabaseWriteLockService,
     private readonly access: ObjectiveAccessService,
+    private readonly changes: ObjectiveChangesService,
   ) {}
 
-  /** Runs the change on an existing objective, once the user is allowed to. */
-  change<T>(
+  /**
+   * Runs the change on an existing objective, once the user is allowed to, then
+   * tells those concerned. `news` is what the others should hear about it.
+   */
+  async change<T>(
     objectiveId: string,
     userId: string,
     permission: ObjectivePermission,
     operation: (access: ObjectiveAccess, manager: EntityManager) => Promise<T>,
+    news?: ObjectiveNewsKind,
   ): Promise<T> {
-    return this.inTransaction(async (manager) => {
-      const access = await this.access.require(
-        objectiveId,
-        userId,
-        permission,
-        manager,
-      );
-      const result = await operation(access, manager);
-      await this.settle(access.node.rootId, userId, manager);
-      return result;
+    const { result, before, completed } = await this.inTransaction(
+      async (manager) => {
+        const access = await this.access.require(
+          objectiveId,
+          userId,
+          permission,
+          manager,
+        );
+        const result = await operation(access, manager);
+        const changed = await this.settle(access.node.rootId, userId, manager);
+        return {
+          result,
+          before: access.tree,
+          completed: changed.filter(({ status }) => status === 'completed'),
+        };
+      },
+    );
+    await this.changes.published({
+      before,
+      objectiveId,
+      actorId: userId,
+      news,
+      completed,
     });
+    return result;
   }
 
   /** For what has no objective to check first: a new tree, an import. */
@@ -76,15 +97,19 @@ export class ObjectiveWriterService {
     );
   }
 
-  /** Brings the statuses of a tree in line with its progress; a deleted tree is skipped. */
+  /**
+   * Brings the statuses of a tree in line with its progress, and answers what
+   * changed; a deleted tree is skipped.
+   */
   async settle(
     rootId: string,
     actorId: string,
     manager: EntityManager,
-  ): Promise<void> {
+  ): Promise<Objective[]> {
     const tree = await this.access.loadTree(rootId, manager);
-    if (!tree) return;
+    if (!tree) return [];
     const changed = settleStatuses(tree, actorId);
     if (changed.length) await manager.save(changed);
+    return changed;
   }
 }

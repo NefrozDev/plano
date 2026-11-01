@@ -209,6 +209,39 @@ describe('Objectives API (e2e)', () => {
     ]);
   });
 
+  it('serves what was pinned to the home page', async () => {
+    const pinned = await create();
+    await create();
+    await http()
+      .patch(`/api/v1/objectives/${pinned.id}/preferences`)
+      .set('Cookie', ada.cookie)
+      .send({ onHome: true })
+      .expect(200);
+
+    const home = await http()
+      .get('/api/v1/objectives/home')
+      .set('Cookie', ada.cookie)
+      .expect(200);
+
+    expect((home.body as ObjectiveSummary[]).map(({ id }) => id)).toEqual([
+      pinned.id,
+    ]);
+    await http().get('/api/v1/objectives/home').expect(401);
+  });
+
+  it('serves what is dated for the agenda', async () => {
+    const dated = await create({ ...newObjective, dueDate: '2026-12-01' });
+
+    const agenda = await http()
+      .get('/api/v1/objectives/agenda')
+      .set('Cookie', ada.cookie)
+      .expect(200);
+
+    expect(agenda.body).toEqual([
+      expect.objectContaining({ kind: 'deadline', objectiveId: dated.id }),
+    ]);
+  });
+
   it('edits, reorders children and deletes', async () => {
     const top = await create({
       ...newObjective,

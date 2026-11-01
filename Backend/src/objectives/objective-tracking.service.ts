@@ -73,6 +73,7 @@ export class ObjectiveTrackingService {
           }),
         );
       },
+      'contribution',
     );
     return this.detail(id, userId);
   }
@@ -132,6 +133,7 @@ export class ObjectiveTrackingService {
           await manager.delete(ObjectiveCheckInRow, row);
         }
       },
+      'contribution',
     );
     return this.detail(id, userId);
   }
@@ -150,6 +152,7 @@ export class ObjectiveTrackingService {
         node.manualProgress = percent;
         await manager.save(node);
       },
+      'contribution',
     );
     return this.detail(id, userId);
   }
@@ -174,6 +177,7 @@ export class ObjectiveTrackingService {
         node.completedByUserId = completed ? userId : null;
         await manager.save(node);
       },
+      'contribution',
     );
     return this.detail(id, userId);
   }

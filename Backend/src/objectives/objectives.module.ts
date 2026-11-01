@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { FriendsModule } from '../friends/friends.module';
+import { LiveModule } from '../live/live.module';
 import { ObjectiveCheckInRow } from './entities/objective-check-in.entity';
 import { ObjectiveMember } from './entities/objective-member.entity';
 import { ObjectivePreference } from './entities/objective-preference.entity';
@@ -10,6 +11,7 @@ import { ObjectiveSession } from './entities/objective-session.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveAgendaService } from './objective-agenda.service';
+import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveImportService } from './objective-import.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
@@ -25,6 +27,7 @@ import { ObjectivesService } from './objectives.service';
     AuthModule,
     DatabaseModule,
     FriendsModule,
+    LiveModule,
     TypeOrmModule.forFeature([
       Objective,
       ObjectiveSession,
@@ -36,6 +39,7 @@ import { ObjectivesService } from './objectives.service';
   controllers: [ObjectivesController],
   providers: [
     ObjectiveAccessService,
+    ObjectiveChangesService,
     ObjectiveWriterService,
     ObjectiveViewService,
     ObjectivePreferencesService,
