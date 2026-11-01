@@ -31,6 +31,10 @@ export class ObjectivesApiService {
     return this.http.get<ObjectiveDetail>(`${this.objectives}/${id}`);
   }
 
+  findHome(): Observable<ObjectiveSummary[]> {
+    return this.http.get<ObjectiveSummary[]>(`${this.objectives}/home`);
+  }
+
   findAgenda(): Observable<ObjectiveAgendaItem[]> {
     return this.http.get<ObjectiveAgendaItem[]>(`${this.objectives}/agenda`);
   }

@@ -5,8 +5,8 @@ import { AuthService } from '../../core/auth/auth.service';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
-import { addDays, compareDueDates, formatDate, parseIsoDate, startOfWeek } from '../../core/time/dates';
-import { objectiveTint } from '../objectives/objective.utils';
+import { addDays, parseIsoDate, startOfWeek } from '../../core/time/dates';
+import { dueCaption, objectiveTint } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaStore } from '../agenda/agenda.store';
 import { ListsStore } from '../lists/lists.store';
@@ -51,20 +51,17 @@ export class DashboardComponent {
   readonly homeLists = this.listsStore.home;
   /** The item being ticked, so a double tap sends one request. */
   readonly checking = signal('');
+  /** Objectives the user pinned to their home page, in their order; null while loading. */
   readonly goals = computed(() =>
-    this.objectivesStore
-      .objectives()
-      .filter((objective) => objective.status === 'active' && !objective.archived)
-      .sort((first, second) => compareDueDates(first.dueDate, second.dueDate))
-      .slice(0, 2)
-      .map((objective) => ({
-        id: objective.id,
-        title: objective.title,
-        category: objective.category,
-        progress: objective.percent ?? 0,
-        due: objective.dueDate ? `échéance : ${formatDate(objective.dueDate)}` : 'sans échéance',
-        tint: objectiveTint(objective.category, this.objectivesStore.settings().categoryColors),
-      })),
+    this.objectivesStore.home()?.map((objective) => ({
+      id: objective.id,
+      title: objective.title,
+      category: objective.category,
+      completed: objective.status === 'completed',
+      progress: objective.percent,
+      due: dueCaption(objective),
+      tint: objectiveTint(objective.category, this.objectivesStore.settings().categoryColors),
+    })) ?? null,
   );
   readonly displayName = computed(
     () => this.auth.user()?.firstName || this.auth.user()?.username || 'vous',
@@ -75,7 +72,7 @@ export class DashboardComponent {
     // The week strip's event dots include list reminders served by the API.
     this.agendaStore.loadTasks();
     void this.listsStore.loadHome();
-    void this.objectivesStore.load();
+    void this.objectivesStore.loadHome();
   }
 
   /** Ticks an item of a pinned list; it then leaves the card. */

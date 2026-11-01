@@ -17,6 +17,9 @@ const EVENT_TYPES: readonly LiveEvent['type'][] = [
   'friend.requested',
   'friend.accepted',
   'friends.changed',
+  'objective.changed',
+  'objective.removed',
+  'objective.news',
 ];
 
 /**

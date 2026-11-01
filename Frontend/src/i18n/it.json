@@ -4,7 +4,8 @@
     "home": "Home",
     "agenda": "Agenda",
     "lists": "Liste",
-    "objectives": "Obiettivi"
+    "objectives": "Obiettivi",
+    "objectivesWithNews": "Obiettivi, {{count}} novità"
   },
   "settings": {
     "title": "Impostazioni",
@@ -58,7 +59,10 @@
   },
   "notifications": {
     "friendRequested": "{{name}} ti ha inviato una richiesta di amicizia.",
-    "friendAccepted": "{{name}} ha accettato la tua richiesta di amicizia."
+    "friendAccepted": "{{name}} ha accettato la tua richiesta di amicizia.",
+    "objectiveInvited": "{{name}} ti ha invitato a «{{title}}».",
+    "objectiveContribution": "{{name}} ha contribuito a «{{title}}».",
+    "objectiveCompleted": "«{{title}}» è completato."
   },
   "friends": {
     "heading": "Amici",

@@ -2,6 +2,7 @@ import type { MockInstance } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { FriendNotificationsService } from '../../../core/friends/friend-notifications.service';
+import { ObjectiveNotificationsService } from '../objective-notifications.service';
 import { ObjectivesStore } from '../objectives.store';
 import { flushObjectives, provideObjectivesTesting, settleObjectives } from '../objectives.testing';
 import { objectiveSummary } from '../testing/objectives-fixtures';
@@ -81,6 +82,15 @@ describe('ObjectivesOverviewComponent', () => {
 
     expect(bell.querySelector('.badge')?.textContent).toBe('1');
     expect(bell.getAttribute('aria-label')).toBe('Notifications : 1 nouvelle(s)');
+  });
+
+  it('counts objective news as seen while it is open', () => {
+    const news = TestBed.inject(ObjectiveNotificationsService);
+
+    news.unseen.set(3);
+    TestBed.tick();
+
+    expect(news.unseen()).toBe(0);
   });
 
   it('switches tabs and labels the archived section', () => {

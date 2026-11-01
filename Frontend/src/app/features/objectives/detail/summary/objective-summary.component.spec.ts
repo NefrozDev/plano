@@ -560,6 +560,22 @@ describe('ObjectiveSummaryComponent', () => {
     });
   });
 
+  describe('home page', () => {
+    const toggle = () => element.querySelector('.home-pin button') as HTMLButtonElement;
+
+    it('pins and unpins, for anyone who can open it', async () => {
+      await show(objectiveDetail({ role: 'viewer' }));
+      expect(toggle().getAttribute('aria-checked')).toBe('false');
+
+      toggle().click();
+      expect(await answer('/preferences', objectiveDetail({ onHome: true }))).toEqual({ onHome: true });
+      expect(toggle().getAttribute('aria-checked')).toBe('true');
+
+      toggle().click();
+      expect(await answer('/preferences', objectiveDetail())).toEqual({ onHome: false });
+    });
+  });
+
   describe('reminders', () => {
     const weekly = { frequency: 'weekly', time: '09:00', weekday: 0 } as const;
 
@@ -600,6 +616,7 @@ describe('ObjectiveSummaryComponent', () => {
     component.setProgress(10);
     component.toggleCompleted();
     component.assign('someone');
+    component.toggleHome();
 
     http.expectNone({ method: 'PATCH' });
     http.expectNone({ method: 'PUT' });

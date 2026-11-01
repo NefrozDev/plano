@@ -34,7 +34,8 @@ export class ObjectiveDetailLayoutComponent {
   readonly store = inject(ObjectivesStore);
 
   readonly objective = this.context.objective;
-  readonly notFound = signal(false);
+  /** Opening is over: no objective from here on means it is not available. */
+  readonly loaded = signal(false);
   readonly menuOpen = signal(false);
   readonly showTitle = signal(true);
   readonly isOwner = computed(() => this.objective()?.role === 'owner');
@@ -106,11 +107,11 @@ export class ObjectiveDetailLayoutComponent {
   }
 
   private async open(id: string): Promise<void> {
-    this.notFound.set(false);
+    this.loaded.set(false);
     const found = await this.store.open(id);
     // Another objective may have been opened in the meantime.
     if (this.context.id() !== id) return;
-    this.notFound.set(!found);
+    this.loaded.set(true);
     if (found && !this.objective()?.parentId) this.store.markViewed(id);
   }
 }

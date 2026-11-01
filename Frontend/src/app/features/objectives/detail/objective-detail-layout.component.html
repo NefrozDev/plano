@@ -68,7 +68,7 @@
   <div class="tab-content">
     <router-outlet (activate)="onActivate($event)" />
   </div>
-} @else if (notFound()) {
+} @else if (loaded()) {
   <app-page-header heading="Objectif" backLink="/objectives" backLabel="Retour aux objectifs" />
   <p class="not-found">
     Cet objectif n’existe pas ou a été supprimé.

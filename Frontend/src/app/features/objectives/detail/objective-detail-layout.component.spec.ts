@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
+import { FakeEventSource } from '../../../testing/fake-event-source';
 import { OBJECTIVES_ROUTES } from '../objectives.routes';
 import { ObjectivesStore } from '../objectives.store';
 import { provideObjectivesTesting, provideSignedIn, settleObjectives } from '../objectives.testing';
@@ -146,6 +147,16 @@ describe('ObjectiveDetailLayoutComponent', () => {
     await visitMissing('inconnu');
 
     expect(markViewed).not.toHaveBeenCalled();
+    expect(element().querySelector('.not-found')?.textContent).toContain('n’existe pas');
+  });
+
+  it('explains when an objective goes away while it is open', async () => {
+    await visit('/objectives/obj-1');
+
+    FakeEventSource.latest()?.emit({ type: 'objective.removed', objectiveId: 'obj-1' });
+    await settleObjectives();
+    harness.detectChanges();
+
     expect(element().querySelector('.not-found')?.textContent).toContain('n’existe pas');
   });
 

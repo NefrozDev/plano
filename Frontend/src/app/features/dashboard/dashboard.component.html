@@ -86,15 +86,21 @@
     <div class="goals-card">
       @for (goal of goals(); track goal.id) {
         <a class="goal" [routerLink]="['/objectives', goal.id]">
-          <app-objective-icon [category]="goal.category" [color]="goal.tint" />
+          <app-objective-icon [category]="goal.category" [color]="goal.tint" [completed]="goal.completed" />
           <div>
             <strong>{{ goal.title }}</strong><small>{{ goal.due }}</small>
-            <div class="progress"><i [style.width.%]="goal.progress"></i></div>
+            @if (goal.progress !== null) {
+              <div class="progress"><i [style.width.%]="goal.progress"></i></div>
+            }
           </div>
-          <b>{{ goal.progress }}%</b>
+          @if (goal.progress !== null) {
+            <b>{{ goal.progress }}%</b>
+          }
         </a>
       } @empty {
-        <a class="card-link" routerLink="/objectives/new">+ Créer un objectif</a>
+        @if (goals()) {
+          <a class="card-link" routerLink="/objectives">Affichez vos objectifs ici depuis leur page.</a>
+        }
       }
     </div>
   </section>

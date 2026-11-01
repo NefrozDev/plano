@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { ObjectiveNotificationsService } from '../../features/objectives/objective-notifications.service';
 
 export type MainSection = 'home' | 'agenda' | 'lists' | 'objectives';
 
@@ -21,6 +22,7 @@ const CALENDAR_ICON = 'M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-
           [routerLink]="item.link"
           [class.active]="active() === item.id"
           [attr.aria-current]="active() === item.id ? 'page' : null"
+          [attr.aria-label]="item.id === 'objectives' && news.unseen() ? ('nav.objectivesWithNews' | transloco: { count: news.unseen() }) : null"
         >
           @if (item.icon) {
             <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icon" /></svg>
@@ -28,6 +30,9 @@ const CALENDAR_ICON = 'M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-
             <span aria-hidden="true">{{ item.glyph }}</span>
           }
           {{ item.label | transloco }}
+          @if (item.id === 'objectives' && news.unseen()) {
+            <i class="badge" aria-hidden="true">{{ news.unseen() }}</i>
+          }
         </a>
       }
     </nav>
@@ -35,13 +40,16 @@ const CALENDAR_ICON = 'M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-
   styles: `
     :host { position: absolute; z-index: 10; right: 0; bottom: 0; left: 0; }
     nav { display: grid; grid-template-columns: repeat(4, 1fr); padding: .35rem 0 calc(.25rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border); background: white; }
-    a { display: grid; gap: .1rem; min-height: 3.6rem; place-items: center; color: #272b32; font-size: .67rem; text-decoration: none; }
+    a { position: relative; display: grid; gap: .1rem; min-height: 3.6rem; place-items: center; color: #272b32; font-size: .67rem; text-decoration: none; }
     span { font-size: 1.7rem; line-height: 1; }
     svg { width: 1.6rem; height: 1.7rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.6; }
     .active { color: var(--color-primary); }
+    .badge { position: absolute; top: .1rem; left: calc(50% + .45rem); display: grid; min-width: 1rem; height: 1rem; padding: 0 .2rem; place-items: center; border-radius: 1rem; background: var(--color-danger); color: white; font-size: .6rem; font-style: normal; font-weight: 750; }
   `,
 })
 export class BottomNavComponent {
+  /** What is new on objectives, shown on their tab from every screen. */
+  readonly news = inject(ObjectiveNotificationsService);
   readonly active = input.required<MainSection>();
   readonly items = [
     { id: 'home', label: 'nav.home', glyph: '⌂', link: '/' },

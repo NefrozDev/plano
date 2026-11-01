@@ -4,7 +4,8 @@
     "home": "Home",
     "agenda": "Calendar",
     "lists": "Lists",
-    "objectives": "Goals"
+    "objectives": "Goals",
+    "objectivesWithNews": "Goals, {{count}} new"
   },
   "settings": {
     "title": "Settings",
@@ -58,7 +59,10 @@
   },
   "notifications": {
     "friendRequested": "{{name}} sent you a friend request.",
-    "friendAccepted": "{{name}} accepted your friend request."
+    "friendAccepted": "{{name}} accepted your friend request.",
+    "objectiveInvited": "{{name}} invited you to “{{title}}”.",
+    "objectiveContribution": "{{name}} contributed to “{{title}}”.",
+    "objectiveCompleted": "“{{title}}” is complete."
   },
   "friends": {
     "heading": "Friends",

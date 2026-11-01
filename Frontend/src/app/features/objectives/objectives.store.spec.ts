@@ -3,8 +3,9 @@ import { TestBed } from '@angular/core/testing';
 import { createMockPlanoData } from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../../core/data/plano-data.adapter';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { FakeEventSource } from '../../testing/fake-event-source';
 import { settle } from '../../testing/plano-testing';
-import { ObjectivesStore } from './objectives.store';
+import { ObjectivesStore, REMOVED_MESSAGE } from './objectives.store';
 import { provideObjectivesTesting, provideSignedIn } from './objectives.testing';
 import { ME, metricDetail, objectiveDetail, objectiveSummary, treeDetail } from './testing/objectives-fixtures';
 
@@ -105,6 +106,160 @@ describe('ObjectivesStore', () => {
       await failing;
       expect(store.agenda()).toEqual([item]);
       expect(store.error()).toBe('');
+    });
+
+    describe('home page', () => {
+      it('is unknown until loaded, then holds what is pinned', async () => {
+        expect(store.home()).toBeNull();
+
+        const loading = store.loadHome();
+        http.expectOne('/api/v1/objectives/home').flush([objectiveSummary()]);
+        await loading;
+
+        expect(store.home()?.map(({ id }) => id)).toEqual(['obj-1']);
+      });
+
+      it('shows nothing rather than loading forever when it fails', async () => {
+        const loading = store.loadHome();
+        http.expectOne('/api/v1/objectives/home').flush(null, { status: 500, statusText: 'Error' });
+        await loading;
+
+        expect(store.home()).toEqual([]);
+      });
+
+      it('follows a pin once loaded, and only then', async () => {
+        await open();
+        const before = store.updatePreferences('obj-1', { onHome: true });
+        http.expectOne('/api/v1/objectives/obj-1/preferences').flush(objectiveDetail({ onHome: true }));
+        await before;
+        http.expectNone('/api/v1/objectives/home');
+
+        const loading = store.loadHome();
+        http.expectOne('/api/v1/objectives/home').flush([]);
+        await loading;
+
+        const pinning = store.updatePreferences('obj-1', { onHome: false });
+        http.expectOne('/api/v1/objectives/obj-1/preferences').flush(objectiveDetail());
+        await settle();
+        http.expectOne('/api/v1/objectives/home').flush([]);
+        await pinning;
+
+        // Another preference leaves the home page alone.
+        const reminding = store.updatePreferences('obj-1', { dueReminder: 'same-day' });
+        http.expectOne('/api/v1/objectives/obj-1/preferences').flush(objectiveDetail());
+        await reminding;
+      });
+    });
+
+    describe('live events', () => {
+      const emit = (event: Parameters<FakeEventSource['emit']>[0]): void => {
+        TestBed.tick();
+        FakeEventSource.latest()?.emit(event);
+      };
+
+      it('reloads only what is on screen', async () => {
+        emit({ type: 'objective.changed', objectiveId: 'x' });
+        // Nothing was asked for: nothing to refresh.
+        http.expectNone('/api/v1/objectives');
+        http.expectNone('/api/v1/objectives/home');
+        http.expectNone('/api/v1/objectives/agenda');
+      });
+
+      it('reloads the list, the home page, the agenda and what is open', async () => {
+        await load();
+        await open();
+        const home = store.loadHome();
+        http.expectOne('/api/v1/objectives/home').flush([]);
+        await home;
+        const agenda = store.loadAgenda();
+        http.expectOne('/api/v1/objectives/agenda').flush([]);
+        await agenda;
+
+        emit({ type: 'objective.changed', objectiveId: 'child' });
+
+        http.expectOne('/api/v1/objectives').flush([objectiveSummary({ title: 'Nouveau' })]);
+        http.expectOne('/api/v1/objectives/obj-1').flush(objectiveDetail({ title: 'Ouvert' }));
+        http.expectOne('/api/v1/objectives/home').flush([objectiveSummary()]);
+        http.expectOne('/api/v1/objectives/agenda').flush([]);
+        await settle();
+
+        expect(store.objectives()[0].title).toBe('Nouveau');
+        expect(store.detail()?.title).toBe('Ouvert');
+        expect(store.home()).toHaveLength(1);
+      });
+
+      it('keeps what it has, quietly, when a reload fails', async () => {
+        await load();
+        await open();
+
+        emit({ type: 'objective.changed', objectiveId: 'obj-1' });
+        http.expectOne('/api/v1/objectives').flush(null, { status: 500, statusText: 'Error' });
+        http.expectOne('/api/v1/objectives/obj-1').flush(null, { status: 500, statusText: 'Error' });
+        await settle();
+
+        expect(store.objectives()).toHaveLength(1);
+        expect(store.detail()).not.toBeNull();
+        expect(store.error()).toBe('');
+      });
+
+      it('closes what is open when it turns out to be gone', async () => {
+        await open();
+
+        emit({ type: 'objective.changed', objectiveId: 'parent' });
+        http.expectOne('/api/v1/objectives/obj-1').flush(null, { status: 404, statusText: 'Not Found' });
+        await settle();
+
+        expect(store.detail()).toBeNull();
+        expect(store.error()).toBe(REMOVED_MESSAGE);
+      });
+
+      it('ignores an answer for what is no longer open', async () => {
+        await open();
+
+        emit({ type: 'objective.changed', objectiveId: 'obj-1' });
+        const opening = store.open('other');
+        http.expectOne('/api/v1/objectives/other').flush(objectiveDetail({ id: 'other' }));
+        await opening;
+        http.expectOne('/api/v1/objectives/obj-1').flush(objectiveDetail());
+        await settle();
+
+        expect(store.detail()?.id).toBe('other');
+      });
+
+      it('takes away what was removed, and says so when it was open', async () => {
+        await load();
+        await open();
+
+        emit({ type: 'objective.removed', objectiveId: 'obj-1' });
+        http.expectOne('/api/v1/objectives').flush([]);
+        await settle();
+
+        expect(store.objectives()).toEqual([]);
+        expect(store.detail()).toBeNull();
+        expect(store.error()).toBe(REMOVED_MESSAGE);
+      });
+
+      it('leaves what is open alone when something else is removed', async () => {
+        await load([objectiveSummary(), objectiveSummary({ id: 'other' })]);
+        await open();
+
+        emit({ type: 'objective.removed', objectiveId: 'other' });
+        http.expectOne('/api/v1/objectives').flush([objectiveSummary()]);
+        http.expectOne('/api/v1/objectives/obj-1').flush(objectiveDetail());
+        await settle();
+
+        expect(store.detail()?.id).toBe('obj-1');
+        expect(store.error()).toBe('');
+      });
+
+      it('ignores other events', async () => {
+        await load();
+
+        emit({ type: 'objective.news', objectiveId: 'obj-1', kind: 'invited', title: 'X', actor: 'Y' });
+        emit({ type: 'friends.changed' });
+
+        http.expectNone('/api/v1/objectives');
+      });
     });
 
     describe('overview queries', () => {

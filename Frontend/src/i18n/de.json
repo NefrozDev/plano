@@ -4,7 +4,8 @@
     "home": "Start",
     "agenda": "Kalender",
     "lists": "Listen",
-    "objectives": "Ziele"
+    "objectives": "Ziele",
+    "objectivesWithNews": "Ziele, {{count}} neu"
   },
   "settings": {
     "title": "Einstellungen",
@@ -58,7 +59,10 @@
   },
   "notifications": {
     "friendRequested": "{{name}} hat dir eine Freundschaftsanfrage gesendet.",
-    "friendAccepted": "{{name}} hat deine Freundschaftsanfrage angenommen."
+    "friendAccepted": "{{name}} hat deine Freundschaftsanfrage angenommen.",
+    "objectiveInvited": "{{name}} hat dich zu „{{title}}“ eingeladen.",
+    "objectiveContribution": "{{name}} hat zu „{{title}}“ beigetragen.",
+    "objectiveCompleted": "„{{title}}“ ist abgeschlossen."
   },
   "friends": {
     "heading": "Freunde",

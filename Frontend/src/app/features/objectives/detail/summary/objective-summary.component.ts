@@ -12,6 +12,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { toPerson } from '../../../../core/people/people';
 import { AvatarStackComponent } from '../../../../shared/ui/avatar-stack.component';
+import { SwitchRowComponent } from '../../../../shared/ui/switch-row.component';
 import type {
   DueReminder,
   ObjectiveDetail,
@@ -47,7 +48,14 @@ interface StatTile {
 
 @Component({
   selector: 'app-objective-summary',
-  imports: [RouterLink, AvatarStackComponent, ObjectiveCardComponent, ObjectiveIconComponent, TimelapseBarComponent],
+  imports: [
+    RouterLink,
+    AvatarStackComponent,
+    ObjectiveCardComponent,
+    ObjectiveIconComponent,
+    SwitchRowComponent,
+    TimelapseBarComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-summary.component.html',
   styleUrl: './objective-summary.component.scss',
@@ -151,6 +159,11 @@ export class ObjectiveSummaryComponent {
     this.toggling.set(child.id);
     await this.store.setChildCompleted(child.id, child.status !== 'completed');
     this.toggling.set('');
+  }
+
+  toggleHome(): void {
+    const objective = this.objective();
+    if (objective) void this.store.updatePreferences(objective.id, { onHome: !objective.onHome });
   }
 
   assign(userId: string): void {

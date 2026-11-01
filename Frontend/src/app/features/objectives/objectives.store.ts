@@ -1,9 +1,11 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type {
   AddObjectiveMemberRequest,
   AddObjectiveSessionRequest,
   CreateObjectiveRequest,
   IsoDate,
+  LiveEvent,
   ObjectiveAgendaItem,
   ObjectiveCategory,
   ObjectiveDetail,
@@ -15,10 +17,12 @@ import type {
   UpdateObjectivePreferencesRequest,
   UpdateObjectiveRequest,
 } from '@plano/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
 import { httpErrorMessage } from '../../core/http/http-error-message';
+import { LiveUpdatesService } from '../../core/live/live-updates.service';
 import { APP_CLOCK, compareDueDates, normalizeText, toIsoDate } from '../../core/time/dates';
 import { ObjectivesApiService } from './objectives-api.service';
 import { categoryMeta, toImportRequest } from './objective.utils';
@@ -43,6 +47,7 @@ export const DEFAULT_OBJECTIVE_FILTERS: ObjectiveFilters = {
 
 const FAILURE_MESSAGE = 'L’action a échoué. Veuillez réessayer.';
 const MAX_RECENT = 5;
+export const REMOVED_MESSAGE = 'Cet objectif a été supprimé ou ne vous est plus partagé.';
 
 /**
  * Client state of the objectives feature, backed by the objectives API: every
@@ -61,7 +66,12 @@ export class ObjectivesStore {
   private readonly objectivesState = signal<readonly ObjectiveSummary[]>([]);
   private readonly detailState = signal<ObjectiveDetail | null>(null);
   private readonly agendaState = signal<readonly ObjectiveAgendaItem[]>([]);
+  private readonly homeState = signal<readonly ObjectiveSummary[] | null>(null);
   private importing: Promise<void> | null = null;
+  /** What screens have asked for, so live changes refresh it and nothing else. */
+  private listRequested = false;
+  private homeRequested = false;
+  private agendaRequested = false;
 
   /** The top of what the user can see, in their own order. */
   readonly objectives = this.objectivesState.asReadonly();
@@ -69,6 +79,8 @@ export class ObjectivesStore {
   readonly detail = this.detailState.asReadonly();
   /** Dated items across every visible objective, for the agenda. */
   readonly agenda = this.agendaState.asReadonly();
+  /** What is pinned to the home page; null until loaded. */
+  readonly home = this.homeState.asReadonly();
   readonly loading = signal(false);
   /** Message of the last failed request, until cleared. */
   readonly error = signal('');
@@ -85,6 +97,12 @@ export class ObjectivesStore {
     () => this.filters().statuses.length + this.filters().categories.length,
   );
 
+  constructor() {
+    inject(LiveUpdatesService)
+      .events.pipe(takeUntilDestroyed())
+      .subscribe((event) => void this.applyLive(event));
+  }
+
   today(): IsoDate {
     return toIsoDate(this.clock());
   }
@@ -94,6 +112,7 @@ export class ObjectivesStore {
   }
 
   async load(): Promise<void> {
+    this.listRequested = true;
     this.loading.set(true);
     if (this.data().items.length) await this.importLocal();
     await this.run(this.api.findAll(), (objectives) => this.objectivesState.set(objectives));
@@ -110,7 +129,14 @@ export class ObjectivesStore {
     return found;
   }
 
+  async loadHome(): Promise<void> {
+    this.homeRequested = true;
+    if (this.data().items.length) await this.importLocal();
+    await this.refreshHome();
+  }
+
   async loadAgenda(): Promise<void> {
+    this.agendaRequested = true;
     if (this.data().items.length) await this.importLocal();
     try {
       this.agendaState.set(await firstValueFrom(this.api.findAgenda()));
@@ -221,8 +247,10 @@ export class ObjectivesStore {
     return removed;
   }
 
-  updatePreferences(id: string, changes: UpdateObjectivePreferencesRequest): Promise<boolean> {
-    return this.apply(this.api.updatePreferences(id, changes));
+  async updatePreferences(id: string, changes: UpdateObjectivePreferencesRequest): Promise<boolean> {
+    const updated = await this.apply(this.api.updatePreferences(id, changes));
+    if (updated && this.homeRequested && changes.onHome !== undefined) await this.refreshHome();
+    return updated;
   }
 
   addSession(id: string, details: AddObjectiveSessionRequest): Promise<boolean> {
@@ -288,6 +316,57 @@ export class ObjectivesStore {
 
   resetFilters(): void {
     this.filters.set(DEFAULT_OBJECTIVE_FILTERS);
+  }
+
+  /** A failure keeps what is shown: the next visit catches up. */
+  private async refreshHome(): Promise<void> {
+    try {
+      this.homeState.set(await firstValueFrom(this.api.findHome()));
+    } catch {
+      this.homeState.update((home) => home ?? []);
+    }
+  }
+
+  private async applyLive(event: LiveEvent): Promise<void> {
+    if (event.type === 'objective.removed') {
+      if (this.detailState()?.id === event.objectiveId) {
+        this.detailState.set(null);
+        this.error.set(REMOVED_MESSAGE);
+      }
+      this.objectivesState.update((items) => items.filter(({ id }) => id !== event.objectiveId));
+    } else if (event.type !== 'objective.changed') {
+      return;
+    }
+    await Promise.all([
+      this.reloadOpenObjective(),
+      this.listRequested ? this.silently(this.api.findAll(), (items) => this.objectivesState.set(items)) : null,
+      this.homeRequested ? this.refreshHome() : null,
+      this.agendaRequested ? this.silently(this.api.findAgenda(), (items) => this.agendaState.set(items)) : null,
+    ]);
+  }
+
+  /** Any change in a tree can move the bars of what is open. */
+  private async reloadOpenObjective(): Promise<void> {
+    const id = this.detailState()?.id;
+    if (!id) return;
+    try {
+      const detail = await firstValueFrom(this.api.findOne(id));
+      if (this.detailState()?.id === id) this.detailState.set(detail);
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 404 && this.detailState()?.id === id) {
+        this.detailState.set(null);
+        this.error.set(REMOVED_MESSAGE);
+      }
+    }
+  }
+
+  /** A reload nobody asked for stays quiet when it fails. */
+  private async silently<T>(request: Observable<T>, apply: (result: T) => void): Promise<void> {
+    try {
+      apply(await firstValueFrom(request));
+    } catch {
+      // The next event or screen visit catches up.
+    }
   }
 
   /**

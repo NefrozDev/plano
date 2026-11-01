@@ -4,7 +4,8 @@
     "home": "Accueil",
     "agenda": "Agenda",
     "lists": "Liste",
-    "objectives": "Objectifs"
+    "objectives": "Objectifs",
+    "objectivesWithNews": "Objectifs, {{count}} nouveauté(s)"
   },
   "settings": {
     "title": "Paramètres",
@@ -58,7 +59,10 @@
   },
   "notifications": {
     "friendRequested": "{{name}} vous a envoyé une demande d’ami.",
-    "friendAccepted": "{{name}} a accepté votre demande d’ami."
+    "friendAccepted": "{{name}} a accepté votre demande d’ami.",
+    "objectiveInvited": "{{name}} vous a invité(e) à « {{title}} ».",
+    "objectiveContribution": "{{name}} a contribué à « {{title}} ».",
+    "objectiveCompleted": "« {{title}} » est terminé."
   },
   "friends": {
     "heading": "Amis",

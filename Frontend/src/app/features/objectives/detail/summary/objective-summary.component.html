@@ -254,6 +254,10 @@
           </div>
         }
       </div>
+
+      <div class="row-block home-pin">
+        <app-switch-row label="Afficher sur l’accueil" hint="Pour vous seulement" [checked]="objective.onHome" (toggled)="toggleHome()" />
+      </div>
     </section>
   }
 }

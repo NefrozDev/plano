@@ -250,22 +250,41 @@ describe('DashboardComponent', () => {
     expect(new Set(headings).size).toBe(1);
   });
 
-  it('shows the two active objectives due first, linked to their pages', async () => {
+  it('shows the objectives the user pinned, in their order, linked to their pages', async () => {
     const fixture = TestBed.createComponent(DashboardComponent);
-    http.expectOne('/api/v1/objectives').flush([
-      objectiveSummary({ id: 'later', title: 'Plus tard', dueDate: '2026-12-01' }),
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    // Nothing to say while loading.
+    expect(element.querySelector('.goals-card .card-link')).toBeNull();
+
+    http.expectOne('/api/v1/objectives/home').flush([
       objectiveSummary({ id: 'run', title: 'Courir', percent: 65, dueDate: '2026-11-30' }),
-      objectiveSummary({ id: 'med', title: 'Méditer', dueDate: '2026-10-30' }),
-      objectiveSummary({ id: 'done', title: 'Fini', status: 'completed', dueDate: '2026-10-01' }),
-      objectiveSummary({ id: 'old', title: 'Rangé', archived: true, dueDate: '2026-10-01' }),
+      objectiveSummary({ id: 'trip', title: 'Voyage' }),
+      objectiveSummary({ id: 'done', title: 'Fini', status: 'completed', percent: 100 }),
     ]);
     await settle();
     fixture.detectChanges();
-    const goals = (fixture.nativeElement as HTMLElement).querySelectorAll('.goals-card .goal');
+    const goals = element.querySelectorAll('.goals-card .goal');
 
-    expect(goals.length).toBe(2);
-    expect(goals[0].textContent).toContain('Méditer');
-    expect(goals[1].getAttribute('href')).toBe('/objectives/run');
-    expect(goals[1].textContent).toContain('65%');
+    expect(goals.length).toBe(3);
+    expect(goals[0].getAttribute('href')).toBe('/objectives/run');
+    expect(goals[0].textContent).toContain('65%');
+    expect(goals[0].textContent).toContain('Échéance : 30 nov. 2026');
+    expect(goals[0].querySelector('.progress')).not.toBeNull();
+    // No completion bar on this one: no empty bar either.
+    expect(goals[1].querySelector('.progress')).toBeNull();
+    expect(goals[1].querySelector('b')).toBeNull();
+    expect(goals[2].querySelector('app-objective-icon')?.classList).toContain('completed');
+  });
+
+  it('explains how to pin an objective when none is', async () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    http.expectOne('/api/v1/objectives/home').flush([]);
+    await settle();
+    fixture.detectChanges();
+
+    const hint = (fixture.nativeElement as HTMLElement).querySelector('.goals-card .card-link');
+    expect(hint?.getAttribute('href')).toBe('/objectives');
+    expect(hint?.textContent).toContain('depuis leur page');
   });
 });

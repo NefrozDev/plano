@@ -4,7 +4,8 @@
     "home": "Start",
     "agenda": "Agenda",
     "lists": "Lijsten",
-    "objectives": "Doelen"
+    "objectives": "Doelen",
+    "objectivesWithNews": "Doelen, {{count}} nieuw"
   },
   "settings": {
     "title": "Instellingen",
@@ -58,7 +59,10 @@
   },
   "notifications": {
     "friendRequested": "{{name}} heeft je een vriendschapsverzoek gestuurd.",
-    "friendAccepted": "{{name}} heeft je vriendschapsverzoek geaccepteerd."
+    "friendAccepted": "{{name}} heeft je vriendschapsverzoek geaccepteerd.",
+    "objectiveInvited": "{{name}} heeft je uitgenodigd voor “{{title}}”.",
+    "objectiveContribution": "{{name}} heeft bijgedragen aan “{{title}}”.",
+    "objectiveCompleted": "“{{title}}” is voltooid."
   },
   "friends": {
     "heading": "Vrienden",

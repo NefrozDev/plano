@@ -56,3 +56,4 @@ app-avatar-stack { --avatar-size: 1.75rem; }
 .contributions li i { display: block; grid-column: 1 / -1; height: .3rem; overflow: hidden; border-radius: 1rem; background: #eef1f6; }
 .contributions li em { display: block; height: 100%; border-radius: inherit; background: var(--color-primary); }
 .assign { cursor: default; }
+.home-pin { padding: .4rem 0; }

@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AppComponent } from './app.component';
 import { FriendNotificationsService } from './core/friends/friend-notifications.service';
+import { ObjectiveNotificationsService } from './features/objectives/objective-notifications.service';
 import { providePlanoTesting } from './testing/plano-testing';
 
 describe('AppComponent', () => {
@@ -20,6 +21,32 @@ describe('AppComponent', () => {
     expect(
       (fixture.nativeElement as HTMLElement).querySelector('router-outlet'),
     ).toBeTruthy();
+  });
+
+  it('shows objective news the same way, and clears it when dismissed', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const news = TestBed.inject(ObjectiveNotificationsService);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    news.message.set('Courir est terminé.');
+    fixture.detectChanges();
+    const toast = element.querySelector('.notification-toast .toast') as HTMLButtonElement;
+    expect(toast.textContent).toContain('Courir est terminé.');
+
+    toast.click();
+    fixture.detectChanges();
+    expect(news.message()).toBe('');
+    expect(element.querySelector('.notification-toast .toast')).toBeNull();
+  });
+
+  it('lets friend news go first when both come at once', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    TestBed.inject(ObjectiveNotificationsService).message.set('Objectif');
+    TestBed.inject(FriendNotificationsService).message.set('Ami');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.toast()).toBe('Ami');
   });
 
   it('shows friend news app-wide, above the screens, until dismissed', () => {
