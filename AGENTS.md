@@ -137,6 +137,7 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 - End-to-end tests should create the real `AppModule`, call `configureApp(app)`, and exercise versioned HTTP routes through Supertest. `createTestApp(overrides)` replaces providers that reach outside, e.g. `MailService` to capture e-mails.
 - Do not run `npm run backend:build` while `npm run start:back` is running: both write `Backend/dist` and the watcher crashes on half-written files.
 - Do not duplicate global prefix, validation, or CORS configuration inside tests.
+- Every test needs at least one real `expect(...)`: SonarQube does not count Supertest's `.expect(404)` or `HttpTestingController`'s `expectOne()`, `expectNone()` and `verify()`, and flags the test as a blocker. Assert something that matters, such as the error body or that nothing changed, not a formality.
 - Type-check the end-to-end project when changing its configuration:
 
 ```powershell
