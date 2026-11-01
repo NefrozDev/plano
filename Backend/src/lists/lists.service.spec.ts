@@ -41,10 +41,31 @@ describe('ListsService', () => {
       completed: 0,
       total: 0,
       onHome: false,
+      removeChecked: false,
       description: '',
       members: [{ id: bed.ada, name: 'Ada Test', role: 'owner' }],
       sections: [],
     });
+  });
+
+  it('lets only the owner choose whether checking an item deletes it', async () => {
+    const list = await createList();
+    await bed.lists.addMember(list.id, bed.ada, {
+      userId: bed.bob,
+      role: 'editor',
+    });
+
+    await expect(
+      bed.lists.update(list.id, bed.ada, { removeChecked: true }),
+    ).resolves.toEqual(expect.objectContaining({ removeChecked: true }));
+    // Members see the list's choice.
+    expect((await bed.lists.findAll(bed.bob))[0].removeChecked).toBe(true);
+    await expect(
+      bed.lists.update(list.id, bed.bob, { removeChecked: false }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect((await bed.lists.findOne(list.id, bed.ada)).removeChecked).toBe(
+      true,
+    );
   });
 
   it('lists owned and shared lists with their counts', async () => {

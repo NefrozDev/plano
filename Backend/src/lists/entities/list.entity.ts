@@ -41,6 +41,10 @@ export class List {
   @Column({ type: 'boolean', default: false })
   archived!: boolean;
 
+  /** Checking an item deletes it instead of keeping it as done. */
+  @Column({ type: 'boolean', default: false })
+  removeChecked!: boolean;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 

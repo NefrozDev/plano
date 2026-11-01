@@ -125,6 +125,7 @@ export class ListPreferencesService {
         icon: list.icon,
         color: list.color,
         role,
+        removeChecked: list.removeChecked,
         remaining: entries.length,
         entries: entries
           .slice(0, HOME_ENTRY_LIMIT)

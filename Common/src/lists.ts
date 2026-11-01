@@ -29,6 +29,8 @@ export interface ListSummary {
   total: number;
   /** Shown on the signed-in user's home page (their own choice). */
   onHome: boolean;
+  /** Checking an item deletes it instead of keeping it as done (set by the owner, for everyone). */
+  removeChecked: boolean;
 }
 
 /** The signed-in user's full order of their lists; lists left out go last. */
@@ -52,6 +54,8 @@ export interface HomeList {
   icon: ListIcon;
   color: string;
   role: ShareRole;
+  /** Ticking an item from the home page deletes it (see ListSummary). */
+  removeChecked: boolean;
   /** Unchecked items in the whole list. */
   remaining: number;
   entries: HomeListEntry[];
@@ -127,6 +131,7 @@ export interface UpdateListRequest {
   color?: string;
   description?: string;
   archived?: boolean;
+  removeChecked?: boolean;
 }
 
 export interface CreateSectionRequest {

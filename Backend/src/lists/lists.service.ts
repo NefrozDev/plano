@@ -340,6 +340,7 @@ export class ListsService {
       icon: list.icon,
       color: list.color,
       archived: list.archived,
+      removeChecked: list.removeChecked,
       ownership: list.ownerId === userId ? 'mine' : 'shared',
       role,
       memberCount: members.length,

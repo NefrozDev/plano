@@ -173,6 +173,7 @@ describe('ListPreferencesService', () => {
         icon: 'cart',
         color: '#2ecb70',
         role: 'owner',
+        removeChecked: false,
         remaining: 0,
         entries: [],
       });

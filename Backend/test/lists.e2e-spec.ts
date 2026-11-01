@@ -383,6 +383,26 @@ describe('Lists API (e2e)', () => {
     await http().get('/api/v1/lists/home').expect(401);
   });
 
+  it('lets the owner choose that checking an item deletes it', async () => {
+    const updated = (
+      await http()
+        .patch(`/api/v1/lists/${list.id}`)
+        .set('Cookie', ada.cookie)
+        .send({ removeChecked: true })
+        .expect(200)
+    ).body as ListDetail;
+    expect(updated.removeChecked).toBe(true);
+    await http()
+      .patch(`/api/v1/lists/${list.id}`)
+      .set('Cookie', ada.cookie)
+      .send({ removeChecked: 'yes' })
+      .expect(400);
+    const summaries = (
+      await http().get('/api/v1/lists').set('Cookie', ada.cookie).expect(200)
+    ).body as ListSummary[];
+    expect(summaries[0].removeChecked).toBe(true);
+  });
+
   it('stores list settings per user', async () => {
     await http()
       .patch('/api/v1/settings/lists')

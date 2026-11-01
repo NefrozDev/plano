@@ -57,4 +57,8 @@ export class UpdateListDto implements UpdateListRequest {
   @IsOptionalButNotNull()
   @IsBoolean()
   archived?: boolean;
+
+  @IsOptionalButNotNull()
+  @IsBoolean()
+  removeChecked?: boolean;
 }
