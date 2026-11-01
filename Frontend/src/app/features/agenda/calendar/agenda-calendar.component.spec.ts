@@ -30,6 +30,17 @@ describe('AgendaCalendarComponent', () => {
     harness = await RouterTestingHarness.create();
   });
 
+  it('leads to the settings with the gear used on every screen', async () => {
+    await harness.navigateByUrl('/agenda');
+    flushListReminders();
+    await settle();
+
+    const settings = element().querySelector('[aria-label="Paramètres de l’agenda"]');
+    expect(settings?.getAttribute('href')).toBe('/agenda/settings');
+    expect(settings?.querySelector('path')?.getAttribute('d')).toMatch(/^M12\.2 2h/);
+    expect(settings?.querySelectorAll('circle')).toHaveLength(1);
+  });
+
   it('opens on today’s day view with a "now" marker between past and upcoming items', async () => {
     await harness.navigateByUrl('/agenda');
     flushListReminders();
