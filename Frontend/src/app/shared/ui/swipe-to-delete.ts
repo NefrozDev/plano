@@ -33,6 +33,8 @@ export class SwipeToDelete {
   constructor(private readonly onDelete: () => void) {}
 
   start(event: PointerEvent): void {
+    // No click follows a swipe on a touch screen: it must not cost the next tap.
+    this.suppressNextClick = false;
     this.pressed = { element: event.currentTarget as HTMLElement, pointerId: event.pointerId };
     this.gesture.set({ startX: event.clientX, currentX: event.clientX });
   }
