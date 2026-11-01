@@ -1,7 +1,6 @@
-<div
+<button
   class="viewport"
-  tabindex="0"
-  role="group"
+  type="button"
   [style.width.px]="viewport"
   [style.height.px]="viewport"
   [attr.aria-label]="'settings.profile.crop.area' | transloco"
@@ -26,7 +25,7 @@
     (load)="onLoad(image)"
     (error)="failed.emit()"
   />
-</div>
+</button>
 <p class="hint" [id]="hintId">{{ 'settings.profile.crop.hint' | transloco }}</p>
 
 <label class="zoom">

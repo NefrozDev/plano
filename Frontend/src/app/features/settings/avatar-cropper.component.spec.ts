@@ -161,6 +161,16 @@ describe('AvatarCropperComponent', () => {
       expect(cropper.zoom()).toBeCloseTo(2);
     });
 
+    it('can be reached from the keyboard without being a submit button', () => {
+      expect(viewport().tagName).toBe('BUTTON');
+      expect(viewport().getAttribute('type')).toBe('button');
+      expect(viewport().hasAttribute('tabindex')).toBe(false);
+
+      viewport().focus();
+
+      expect(document.activeElement).toBe(viewport());
+    });
+
     it('moves with the arrow keys and zooms with + and -', () => {
       const key = (name: string) => {
         const event = new KeyboardEvent('keydown', { key: name, cancelable: true, bubbles: true });

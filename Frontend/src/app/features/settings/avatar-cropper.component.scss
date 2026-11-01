@@ -1,5 +1,5 @@
 :host { display: grid; justify-items: center; gap: .7rem; }
-.viewport { position: relative; overflow: hidden; border-radius: 50%; background: #e9edf4; box-shadow: 0 0 0 3px #fff, 0 0 0 4px #d5dbe6; cursor: grab; touch-action: none; user-select: none; }
+.viewport { position: relative; display: block; overflow: hidden; padding: 0; border: 0; border-radius: 50%; background: #e9edf4; box-shadow: 0 0 0 3px #fff, 0 0 0 4px #d5dbe6; cursor: grab; touch-action: none; user-select: none; }
 .viewport:active { cursor: grabbing; }
 .viewport:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 4px; }
 img { position: absolute; max-width: none; visibility: hidden; pointer-events: none; }
