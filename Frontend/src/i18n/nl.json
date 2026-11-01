@@ -62,7 +62,8 @@
     "friendAccepted": "{{name}} heeft je vriendschapsverzoek geaccepteerd.",
     "objectiveInvited": "{{name}} heeft je uitgenodigd voor “{{title}}”.",
     "objectiveContribution": "{{name}} heeft bijgedragen aan “{{title}}”.",
-    "objectiveCompleted": "“{{title}}” is voltooid."
+    "objectiveCompleted": "“{{title}}” is voltooid.",
+    "objectiveComment": "{{name}} heeft gereageerd op “{{title}}”."
   },
   "friends": {
     "heading": "Vrienden",

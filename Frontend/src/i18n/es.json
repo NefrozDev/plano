@@ -62,7 +62,8 @@
     "friendAccepted": "{{name}} ha aceptado tu solicitud de amistad.",
     "objectiveInvited": "{{name}} te ha invitado a «{{title}}».",
     "objectiveContribution": "{{name}} ha contribuido a «{{title}}».",
-    "objectiveCompleted": "«{{title}}» se ha completado."
+    "objectiveCompleted": "«{{title}}» se ha completado.",
+    "objectiveComment": "{{name}} ha comentado «{{title}}»."
   },
   "friends": {
     "heading": "Amigos",

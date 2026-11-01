@@ -53,8 +53,7 @@ export class ObjectiveDetailLayoutComponent {
     } else if (objective.completion === 'habit') {
       extra.push({ label: 'Habitude', path: 'habit' });
     }
-    if (!extra.length) return [];
-    return [{ label: 'Aperçu', path: '' }, ...extra].map((tab) => ({
+    return [{ label: 'Aperçu', path: '' }, ...extra, { label: 'Activité', path: 'activity' }].map((tab) => ({
       ...tab,
       link: ['/objectives', objective.id, ...(tab.path ? [tab.path] : [])],
     }));

@@ -33,15 +33,16 @@ describe('ObjectiveDetailLayoutComponent', () => {
     await settleObjectives();
     harness.detectChanges();
   };
-  /** The layout is lazy loaded: its request comes a few macrotasks after navigating. */
-  const requested = async (id: string): Promise<TestRequest> => {
-    for (let attempt = 0; attempt < 50; attempt += 1) {
-      const [request] = http.match(`/api/v1/objectives/${id}`);
-      if (request) return request;
-      await settleObjectives();
-    }
-    throw new Error(`No request for objective ${id}`);
-  };
+  /** The layout is lazy loaded: its request comes when its chunk has arrived, however long that takes. */
+  const requested = (id: string): Promise<TestRequest> =>
+    vi.waitFor(
+      () => {
+        const [request] = http.match(`/api/v1/objectives/${id}`);
+        if (!request) throw new Error(`No request yet for objective ${id}`);
+        return request;
+      },
+      { timeout: 4000, interval: 10 },
+    );
   const visitMissing = async (id: string): Promise<void> => {
     const navigating = harness.navigateByUrl(`/objectives/${id}`);
     (await requested(id)).flush(null, { status: 404, statusText: 'Not Found' });
@@ -71,7 +72,7 @@ describe('ObjectiveDetailLayoutComponent', () => {
     await visit('/objectives/obj-1');
 
     expect(markViewed).toHaveBeenCalledExactlyOnceWith('obj-1');
-    expect(tabLabels()).toEqual(['Aperçu', 'Calendrier', 'Statistiques']);
+    expect(tabLabels()).toEqual(['Aperçu', 'Calendrier', 'Statistiques', 'Activité']);
     expect(element().querySelector('h1')?.classList).toContain('visually-hidden');
     expect(element().querySelector('app-objective-summary h2')?.textContent).toContain('Courir 10 km');
   });
@@ -82,14 +83,15 @@ describe('ObjectiveDetailLayoutComponent', () => {
     expect(element().querySelector('app-objective-stats')).not.toBeNull();
 
     await visit('/objectives/obj-2/habit', habitDetail({ id: 'obj-2' }));
-    expect(tabLabels()).toEqual(['Aperçu', 'Habitude']);
+    expect(tabLabels()).toEqual(['Aperçu', 'Habitude', 'Activité']);
     expect(element().querySelector('.tabs a.active')?.textContent).toContain('Habitude');
   });
 
-  it('shows no tabs when the overview is all there is', async () => {
+  it('keeps the overview and the activity when there is nothing else', async () => {
     await visit('/objectives/obj-1', treeDetail());
-    expect(element().querySelector('.tabs')).toBeNull();
-    expect(layout().tabs()).toEqual([]);
+
+    expect(tabLabels()).toEqual(['Aperçu', 'Activité']);
+    expect(element().querySelectorAll('.tabs a')[1].getAttribute('href')).toBe('/objectives/obj-1/activity');
   });
 
   it('goes down the tree: a breadcrumb up, one level back, not in the recents', async () => {

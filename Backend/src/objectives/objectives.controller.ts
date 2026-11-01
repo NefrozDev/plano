@@ -14,7 +14,9 @@ import {
 } from '@nestjs/common';
 import type {
   ImportObjectivesResponse,
+  ObjectiveActivityEntry,
   ObjectiveAgendaItem,
+  ObjectiveCommentEntry,
   ObjectiveDetail,
   ObjectiveSummary,
 } from '@plano/common';
@@ -23,6 +25,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { ImportObjectivesDto } from './dto/import-objectives.dto';
 import {
+  AddObjectiveCommentDto,
   AddObjectiveMemberDto,
   AddObjectiveSessionDto,
   CreateObjectiveDto,
@@ -34,6 +37,7 @@ import {
   UpdateObjectiveMemberDto,
   UpdateObjectivePreferencesDto,
 } from './dto/objective.dto';
+import { ObjectiveActivityService } from './objective-activity.service';
 import { ObjectiveAgendaService } from './objective-agenda.service';
 import { ObjectiveDateParamPipe } from './objective-date-param.pipe';
 import { ObjectiveImportService } from './objective-import.service';
@@ -54,6 +58,7 @@ export class ObjectivesController {
     private readonly importer: ObjectiveImportService,
     private readonly agenda: ObjectiveAgendaService,
     private readonly members: ObjectiveMembersService,
+    private readonly activity: ObjectiveActivityService,
   ) {}
 
   @Get()
@@ -146,6 +151,41 @@ export class ObjectivesController {
     @Body() changes: UpdateObjectivePreferencesDto,
   ): Promise<ObjectiveDetail> {
     return this.preferences.update(objectiveId, userId, changes);
+  }
+
+  @Get(':objectiveId/activity')
+  findActivity(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+  ): Promise<ObjectiveActivityEntry[]> {
+    return this.activity.history(objectiveId, userId);
+  }
+
+  @Get(':objectiveId/comments')
+  findComments(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+  ): Promise<ObjectiveCommentEntry[]> {
+    return this.activity.comments(objectiveId, userId);
+  }
+
+  @Post(':objectiveId/comments')
+  addComment(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+    @Body() details: AddObjectiveCommentDto,
+  ): Promise<ObjectiveCommentEntry> {
+    return this.activity.addComment(objectiveId, userId, details);
+  }
+
+  @Delete(':objectiveId/comments/:commentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeComment(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+    @Param('commentId', ParseUUIDPipe) commentId: string,
+  ): Promise<void> {
+    return this.activity.removeComment(objectiveId, commentId, userId);
   }
 
   @Post(':objectiveId/members')

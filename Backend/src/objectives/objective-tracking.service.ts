@@ -14,6 +14,7 @@ import type {
 import { ObjectiveCheckInRow } from './entities/objective-check-in.entity';
 import { ObjectiveSession } from './entities/objective-session.entity';
 import { Objective } from './entities/objective.entity';
+import { recordActivity } from './objective-activity.record';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
 import { ObjectiveAccessService } from './objective-access.service';
@@ -72,8 +73,20 @@ export class ObjectiveTrackingService {
             durationMinutes: details.durationMinutes ?? null,
           }),
         );
+        // What is only planned has not happened yet.
+        if (details.status === 'done') {
+          await recordActivity(
+            manager,
+            node.id,
+            userId,
+            'session',
+            [`${details.value} ${node.metricUnit ?? ''}`.trim(), details.label]
+              .filter(Boolean)
+              .join(' · '),
+          );
+        }
       },
-      'contribution',
+      { news: 'contribution' },
     );
     return this.detail(id, userId);
   }
@@ -99,6 +112,15 @@ export class ObjectiveTrackingService {
           );
         }
         await manager.delete(ObjectiveSession, { id: session.id });
+        if (session.status === 'done') {
+          await recordActivity(
+            manager,
+            node.id,
+            userId,
+            'session_removed',
+            session.label,
+          );
+        }
       },
     );
     return this.detail(id, userId);
@@ -132,8 +154,15 @@ export class ObjectiveTrackingService {
         } else {
           await manager.delete(ObjectiveCheckInRow, row);
         }
+        await recordActivity(
+          manager,
+          node.id,
+          userId,
+          checked ? 'check_in' : 'check_out',
+          date,
+        );
       },
-      'contribution',
+      { news: 'contribution' },
     );
     return this.detail(id, userId);
   }
@@ -151,8 +180,15 @@ export class ObjectiveTrackingService {
         requireMode(node, 'manual');
         node.manualProgress = percent;
         await manager.save(node);
+        await recordActivity(
+          manager,
+          node.id,
+          userId,
+          'progress',
+          String(percent),
+        );
       },
-      'contribution',
+      { news: 'contribution' },
     );
     return this.detail(id, userId);
   }
@@ -176,8 +212,14 @@ export class ObjectiveTrackingService {
         node.completedAt = completed ? new Date() : null;
         node.completedByUserId = completed ? userId : null;
         await manager.save(node);
+        await recordActivity(
+          manager,
+          node.id,
+          userId,
+          completed ? 'completed' : 'reopened',
+        );
       },
-      'contribution',
+      { news: 'contribution' },
     );
     return this.detail(id, userId);
   }

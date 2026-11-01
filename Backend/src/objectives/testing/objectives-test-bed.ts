@@ -9,6 +9,7 @@ import {
   type ListsTestBed,
 } from '../../lists/testing/lists-test-bed';
 import { ObjectiveAccessService } from '../objective-access.service';
+import { ObjectiveActivityService } from '../objective-activity.service';
 import { ObjectiveChangesService } from '../objective-changes.service';
 import { ObjectiveImportService } from '../objective-import.service';
 import { ObjectiveMembersService } from '../objective-members.service';
@@ -25,6 +26,7 @@ export interface ObjectivesTestBed extends ListsTestBed {
   importer: ObjectiveImportService;
   access: ObjectiveAccessService;
   members: ObjectiveMembersService;
+  activity: ObjectiveActivityService;
 }
 
 /** The lists test bed's people and database, with the objectives services on top. */
@@ -76,6 +78,7 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     ),
     tracking: new ObjectiveTrackingService(access, writer, view),
     importer: new ObjectiveImportService(writer),
+    activity: new ObjectiveActivityService(bed.dataSource, access, writer),
   };
 }
 

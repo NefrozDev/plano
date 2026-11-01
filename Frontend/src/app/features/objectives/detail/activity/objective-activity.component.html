@@ -1,0 +1,43 @@
+@if (objective()) {
+  @if (error(); as message) {
+    <p class="field-error" role="alert">{{ message }}</p>
+  }
+
+  <section aria-labelledby="comments-title">
+    <h2 id="comments-title">Commentaires</h2>
+    <ul class="comments">
+      @for (comment of comments(); track comment.id) {
+        <li>
+          <p class="meta">
+            <b>{{ comment.author?.name ?? 'Compte supprimé' }}</b>
+            <small>{{ when(comment.createdAt) }}</small>
+            @if (canRemove(comment)) {
+              <button type="button" aria-label="Supprimer le commentaire" (click)="remove(comment.id)">×</button>
+            }
+          </p>
+          <p class="body">{{ comment.body }}</p>
+        </li>
+      } @empty {
+        <li class="empty">Aucun commentaire pour l’instant.</li>
+      }
+    </ul>
+    <form class="new-comment" (submit)="$event.preventDefault(); send(message)">
+      <textarea #message class="form-control" rows="2" maxlength="1000" aria-label="Votre commentaire" placeholder="Écrire un commentaire…"></textarea>
+      <button class="primary-button" type="submit" [disabled]="sending()">Envoyer</button>
+    </form>
+  </section>
+
+  <section aria-labelledby="history-title">
+    <h2 id="history-title">Historique</h2>
+    <ol class="history">
+      @for (line of lines(); track line.id) {
+        <li>
+          <span><b>{{ line.who }}</b> {{ line.what }}@if (line.on) { · <em>{{ line.on }}</em> }</span>
+          <small>{{ line.when }}</small>
+        </li>
+      } @empty {
+        <li class="empty">Rien pour l’instant.</li>
+      }
+    </ol>
+  </section>
+}

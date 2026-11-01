@@ -9,6 +9,8 @@ import type {
   ObjectiveStatus,
   ObjectiveSummary,
   ImportObjectiveRequest,
+  ObjectiveActivityEntry,
+  ObjectiveActivityKind,
 } from '@plano/common';
 
 export interface CategoryMeta {
@@ -131,6 +133,45 @@ export function timelapseView(
     label,
     overdue: false,
   };
+}
+
+const ACTIVITY_LABELS: Readonly<Record<ObjectiveActivityKind, string>> = {
+  created: 'a créé l’objectif',
+  edited: 'a modifié les réglages',
+  paused: 'a mis en pause',
+  resumed: 'a repris',
+  archived: 'a archivé',
+  unarchived: 'a désarchivé',
+  session: 'a ajouté une séance',
+  session_removed: 'a retiré une séance',
+  check_in: 'a réussi le',
+  check_out: 'a décoché le',
+  progress: 'a avancé à',
+  completed: 'a terminé',
+  reopened: 'a rouvert',
+  member_added: 'a invité',
+  member_removed: 'a retiré',
+  member_left: 'a quitté l’objectif',
+  assigned: 'a assigné à',
+  unassigned: 'a retiré l’assignation',
+};
+
+/** What a line of history says after the person's name. */
+export function activityLabel({ kind, detail }: Pick<ObjectiveActivityEntry, 'kind' | 'detail'>): string {
+  const label = ACTIVITY_LABELS[kind];
+  if (!detail) return label;
+  switch (kind) {
+    case 'check_in':
+    case 'check_out':
+      return `${label} ${formatDate(detail)}`;
+    case 'progress':
+      return `${label} ${detail} %`;
+    case 'session':
+    case 'session_removed':
+      return `${label} : ${detail}`;
+    default:
+      return `${label} ${detail}`;
+  }
 }
 
 export function objectiveReminderLabel(reminder: ObjectiveReminder): string {

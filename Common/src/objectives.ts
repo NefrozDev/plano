@@ -28,7 +28,26 @@ export type ObjectiveMemberRole = Exclude<ObjectiveRole, 'owner'>;
 /** What the people on an objective can do with it, as far as the user can see. */
 export type ObjectiveSharing = 'private' | 'shared' | 'common';
 /** What the others hear about, in a toast and a badge. */
-export type ObjectiveNewsKind = 'invited' | 'contribution' | 'completed';
+export type ObjectiveNewsKind = 'invited' | 'contribution' | 'completed' | 'comment';
+export type ObjectiveActivityKind =
+  | 'created'
+  | 'edited'
+  | 'paused'
+  | 'resumed'
+  | 'archived'
+  | 'unarchived'
+  | 'session'
+  | 'session_removed'
+  | 'check_in'
+  | 'check_out'
+  | 'progress'
+  | 'completed'
+  | 'reopened'
+  | 'member_added'
+  | 'member_removed'
+  | 'member_left'
+  | 'assigned'
+  | 'unassigned';
 
 export interface ObjectiveMetricSettings {
   unit: string;
@@ -134,6 +153,33 @@ export interface ObjectiveDetail extends ObjectiveSummary {
   /** The signed-in user's own reminders. */
   reminder: ObjectiveReminder;
   dueReminder: DueReminder;
+}
+
+/** One line of history, on the objective or something below it. */
+export interface ObjectiveActivityEntry {
+  id: string;
+  kind: ObjectiveActivityKind;
+  /** What it was about: an amount, a day, a name. */
+  detail: string;
+  /** Null for an account since deleted. */
+  actor: ObjectivePerson | null;
+  objectiveId: string;
+  objectiveTitle: string;
+  /** ISO timestamp. */
+  createdAt: string;
+}
+
+export interface ObjectiveCommentEntry {
+  id: string;
+  body: string;
+  /** Null for an account since deleted. */
+  author: ObjectivePerson | null;
+  /** ISO timestamp. */
+  createdAt: string;
+}
+
+export interface AddObjectiveCommentRequest {
+  body: string;
 }
 
 /** Something dated on an objective the user can see, for the agenda. */

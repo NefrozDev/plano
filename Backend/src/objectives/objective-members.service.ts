@@ -12,6 +12,9 @@ import { ContactsService } from '../friends/contacts.service';
 import type { AddObjectiveMemberDto } from './dto/objective.dto';
 import { ObjectiveMember } from './entities/objective-member.entity';
 import { Objective } from './entities/objective.entity';
+import { displayName } from '../lists/list.mapper';
+import { User } from '../users/user.entity';
+import { recordActivity } from './objective-activity.record';
 import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveViewService } from './objective-view.service';
@@ -80,6 +83,13 @@ export class ObjectiveMembersService {
         role: details.role,
       }),
     );
+    await recordActivity(
+      manager,
+      id,
+      userId,
+      'member_added',
+      await this.nameOf(details.userId, manager),
+    );
   }
 
   async updateRole(
@@ -105,6 +115,13 @@ export class ObjectiveMembersService {
     await this.writer.change(id, userId, 'own', async (_, manager) => {
       const member = await this.requireMember(id, memberUserId, manager);
       await manager.delete(ObjectiveMember, { id: member.id });
+      await recordActivity(
+        manager,
+        id,
+        userId,
+        'member_removed',
+        await this.nameOf(memberUserId, manager),
+      );
     });
     return this.detail(id, userId);
   }
@@ -125,8 +142,17 @@ export class ObjectiveMembersService {
           userId,
           objectiveId: In(tree.nodes.map((node: Objective) => node.id)),
         });
+        await recordActivity(manager, id, userId, 'member_left');
       },
     );
+  }
+
+  private async nameOf(
+    userId: string,
+    manager: EntityManager,
+  ): Promise<string> {
+    const user = await manager.findOne(User, { where: { id: userId } });
+    return user ? displayName(user) : '';
   }
 
   private async requireMember(

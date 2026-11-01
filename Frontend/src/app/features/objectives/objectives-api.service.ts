@@ -1,13 +1,16 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import type {
+  AddObjectiveCommentRequest,
   AddObjectiveMemberRequest,
   AddObjectiveSessionRequest,
   CreateObjectiveRequest,
   ImportObjectivesRequest,
   ImportObjectivesResponse,
   IsoDate,
+  ObjectiveActivityEntry,
   ObjectiveAgendaItem,
+  ObjectiveCommentEntry,
   ObjectiveDetail,
   ObjectiveMemberRole,
   ObjectiveSummary,
@@ -98,6 +101,22 @@ export class ObjectivesApiService {
 
   leave(id: string): Observable<void> {
     return this.http.delete<void>(`${this.objectives}/${id}/members/me`);
+  }
+
+  findActivity(id: string): Observable<ObjectiveActivityEntry[]> {
+    return this.http.get<ObjectiveActivityEntry[]>(`${this.objectives}/${id}/activity`);
+  }
+
+  findComments(id: string): Observable<ObjectiveCommentEntry[]> {
+    return this.http.get<ObjectiveCommentEntry[]>(`${this.objectives}/${id}/comments`);
+  }
+
+  addComment(id: string, details: AddObjectiveCommentRequest): Observable<ObjectiveCommentEntry> {
+    return this.http.post<ObjectiveCommentEntry>(`${this.objectives}/${id}/comments`, details);
+  }
+
+  removeComment(id: string, commentId: string): Observable<void> {
+    return this.http.delete<void>(`${this.objectives}/${id}/comments/${commentId}`);
   }
 
   importLocal(details: ImportObjectivesRequest): Observable<ImportObjectivesResponse> {

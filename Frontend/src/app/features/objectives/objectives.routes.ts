@@ -70,6 +70,11 @@ export const OBJECTIVES_ROUTES: Routes = [
               import('./detail/stats/objective-stats.component').then((m) => m.ObjectiveStatsComponent),
           },
           {
+            path: 'activity',
+            loadComponent: () =>
+              import('./detail/activity/objective-activity.component').then((m) => m.ObjectiveActivityComponent),
+          },
+          {
             path: 'habit',
             loadComponent: () =>
               import('./detail/habit/objective-habit.component').then((m) => m.ObjectiveHabitComponent),

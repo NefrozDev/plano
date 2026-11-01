@@ -13,6 +13,7 @@ const MESSAGE_KEYS: Readonly<Record<ObjectiveNewsKind, string>> = {
   invited: 'notifications.objectiveInvited',
   contribution: 'notifications.objectiveContribution',
   completed: 'notifications.objectiveCompleted',
+  comment: 'notifications.objectiveComment',
 };
 
 /**

@@ -8,6 +8,7 @@ import {
   ObjectiveAccessService,
   ObjectivePermission,
 } from './objective-access.service';
+import { recordActivity } from './objective-activity.record';
 import { ObjectiveChangesService } from './objective-changes.service';
 import type { ObjectiveTree } from './objective-tree';
 
@@ -52,14 +53,14 @@ export class ObjectiveWriterService {
 
   /**
    * Runs the change on an existing objective, once the user is allowed to, then
-   * tells those concerned. `news` is what the others should hear about it.
+   * tells those concerned. `options.news` is what the others should hear about it.
    */
   async change<T>(
     objectiveId: string,
     userId: string,
     permission: ObjectivePermission,
     operation: (access: ObjectiveAccess, manager: EntityManager) => Promise<T>,
-    news?: ObjectiveNewsKind,
+    options: { news?: ObjectiveNewsKind } = {},
   ): Promise<T> {
     const { result, before, completed } = await this.inTransaction(
       async (manager) => {
@@ -82,7 +83,7 @@ export class ObjectiveWriterService {
       before,
       objectiveId,
       actorId: userId,
-      news,
+      news: options.news,
       completed,
     });
     return result;
@@ -110,6 +111,14 @@ export class ObjectiveWriterService {
     if (!tree) return [];
     const changed = settleStatuses(tree, actorId);
     if (changed.length) await manager.save(changed);
+    for (const node of changed) {
+      await recordActivity(
+        manager,
+        node.id,
+        actorId,
+        node.status === 'completed' ? 'completed' : 'reopened',
+      );
+    }
     return changed;
   }
 }

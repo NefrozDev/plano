@@ -9,6 +9,7 @@ import {
   normalizeText,
 } from '../../core/time/dates';
 import {
+  activityLabel,
   categoryMeta,
   dueCaption,
   formatDuration,
@@ -83,6 +84,22 @@ describe('objective utils', () => {
       expect(slugify('  Économiser 1 000 € ! ')).toBe('economiser-1-000');
       expect(slugify('***')).toBe('objectif');
       expect(normalizeText('ÉTÉ')).toBe('ete');
+    });
+  });
+
+  describe('activityLabel', () => {
+    it.each([
+      ['created', '', 'a créé l’objectif'],
+      ['member_left', '', 'a quitté l’objectif'],
+      ['session', '3 km · Sortie', 'a ajouté une séance : 3 km · Sortie'],
+      ['session_removed', '', 'a retiré une séance'],
+      ['check_in', '2026-10-05', 'a réussi le 5 oct. 2026'],
+      ['check_out', '2026-10-05', 'a décoché le 5 oct. 2026'],
+      ['progress', '40', 'a avancé à 40 %'],
+      ['member_added', 'Bob Martin', 'a invité Bob Martin'],
+      ['assigned', 'Bob Martin', 'a assigné à Bob Martin'],
+    ] as const)('words %s', (kind, detail, label) => {
+      expect(activityLabel({ kind, detail })).toBe(label);
     });
   });
 

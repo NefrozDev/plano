@@ -11,6 +11,8 @@ import { PasswordReset } from '../../auth/password-reset.entity';
 import { ListSection } from '../../lists/entities/list-section.entity';
 import { ListSettings } from '../../lists/entities/list-settings.entity';
 import { List } from '../../lists/entities/list.entity';
+import { ObjectiveActivity } from '../../objectives/entities/objective-activity.entity';
+import { ObjectiveComment } from '../../objectives/entities/objective-comment.entity';
 import { ObjectiveCheckInRow } from '../../objectives/entities/objective-check-in.entity';
 import { ObjectiveMember } from '../../objectives/entities/objective-member.entity';
 import { ObjectivePreference } from '../../objectives/entities/objective-preference.entity';
@@ -37,6 +39,8 @@ export const ENTITIES = [
   ObjectiveCheckInRow,
   ObjectivePreference,
   ObjectiveMember,
+  ObjectiveActivity,
+  ObjectiveComment,
 ];
 
 export interface TestDatabase {

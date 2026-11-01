@@ -1,4 +1,5 @@
 import type {
+  AddObjectiveCommentRequest,
   AddObjectiveMemberRequest,
   AddObjectiveSessionRequest,
   CompletionMode,
@@ -82,6 +83,13 @@ export class ObjectiveReminderDto implements ObjectiveReminder {
   @Min(0)
   @Max(6)
   weekday!: number;
+}
+
+export class AddObjectiveCommentDto implements AddObjectiveCommentRequest {
+  @IsString()
+  @Transform(trimString)
+  @Length(1, 1000)
+  body!: string;
 }
 
 export class AddObjectiveMemberDto implements AddObjectiveMemberRequest {

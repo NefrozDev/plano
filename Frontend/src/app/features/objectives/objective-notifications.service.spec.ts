@@ -11,7 +11,7 @@ describe('ObjectiveNotificationsService', () => {
   let notifications: ObjectiveNotificationsService;
   const user = signal<{ id: string } | null>({ id: ME });
 
-  const hear = (kind: 'invited' | 'contribution' | 'completed'): void => {
+  const hear = (kind: 'invited' | 'contribution' | 'completed' | 'comment'): void => {
     FakeEventSource.latest()?.emit({
       type: 'objective.news',
       objectiveId: 'obj-1',
@@ -39,6 +39,7 @@ describe('ObjectiveNotificationsService', () => {
     ['invited', 'Bob Martin vous a invité(e) à « Courir ».'],
     ['contribution', 'Bob Martin a contribué à « Courir ».'],
     ['completed', '« Courir » est terminé.'],
+    ['comment', 'Bob Martin a commenté « Courir ».'],
   ] as const)('says when %s, and counts it', (kind, message) => {
     hear(kind);
 

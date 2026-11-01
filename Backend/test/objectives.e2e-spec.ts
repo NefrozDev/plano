@@ -1,5 +1,7 @@
 import type {
   ImportObjectivesResponse,
+  ObjectiveActivityEntry,
+  ObjectiveCommentEntry,
   ObjectiveDetail,
   ObjectiveSummary,
 } from '@plano/common';
@@ -457,6 +459,56 @@ describe('Objectives API (e2e)', () => {
       });
       expect(shared.sharing).toBe('shared');
     });
+  });
+
+  it('serves the history and the comments, to those who can open it', async () => {
+    const objective = await create();
+    const url = `/api/v1/objectives/${objective.id}`;
+
+    const history = await http()
+      .get(`${url}/activity`)
+      .set('Cookie', ada.cookie)
+      .expect(200);
+    expect((history.body as ObjectiveActivityEntry[])[0].kind).toBe('created');
+
+    const added = await http()
+      .post(`${url}/comments`)
+      .set('Cookie', ada.cookie)
+      .send({ body: '  Courage  ' })
+      .expect(201);
+    const comment = added.body as ObjectiveCommentEntry;
+    expect(comment.body).toBe('Courage');
+    for (const body of [{ body: '   ' }, { body: 'x'.repeat(1001) }, {}]) {
+      await http()
+        .post(`${url}/comments`)
+        .set('Cookie', ada.cookie)
+        .send(body)
+        .expect(400);
+    }
+
+    const comments = await http()
+      .get(`${url}/comments`)
+      .set('Cookie', ada.cookie)
+      .expect(200);
+    expect((comments.body as ObjectiveCommentEntry[]).length).toBe(1);
+
+    for (const path of ['activity', 'comments']) {
+      await http().get(`${url}/${path}`).set('Cookie', bob.cookie).expect(404);
+    }
+    await http()
+      .post(`${url}/comments`)
+      .set('Cookie', bob.cookie)
+      .send({ body: 'Coucou' })
+      .expect(404);
+    await http()
+      .delete(`${url}/comments/${comment.id}`)
+      .set('Cookie', bob.cookie)
+      .expect(404);
+
+    await http()
+      .delete(`${url}/comments/${comment.id}`)
+      .set('Cookie', ada.cookie)
+      .expect(204);
   });
 
   it('rejects an id that is not one', async () => {

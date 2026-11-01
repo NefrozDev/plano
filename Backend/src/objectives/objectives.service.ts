@@ -14,6 +14,9 @@ import type {
 } from './dto/objective.dto';
 import { ObjectivePreference } from './entities/objective-preference.entity';
 import { Objective } from './entities/objective.entity';
+import { displayName } from '../lists/list.mapper';
+import { User } from '../users/user.entity';
+import { recordActivity } from './objective-activity.record';
 import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveMembersService } from './objective-members.service';
@@ -134,6 +137,7 @@ export class ObjectivesService {
       node.rootId = placement?.rootId ?? node.id;
       applySettings(node, sentFields(settings));
       await manager.save(node);
+      await recordActivity(manager, node.id, userId, 'created');
 
       await manager.save(
         (children ?? []).map((title, position) =>
@@ -197,8 +201,30 @@ export class ObjectivesService {
         const { archived, paused, assignedToUserId, ...settings } =
           sentFields(changes);
         applySettings(node, settings);
+        if (Object.keys(settings).length) {
+          await recordActivity(manager, node.id, userId, 'edited');
+        }
+        if (archived !== undefined && archived !== node.archived) {
+          await recordActivity(
+            manager,
+            node.id,
+            userId,
+            archived ? 'archived' : 'unarchived',
+          );
+        }
         if (archived !== undefined) node.archived = archived;
-        if (paused !== undefined) this.setPaused(node, paused);
+        if (paused !== undefined) {
+          const wasPaused = node.status === 'paused';
+          this.setPaused(node, paused);
+          if (paused !== wasPaused) {
+            await recordActivity(
+              manager,
+              node.id,
+              userId,
+              paused ? 'paused' : 'resumed',
+            );
+          }
+        }
         if (assignedToUserId !== undefined) {
           if (assignedToUserId && !tree.roleOf(node.id, assignedToUserId)) {
             throw new BadRequestException(
@@ -206,6 +232,16 @@ export class ObjectivesService {
             );
           }
           node.assignedToUserId = assignedToUserId;
+          const assignee = assignedToUserId
+            ? await manager.findOne(User, { where: { id: assignedToUserId } })
+            : null;
+          await recordActivity(
+            manager,
+            node.id,
+            userId,
+            assignee ? 'assigned' : 'unassigned',
+            assignee ? displayName(assignee) : '',
+          );
         }
         await manager.save(node);
       },

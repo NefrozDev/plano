@@ -1,0 +1,15 @@
+:host { display: block; padding: .3rem 1.25rem 2rem; }
+h2 { margin: 1rem 0 .55rem; font-size: .85rem; font-weight: 750; }
+ul, ol { display: grid; gap: .65rem; margin: 0; padding: 0; list-style: none; }
+.empty { color: #7b8292; font-size: .76rem; }
+.meta { display: flex; gap: .45rem; align-items: baseline; margin: 0; font-size: .76rem; }
+.meta small { flex: 1; color: #8a93a3; font-size: .66rem; }
+.meta button { width: 1.5rem; height: 1.5rem; flex: none; border: 0; border-radius: .4rem; background: transparent; color: #8a93a3; cursor: pointer; font-size: .95rem; }
+.meta button:hover { background: #f2f4f8; color: #4b5468; }
+.body { margin: .15rem 0 0; font-size: .82rem; line-height: 1.4; overflow-wrap: anywhere; white-space: pre-wrap; }
+.new-comment { display: grid; gap: .5rem; margin-top: .8rem; }
+.new-comment textarea { resize: none; }
+.history li { display: grid; gap: .1rem; padding-bottom: .55rem; border-bottom: 1px solid #edf0f5; font-size: .76rem; line-height: 1.35; }
+.history li:last-child { border-bottom: 0; }
+.history small { color: #8a93a3; font-size: .66rem; }
+.history em { color: #5b6476; font-style: normal; font-weight: 650; }
