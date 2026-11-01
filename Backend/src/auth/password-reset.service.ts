@@ -15,6 +15,12 @@ export const RESET_VALID_MINUTES = 30;
 export const INVALID_RESET_MESSAGE =
   'Ce lien n’est plus valable. Demandez-en un nouveau.';
 
+function withoutTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (url[end - 1] === '/') end -= 1;
+  return url.slice(0, end);
+}
+
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
@@ -37,9 +43,9 @@ export class PasswordResetService {
     private readonly mail: MailService,
     config: ConfigService,
   ) {
-    this.frontendUrl = (
-      config.get<string>('FRONTEND_URL') ?? 'http://localhost:4200'
-    ).replace(/\/+$/, '');
+    this.frontendUrl = withoutTrailingSlashes(
+      config.get<string>('FRONTEND_URL') ?? 'http://localhost:4200',
+    );
     this.production = config.get<string>('NODE_ENV') === 'production';
   }
 

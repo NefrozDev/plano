@@ -96,6 +96,17 @@ describe('PasswordResetService', () => {
   });
 
   describe('request', () => {
+    it('takes every trailing slash off the configured URL, and only those', async () => {
+      await build({ FRONTEND_URL: 'https://plano.test/app///' }).request(
+        'ada@example.com',
+      );
+
+      const token = await sentToken();
+      expect(mail.send.mock.lastCall![0].text).toContain(
+        `https://plano.test/app/reset-password#token=${token}`,
+      );
+    });
+
     it('e-mails a single-use link in the account language, storing only the token hash', async () => {
       await resets.request('  ADA@example.com ');
 

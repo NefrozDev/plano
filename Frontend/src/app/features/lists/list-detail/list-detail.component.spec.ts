@@ -310,7 +310,7 @@ describe('ListDetailComponent', () => {
     await create();
 
     component.beginAdding('fresh');
-    component.newEntryValue.set('Beurre\n  doux \r\n demi-sel');
+    component.newEntryValue.set('Beurre\n\n  doux \r\n demi-sel\n');
     component.finishAdding('fresh');
 
     const request = http.expectOne('/api/v1/lists/list-1/sections/fresh/entries');

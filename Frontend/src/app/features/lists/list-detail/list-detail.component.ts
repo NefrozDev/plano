@@ -174,7 +174,11 @@ export class ListDetailComponent {
   finishAdding(sectionId: string): void {
     if (this.addingTo() !== sectionId) return;
     // A pasted line break becomes a space: an item is one line of text.
-    const name = this.newEntryValue().replace(/\s*\n\s*/g, ' ').trim();
+    const name = this.newEntryValue()
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .join(' ');
     this.cancelAdding();
     if (name) void this.store.addEntry(sectionId, name);
   }
