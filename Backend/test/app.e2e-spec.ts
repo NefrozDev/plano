@@ -73,7 +73,7 @@ describe('Plano API (e2e)', () => {
   });
 
   it('rejects invalid and unexpected registration fields', async () => {
-    await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
         ...validRegistration,
@@ -81,6 +81,12 @@ describe('Plano API (e2e)', () => {
         administrator: true,
       })
       .expect(400);
+
+    expect((response.body as { message: string[] }).message).toContain(
+      'property administrator should not exist',
+    );
+    // No account means no session.
+    expect(response.headers['set-cookie']).toBeUndefined();
   });
 
   it('normalizes unique email addresses and usernames', async () => {
@@ -89,7 +95,7 @@ describe('Plano API (e2e)', () => {
       .send(validRegistration)
       .expect(201);
 
-    await request(app.getHttpServer())
+    const sameEmail = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
         ...validRegistration,
@@ -97,8 +103,9 @@ describe('Plano API (e2e)', () => {
         email: ' JAMIE@EXAMPLE.COM ',
       })
       .expect(409);
+    expect(sameEmail.headers['set-cookie']).toBeUndefined();
 
-    await request(app.getHttpServer())
+    const sameUsername = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
         ...validRegistration,
@@ -106,6 +113,7 @@ describe('Plano API (e2e)', () => {
         email: 'other@example.com',
       })
       .expect(409);
+    expect(sameUsername.headers['set-cookie']).toBeUndefined();
   });
 
   it('serializes concurrent registrations for the single-connection database', async () => {
@@ -127,11 +135,19 @@ describe('Plano API (e2e)', () => {
   });
 
   it('rejects unsafe browser requests from an untrusted origin', async () => {
-    await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .set('Origin', 'https://attacker.example')
       .send(validRegistration)
       .expect(403);
+
+    expect(response.headers['set-cookie']).toBeUndefined();
+    // Nothing was created: the same account can still register normally.
+    const accepted = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send(validRegistration)
+      .expect(201);
+    expect(accepted.body).toMatchObject({ username: 'jamie.doe' });
   });
 
   it('logs in and uses the same response for unknown users and bad passwords', async () => {
@@ -177,9 +193,15 @@ describe('Plano API (e2e)', () => {
   });
 
   it('does not rate limit the health check', async () => {
+    const statuses = new Set<number>();
     for (let i = 0; i < 301; i++) {
-      await request(app.getHttpServer()).get('/api/v1/health').expect(200);
+      const { status } = await request(app.getHttpServer()).get(
+        '/api/v1/health',
+      );
+      statuses.add(status);
     }
+
+    expect([...statuses]).toEqual([200]);
   });
 
   it('revokes the session and clears the cookie on logout', async () => {

@@ -46,8 +46,14 @@ describe('Objectives API (e2e)', () => {
   afterEach(() => testApp.close());
 
   it('requires a session', async () => {
-    await http().get('/api/v1/objectives').expect(401);
-    await http().post('/api/v1/objectives').send(newObjective).expect(401);
+    const read = await http().get('/api/v1/objectives').expect(401);
+    expect(read.body).toMatchObject({ statusCode: 401 });
+
+    const write = await http()
+      .post('/api/v1/objectives')
+      .send(newObjective)
+      .expect(401);
+    expect(write.body).toMatchObject({ statusCode: 401 });
   });
 
   it('creates a trimmed objective and lists it', async () => {
@@ -87,12 +93,19 @@ describe('Objectives API (e2e)', () => {
     ['a parent that is not an id', { parentId: 'not-an-id' }],
     ['a weight out of range', { weight: 0 }],
     ['a blank sub-objective', { children: ['   '] }],
-  ])('rejects %s', async (_, changes) => {
-    await http()
+  ])('rejects %s, and stores nothing', async (_, changes) => {
+    const response = await http()
       .post('/api/v1/objectives')
       .set('Cookie', ada.cookie)
       .send({ ...newObjective, ...changes })
       .expect(400);
+    expect(response.body).toMatchObject({ statusCode: 400 });
+
+    const list = await http()
+      .get('/api/v1/objectives')
+      .set('Cookie', ada.cookie)
+      .expect(200);
+    expect(list.body).toEqual([]);
   });
 
   it('builds a tree and reads it level by level', async () => {
@@ -393,6 +406,10 @@ describe('Objectives API (e2e)', () => {
         .expect(403);
       await http().delete(url).set('Cookie', bob.cookie).expect(403);
       await invite('viewer', branch.id, bob.cookie).expect(403);
+
+      // None of it went through.
+      const seen = await http().get(url).set('Cookie', ada.cookie).expect(200);
+      expect(seen.body).toMatchObject({ title: 'Branche', status: 'active' });
     });
 
     it('changes roles, removes people, and lets them leave', async () => {
@@ -434,6 +451,21 @@ describe('Objectives API (e2e)', () => {
         .expect(400);
       await invite('viewer').expect(201);
       await invite('viewer').expect(409);
+
+      // Only the good invitation counts, once.
+      const seen = await http()
+        .get(`/api/v1/objectives/${branch.id}`)
+        .set('Cookie', ada.cookie)
+        .expect(200);
+      expect(
+        (seen.body as ObjectiveDetail).members.map(({ id, role }) => [
+          id,
+          role,
+        ]),
+      ).toEqual([
+        [ada.user.id, 'owner'],
+        [bob.user.id, 'viewer'],
+      ]);
     });
 
     it('assigns, and refuses someone without access', async () => {
@@ -584,10 +616,12 @@ describe('Objectives API (e2e)', () => {
   });
 
   it('rejects an id that is not one', async () => {
-    await http()
+    const response = await http()
       .get('/api/v1/objectives/not-an-id')
       .set('Cookie', ada.cookie)
       .expect(400);
+
+    expect(response.body).toMatchObject({ statusCode: 400 });
   });
 
   it('imports what a browser stored, once', async () => {

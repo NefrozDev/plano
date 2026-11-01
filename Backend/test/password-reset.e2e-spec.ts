@@ -113,9 +113,11 @@ describe('Password recovery (e2e)', () => {
         .expect(204);
     }
 
-    await http()
+    const refused = await http()
       .post('/api/v1/auth/password-reset')
       .send({ email: 'nobody@example.com' })
       .expect(429);
+
+    expect(refused.body).toMatchObject({ statusCode: 429 });
   });
 });

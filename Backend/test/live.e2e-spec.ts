@@ -87,7 +87,10 @@ describe('Live updates (e2e)', () => {
   afterEach(() => testApp.close());
 
   it('requires a session', async () => {
-    await http().get('/api/v1/live/stream').expect(401);
+    const response = await http().get('/api/v1/live/stream').expect(401);
+
+    // A plain refusal: no stream was opened.
+    expect(response.headers['content-type']).not.toContain('text/event-stream');
   });
 
   it('pushes a change of a shared list to its members as it happens', async () => {

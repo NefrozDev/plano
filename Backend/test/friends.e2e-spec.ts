@@ -28,13 +28,16 @@ describe('Friends and contacts (e2e)', () => {
   afterEach(() => testApp.close());
 
   it('requires a session and a valid search query', async () => {
-    await http().get('/api/v1/friends').expect(401);
-    await http().get('/api/v1/contacts').expect(401);
+    for (const path of ['/api/v1/friends', '/api/v1/contacts']) {
+      const response = await http().get(path).expect(401);
+      expect(response.body).toMatchObject({ statusCode: 401 });
+    }
     for (const query of ['q=b', 'q=bo%25', 'q=bob&role=admin', '']) {
-      await http()
+      const response = await http()
         .get(`/api/v1/friends/search?${query}`)
         .set('Cookie', ada.cookie)
         .expect(400);
+      expect(response.body).toMatchObject({ statusCode: 400 });
     }
   });
 
