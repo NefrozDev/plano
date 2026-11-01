@@ -15,6 +15,7 @@ import type {
   ObjectiveCategory,
   ObjectiveDetail,
   ObjectiveMemberRole,
+  ObjectiveRecurrence,
   ObjectiveReminder,
   ObjectiveSettingsFields,
   UpdateObjectiveRequest,
@@ -79,6 +80,15 @@ export class ObjectiveFormComponent {
   readonly childrenOn = signal(false);
   readonly sharedOn = signal(false);
   readonly commonOn = signal(false);
+  readonly recurrenceOn = signal(false);
+  readonly recurrence = signal<Exclude<ObjectiveRecurrence, 'none'>>('monthly');
+  readonly recurrenceOptions: readonly { value: Exclude<ObjectiveRecurrence, 'none'>; label: string }[] = [
+    { value: 'weekly', label: 'Chaque semaine' },
+    { value: 'monthly', label: 'Chaque mois' },
+    { value: 'yearly', label: 'Chaque année' },
+  ];
+  /** The template picked to start from. */
+  readonly templateId = signal('');
   /** The signed-in user's contacts; null until a sharing option is opened. */
   readonly contacts = signal<readonly Contact[] | null>(null);
   /** Who follows the objective, and who contributes to it. */
@@ -111,11 +121,17 @@ export class ObjectiveFormComponent {
   constructor() {
     if (this.objectiveId) void this.loadForEditing(this.objectiveId);
     else if (this.parentId) void this.inheritFromParent(this.parentId);
+    else void this.store.loadTemplates();
   }
 
   get heading(): string {
     if (this.objectiveId) return 'Modifier l’objectif';
     return this.parentId ? 'Nouveau sous-objectif' : 'Nouvel objectif';
+  }
+
+  /** Only a top-level objective repeats, and starts from a template. */
+  isTopLevel(): boolean {
+    return !this.parentId && !(this.objectiveId && this.store.detail()?.parentId);
   }
 
   /** Only a sub-objective has a share of its parent's bar. */
@@ -142,6 +158,15 @@ export class ObjectiveFormComponent {
   dueDateInPast(): boolean {
     const { dueDate } = this.form.getRawValue();
     return !this.objectiveId && !!dueDate && dueDate < this.today;
+  }
+
+  async startFromTemplate(): Promise<void> {
+    const templateId = this.templateId();
+    if (!templateId || this.saving()) return;
+    this.saving.set(true);
+    const created = await this.store.useTemplate(templateId, this.today);
+    this.saving.set(false);
+    if (created) void this.router.navigate(['/objectives', created.id], { replaceUrl: true });
   }
 
   toggleBar(): void {
@@ -214,6 +239,7 @@ export class ObjectiveFormComponent {
       startDate: value.startDate,
       dueDate: value.dueDate || null,
       timelapse: this.timelapseOn() ? value.timelapse : 'off',
+      ...(this.isTopLevel() && { recurrence: this.recurrenceOn() ? this.recurrence() : 'none' }),
       ...(completion === 'metric' && {
         metric: { unit: value.unit.trim(), target: value.target, aggregation: value.aggregation },
       }),
@@ -272,6 +298,8 @@ export class ObjectiveFormComponent {
   private fill(objective: ObjectiveDetail): void {
     this.barOn.set(objective.completion !== 'none');
     this.timelapseOn.set(objective.timelapse !== 'off');
+    this.recurrenceOn.set(objective.recurrence !== 'none');
+    if (objective.recurrence !== 'none') this.recurrence.set(objective.recurrence);
     this.form.patchValue({
       title: objective.title,
       category: objective.category,

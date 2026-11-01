@@ -9,6 +9,7 @@ import {
 } from '@angular/router';
 import { ObjectivesStore } from '../objectives.store';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveContext } from './objective-context';
 
@@ -20,7 +21,7 @@ interface DetailTab {
 
 @Component({
   selector: 'app-objective-detail-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, PageHeaderComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ModalDialogComponent, PageHeaderComponent],
   providers: [ObjectiveContext],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-detail-layout.component.html',
@@ -37,6 +38,9 @@ export class ObjectiveDetailLayoutComponent {
   /** Opening is over: no objective from here on means it is not available. */
   readonly loaded = signal(false);
   readonly menuOpen = signal(false);
+  readonly templateOpen = signal(false);
+  /** Says the template was saved, until the dialog closes. */
+  readonly templateSaved = signal(false);
   readonly showTitle = signal(true);
   readonly isOwner = computed(() => this.objective()?.role === 'owner');
   /** One level up the tree, or the overview from the top. */
@@ -85,6 +89,22 @@ export class ObjectiveDetailLayoutComponent {
     if (!objective) return;
     void this.store.update(objective.id, { archived: !objective.archived });
     this.menuOpen.set(false);
+  }
+
+  openTemplate(): void {
+    this.menuOpen.set(false);
+    this.templateSaved.set(false);
+    this.templateOpen.set(true);
+  }
+
+  async saveTemplate(input: HTMLInputElement): Promise<void> {
+    const objective = this.objective();
+    const name = input.value.trim();
+    if (!objective || !name) return;
+    if (await this.store.saveTemplate(objective.id, name)) {
+      input.value = '';
+      this.templateSaved.set(true);
+    }
   }
 
   async remove(): Promise<void> {

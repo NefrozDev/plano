@@ -16,6 +16,7 @@ import { SwitchRowComponent } from '../../../../shared/ui/switch-row.component';
 import type {
   DueReminder,
   ObjectiveDetail,
+  ObjectiveRecurrence,
   ObjectiveReminder,
   ObjectiveSummary,
 } from '@plano/common';
@@ -38,6 +39,13 @@ import { ObjectiveCardComponent, ObjectiveCardView } from '../../ui/objective-ca
 import { ObjectiveIconComponent } from '../../ui/objective-icon.component';
 import { TimelapseBarComponent } from '../../ui/timelapse-bar.component';
 import { ObjectiveContext } from '../objective-context';
+
+const RECURRENCE_LABELS: Readonly<Record<ObjectiveRecurrence, string>> = {
+  none: '',
+  weekly: 'Se répète chaque semaine',
+  monthly: 'Se répète chaque mois',
+  yearly: 'Se répète chaque année',
+};
 
 type EditableRow = 'description' | 'plan' | 'reminder';
 
@@ -107,6 +115,12 @@ export class ObjectiveSummaryComponent {
       children: objective.children.map((child) => this.toCard(child)),
       people: objective.people.map(toPerson),
       contributions: this.contributions(objective),
+      recurrence: RECURRENCE_LABELS[objective.recurrence],
+      periods: objective.periods.map((period) => ({
+        ...period,
+        label: `${formatShortDate(period.startDate)} – ${formatShortDate(period.endDate)}`,
+        result: period.percent === null ? (period.completed ? 'Terminé' : 'Non terminé') : `${period.percent} %`,
+      })),
     };
   });
 

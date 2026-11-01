@@ -57,3 +57,7 @@ app-avatar-stack { --avatar-size: 1.75rem; }
 .contributions li em { display: block; height: 100%; border-radius: inherit; background: var(--color-primary); }
 .assign { cursor: default; }
 .home-pin { padding: .4rem 0; }
+.periods { margin-top: 1.2rem; }
+.periods ul { display: grid; gap: .3rem; margin: .5rem 0 0; padding: 0; list-style: none; }
+.periods li { display: flex; justify-content: space-between; gap: .6rem; padding: .35rem 0; border-bottom: 1px solid #edf0f5; color: #5b6476; font-size: .76rem; }
+.periods li.done b { color: #22a95a; }

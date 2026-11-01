@@ -97,9 +97,9 @@ describe('ObjectiveActivityComponent', () => {
     });
 
     it('names no one for what happened by itself, or an account since deleted', async () => {
-      await setUp([], [entry({ actor: null, kind: 'completed' })]);
+      await setUp([], [entry({ actor: null, kind: 'restarted' })]);
 
-      expect(lines()[0]).toContain('Plano a terminé');
+      expect(lines()[0]).toContain('Plano a relancé une nouvelle période');
     });
   });
 

@@ -29,6 +29,9 @@
         </h2>
       }
       <p class="due">{{ view.due }}</p>
+      @if (view.recurrence) {
+        <p class="due">{{ view.recurrence }}</p>
+      }
       @if (objective.status === 'paused' || objective.archived) {
         <p class="pill">{{ objective.archived ? 'Archivé' : 'En pause' }}</p>
       }
@@ -139,6 +142,17 @@
         @if (isOwner()) {
           <a class="add-child" routerLink="/objectives/new" [queryParams]="{ parent: objective.id }">＋ Ajouter un sous-objectif</a>
         }
+      </section>
+    }
+
+    @if (view.periods.length) {
+      <section class="periods" aria-labelledby="periods-title">
+        <div class="heading"><h3 id="periods-title">Périodes passées</h3></div>
+        <ul>
+          @for (period of view.periods; track period.startDate) {
+            <li [class.done]="period.completed"><span>{{ period.label }}</span><b>{{ period.result }}</b></li>
+          }
+        </ul>
       </section>
     }
 

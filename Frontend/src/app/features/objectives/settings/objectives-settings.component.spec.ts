@@ -1,3 +1,4 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ObjectivesStore } from '../objectives.store';
 import { provideObjectivesTesting } from '../objectives.testing';
@@ -40,6 +41,35 @@ describe('ObjectivesSettingsComponent', () => {
       }),
     );
     expect(element.querySelector('.switch.on')).not.toBeNull();
+  });
+
+  describe('templates', () => {
+    const answer = async (templates: unknown[]): Promise<void> => {
+      TestBed.inject(HttpTestingController).expectOne('/api/v1/objectives/templates').flush(templates);
+      await new Promise((resolve) => setTimeout(resolve));
+      fixture.detectChanges();
+    };
+
+    it('explains where they come from when there are none', async () => {
+      await answer([]);
+
+      expect(element.querySelector('.templates .hint')?.textContent).toContain('Enregistrez un objectif');
+    });
+
+    it('lists them, and deletes one', async () => {
+      await answer([{ id: 't1', name: 'Voyage', nodeCount: 3 }]);
+      expect(element.querySelector('.templates li')?.textContent).toContain('Voyage');
+      expect(element.querySelector('.templates li')?.textContent).toContain('3 objectif(s)');
+
+      (element.querySelector('.templates button') as HTMLButtonElement).click();
+      const request = TestBed.inject(HttpTestingController).expectOne('/api/v1/objectives/templates/t1');
+      expect(request.request.method).toBe('DELETE');
+      request.flush(null);
+      await new Promise((resolve) => setTimeout(resolve));
+      fixture.detectChanges();
+
+      expect(element.querySelector('.templates .hint')).not.toBeNull();
+    });
   });
 
   it('updates select-based settings', () => {

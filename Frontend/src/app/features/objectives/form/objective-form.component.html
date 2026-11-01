@@ -5,6 +5,23 @@
 } @else {
   <form class="objective-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="body">
+      @if (!objectiveId && !parentId && store.templates().length) {
+        <div class="from-template">
+          <label class="field">
+            <span>Partir d’un modèle</span>
+            <select class="form-control" (change)="templateId.set($any($event.target).value)">
+              <option value="">Aucun</option>
+              @for (template of store.templates(); track template.id) {
+                <option [value]="template.id">{{ template.name }}</option>
+              }
+            </select>
+          </label>
+          @if (templateId()) {
+            <button class="primary-button" type="button" [disabled]="saving()" (click)="startFromTemplate()">Créer depuis ce modèle</button>
+          }
+        </div>
+      }
+
       <label class="field">
         <span class="question">Quel est votre objectif ?</span>
         <input
@@ -136,6 +153,27 @@
           </div>
         }
       </section>
+
+      @if (isTopLevel()) {
+        <section class="option">
+          <app-switch-row
+            label="Répéter"
+            hint="Repart à zéro à chaque période, le résultat est gardé"
+            [checked]="recurrenceOn()"
+            (toggled)="recurrenceOn.set(!recurrenceOn())"
+          />
+          @if (recurrenceOn()) {
+            <div class="option-body modes" role="radiogroup" aria-label="Fréquence">
+              @for (option of recurrenceOptions; track option.value) {
+                <label class="mode" [class.selected]="recurrence() === option.value">
+                  <input type="radio" name="recurrence" [checked]="recurrence() === option.value" (change)="recurrence.set(option.value)" />
+                  <span><strong>{{ option.label }}</strong></span>
+                </label>
+              }
+            </div>
+          }
+        </section>
+      }
 
       @if (!objectiveId) {
         <section class="option">

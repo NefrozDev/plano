@@ -33,3 +33,5 @@ legend { margin-bottom: .6rem; padding: 0; color: #394254; font-size: .82rem; fo
 .link-button { justify-self: start; }
 .weight { padding-top: .8rem; border-top: 1px solid #edf0f5; }
 .actions { display: grid; padding: .8rem 1.25rem calc(1.2rem + env(safe-area-inset-bottom)); border-top: 1px solid #edf0f5; }
+.from-template { display: grid; gap: .5rem; margin-bottom: 1.1rem; padding-bottom: 1.1rem; border-bottom: 1px solid #edf0f5; }
+.from-template .field { margin-bottom: 0; }

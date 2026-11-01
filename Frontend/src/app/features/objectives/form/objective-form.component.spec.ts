@@ -13,6 +13,7 @@ describe('ObjectiveFormComponent', () => {
   let element: HTMLElement;
   let navigate: Mock;
   let http: HttpTestingController;
+  let templates: { id: string; name: string; nodeCount: number }[] = [];
 
   function setUp(route: { id?: string; parent?: string } = {}): void {
     TestBed.configureTestingModule({
@@ -39,6 +40,10 @@ describe('ObjectiveFormComponent', () => {
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
+    // A new top-level objective can start from a template: they load with the form.
+    if (!component.objectiveId && !component.parentId) {
+      http.expectOne('/api/v1/objectives/templates').flush(templates);
+    }
   }
 
   const input = (selector: string): HTMLInputElement => element.querySelector(selector) as HTMLInputElement;
@@ -78,7 +83,10 @@ describe('ObjectiveFormComponent', () => {
     return request.request.body;
   };
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    templates = [];
+  });
 
   describe('creating', () => {
     beforeEach(() => {
@@ -116,6 +124,7 @@ describe('ObjectiveFormComponent', () => {
         startDate: '2026-10-15',
         dueDate: null,
         timelapse: 'off',
+        recurrence: 'none',
         reminder: { frequency: 'none', time: '09:00', weekday: 0 },
         dueReminder: 'day-before',
       });
@@ -299,6 +308,110 @@ describe('ObjectiveFormComponent', () => {
     });
   });
 
+  describe('repeating', () => {
+    beforeEach(() => {
+      setUp();
+      render();
+      type('title', 'Lire');
+    });
+
+    it('stays off by default', async () => {
+      expect(element.querySelector('input[name="recurrence"]')).toBeNull();
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({ recurrence: 'none' });
+    });
+
+    it('repeats each month unless told otherwise', async () => {
+      toggle('Répéter');
+      expect(element.querySelector('.mode.selected')?.textContent).toContain('Chaque mois');
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({ recurrence: 'monthly' });
+    });
+
+    it('sends the frequency chosen', async () => {
+      toggle('Répéter');
+      element.querySelectorAll<HTMLInputElement>('input[name="recurrence"]')[0].click();
+      fixture.detectChanges();
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({ recurrence: 'weekly' });
+    });
+  });
+
+  describe('starting from a template', () => {
+    const pick = (value: string): void => {
+      const select = element.querySelector('.from-template select') as HTMLSelectElement;
+      select.value = value;
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    };
+    const useIt = () => element.querySelector('.from-template button') as HTMLButtonElement | null;
+
+    it('is not offered without templates', async () => {
+      setUp();
+      render();
+      await settleObjectives();
+      fixture.detectChanges();
+
+      expect(element.querySelector('.from-template')).toBeNull();
+    });
+
+    it('makes the objective from it, starting today, and opens it', async () => {
+      templates = [{ id: 't1', name: 'Voyage', nodeCount: 3 }];
+      setUp();
+      render();
+      await settleObjectives();
+      fixture.detectChanges();
+      expect(useIt()).toBeNull();
+
+      pick('t1');
+      useIt()?.click();
+      const request = http.expectOne('/api/v1/objectives/templates/t1/use');
+      expect(request.request.body).toEqual({ startDate: '2026-10-15' });
+      expect(component.saving()).toBe(true);
+      request.flush(objectiveDetail({ id: 'made' }));
+      await settleObjectives();
+
+      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/objectives', 'made'], { replaceUrl: true });
+      expect(component.saving()).toBe(false);
+    });
+
+    it('stays on the form when it fails, with the reason', async () => {
+      templates = [{ id: 't1', name: 'Voyage', nodeCount: 3 }];
+      setUp();
+      render();
+      await settleObjectives();
+      fixture.detectChanges();
+
+      pick('t1');
+      useIt()?.click();
+      http.expectOne('/api/v1/objectives/templates/t1/use').flush({ message: 'Modèle introuvable.' }, { status: 404, statusText: 'Not Found' });
+      await settleObjectives();
+      fixture.detectChanges();
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(errors()).toEqual(['Modèle introuvable.']);
+    });
+
+    it('does nothing without a choice, or twice', async () => {
+      templates = [{ id: 't1', name: 'Voyage', nodeCount: 3 }];
+      setUp();
+      render();
+      await settleObjectives();
+
+      await component.startFromTemplate();
+      http.expectNone('/api/v1/objectives/templates/t1/use');
+
+      component.templateId.set('t1');
+      const first = component.startFromTemplate();
+      await component.startFromTemplate();
+      http.expectOne('/api/v1/objectives/templates/t1/use').flush(objectiveDetail({ id: 'made' }));
+      await first;
+    });
+  });
+
   describe('sharing from the start', () => {
     const contact = (id: string, firstName: string) => ({
       id,
@@ -413,6 +526,10 @@ describe('ObjectiveFormComponent', () => {
       fixture.detectChanges();
 
       expect(element.querySelector('h1')?.textContent).toBe('Nouveau sous-objectif');
+      // Only a top-level objective repeats.
+      expect(Array.from(element.querySelectorAll('[role="switch"]')).map((row) => row.textContent)).not.toContainEqual(
+        expect.stringContaining('Répéter'),
+      );
       expect(component.form.controls.category.value).toBe('finance');
       expect(element.querySelector('.weight')).not.toBeNull();
 
@@ -420,7 +537,9 @@ describe('ObjectiveFormComponent', () => {
       type('weight', '3');
       await submit();
 
-      expect(await answerCreate('child')).toMatchObject({ parentId: 'obj-1', weight: 3, category: 'finance' });
+      const body = (await answerCreate('child')) as object;
+      expect(body).toMatchObject({ parentId: 'obj-1', weight: 3, category: 'finance' });
+      expect(body).not.toHaveProperty('recurrence');
       expect(navigate).toHaveBeenCalledExactlyOnceWith(['/objectives', 'obj-1'], { replaceUrl: true });
     });
 
@@ -497,6 +616,7 @@ describe('ObjectiveFormComponent', () => {
       });
       expect(component.barOn()).toBe(true);
       expect(component.timelapseOn()).toBe(true);
+      expect(component.recurrenceOn()).toBe(false);
       // Sub-objectives and reminders are managed from the objective itself.
       expect(element.querySelector('[formArrayName="children"]')).toBeNull();
       expect(element.querySelector('[formControlName="reminderFrequency"]')).toBeNull();
@@ -520,9 +640,23 @@ describe('ObjectiveFormComponent', () => {
         startDate: '2026-10-01',
         dueDate: null,
         timelapse: 'off',
+        recurrence: 'none',
         habitTargetDays: 5,
       });
       expect(navigate).toHaveBeenCalledExactlyOnceWith(['/objectives', 'obj-1'], { replaceUrl: true });
+    });
+
+    it('shows and keeps how it repeats', async () => {
+      await openObjective(objectiveDetail({ recurrence: 'yearly' }));
+      render();
+      await settleObjectives();
+      fixture.detectChanges();
+
+      expect(component.recurrenceOn()).toBe(true);
+      expect(component.recurrence()).toBe('yearly');
+      await submit();
+
+      expect(await answerUpdate()).toMatchObject({ recurrence: 'yearly' });
     });
 
     it('keeps a deadline that has passed', async () => {
@@ -545,7 +679,9 @@ describe('ObjectiveFormComponent', () => {
       expect(component.form.controls.weight.value).toBe(4);
       await submit();
 
-      expect(await answerUpdate()).toMatchObject({ weight: 4 });
+      const body = (await answerUpdate()) as object;
+      expect(body).toMatchObject({ weight: 4 });
+      expect(body).not.toHaveProperty('recurrence');
     });
 
     it('stays on the form when saving fails', async () => {

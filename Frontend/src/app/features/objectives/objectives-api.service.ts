@@ -14,6 +14,7 @@ import type {
   ObjectiveDetail,
   ObjectiveMemberRole,
   ObjectiveSummary,
+  ObjectiveTemplateSummary,
   UpdateObjectivePreferencesRequest,
   UpdateObjectiveRequest,
 } from '@plano/common';
@@ -117,6 +118,22 @@ export class ObjectivesApiService {
 
   removeComment(id: string, commentId: string): Observable<void> {
     return this.http.delete<void>(`${this.objectives}/${id}/comments/${commentId}`);
+  }
+
+  findTemplates(): Observable<ObjectiveTemplateSummary[]> {
+    return this.http.get<ObjectiveTemplateSummary[]>(`${this.objectives}/templates`);
+  }
+
+  saveTemplate(id: string, name: string): Observable<ObjectiveTemplateSummary> {
+    return this.http.post<ObjectiveTemplateSummary>(`${this.objectives}/${id}/template`, { name });
+  }
+
+  useTemplate(templateId: string, startDate: IsoDate): Observable<ObjectiveDetail> {
+    return this.http.post<ObjectiveDetail>(`${this.objectives}/templates/${templateId}/use`, { startDate });
+  }
+
+  removeTemplate(templateId: string): Observable<void> {
+    return this.http.delete<void>(`${this.objectives}/templates/${templateId}`);
   }
 
   importLocal(details: ImportObjectivesRequest): Observable<ImportObjectivesResponse> {

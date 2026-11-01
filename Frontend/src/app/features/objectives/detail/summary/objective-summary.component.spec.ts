@@ -560,6 +560,56 @@ describe('ObjectiveSummaryComponent', () => {
     });
   });
 
+  describe('repeating', () => {
+    const lines = () => Array.from(element.querySelectorAll('.periods li')).map((line) => line.textContent);
+
+    it('says nothing for what does not repeat', async () => {
+      await show(objectiveDetail());
+
+      expect(element.querySelectorAll('.due')).toHaveLength(1);
+      expect(element.querySelector('.periods')).toBeNull();
+    });
+
+    it('says how it repeats, and how past periods ended', async () => {
+      await show(
+        metricDetail({
+          recurrence: 'monthly',
+          periods: [
+            { startDate: '2026-09-01', endDate: '2026-09-30', percent: 100, completed: true },
+            { startDate: '2026-08-01', endDate: '2026-08-31', percent: 40, completed: false },
+          ],
+        }),
+      );
+
+      expect(element.querySelectorAll('.due')[1].textContent).toBe('Se répète chaque mois');
+      expect(lines()).toEqual(['1 sept. – 30 sept.100 %', '1 août – 31 août40 %']);
+      expect(element.querySelector('.periods li')?.classList).toContain('done');
+      expect(element.querySelectorAll('.periods li')[1].classList).not.toContain('done');
+    });
+
+    it('words the result of a period without a bar', async () => {
+      await show(
+        objectiveDetail({
+          recurrence: 'weekly',
+          periods: [
+            { startDate: '2026-10-05', endDate: '2026-10-11', percent: null, completed: true },
+            { startDate: '2026-09-28', endDate: '2026-10-04', percent: null, completed: false },
+          ],
+        }),
+      );
+
+      expect(element.querySelector('.due:nth-of-type(2)')?.textContent).toBe('Se répète chaque semaine');
+      expect(lines()[0]).toContain('Terminé');
+      expect(lines()[1]).toContain('Non terminé');
+    });
+
+    it('says when it repeats each year', async () => {
+      await show(objectiveDetail({ recurrence: 'yearly' }));
+
+      expect(element.querySelectorAll('.due')[1].textContent).toBe('Se répète chaque année');
+    });
+  });
+
   describe('home page', () => {
     const toggle = () => element.querySelector('.home-pin button') as HTMLButtonElement;
 

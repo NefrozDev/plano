@@ -98,6 +98,7 @@ describe('objective utils', () => {
       ['progress', '40', 'a avancé à 40 %'],
       ['member_added', 'Bob Martin', 'a invité Bob Martin'],
       ['assigned', 'Bob Martin', 'a assigné à Bob Martin'],
+      ['restarted', '', 'a relancé une nouvelle période'],
     ] as const)('words %s', (kind, detail, label) => {
       expect(activityLabel({ kind, detail })).toBe(label);
     });

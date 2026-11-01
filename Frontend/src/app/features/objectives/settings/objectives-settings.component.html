@@ -34,6 +34,20 @@
   </section>
 
   <section>
+    <h2>Modèles</h2>
+    <ul class="templates">
+      @for (template of templates(); track template.id) {
+        <li>
+          <span>{{ template.name }} <small>{{ template.nodeCount }} objectif(s)</small></span>
+          <button type="button" [attr.aria-label]="'Supprimer le modèle ' + template.name" (click)="removeTemplate(template.id)">×</button>
+        </li>
+      } @empty {
+        <li class="hint">Enregistrez un objectif comme modèle depuis son menu pour le réutiliser ici.</li>
+      }
+    </ul>
+  </section>
+
+  <section>
     <h2>Affichage</h2>
     <app-switch-row label="Afficher la progression en pourcentage" [checked]="settings().showPercentage" (toggled)="toggle('showPercentage')" />
     <app-switch-row label="Couleur par catégorie" [checked]="settings().categoryColors" (toggled)="toggle('categoryColors')" />

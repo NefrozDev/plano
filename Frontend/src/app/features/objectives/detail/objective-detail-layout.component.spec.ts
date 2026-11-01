@@ -179,7 +179,7 @@ describe('ObjectiveDetailLayoutComponent', () => {
       menu();
 
       expect(element().querySelectorAll('.menu a')[1].getAttribute('href')).toBe('/objectives/obj-1/edit');
-      expect(element().querySelectorAll('.menu button').length).toBe(3);
+      expect(element().querySelectorAll('.menu button').length).toBe(4);
 
       layout().togglePause();
       const pausing = http.expectOne('/api/v1/objectives/obj-1');
@@ -206,6 +206,7 @@ describe('ObjectiveDetailLayoutComponent', () => {
       menu();
 
       expect(Array.from(element().querySelectorAll('.menu button')).map((button) => button.textContent?.trim())).toEqual([
+        'Enregistrer comme modèle',
         'Archiver',
         'Supprimer',
       ]);
@@ -216,10 +217,75 @@ describe('ObjectiveDetailLayoutComponent', () => {
       menu();
 
       expect(Array.from(element().querySelectorAll('.menu button')).map((button) => button.textContent?.trim())).toEqual([
+        'Enregistrer comme modèle',
         'Reprendre',
         'Désarchiver',
         'Supprimer',
       ]);
+    });
+
+    describe('saving as a template', () => {
+      const dialog = () => element().querySelector('dialog') as HTMLDialogElement;
+      const nameInput = () => element().querySelector('.template-form input') as HTMLInputElement;
+      const submit = () =>
+        (element().querySelector('.template-form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+
+      const openDialog = async (): Promise<void> => {
+        await visit('/objectives/obj-1');
+        menu();
+        (Array.from(element().querySelectorAll<HTMLButtonElement>('.menu button')).find((button) =>
+          button.textContent?.includes('modèle'),
+        ) as HTMLButtonElement).click();
+        harness.detectChanges();
+      };
+
+      it('asks for a name, saves it, and says so', async () => {
+        await openDialog();
+        expect(dialog().open).toBe(true);
+        expect(layout().menuOpen()).toBe(false);
+
+        nameInput().value = '  Mon modèle ';
+        submit();
+        const request = http.expectOne('/api/v1/objectives/obj-1/template');
+        expect(request.request.body).toEqual({ name: 'Mon modèle' });
+        request.flush({ id: 't1', name: 'Mon modèle', nodeCount: 1 });
+        await settleObjectives();
+        harness.detectChanges();
+
+        expect(element().querySelector('.saved')?.textContent).toBe('Modèle enregistré.');
+        expect(nameInput().value).toBe('');
+      });
+
+      it('sends nothing without a name', async () => {
+        await openDialog();
+
+        nameInput().value = '   ';
+        submit();
+
+        http.expectNone('/api/v1/objectives/obj-1/template');
+      });
+
+      it('keeps the name when saving fails', async () => {
+        await openDialog();
+
+        nameInput().value = 'Mon modèle';
+        submit();
+        http.expectOne('/api/v1/objectives/obj-1/template').flush(null, { status: 500, statusText: 'Error' });
+        await settleObjectives();
+        harness.detectChanges();
+
+        expect(nameInput().value).toBe('Mon modèle');
+        expect(element().querySelector('.saved')).toBeNull();
+      });
+
+      it('closes from its button', async () => {
+        await openDialog();
+
+        (element().querySelector('.template-form .secondary') as HTMLButtonElement).click();
+        harness.detectChanges();
+
+        expect(dialog().open).toBe(false);
+      });
     });
 
     it('asks before deleting, says what goes with it, and goes back one level', async () => {
@@ -291,7 +357,10 @@ describe('ObjectiveDetailLayoutComponent', () => {
       expect(links).toHaveLength(1);
       expect(links[0].textContent).toBe('Personnes');
       expect(links[0].getAttribute('href')).toBe('/objectives/obj-1/share');
-      expect(element().querySelector('.menu button')).toBeNull();
+      // Saving what they can see as a template is all they can do from here.
+      expect(Array.from(element().querySelectorAll('.menu button')).map((button) => button.textContent)).toEqual([
+        'Enregistrer comme modèle',
+      ]);
     });
 
     it('offers the owner to share', async () => {

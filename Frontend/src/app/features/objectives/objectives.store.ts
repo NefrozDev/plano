@@ -13,6 +13,7 @@ import type {
   ObjectiveSettings,
   ObjectiveStatus,
   ObjectiveSummary,
+  ObjectiveTemplateSummary,
   ObjectivesData,
   UpdateObjectivePreferencesRequest,
   UpdateObjectiveRequest,
@@ -67,6 +68,7 @@ export class ObjectivesStore {
   private readonly detailState = signal<ObjectiveDetail | null>(null);
   private readonly agendaState = signal<readonly ObjectiveAgendaItem[]>([]);
   private readonly homeState = signal<readonly ObjectiveSummary[] | null>(null);
+  private readonly templatesState = signal<readonly ObjectiveTemplateSummary[]>([]);
   private importing: Promise<void> | null = null;
   /** What screens have asked for, so live changes refresh it and nothing else. */
   private listRequested = false;
@@ -81,6 +83,8 @@ export class ObjectivesStore {
   readonly agenda = this.agendaState.asReadonly();
   /** What is pinned to the home page; null until loaded. */
   readonly home = this.homeState.asReadonly();
+  /** The structures the user saved to reuse. */
+  readonly templates = this.templatesState.asReadonly();
   readonly loading = signal(false);
   /** Message of the last failed request, until cleared. */
   readonly error = signal('');
@@ -299,6 +303,33 @@ export class ObjectivesStore {
     const done = await this.run(this.api.setCompleted(childId, completed), () => undefined);
     if (done && parentId) await this.run(this.api.findOne(parentId), (detail) => this.detailState.set(detail));
     return done;
+  }
+
+  async loadTemplates(): Promise<void> {
+    await this.silently(this.api.findTemplates(), (templates) => this.templatesState.set(templates));
+  }
+
+  saveTemplate(id: string, name: string): Promise<boolean> {
+    return this.run(this.api.saveTemplate(id, name), (template) =>
+      this.templatesState.update((templates) => [...templates, template]),
+    );
+  }
+
+  removeTemplate(templateId: string): Promise<boolean> {
+    return this.run(this.api.removeTemplate(templateId), () =>
+      this.templatesState.update((templates) => templates.filter(({ id }) => id !== templateId)),
+    );
+  }
+
+  /** A new objective with this structure, which opens. */
+  async useTemplate(templateId: string, startDate: IsoDate): Promise<ObjectiveDetail | null> {
+    let created: ObjectiveDetail | null = null;
+    await this.run(this.api.useTemplate(templateId, startDate), (detail) => {
+      created = detail;
+      this.detailState.set(detail);
+      this.objectivesState.update((items) => [...items, detail]);
+    });
+    return created;
   }
 
   /** Remembers a top-level objective for the search screen. */

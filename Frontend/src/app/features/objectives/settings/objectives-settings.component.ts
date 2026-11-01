@@ -18,7 +18,12 @@ export class ObjectivesSettingsComponent {
   private readonly store = inject(ObjectivesStore);
 
   readonly settings = this.store.settings;
+  readonly templates = this.store.templates;
   readonly dueReminders = Object.entries(DUE_REMINDER_LABELS) as [DueReminder, string][];
+
+  constructor() {
+    void this.store.loadTemplates();
+  }
 
   toggle(setting: ToggleSetting): void {
     this.store.updateSettings({ [setting]: !this.settings()[setting] });
@@ -26,5 +31,9 @@ export class ObjectivesSettingsComponent {
 
   update(changes: Partial<ObjectiveSettings>): void {
     this.store.updateSettings(changes);
+  }
+
+  removeTemplate(id: string): void {
+    void this.store.removeTemplate(id);
   }
 }

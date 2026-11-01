@@ -604,6 +604,82 @@ describe('ObjectivesStore', () => {
       });
     });
 
+    describe('templates', () => {
+      const template = { id: 't1', name: 'Voyage', nodeCount: 3 };
+
+      it('loads them, and keeps quiet when that fails', async () => {
+        const loading = store.loadTemplates();
+        http.expectOne('/api/v1/objectives/templates').flush([template]);
+        await loading;
+        expect(store.templates()).toEqual([template]);
+
+        const failing = store.loadTemplates();
+        http.expectOne('/api/v1/objectives/templates').flush(null, { status: 500, statusText: 'Error' });
+        await failing;
+        expect(store.templates()).toEqual([template]);
+        expect(store.error()).toBe('');
+      });
+
+      it('saves one from an objective', async () => {
+        const saving = store.saveTemplate('obj-1', 'Voyage');
+        const request = http.expectOne('/api/v1/objectives/obj-1/template');
+        expect(request.request.method).toBe('POST');
+        expect(request.request.body).toEqual({ name: 'Voyage' });
+        request.flush(template);
+
+        expect(await saving).toBe(true);
+        expect(store.templates()).toEqual([template]);
+      });
+
+      it('reports what could not be saved', async () => {
+        const saving = store.saveTemplate('obj-1', 'Voyage');
+        http.expectOne('/api/v1/objectives/obj-1/template').flush({ message: 'Trop de modèles' }, { status: 400, statusText: 'Bad Request' });
+
+        expect(await saving).toBe(false);
+        expect(store.error()).toBe('Trop de modèles');
+        expect(store.templates()).toEqual([]);
+      });
+
+      it('removes one, keeping it when that fails', async () => {
+        const loading = store.loadTemplates();
+        http.expectOne('/api/v1/objectives/templates').flush([template]);
+        await loading;
+
+        const failing = store.removeTemplate('t1');
+        http.expectOne('/api/v1/objectives/templates/t1').flush(null, { status: 500, statusText: 'Error' });
+        expect(await failing).toBe(false);
+        expect(store.templates()).toHaveLength(1);
+
+        const removing = store.removeTemplate('t1');
+        const request = http.expectOne('/api/v1/objectives/templates/t1');
+        expect(request.request.method).toBe('DELETE');
+        request.flush(null);
+        expect(await removing).toBe(true);
+        expect(store.templates()).toEqual([]);
+      });
+
+      it('makes an objective from one, which opens', async () => {
+        await load();
+
+        const using = store.useTemplate('t1', '2026-10-15');
+        const request = http.expectOne('/api/v1/objectives/templates/t1/use');
+        expect(request.request.method).toBe('POST');
+        expect(request.request.body).toEqual({ startDate: '2026-10-15' });
+        request.flush(objectiveDetail({ id: 'made' }));
+
+        expect((await using)?.id).toBe('made');
+        expect(store.detail()?.id).toBe('made');
+        expect(store.objectives().map(({ id }) => id)).toEqual(['obj-1', 'made']);
+      });
+
+      it('answers null when a template cannot be used', async () => {
+        const using = store.useTemplate('t1', '2026-10-15');
+        http.expectOne('/api/v1/objectives/templates/t1/use').flush(null, { status: 404, statusText: 'Not Found' });
+
+        expect(await using).toBeNull();
+      });
+    });
+
     describe('in this browser', () => {
       it('remembers what was viewed, most recent first, once each, five at most', async () => {
         const items = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => objectiveSummary({ id }));
