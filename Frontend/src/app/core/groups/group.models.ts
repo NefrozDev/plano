@@ -16,6 +16,7 @@ export interface GroupMember {
   email: string;
   role: GroupRole;
   joinedAt: string;
+  avatarVersion: number | null;
 }
 
 export interface GroupDetails extends GroupSummary {

@@ -20,8 +20,8 @@ import { ClipboardService } from '../../../core/browser/clipboard.service';
 import { httpErrorMessage } from '../../../core/http/http-error-message';
 import { GroupDetails, GroupMember } from '../../../core/groups/group.models';
 import { GroupsService } from '../../../core/groups/groups.service';
-import { initialsOf } from '../../../core/people/people';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
+import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { ToastComponent } from '../../../shared/ui/toast.component';
 import { AuthShellComponent } from '../../auth/auth-shell/auth-shell.component';
@@ -32,6 +32,7 @@ type GroupDialog = 'rename' | 'danger';
 @Component({
   selector: 'app-group-detail',
   imports: [
+    UserAvatarComponent,
     AuthShellComponent,
     ModalDialogComponent,
     ReactiveFormsModule,
@@ -193,13 +194,6 @@ export class GroupDetailComponent implements OnInit {
 
   memberName(member: GroupMember): string {
     return `${member.firstName} ${member.lastName}`.trim() || member.username;
-  }
-
-  memberInitials(member: GroupMember): string {
-    return (
-      initialsOf(member.firstName, member.lastName) ||
-      member.username.slice(0, 2).toUpperCase()
-    );
   }
 
   private setGroup(group: GroupDetails): void {

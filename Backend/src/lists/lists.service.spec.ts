@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Friendship } from '../friends/friendship.entity';
+import { User } from '../users/user.entity';
 import {
   createListsTestBed,
   type ListsTestBed,
@@ -26,6 +27,36 @@ describe('ListsService', () => {
       color: '#2ecb70',
     });
 
+  it('gives each person the version of their picture', async () => {
+    const uploaded = new Date('2026-10-01T10:00:00.000Z');
+    await bed.dataSource.manager.update(
+      User,
+      { id: bed.bob },
+      { avatarUpdatedAt: uploaded },
+    );
+    const list = await createList();
+
+    const member = await bed.lists.addMember(list.id, bed.ada, {
+      userId: bed.bob,
+      role: 'viewer',
+    });
+
+    expect(member.avatarVersion).toBe(uploaded.getTime());
+    const versions = (await bed.lists.findOne(list.id, bed.ada)).members.map(
+      ({ avatarVersion }) => avatarVersion,
+    );
+    expect(versions).toEqual([null, uploaded.getTime()]);
+    const [summary] = await bed.lists.findAll(bed.bob);
+    expect(summary.members.map(({ avatarVersion }) => avatarVersion)).toEqual([
+      null,
+      uploaded.getTime(),
+    ]);
+    const updated = await bed.lists.updateMember(list.id, bed.bob, bed.ada, {
+      role: 'editor',
+    });
+    expect(updated.avatarVersion).toBe(uploaded.getTime());
+  });
+
   it('creates a list owned by its creator', async () => {
     const list = await createList();
 
@@ -43,7 +74,9 @@ describe('ListsService', () => {
       onHome: false,
       removeChecked: false,
       description: '',
-      members: [{ id: bed.ada, name: 'Ada Test', role: 'owner' }],
+      members: [
+        { id: bed.ada, name: 'Ada Test', avatarVersion: null, role: 'owner' },
+      ],
       sections: [],
     });
   });
@@ -86,8 +119,8 @@ describe('ListsService', () => {
 
     // Owner first, then whoever it is shared with: each side sees who.
     const people = [
-      { id: bed.ada, name: 'Ada Test', role: 'owner' },
-      { id: bed.bob, name: 'Bob Test', role: 'editor' },
+      { id: bed.ada, name: 'Ada Test', avatarVersion: null, role: 'owner' },
+      { id: bed.bob, name: 'Bob Test', avatarVersion: null, role: 'editor' },
     ];
     expect(await bed.lists.findAll(bed.ada)).toEqual([
       expect.objectContaining({
@@ -121,11 +154,11 @@ describe('ListsService', () => {
     const forBob = await bed.lists.findAll(bed.bob);
 
     expect(forBob.find(({ id }) => id === own.id)?.members).toEqual([
-      { id: bed.bob, name: 'Bob Test', role: 'owner' },
+      { id: bed.bob, name: 'Bob Test', avatarVersion: null, role: 'owner' },
     ]);
     expect(forBob.find(({ id }) => id === shared.id)?.members).toEqual([
-      { id: bed.ada, name: 'Ada Test', role: 'owner' },
-      { id: bed.bob, name: 'Bob Test', role: 'viewer' },
+      { id: bed.ada, name: 'Ada Test', avatarVersion: null, role: 'owner' },
+      { id: bed.bob, name: 'Bob Test', avatarVersion: null, role: 'viewer' },
     ]);
   });
 
@@ -229,6 +262,7 @@ describe('ListsService', () => {
       ).resolves.toEqual({
         id: bed.bob,
         name: 'Bob Test',
+        avatarVersion: null,
         role: 'viewer',
       });
       await expect(

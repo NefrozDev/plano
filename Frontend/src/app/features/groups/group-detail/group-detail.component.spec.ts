@@ -39,6 +39,7 @@ describe('GroupDetailComponent', () => {
         email: 'ada@example.com',
         role: 'owner',
         joinedAt: '2030-01-01T00:00:00Z',
+        avatarVersion: null,
       },
     ],
   };
@@ -141,6 +142,7 @@ describe('GroupDetailComponent', () => {
       email: 'grace@example.com',
       role: 'member' as const,
       joinedAt: '2030-01-02T00:00:00Z',
+        avatarVersion: null,
     };
     let confirm: Mock;
 
@@ -308,14 +310,31 @@ describe('GroupDetailComponent', () => {
     expect(groups.update).not.toHaveBeenCalled();
   });
 
-  it('formats member names and initials with username fallbacks', () => {
+  it('formats member names with a username fallback', () => {
     const anonymous = { ...group.members[0], firstName: '', lastName: '' };
 
     expect(component.memberName(group.members[0])).toBe('Ada Lovelace');
-    expect(component.memberInitials(group.members[0])).toBe('AL');
     expect(component.memberName(anonymous)).toBe('ada');
-    expect(component.memberInitials(anonymous)).toBe('AD');
     expect(component.currentUserId()).toBe('user-1');
+  });
+
+  it('shows each member’s picture, or their initials without one', () => {
+    groups.get.mockReturnValue(
+      of({
+        ...group,
+        members: [
+          group.members[0],
+          { ...group.members[0], id: 'user-2', firstName: 'Bob', lastName: 'Martin', avatarVersion: 77 },
+        ],
+      }),
+    );
+    const fixture = TestBed.createComponent(GroupDetailComponent);
+    fixture.detectChanges();
+
+    const avatars = (fixture.nativeElement as HTMLElement).querySelectorAll('.member-row app-user-avatar');
+    expect(avatars).toHaveLength(2);
+    expect(avatars[0].textContent?.trim()).toBe('AL');
+    expect(avatars[1].querySelector('img')?.getAttribute('src')).toBe('/api/v1/users/user-2/avatar?v=77');
   });
 
   it('renders the owner management view', () => {

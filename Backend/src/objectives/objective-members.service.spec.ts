@@ -66,8 +66,20 @@ describe('ObjectiveMembersService', () => {
 
       expect(shared.sharing).toBe('shared');
       expect(shared.members).toEqual([
-        { id: bed.ada, name: 'Ada Test', role: 'owner', inheritedFrom: null },
-        { id: bed.bob, name: 'Bob Test', role: 'viewer', inheritedFrom: null },
+        {
+          id: bed.ada,
+          name: 'Ada Test',
+          avatarVersion: null,
+          role: 'owner',
+          inheritedFrom: null,
+        },
+        {
+          id: bed.bob,
+          name: 'Bob Test',
+          avatarVersion: null,
+          role: 'viewer',
+          inheritedFrom: null,
+        },
       ]);
       expect(shared.people.map(({ name }) => name)).toEqual([
         'Ada Test',
@@ -428,6 +440,69 @@ describe('ObjectiveMembersService', () => {
     });
   });
 
+  describe('pictures', () => {
+    const uploaded = new Date('2026-10-01T10:00:00.000Z');
+    const version = uploaded.getTime();
+
+    it('gives everyone named on an objective the version of their picture', async () => {
+      await bed.dataSource.manager.update(
+        User,
+        { id: bed.bob },
+        { avatarUpdatedAt: uploaded },
+      );
+      const top = await create({
+        completion: 'metric',
+        metric: { unit: 'km', target: 2, aggregation: 'sum' },
+        children: ['Un'],
+        members: [{ userId: bed.bob, role: 'contributor' }],
+      });
+      await bed.objectives.update(top.children[0].id, bed.ada, {
+        assignedToUserId: bed.bob,
+      });
+      await bed.tracking.setCompleted(top.children[0].id, bed.bob, {
+        completed: true,
+      });
+      const seen = await bed.tracking.addSession(top.id, bed.bob, {
+        date: '2026-10-02',
+        status: 'done',
+        label: 'Sortie',
+        value: 2,
+      });
+
+      expect(seen.owner.avatarVersion).toBeNull();
+      expect(seen.people.map(({ avatarVersion }) => avatarVersion)).toEqual([
+        null,
+        version,
+      ]);
+      expect(seen.members[1].avatarVersion).toBe(version);
+      expect(seen.sessions[0].author?.avatarVersion).toBe(version);
+      expect(seen.contributions[0].person.avatarVersion).toBe(version);
+      expect(seen.completedBy?.avatarVersion).toBe(version);
+      expect(seen.children[0].assignee?.avatarVersion).toBe(version);
+      expect(seen.children[0].completedBy?.avatarVersion).toBe(version);
+
+      // The one who was invited sees the same, on the list of objectives too.
+      const [listed] = await bed.objectives.findAll(bed.bob);
+      expect(listed.people[1].avatarVersion).toBe(version);
+    });
+
+    it('has none for an account since deleted', async () => {
+      const objective = await create({
+        members: [{ userId: bed.bob, role: 'contributor' }],
+      });
+      await bed.tracking.setCompleted(objective.id, bed.bob, {
+        completed: true,
+      });
+      await bed.dataSource.manager.delete(User, { id: bed.bob });
+
+      const seen = await bed.objectives.findOne(objective.id, bed.ada);
+
+      // Nobody to name: the completion stays, without a person.
+      expect(seen.completedBy).toBeNull();
+      expect(seen.members).toHaveLength(1);
+    });
+  });
+
   describe('losing the link', () => {
     it('takes access away at once, and gives it back with the link', async () => {
       const objective = await create();
@@ -673,8 +748,14 @@ describe('ObjectiveMembersService', () => {
       expect(updated.status).toBe('completed');
       expect(updated.completedBy?.id).toBe(bed.bob);
       expect(updated.contributions).toEqual([
-        { person: { id: bed.ada, name: 'Ada Test' }, value: 600 },
-        { person: { id: bed.bob, name: 'Bob Test' }, value: 400 },
+        {
+          person: { id: bed.ada, name: 'Ada Test', avatarVersion: null },
+          value: 600,
+        },
+        {
+          person: { id: bed.bob, name: 'Bob Test', avatarVersion: null },
+          value: 400,
+        },
       ]);
     });
 
@@ -731,8 +812,14 @@ describe('ObjectiveMembersService', () => {
       expect(adaDone.status).toBe('active');
       expect(adaDone.amount?.current).toBe(2);
       expect(adaDone.contributions).toEqual([
-        { person: { id: bed.ada, name: 'Ada Test' }, value: 2 },
-        { person: { id: bed.bob, name: 'Bob Test' }, value: 0 },
+        {
+          person: { id: bed.ada, name: 'Ada Test', avatarVersion: null },
+          value: 2,
+        },
+        {
+          person: { id: bed.bob, name: 'Bob Test', avatarVersion: null },
+          value: 0,
+        },
       ]);
 
       await bed.tracking.setCheckIn(objective.id, '2026-10-01', bed.bob, true);
@@ -835,7 +922,11 @@ describe('ObjectiveMembersService', () => {
       const assigned = await bed.objectives.update(child.id, bed.ada, {
         assignedToUserId: bed.bob,
       });
-      expect(assigned.assignee).toEqual({ id: bed.bob, name: 'Bob Test' });
+      expect(assigned.assignee).toEqual({
+        id: bed.bob,
+        name: 'Bob Test',
+        avatarVersion: null,
+      });
 
       const parent = await bed.objectives.findOne(top.id, bed.bob);
       expect(parent.children[0].assignee?.id).toBe(bed.bob);

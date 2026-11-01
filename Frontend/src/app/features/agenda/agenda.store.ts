@@ -40,6 +40,7 @@ export function toAgendaContact(contact: Contact): AgendaContact {
     initials: initialsOf(contact.firstName, contact.lastName) || contact.username.slice(0, 2).toUpperCase(),
     color: personColor(contact.id),
     frequent: contact.friend,
+    avatarVersion: contact.avatarVersion,
   };
 }
 

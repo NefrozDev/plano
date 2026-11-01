@@ -6,6 +6,7 @@ import type { Contact } from '@plano/common';
 import { FriendsService } from '../../../core/friends/friends.service';
 import { toPerson } from '../../../core/people/people';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
+import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
 import { ListsStore } from '../lists.store';
 import { ROLE_LABELS } from './list-options';
 
@@ -15,6 +16,7 @@ import { ROLE_LABELS } from './list-options';
  */
 @Component({
   selector: 'app-list-sharing-panel',
+  imports: [UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-sharing-panel.component.html',
   styles: `:host { display: contents; }`,

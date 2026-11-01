@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 import { DataSource, In } from 'typeorm';
 import { displayName } from '../lists/list.mapper';
 import type { User } from '../users/user.entity';
+import { avatarVersion } from '../users/user.mapper';
 import type { AddObjectiveCommentDto } from './dto/objective.dto';
 import { ObjectiveActivity } from './entities/objective-activity.entity';
 import { ObjectiveComment } from './entities/objective-comment.entity';
@@ -21,7 +22,13 @@ import { ObjectiveWriterService } from './objective-writer.service';
 export const ACTIVITY_LIMIT = 100;
 
 function person(user: User | null) {
-  return user ? { id: user.id, name: displayName(user) } : null;
+  return user
+    ? {
+        id: user.id,
+        name: displayName(user),
+        avatarVersion: avatarVersion(user),
+      }
+    : null;
 }
 
 /** What happened on an objective, and what people say about it. */

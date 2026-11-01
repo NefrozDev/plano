@@ -18,7 +18,7 @@
       <h3>Membres ({{ list().memberCount }})</h3>
       @for (member of members(); track member.id) {
         <div class="sharing-member">
-          <span class="member-avatar" [style.background]="member.avatar.color">{{ member.avatar.initials }}</span>
+          <app-user-avatar [user]="member.avatar" [size]="28" />
           <strong>{{ member.name }}</strong>
           @if (member.role === 'owner' || !isOwner()) {
             <span class="owner-role">{{ roleLabels[member.role] }}</span>

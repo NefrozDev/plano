@@ -358,8 +358,8 @@ describe('ObjectiveSummaryComponent', () => {
       await show(
         objectiveDetail({
           people: [
-            { id: 'a', name: 'Ada Lovelace' },
-            { id: 'b', name: 'Bob Martin' },
+            { id: 'a', name: 'Ada Lovelace', avatarVersion: null },
+            { id: 'b', name: 'Bob Martin', avatarVersion: null },
           ],
         }),
       );
@@ -368,11 +368,26 @@ describe('ObjectiveSummaryComponent', () => {
       expect(element.querySelector('app-avatar-stack .avatars')?.getAttribute('aria-label')).toBe('Ada Lovelace, Bob Martin');
     });
 
+    it('shows their pictures', async () => {
+      await show(
+        objectiveDetail({
+          people: [
+            { id: 'a', name: 'Ada Lovelace', avatarVersion: null },
+            { id: 'b', name: 'Bob Martin', avatarVersion: 42 },
+          ],
+        }),
+      );
+
+      const avatars = element.querySelectorAll('app-avatar-stack .avatar');
+      expect(avatars[0].querySelector('img')).toBeNull();
+      expect(avatars[1].querySelector('img')?.getAttribute('src')).toBe('/api/v1/users/b/avatar?v=42');
+    });
+
     it('labels the sub-objectives shared or assigned', async () => {
       await show(
         treeDetail({
           children: [
-            objectiveSummary({ id: 'x', parentId: 'obj-1', sharing: 'common', assignee: { id: 'b', name: 'Bob' } }),
+            objectiveSummary({ id: 'x', parentId: 'obj-1', sharing: 'common', assignee: { id: 'b', name: 'Bob', avatarVersion: null } }),
           ],
         }),
       );
@@ -382,8 +397,8 @@ describe('ObjectiveSummaryComponent', () => {
   });
 
   describe('contributions', () => {
-    const bob = { id: 'b', name: 'Bob Martin' };
-    const ada = { id: 'a', name: 'Ada Lovelace' };
+    const bob = { id: 'b', name: 'Bob Martin', avatarVersion: null };
+    const ada = { id: 'a', name: 'Ada Lovelace', avatarVersion: null };
     const lines = () =>
       Array.from(element.querySelectorAll('.contributions li')).map(
         (line) => `${line.querySelector('span')?.textContent} ${line.querySelector('b')?.textContent}`,
@@ -437,8 +452,8 @@ describe('ObjectiveSummaryComponent', () => {
 
   describe('assigning', () => {
     const people = [
-      { id: 'a', name: 'Ada Lovelace' },
-      { id: 'b', name: 'Bob Martin' },
+      { id: 'a', name: 'Ada Lovelace', avatarVersion: null },
+      { id: 'b', name: 'Bob Martin', avatarVersion: null },
     ];
     const select = () => element.querySelector('.assign select') as HTMLSelectElement | null;
 

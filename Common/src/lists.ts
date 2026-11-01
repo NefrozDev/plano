@@ -87,6 +87,8 @@ export interface ListMember {
   /** User id. */
   id: string;
   name: string;
+  /** Changes with each new profile picture, null without one: see GET /users/:id/avatar. */
+  avatarVersion: number | null;
   role: ShareRole;
 }
 

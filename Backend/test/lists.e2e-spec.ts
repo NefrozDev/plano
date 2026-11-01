@@ -138,6 +138,7 @@ describe('Lists API (e2e)', () => {
         expect(response.body).toEqual({
           id: bob.user.id,
           name: 'Bob Doe',
+          avatarVersion: null,
           role: 'viewer',
         });
       });

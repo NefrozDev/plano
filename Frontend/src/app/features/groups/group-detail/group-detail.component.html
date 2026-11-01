@@ -119,7 +119,7 @@
           <div class="member-list">
             @for (member of currentGroup.members; track member.id) {
               <div class="member-row">
-                <span class="member-avatar">{{ memberInitials(member) }}</span>
+                <app-user-avatar [user]="member" [size]="38" />
                 <div class="member-identity">
                   <strong>{{ memberName(member) }}</strong>
                   <small>{{ member.email }}</small>

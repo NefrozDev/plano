@@ -7,7 +7,6 @@
 h2 { margin: 1rem 0 .5rem; font-size: .82rem; font-weight: 750; }
 .people { display: grid; gap: .2rem; margin: 0; padding: 0; list-style: none; }
 .people li { display: flex; min-height: 2.8rem; gap: .55rem; align-items: center; }
-.avatar { display: grid; width: 1.9rem; height: 1.9rem; flex: none; place-items: center; border-radius: 50%; color: white; font-size: .68rem; font-weight: 750; }
 .name { display: grid; flex: 1; min-width: 0; gap: .1rem; overflow-wrap: anywhere; font-size: .8rem; font-weight: 650; }
 .name small { color: #8a93a3; font-size: .66rem; font-weight: 500; }
 .role { color: #7b8292; font-size: .72rem; }

@@ -14,7 +14,7 @@ import { ObjectiveActivityComponent } from './objective-activity.component';
 const comment = (changes: Partial<ObjectiveCommentEntry> = {}): ObjectiveCommentEntry => ({
   id: 'c1',
   body: 'Courage',
-  author: { id: ME, name: 'Ada Lovelace' },
+  author: { id: ME, name: 'Ada Lovelace', avatarVersion: null },
   createdAt: '2026-10-14T09:30:00',
   ...changes,
 });
@@ -22,7 +22,7 @@ const entry = (changes: Partial<ObjectiveActivityEntry> = {}): ObjectiveActivity
   id: 'a1',
   kind: 'created',
   detail: '',
-  actor: { id: ME, name: 'Ada Lovelace' },
+  actor: { id: ME, name: 'Ada Lovelace', avatarVersion: null },
   objectiveId: 'obj-1',
   objectiveTitle: 'Courir',
   createdAt: '2026-10-14T09:30:00',
@@ -166,7 +166,7 @@ describe('ObjectiveActivityComponent', () => {
 
     it('lets people remove their own, not others’', async () => {
       await setUp(
-        [comment(), comment({ id: 'c2', author: { id: OTHER, name: 'Bob Martin' } })],
+        [comment(), comment({ id: 'c2', author: { id: OTHER, name: 'Bob Martin', avatarVersion: null } })],
         [],
         objectiveDetail({ role: 'viewer' }),
       );
@@ -186,7 +186,7 @@ describe('ObjectiveActivityComponent', () => {
     });
 
     it('lets the owner remove anyone’s', async () => {
-      await setUp([comment({ author: { id: OTHER, name: 'Bob Martin' } })]);
+      await setUp([comment({ author: { id: OTHER, name: 'Bob Martin', avatarVersion: null } })]);
 
       expect(element.querySelector('.comments button')).not.toBeNull();
     });

@@ -62,13 +62,31 @@ describe('shared form controls', () => {
     expect(host.query()).toBe('camille');
   });
 
+  it('avatar stack shows pictures, falls back to initials, and keeps the bubbles the same size', () => {
+    const { fixture, host, element } = render();
+
+    host.people.set([{ ...person('a', 'Alex'), avatarVersion: 9 }, person('b', 'Béa')]);
+    fixture.detectChanges();
+    const [withPicture, withInitials] = Array.from(element.querySelectorAll<HTMLElement>('.avatar'));
+
+    const picture = withPicture.querySelector('img') as HTMLImageElement;
+    expect(picture.getAttribute('src')).toBe('/api/v1/users/a/avatar?v=9');
+    expect(withInitials.textContent?.trim()).toBe('B');
+    expect(withPicture.getBoundingClientRect().width).toBe(withInitials.getBoundingClientRect().width);
+    // A picture that cannot load leaves the initials, not a broken image.
+    picture.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+    expect(withPicture.querySelector('img')).toBeNull();
+    expect(withPicture.textContent?.trim()).toBe('A');
+  });
+
   it('avatar stack caps the bubbles, counts the rest and labels the group', () => {
     const { fixture, host, element } = render();
     expect(element.querySelector('.avatars')).toBeNull();
 
     host.people.set([person('a', 'Alex'), person('b', 'Béa'), person('c', 'Chloé')]);
     fixture.detectChanges();
-    expect(Array.from(element.querySelectorAll('.avatar')).map((avatar) => avatar.textContent)).toEqual(['A', 'B', '+1']);
+    expect(Array.from(element.querySelectorAll('.avatar')).map((avatar) => avatar.textContent?.trim())).toEqual(['A', 'B', '+1']);
     expect(element.querySelector('.avatars')?.getAttribute('aria-label')).toBe('Alex, Béa, Chloé');
 
     host.stackLabel.set('Avec 3 personnes');

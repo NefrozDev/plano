@@ -35,8 +35,8 @@ export function listDetail(changes: Partial<ListDetail> = {}): ListDetail {
     removeChecked: false,
     description: '',
     members: [
-      { id: OWNER_ID, name: 'Ada Lovelace', role: 'owner' },
-      { id: MEMBER_ID, name: 'Bob Martin', role: 'editor' },
+      { id: OWNER_ID, name: 'Ada Lovelace', avatarVersion: null, role: 'owner' },
+      { id: MEMBER_ID, name: 'Bob Martin', avatarVersion: null, role: 'editor' },
     ],
     sections: [
       {

@@ -11,7 +11,7 @@ import { ListsStore } from './lists.store';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { OWNER_ID, listDetail, listSettings, listSummary } from './testing/lists-fixtures';
 
-const me: ListMember = { id: OWNER_ID, name: 'Ada Lovelace', role: 'owner' };
+const me: ListMember = { id: OWNER_ID, name: 'Ada Lovelace', avatarVersion: null, role: 'owner' };
 
 describe('ListsComponent', () => {
   let fixture: ComponentFixture<ListsComponent>;
@@ -34,7 +34,7 @@ describe('ListsComponent', () => {
         name: 'Cadeaux',
         ownership: 'shared',
         role: 'viewer',
-        members: [{ id: 'user-cyd', name: 'Cyd Martin', role: 'owner' }, { ...me, role: 'viewer' }],
+        members: [{ id: 'user-cyd', name: 'Cyd Martin', avatarVersion: 55, role: 'owner' }, { ...me, role: 'viewer' }],
       }),
       listSummary({ id: 'ete', name: 'Été', archived: true }),
     ]);
@@ -52,11 +52,12 @@ describe('ListsComponent', () => {
     // Avatars of whom it is shared with, or of who shared it; none for a private list.
     const avatars = (listId: string) =>
       Array.from(element.querySelectorAll(`.list-item[data-list-id="${listId}"] .list-sharing .avatar`)).map(
-        (avatar) => avatar.textContent,
+        (avatar) => avatar.textContent?.trim(),
       );
     expect(avatars('courses')).toEqual(['BM']);
     expect(avatars('maison')).toEqual([]);
-    expect(avatars('cadeaux')).toEqual(['CM']);
+    // Cyd has a picture: see below.
+    expect(avatars('cadeaux')).toEqual(['']);
     expect(
       element.querySelector('.list-item[data-list-id="cadeaux"] app-avatar-stack [role="img"]')?.getAttribute('aria-label'),
     ).toBe('Partagée par Cyd Martin');
@@ -82,7 +83,7 @@ describe('ListsComponent', () => {
     const shared = (...names: string[]) =>
       caption(
         listSummary({
-          members: [me, ...names.map((name, index) => ({ id: `user-${index}`, name, role: 'editor' as const }))],
+          members: [me, ...names.map((name, index) => ({ id: `user-${index}`, name, avatarVersion: null, role: 'editor' as const }))],
         }),
       );
 
@@ -91,6 +92,16 @@ describe('ListsComponent', () => {
     expect(shared('Bob Martin', 'Cyd Durand', 'Dan Petit', 'Eve Roux')).toBe('Partagée avec Bob, Cyd et 2 autres');
     // An owner the app cannot name still reads sensibly.
     expect(caption(listSummary({ ownership: 'shared', members: [] }))).toBe('Partagée avec vous');
+  });
+
+  it('shows the picture of who shared a list, not their initials', () => {
+    component.selectFilter('shared');
+    fixture.detectChanges();
+
+    const avatar = (fixture.nativeElement as HTMLElement).querySelector('.list-item app-avatar-stack .avatar') as HTMLElement;
+    expect(avatar.querySelector('img')?.getAttribute('src')).toBe('/api/v1/users/user-cyd/avatar?v=55');
+    expect(avatar.textContent?.trim()).toBe('');
+    expect(avatar.getAttribute('title')).toBe('Cyd Martin');
   });
 
   it('filters personal, shared and archived lists', () => {

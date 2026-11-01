@@ -130,6 +130,8 @@ export interface AgendaContact {
   color: string;
   /** Shown in the "Fréquemment contactés" section of the participant picker. */
   frequent: boolean;
+  /** Their profile picture; see PublicUser.avatarVersion. Absent for people typed in by hand. */
+  avatarVersion?: number | null;
 }
 
 /** Metadata only: files are not uploaded until a backend exists. */

@@ -61,6 +61,8 @@ export interface ObjectiveMetricSettings {
 export interface ObjectivePerson {
   id: string;
   name: string;
+  /** Changes with each new profile picture, null without one: see GET /users/:id/avatar. */
+  avatarVersion: number | null;
 }
 
 /** Progress in the objective's own unit; only for metrics and habits. */

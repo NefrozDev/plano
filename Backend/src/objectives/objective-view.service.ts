@@ -11,6 +11,7 @@ import type {
 import { DataSource, In } from 'typeorm';
 import { displayName } from '../lists/list.mapper';
 import { User } from '../users/user.entity';
+import { avatarVersion } from '../users/user.mapper';
 import { ObjectiveCheckInRow } from './entities/objective-check-in.entity';
 import { ObjectivePeriod } from './entities/objective-period.entity';
 import { ObjectivePreference } from './entities/objective-preference.entity';
@@ -22,7 +23,11 @@ import type { ObjectiveTree, TreeMembership } from './objective-tree';
 type People = ReadonlyMap<string, ObjectivePerson>;
 
 function toPerson(user: User): ObjectivePerson {
-  return { id: user.id, name: displayName(user) };
+  return {
+    id: user.id,
+    name: displayName(user),
+    avatarVersion: avatarVersion(user),
+  };
 }
 
 const DELETED_ACCOUNT = 'Compte supprimé';
@@ -361,7 +366,7 @@ export class ObjectiveViewService {
   }
 
   private person(people: People, id: string): ObjectivePerson {
-    return people.get(id) ?? { id, name: DELETED_ACCOUNT };
+    return people.get(id) ?? { id, name: DELETED_ACCOUNT, avatarVersion: null };
   }
 
   private async people(

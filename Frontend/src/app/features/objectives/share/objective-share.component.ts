@@ -6,6 +6,7 @@ import { FriendsService } from '../../../core/friends/friends.service';
 import { toPerson } from '../../../core/people/people';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
+import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
 import { objectiveTint } from '../objective.utils';
 import { ObjectivesStore } from '../objectives.store';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
@@ -23,7 +24,7 @@ export const OBJECTIVE_ROLE_LABELS: Readonly<Record<ObjectiveRole, string>> = {
  */
 @Component({
   selector: 'app-objective-share',
-  imports: [PageHeaderComponent, ObjectiveIconComponent],
+  imports: [PageHeaderComponent, ObjectiveIconComponent, UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-share.component.html',
   styleUrl: './objective-share.component.scss',

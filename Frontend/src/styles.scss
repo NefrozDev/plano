@@ -642,7 +642,6 @@ app-list-detail .shared-list-summary small { color: #7B8496; font-size: .72rem; 
 app-list-detail .sharing-members, app-list-detail .invitation-link { padding: 1rem 0; border-bottom: 1px solid #EEF0F4; }
 app-list-detail .sharing-panel h3 { margin: 0 0 .75rem; color: #3C4658; font-size: .74rem; }
 app-list-detail .sharing-member { display: grid; min-height: 2.6rem; grid-template-columns: 1.8rem 1fr auto; gap: .6rem; align-items: center; }
-app-list-detail .member-avatar { display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border-radius: 50%; color: white; font-size: .65rem; font-weight: 750; }
 app-list-detail .sharing-member strong { font-size: .79rem; }
 app-list-detail .owner-role { color: #8A93A3; font-size: .71rem; }
 app-list-detail .invite-people { display: flex; gap: .5rem; align-items: center; margin-top: .55rem; padding: .5rem 0; border: 0; background: transparent; color: var(--color-primary); cursor: pointer; font-size: .8rem; font-weight: 650; }
@@ -1016,3 +1015,8 @@ select option {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* The grip that reorders objectives, on the overview and among sub-objectives. */
+app-objectives-overview .drag-handle, app-objective-summary .drag-handle { display: grid; width: 1.8rem; height: 2.6rem; flex: none; place-items: center; padding: 0; border: 0; border-radius: .5rem; background: transparent; color: #9aa3b5; cursor: grab; font-size: 1.05rem; touch-action: none; user-select: none; }
+app-objectives-overview .drag-handle:hover, app-objective-summary .drag-handle:hover { background: #f2f4f8; color: #4b5468; }
+app-objectives-overview .drag-handle:focus-visible, app-objective-summary .drag-handle:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); }

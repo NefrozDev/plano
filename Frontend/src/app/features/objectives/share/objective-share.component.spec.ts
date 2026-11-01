@@ -7,8 +7,8 @@ import { openObjective, provideObjectivesTesting, provideSignedIn, settleObjecti
 import { ME, OTHER, objectiveDetail, treeDetail } from '../testing/objectives-fixtures';
 import { ObjectiveShareComponent } from './objective-share.component';
 
-const OWNER = { id: ME, name: 'Ada Lovelace', role: 'owner', inheritedFrom: null } as const;
-const BOB = { id: OTHER, name: 'Bob Martin', role: 'viewer', inheritedFrom: null } as const;
+const OWNER = { id: ME, name: 'Ada Lovelace', avatarVersion: null, role: 'owner', inheritedFrom: null } as const;
+const BOB = { id: OTHER, name: 'Bob Martin', avatarVersion: null, role: 'viewer', inheritedFrom: null } as const;
 const shared = (changes: Partial<ObjectiveDetail> = {}): ObjectiveDetail =>
   objectiveDetail({ sharing: 'shared', members: [OWNER, BOB], ...changes });
 
@@ -83,6 +83,15 @@ describe('ObjectiveShareComponent', () => {
   it('says that sub-objectives follow, only when there are some', async () => {
     await show(treeDetail());
     expect(element.querySelector('.note')?.textContent).toContain('aussi accès aux sous-objectifs');
+  });
+
+  it('shows each person’s picture, or their initials without one', async () => {
+    await show(shared({ members: [OWNER, { ...BOB, avatarVersion: 42 }] }));
+
+    const avatars = element.querySelectorAll('.people app-user-avatar');
+    expect(avatars).toHaveLength(2);
+    expect(avatars[0].textContent?.trim()).toBe('AL');
+    expect(avatars[1].querySelector('img')?.getAttribute('src')).toBe(`/api/v1/users/${OTHER}/avatar?v=42`);
   });
 
   describe('for the owner', () => {

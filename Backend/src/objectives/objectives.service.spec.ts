@@ -46,7 +46,7 @@ describe('ObjectivesService', () => {
         completedAt: null,
         weight: 1,
         role: 'owner',
-        owner: { id: bed.ada, name: 'Ada Test' },
+        owner: { id: bed.ada, name: 'Ada Test', avatarVersion: null },
         childCount: 0,
         completedChildCount: 0,
         onHome: false,

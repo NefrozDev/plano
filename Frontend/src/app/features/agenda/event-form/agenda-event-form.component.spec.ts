@@ -305,7 +305,7 @@ describe('AgendaEventFormComponent', () => {
       harness.detectChanges();
 
       expect(form().participantIds()).toEqual(['user-bob']);
-      expect(element().querySelector('.participants-row .avatar')?.textContent).toBe('BT');
+      expect(element().querySelector('.participants-row .avatar')?.textContent?.trim()).toBe('BT');
     });
   });
 

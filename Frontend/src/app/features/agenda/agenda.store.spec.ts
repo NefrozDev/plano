@@ -182,6 +182,7 @@ describe('AgendaStore', () => {
       await expect(loading).resolves.toBe(true);
       expect(store.invitable()).toEqual(CONTACTS);
       expect(store.contact('user-bob')).toEqual({
+        avatarVersion: null,
         id: 'user-bob',
         name: 'Bob Test',
         initials: 'BT',
@@ -203,6 +204,7 @@ describe('AgendaStore', () => {
     });
 
     it('names a contact without a name after their username', () => {
+      expect(toAgendaContact(contact('user-y', 'Yann', { avatarVersion: 88 })).avatarVersion).toBe(88);
       expect(toAgendaContact(contact('user-x', '', { lastName: '', username: 'xavier' }))).toEqual(
         expect.objectContaining({ name: 'xavier', initials: 'XA', frequent: false }),
       );

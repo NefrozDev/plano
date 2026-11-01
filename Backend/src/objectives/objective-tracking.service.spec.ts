@@ -73,7 +73,7 @@ describe('ObjectiveTrackingService', () => {
           label: 'Sortie',
           value: 4,
           durationMinutes: 30,
-          author: { id: bed.ada, name: 'Ada Test' },
+          author: { id: bed.ada, name: 'Ada Test', avatarVersion: null },
         },
       ]);
     });

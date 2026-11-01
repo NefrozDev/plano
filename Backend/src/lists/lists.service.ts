@@ -16,6 +16,7 @@ import { DataSource, EntityManager, In, IsNull, Not } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
 import { ContactsService } from '../friends/contacts.service';
 import { User } from '../users/user.entity';
+import { avatarVersion } from '../users/user.mapper';
 import type { CreateListDto, UpdateListDto } from './dto/list.dto';
 import { sentFields } from './dto/validation';
 import type {
@@ -34,10 +35,16 @@ import { displayName, toSectionResponse } from './list.mapper';
 /** The owner, then the people they shared the list with (`members` oldest first). */
 function toPeople(owner: User, members: ListMember[]): ListMemberResponse[] {
   return [
-    { id: owner.id, name: displayName(owner), role: 'owner' },
+    {
+      id: owner.id,
+      name: displayName(owner),
+      avatarVersion: avatarVersion(owner),
+      role: 'owner',
+    },
     ...members.map((member) => ({
       id: member.userId,
       name: displayName(member.user),
+      avatarVersion: avatarVersion(member.user),
       role: member.role,
     })),
   ];
@@ -369,6 +376,11 @@ export class ListsService {
     member: ListMember,
   ): Promise<ListMemberResponse> {
     const user = await manager.findOneByOrFail(User, { id: member.userId });
-    return { id: member.userId, name: displayName(user), role: member.role };
+    return {
+      id: member.userId,
+      name: displayName(user),
+      avatarVersion: avatarVersion(user),
+      role: member.role,
+    };
   }
 }

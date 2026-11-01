@@ -166,7 +166,7 @@ describe('ObjectiveCalendarComponent', () => {
       label: 'Sortie',
       value: 1,
       durationMinutes: null,
-      author: { id: authorId, name: authorId },
+      author: { id: authorId, name: authorId, avatarVersion: null },
     });
 
     it('lets the owner remove anyone’s session', async () => {

@@ -43,6 +43,23 @@ describe('ListSharingPanelComponent', () => {
 
   afterEach(() => http.verify());
 
+  it('shows each member’s picture, or their initials without one', async () => {
+    await create(
+      listDetail({
+        members: [
+          { id: OWNER_ID, name: 'Ada Lovelace', avatarVersion: null, role: 'owner' },
+          { id: MEMBER_ID, name: 'Bob Martin', avatarVersion: 42, role: 'editor' },
+        ],
+      }),
+    );
+
+    const avatars = element.querySelectorAll('.sharing-member app-user-avatar');
+    expect(avatars).toHaveLength(2);
+    expect(avatars[0].textContent?.trim()).toBe('AL');
+    expect(avatars[0].querySelector('img')).toBeNull();
+    expect(avatars[1].querySelector('img')?.getAttribute('src')).toBe(`/api/v1/users/${MEMBER_ID}/avatar?v=42`);
+  });
+
   it('lets the owner invite friends and group mates who cannot see the list yet', async () => {
     await create(listDetail());
 

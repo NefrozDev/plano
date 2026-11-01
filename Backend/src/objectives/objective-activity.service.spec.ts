@@ -39,7 +39,7 @@ describe('ObjectiveActivityService', () => {
         id: expect.any(String) as string,
         kind: 'created',
         detail: '',
-        actor: { id: bed.ada, name: 'Ada Test' },
+        actor: { id: bed.ada, name: 'Ada Test', avatarVersion: null },
         objectiveId: objective.id,
         objectiveTitle: 'Courir',
         createdAt: expect.any(String) as string,
@@ -169,7 +169,7 @@ describe('ObjectiveActivityService', () => {
       expect(latest).toMatchObject({
         kind: 'progress',
         detail: '30',
-        actor: { id: bed.bob, name: 'Bob Test' },
+        actor: { id: bed.bob, name: 'Bob Test', avatarVersion: null },
         objectiveId: child.id,
         objectiveTitle: 'Bas',
       });
@@ -248,7 +248,7 @@ describe('ObjectiveActivityService', () => {
       expect(first).toEqual({
         id: expect.any(String) as string,
         body: 'Courage',
-        author: { id: bed.ada, name: 'Ada Test' },
+        author: { id: bed.ada, name: 'Ada Test', avatarVersion: null },
         createdAt: expect.any(String) as string,
       });
       await bed.activity.addComment(objective.id, bed.bob, { body: 'Merci' });
@@ -331,6 +331,24 @@ describe('ObjectiveActivityService', () => {
         bed.activity.removeComment(objective.id, randomUUID(), bed.ada),
       ).rejects.toThrow(NotFoundException);
       expect(await bed.dataSource.manager.count(ObjectiveComment)).toBe(1);
+    });
+
+    it('gives the author’s and the actor’s picture', async () => {
+      const uploaded = new Date('2026-10-01T10:00:00.000Z');
+      await bed.dataSource.manager.update(
+        User,
+        { id: bed.ada },
+        { avatarUpdatedAt: uploaded },
+      );
+      const objective = await create();
+
+      const comment = await bed.activity.addComment(objective.id, bed.ada, {
+        body: 'Salut',
+      });
+      const [entry] = await bed.activity.history(objective.id, bed.ada);
+
+      expect(comment.author?.avatarVersion).toBe(uploaded.getTime());
+      expect(entry.actor?.avatarVersion).toBe(uploaded.getTime());
     });
 
     it('keeps the words of an account since deleted', async () => {

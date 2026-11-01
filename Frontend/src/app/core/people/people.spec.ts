@@ -12,6 +12,8 @@ describe('people', () => {
     const ada = toPerson({ id: 'user-1', name: 'Ada King Lovelace' });
 
     expect(ada).toEqual({ id: 'user-1', name: 'Ada King Lovelace', initials: 'AL', color: personColor('user-1') });
+    expect(toPerson({ id: 'user-1', name: 'Ada', avatarVersion: 12 }).avatarVersion).toBe(12);
+    expect(toPerson({ id: 'user-1', name: 'Ada', avatarVersion: null }).avatarVersion).toBeNull();
     expect(toPerson({ id: 'user-2', name: 'Grace' }).initials).toBe('G');
     expect(personColor('user-1')).toBe(personColor('user-1'));
   });

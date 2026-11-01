@@ -6,6 +6,8 @@ export interface Person {
   name: string;
   initials: string;
   color: string;
+  /** Their profile picture, when they are a real user who has one. */
+  avatarVersion?: number | null;
 }
 
 /** Colour of people added by hand, before they pick their own. */
@@ -26,13 +28,22 @@ export function personColor(id: string): string {
 }
 
 /** Avatar of a real user known by id and full name: 'Ada Lovelace' → 'AL'. */
-export function toPerson({ id, name }: { id: string; name: string }): Person {
+export function toPerson({
+  id,
+  name,
+  avatarVersion,
+}: {
+  id: string;
+  name: string;
+  avatarVersion?: number | null;
+}): Person {
   const words = name.trim().split(/\s+/);
   return {
     id,
     name,
     initials: initialsOf(words[0] ?? '', words.length > 1 ? words[words.length - 1] : ''),
     color: personColor(id),
+    avatarVersion,
   };
 }
 

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { personColor } from '../../core/people/people';
+import { type Person, personColor } from '../../core/people/people';
 import { AvatarUser, UserAvatarComponent } from './user-avatar.component';
 
 describe('UserAvatarComponent', () => {
@@ -7,7 +7,7 @@ describe('UserAvatarComponent', () => {
   let element: HTMLElement;
   const ada: AvatarUser = { id: 'user-1', firstName: 'Ada', lastName: 'Lovelace', username: 'ada', avatarVersion: null };
 
-  function render(user: AvatarUser, size?: number): void {
+  function render(user: AvatarUser | Person, size?: number): void {
     fixture.componentRef.setInput('user', user);
     if (size) fixture.componentRef.setInput('size', size);
     fixture.detectChanges();
@@ -16,6 +16,44 @@ describe('UserAvatarComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(UserAvatarComponent);
     element = fixture.nativeElement as HTMLElement;
+  });
+
+  describe('with a person known by name', () => {
+    const person: Person = { id: 'user-9', name: 'Bob Martin', initials: 'BM', color: '#112233' };
+
+    it('uses their own initials and colour without a picture', () => {
+      render(person);
+
+      expect(element.textContent?.trim()).toBe('BM');
+      expect(getComputedStyle(element).backgroundColor).toBe('rgb(17, 34, 51)');
+      expect(element.querySelector('img')).toBeNull();
+    });
+
+    it('shows their picture when they have one', () => {
+      render({ ...person, avatarVersion: 123 });
+
+      expect(element.querySelector('img')?.getAttribute('src')).toBe('/api/v1/users/user-9/avatar?v=123');
+      expect(element.textContent?.trim()).toBe('');
+    });
+
+    it('treats a person without the information as having no picture', () => {
+      render({ ...person, avatarVersion: undefined });
+      expect(element.querySelector('img')).toBeNull();
+
+      render({ ...person, avatarVersion: null });
+      expect(element.querySelector('img')).toBeNull();
+    });
+  });
+
+  it('leaves its size to what surrounds it when asked to', () => {
+    fixture.componentRef.setInput('size', null);
+    fixture.componentRef.setInput('user', ada);
+    element.parentElement?.style.setProperty('--avatar-size', '50px');
+    fixture.detectChanges();
+
+    expect(element.style.getPropertyValue('--avatar-size')).toBe('');
+    expect(element.getBoundingClientRect().width).toBe(50);
+    element.parentElement?.style.removeProperty('--avatar-size');
   });
 
   it('shows initials on the user’s colour without a picture', () => {

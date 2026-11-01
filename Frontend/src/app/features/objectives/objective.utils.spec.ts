@@ -137,7 +137,7 @@ describe('objective utils', () => {
 
     it('adds who it is for', () => {
       expect(
-        sharingLabel(objectiveSummary({ sharing: 'common', assignee: { id: 'b', name: 'Bob Martin' } })),
+        sharingLabel(objectiveSummary({ sharing: 'common', assignee: { id: 'b', name: 'Bob Martin', avatarVersion: null } })),
       ).toBe('Commun · Pour Bob Martin');
     });
   });
@@ -154,7 +154,7 @@ describe('objective utils', () => {
           objectiveSummary({
             status: 'completed',
             completedAt: '2026-08-30T12:00:00.000Z',
-            completedBy: { id: 'b', name: 'Bob Martin' },
+            completedBy: { id: 'b', name: 'Bob Martin', avatarVersion: null },
           }),
         ),
       ).toBe('Terminé le 30 août 2026 par Bob Martin');

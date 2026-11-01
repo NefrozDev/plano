@@ -21,6 +21,7 @@ describe('GroupsOverviewComponent', () => {
     email: 'ada@example.com',
     role: 'owner' as const,
     joinedAt: '2030-01-01T00:00:00Z',
+    avatarVersion: null,
   };
   const family: GroupDetails = {
     id: 'group-1',
