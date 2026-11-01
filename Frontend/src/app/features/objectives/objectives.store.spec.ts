@@ -131,6 +131,13 @@ describe('ObjectivesStore', () => {
         expect(ids('archived')).toEqual(['archived']);
       });
 
+      it('puts what the user shares in "Partagés" too', async () => {
+        await load([mine, objectiveSummary({ id: 'mine-shared', sharing: 'shared' }), objectiveSummary({ id: 'mine-common', sharing: 'common' })]);
+
+        expect(ids('shared')).toEqual(['mine-shared', 'mine-common']);
+        expect(ids('mine')).toEqual(['mine', 'mine-shared', 'mine-common']);
+      });
+
       it('includes archived objectives in "Tous" when the setting asks for it', () => {
         store.updateSettings({ showArchived: true });
         expect(ids('all')).toContain('archived');
@@ -320,6 +327,15 @@ describe('ObjectivesStore', () => {
         ['removing a check-in', (s) => s.setCheckIn('obj-1', '2026-10-15', false), 'DELETE', '/obj-1/check-ins/2026-10-15', null],
         ['the percentage', (s) => s.setProgress('obj-1', 40), 'PUT', '/obj-1/progress', { percent: 40 }],
         ['completing', (s) => s.setCompleted('obj-1', true), 'PUT', '/obj-1/completed', { completed: true }],
+        [
+          'an invitation',
+          (s) => s.addMember('obj-1', { userId: 'b', role: 'viewer' }),
+          'POST',
+          '/obj-1/members',
+          { userId: 'b', role: 'viewer' },
+        ],
+        ['a role', (s) => s.updateMemberRole('obj-1', 'b', 'contributor'), 'PATCH', '/obj-1/members/b', { role: 'contributor' }],
+        ['removing someone', (s) => s.removeMember('obj-1', 'b'), 'DELETE', '/obj-1/members/b', null],
       ])('sends %s and applies the answer everywhere', async (_, act, method, path, body) => {
         const changing = act(store);
         const request = http.expectOne(`/api/v1/objectives${path}`);
@@ -380,6 +396,25 @@ describe('ObjectivesStore', () => {
         http.expectOne('/api/v1/objectives/child-2/completed').flush(null, { status: 500, statusText: 'Error' });
 
         expect(await ticking).toBe(false);
+      });
+
+      it('takes an objective off the screens when leaving it', async () => {
+        const leaving = store.leave('obj-1');
+        const request = http.expectOne('/api/v1/objectives/obj-1/members/me');
+        expect(request.request.method).toBe('DELETE');
+        request.flush(null);
+
+        expect(await leaving).toBe(true);
+        expect(store.detail()).toBeNull();
+        expect(store.objectives()).toEqual([]);
+      });
+
+      it('stays on what it could not leave', async () => {
+        const leaving = store.leave('obj-1');
+        http.expectOne('/api/v1/objectives/obj-1/members/me').flush(null, { status: 500, statusText: 'Error' });
+
+        expect(await leaving).toBe(false);
+        expect(store.objectives()).toHaveLength(1);
       });
 
       it('removes an objective from the list and forgets it', async () => {

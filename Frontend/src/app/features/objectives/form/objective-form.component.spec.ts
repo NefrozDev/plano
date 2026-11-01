@@ -299,6 +299,110 @@ describe('ObjectiveFormComponent', () => {
     });
   });
 
+  describe('sharing from the start', () => {
+    const contact = (id: string, firstName: string) => ({
+      id,
+      username: firstName.toLowerCase(),
+      firstName,
+      lastName: '',
+      avatarVersion: null,
+      friend: true,
+      groups: [],
+    });
+    const pick = (section: number, index: number): void => {
+      const pickers = element.querySelectorAll('app-people-picker');
+      pickers[section].querySelectorAll<HTMLInputElement>('input')[index].click();
+      fixture.detectChanges();
+    };
+
+    beforeEach(() => {
+      setUp();
+      render();
+      type('title', 'Épargner');
+    });
+
+    const open = async (label: string): Promise<void> => {
+      toggle(label);
+      http.expectOne('/api/v1/contacts').flush([contact('c1', 'Cyd'), contact('c2', 'Dan')]);
+      await settleObjectives();
+      fixture.detectChanges();
+    };
+
+    it('loads contacts once, when first asked, and says while it does', async () => {
+      http.expectNone('/api/v1/contacts');
+      toggle('Partager');
+      expect(element.querySelector('app-people-picker')?.textContent).toContain('Chargement');
+      http.expectOne('/api/v1/contacts').flush([contact('c1', 'Cyd')]);
+      await settleObjectives();
+      fixture.detectChanges();
+      expect(element.querySelector('app-people-picker label')?.textContent).toContain('Cyd');
+
+      toggle('Objectif commun');
+      http.expectNone('/api/v1/contacts');
+    });
+
+    it('explains what to do without contacts, or if they cannot be loaded', async () => {
+      toggle('Partager');
+      http.expectOne('/api/v1/contacts').flush(null, { status: 500, statusText: 'Error' });
+      await settleObjectives();
+      fixture.detectChanges();
+
+      expect(element.querySelector('app-people-picker')?.textContent).toContain('Ajoutez des amis');
+    });
+
+    it('shares with those picked, as viewers', async () => {
+      await open('Partager');
+      pick(0, 1);
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({ members: [{ userId: 'c2', role: 'viewer' }] });
+    });
+
+    it('makes it common with those picked, as contributors', async () => {
+      await open('Objectif commun');
+      pick(0, 0);
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({ members: [{ userId: 'c1', role: 'contributor' }] });
+    });
+
+    it('can do both, a person being in one role only', async () => {
+      await open('Partager');
+      toggle('Objectif commun');
+      pick(0, 0);
+      pick(0, 1);
+      // Cyd moves to the contributors.
+      pick(1, 0);
+      expect(component.viewers()).toEqual(['c2']);
+      expect(component.contributors()).toEqual(['c1']);
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({
+        members: [
+          { userId: 'c2', role: 'viewer' },
+          { userId: 'c1', role: 'contributor' },
+        ],
+      });
+    });
+
+    it('unticks someone', async () => {
+      await open('Partager');
+      pick(0, 0);
+      pick(0, 0);
+
+      expect(component.viewers()).toEqual([]);
+    });
+
+    it('stays private when nobody is picked, or the switch is back off', async () => {
+      await open('Partager');
+      pick(0, 0);
+      toggle('Partager');
+      await submit();
+
+      expect(await answerCreate()).not.toHaveProperty('members');
+    });
+  });
+
   describe('creating a sub-objective', () => {
     beforeEach(() => setUp({ parent: 'obj-1' }));
 

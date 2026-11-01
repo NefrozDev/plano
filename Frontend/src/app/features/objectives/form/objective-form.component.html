@@ -159,6 +159,34 @@
         </section>
 
         <section class="option">
+          <app-switch-row
+            label="Partager"
+            hint="Ces personnes peuvent suivre l’objectif"
+            [checked]="sharedOn()"
+            (toggled)="toggleSharing('viewer')"
+          />
+          @if (sharedOn()) {
+            <div class="option-body">
+              <app-people-picker [contacts]="contacts()" [selected]="viewers()" (toggled)="togglePerson('viewer', $event)" />
+            </div>
+          }
+        </section>
+
+        <section class="option">
+          <app-switch-row
+            label="Objectif commun"
+            hint="Ces personnes contribuent à sa progression"
+            [checked]="commonOn()"
+            (toggled)="toggleSharing('contributor')"
+          />
+          @if (commonOn()) {
+            <div class="option-body">
+              <app-people-picker [contacts]="contacts()" [selected]="contributors()" (toggled)="togglePerson('contributor', $event)" />
+            </div>
+          }
+        </section>
+
+        <section class="option">
           <div class="inline-fields">
             <label class="field">
               <span>Rappel</span>

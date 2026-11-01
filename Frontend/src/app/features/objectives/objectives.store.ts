@@ -1,11 +1,13 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import type {
+  AddObjectiveMemberRequest,
   AddObjectiveSessionRequest,
   CreateObjectiveRequest,
   IsoDate,
   ObjectiveAgendaItem,
   ObjectiveCategory,
   ObjectiveDetail,
+  ObjectiveMemberRole,
   ObjectiveSettings,
   ObjectiveStatus,
   ObjectiveSummary,
@@ -125,7 +127,7 @@ export class ObjectivesStore {
       if (tab === 'archived') return objective.archived;
       if (objective.archived && !(tab === 'all' && showArchived)) return false;
       if (tab === 'mine') return objective.role === 'owner';
-      if (tab === 'shared') return objective.role !== 'owner';
+      if (tab === 'shared') return objective.role !== 'owner' || objective.sharing !== 'private';
       return true;
     };
     const factor = direction === 'asc' ? 1 : -1;
@@ -241,6 +243,26 @@ export class ObjectivesStore {
 
   setCompleted(id: string, completed: boolean): Promise<boolean> {
     return this.apply(this.api.setCompleted(id, completed));
+  }
+
+  addMember(id: string, details: AddObjectiveMemberRequest): Promise<boolean> {
+    return this.apply(this.api.addMember(id, details));
+  }
+
+  updateMemberRole(id: string, userId: string, role: ObjectiveMemberRole): Promise<boolean> {
+    return this.apply(this.api.updateMember(id, userId, role));
+  }
+
+  removeMember(id: string, userId: string): Promise<boolean> {
+    return this.apply(this.api.removeMember(id, userId));
+  }
+
+  /** Gives up what was shared in this objective's tree: it leaves the screens. */
+  async leave(id: string): Promise<boolean> {
+    return this.run(this.api.leave(id), () => {
+      this.detailState.set(null);
+      this.objectivesState.update((items) => items.filter((objective) => objective.id !== id));
+    });
   }
 
   /** Ticks a sub-objective from its parent, whose state then changes too. */

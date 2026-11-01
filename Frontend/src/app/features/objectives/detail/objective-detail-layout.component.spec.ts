@@ -112,6 +112,21 @@ describe('ObjectiveDetailLayoutComponent', () => {
     expect(markViewed).not.toHaveBeenCalled();
   });
 
+  it('shows parents above what was shared as names, and goes back to the overview', async () => {
+    await visit(
+      '/objectives/branch',
+      objectiveDetail({
+        id: 'branch',
+        role: 'contributor',
+        breadcrumb: [{ id: null, title: 'Haut' }],
+      }),
+    );
+
+    expect(element().querySelector('.breadcrumb a')).toBeNull();
+    expect(element().querySelector('.hidden-crumb')?.textContent).toBe('Haut');
+    expect(element().querySelector('.nav-link')?.getAttribute('href')).toBe('/objectives');
+  });
+
   it('goes back to the overview from the top, without a breadcrumb', async () => {
     await visit('/objectives/obj-1');
 
@@ -150,7 +165,7 @@ describe('ObjectiveDetailLayoutComponent', () => {
       await visit('/objectives/obj-1');
       menu();
 
-      expect(element().querySelector('.menu a')?.getAttribute('href')).toBe('/objectives/obj-1/edit');
+      expect(element().querySelectorAll('.menu a')[1].getAttribute('href')).toBe('/objectives/obj-1/edit');
       expect(element().querySelectorAll('.menu button').length).toBe(3);
 
       layout().togglePause();
@@ -255,10 +270,22 @@ describe('ObjectiveDetailLayoutComponent', () => {
       expect(navigate).not.toHaveBeenCalled();
     });
 
-    it('offers nothing to someone who does not own the objective', async () => {
+    it('only offers the people to someone who does not own the objective', async () => {
       await visit('/objectives/obj-1', metricDetail({ role: 'contributor' }));
+      menu();
 
-      expect(element().querySelector('.more-button')).toBeNull();
+      const links = element().querySelectorAll('.menu a');
+      expect(links).toHaveLength(1);
+      expect(links[0].textContent).toBe('Personnes');
+      expect(links[0].getAttribute('href')).toBe('/objectives/obj-1/share');
+      expect(element().querySelector('.menu button')).toBeNull();
+    });
+
+    it('offers the owner to share', async () => {
+      await visit('/objectives/obj-1');
+      menu();
+
+      expect(element().querySelector('.menu a')?.textContent).toBe('Partager');
     });
 
     it('ignores menu actions when the objective is missing', async () => {

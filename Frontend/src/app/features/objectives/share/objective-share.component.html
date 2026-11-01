@@ -1,0 +1,88 @@
+<app-page-header
+  heading="Partager l’objectif"
+  [backLink]="['/objectives', id]"
+  backLabel="Fermer le partage"
+  variant="close"
+/>
+
+@if (objective(); as objective) {
+  <div class="content">
+    <div class="summary">
+      <app-objective-icon [category]="objective.category" [color]="tint()" />
+      <strong>{{ objective.title }}</strong>
+    </div>
+
+    @if (objective.descendantCount) {
+      <p class="note">Les personnes invitées ont aussi accès aux sous-objectifs, mais à rien au-dessus.</p>
+    }
+
+    <section>
+      <h2>Personnes ({{ members().length }})</h2>
+      <ul class="people">
+        @for (member of members(); track member.id) {
+          <li>
+            <span class="avatar" [style.background]="member.avatar.color" aria-hidden="true">{{ member.avatar.initials }}</span>
+            <span class="name">
+              {{ member.name }}
+              @if (member.inheritedFrom; as from) {
+                <small>Invité·e sur « {{ from.title }} »</small>
+              }
+            </span>
+            @if (isOwner() && member.role !== 'owner' && !member.inheritedFrom) {
+              <select
+                class="choice-select"
+                [attr.aria-label]="'Droits de ' + member.name"
+                (change)="updateRole(member.id, $any($event.target).value)"
+              >
+                <option value="contributor" [selected]="member.role === 'contributor'">{{ roleLabels.contributor }}</option>
+                <option value="viewer" [selected]="member.role === 'viewer'">{{ roleLabels.viewer }}</option>
+              </select>
+              <button class="remove" type="button" [attr.aria-label]="'Retirer ' + member.name" (click)="removeMember(member.id)">×</button>
+            } @else {
+              <span class="role">{{ roleLabels[member.role] }}</span>
+            }
+          </li>
+        }
+      </ul>
+
+      @if (isOwner()) {
+        @if (!inviteOpen()) {
+          <button class="link-button" type="button" (click)="openInvite()">＋ Inviter des amis ou membres de groupe</button>
+        } @else if (contacts() === null) {
+          <p class="note">Chargement de vos contacts…</p>
+        } @else if (candidates().length) {
+          <div class="invite">
+            <select class="form-control" aria-label="Personne à inviter" (change)="inviteUserId.set($any($event.target).value)">
+              @for (candidate of candidates(); track candidate.id) {
+                <option [value]="candidate.id" [selected]="candidate.id === inviteUserId()">{{ contactName(candidate) }}</option>
+              }
+            </select>
+            <div class="invite-roles" role="radiogroup" aria-label="Ce que la personne pourra faire">
+              <label [class.selected]="inviteRole() === 'viewer'">
+                <input type="radio" name="invite-role" [checked]="inviteRole() === 'viewer'" (change)="inviteRole.set('viewer')" />
+                <span><strong>Partager</strong><small>Elle peut suivre l’objectif, sans le modifier</small></span>
+              </label>
+              <label [class.selected]="inviteRole() === 'contributor'">
+                <input type="radio" name="invite-role" [checked]="inviteRole() === 'contributor'" (change)="inviteRole.set('contributor')" />
+                <span><strong>Objectif commun</strong><small>Elle contribue à sa progression</small></span>
+              </label>
+            </div>
+            <button class="primary-button" type="button" (click)="invite()">Inviter</button>
+          </div>
+        } @else {
+          <p class="note">Tous vos contacts ont déjà accès. Ajoutez des amis dans les paramètres pour partager avec d’autres personnes.</p>
+        }
+      }
+    </section>
+
+    @if (store.error(); as error) {
+      <p class="field-error" role="alert">{{ error }}</p>
+    }
+
+    @if (!isOwner()) {
+      <button class="leave" type="button" (click)="leave()">Quitter l’objectif</button>
+    }
+  </div>
+} @else if (missing()) {
+  <p class="empty">Cet objectif n’existe pas ou a été supprimé.</p>
+}

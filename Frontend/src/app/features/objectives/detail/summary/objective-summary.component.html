@@ -83,6 +83,21 @@
       </section>
     }
 
+    @if (view.contributions.length) {
+      <section class="contributions" aria-labelledby="contributions-title">
+        <div class="heading"><h3 id="contributions-title">Contributions</h3></div>
+        <ul>
+          @for (contribution of view.contributions; track contribution.name) {
+            <li>
+              <span>{{ contribution.name }}</span>
+              <b>{{ contribution.value }}</b>
+              <i aria-hidden="true"><em [style.width.%]="contribution.share"></em></i>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     @if (objective.children.length || isOwner()) {
       <section class="children" aria-labelledby="children-title">
         <div class="heading">
@@ -168,6 +183,37 @@
             />
           }
         </div>
+      }
+
+      <a class="row" [routerLink]="['/objectives', objective.id, 'share']">
+        <span>
+          <b>{{ objective.people.length > 1 ? 'Partagé avec' : 'Partager' }}</b>
+          @if (objective.people.length > 1) {
+            <app-avatar-stack [people]="view.people" />
+          } @else {
+            <small>Personne pour l’instant</small>
+          }
+        </span>
+        <i aria-hidden="true">›</i>
+      </a>
+
+      @if (objective.parentId && objective.people.length > 1) {
+        @if (isOwner()) {
+          <label class="row assign">
+            <span><b>Assigné à</b></span>
+            <select class="choice-select" (change)="assign($any($event.target).value)">
+              <option value="" [selected]="!objective.assignee">Personne</option>
+              @for (person of objective.people; track person.id) {
+                <option [value]="person.id" [selected]="person.id === objective.assignee?.id">{{ person.name }}</option>
+              }
+            </select>
+          </label>
+        } @else {
+          <div class="row assign">
+            <span><b>Assigné à</b></span>
+            <small>{{ objective.assignee?.name ?? 'Personne' }}</small>
+          </div>
+        }
       }
 
       <div class="row-block">

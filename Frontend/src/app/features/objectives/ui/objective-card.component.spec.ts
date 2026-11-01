@@ -103,6 +103,14 @@ describe('ObjectiveCardComponent', () => {
     expect(fill.width).toBeCloseTo(meter.width / 2, 0);
   });
 
+  it('says whose it is or how it is shared, when it is', () => {
+    render({}, false);
+    expect(element.querySelector('.sharing')).toBeNull();
+
+    render({ sharing: 'Par Ada Lovelace' }, false);
+    expect(element.querySelector('.sharing')?.textContent).toBe('Par Ada Lovelace');
+  });
+
   it('marks a completed objective', () => {
     render({ objective: objectiveSummary({ status: 'completed', percent: 100 }) }, false);
     expect(element.querySelector('.card')?.classList).toContain('completed');

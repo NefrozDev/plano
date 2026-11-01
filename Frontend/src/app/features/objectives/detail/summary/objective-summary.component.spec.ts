@@ -337,6 +337,140 @@ describe('ObjectiveSummaryComponent', () => {
     });
   });
 
+  describe('people', () => {
+    const shareRow = () => element.querySelector('a.row') as HTMLAnchorElement;
+
+    it('leads to sharing, and says when nobody else is there', async () => {
+      await show(objectiveDetail());
+
+      expect(shareRow().getAttribute('href')).toBe('/objectives/obj-1/share');
+      expect(shareRow().textContent).toContain('Partager');
+      expect(shareRow().textContent).toContain('Personne pour l’instant');
+      expect(element.querySelector('app-avatar-stack .avatars')).toBeNull();
+    });
+
+    it('shows who it is shared with', async () => {
+      await show(
+        objectiveDetail({
+          people: [
+            { id: 'a', name: 'Ada Lovelace' },
+            { id: 'b', name: 'Bob Martin' },
+          ],
+        }),
+      );
+
+      expect(shareRow().textContent).toContain('Partagé avec');
+      expect(element.querySelector('app-avatar-stack .avatars')?.getAttribute('aria-label')).toBe('Ada Lovelace, Bob Martin');
+    });
+
+    it('labels the sub-objectives shared or assigned', async () => {
+      await show(
+        treeDetail({
+          children: [
+            objectiveSummary({ id: 'x', parentId: 'obj-1', sharing: 'common', assignee: { id: 'b', name: 'Bob' } }),
+          ],
+        }),
+      );
+
+      expect(element.querySelector('.child-item .sharing')?.textContent).toBe('Commun · Pour Bob');
+    });
+  });
+
+  describe('contributions', () => {
+    const bob = { id: 'b', name: 'Bob Martin' };
+    const ada = { id: 'a', name: 'Ada Lovelace' };
+    const lines = () =>
+      Array.from(element.querySelectorAll('.contributions li')).map(
+        (line) => `${line.querySelector('span')?.textContent} ${line.querySelector('b')?.textContent}`,
+      );
+
+    it('stays hidden with one person', async () => {
+      await show(metricDetail({ contributions: [{ person: ada, value: 3 }] }));
+      expect(element.querySelector('.contributions')).toBeNull();
+    });
+
+    it('shows each share, in the objective’s unit', async () => {
+      await show(
+        metricDetail({
+          contributions: [
+            { person: ada, value: 6.5 },
+            { person: bob, value: 2 },
+          ],
+        }),
+      );
+
+      expect(lines()).toEqual(['Ada Lovelace 6,5 km', 'Bob Martin 2 km']);
+      const bars = element.querySelectorAll<HTMLElement>('.contributions em');
+      expect(bars[0].style.width).toBe('100%');
+      expect(bars[1].style.width).toBe('31%');
+    });
+
+    it('counts days on a habit and sub-objectives on a tree', async () => {
+      const contributions = [
+        { person: ada, value: 3 },
+        { person: bob, value: 0 },
+      ];
+      await show(habitDetail({ contributions }));
+      expect(lines()).toEqual(['Ada Lovelace 3 j', 'Bob Martin 0 j']);
+
+      await show(treeDetail({ contributions }));
+      expect(lines()[0]).toBe('Ada Lovelace 3 terminé(s)');
+    });
+
+    it('survives everyone at zero', async () => {
+      await show(
+        habitDetail({
+          contributions: [
+            { person: ada, value: 0 },
+            { person: bob, value: 0 },
+          ],
+        }),
+      );
+      expect(element.querySelector<HTMLElement>('.contributions em')?.style.width).toBe('0%');
+    });
+  });
+
+  describe('assigning', () => {
+    const people = [
+      { id: 'a', name: 'Ada Lovelace' },
+      { id: 'b', name: 'Bob Martin' },
+    ];
+    const select = () => element.querySelector('.assign select') as HTMLSelectElement | null;
+
+    it('lets the owner assign a sub-objective to someone, and take it back', async () => {
+      await show(objectiveDetail({ parentId: 'parent', people }));
+      expect(select()?.value).toBe('');
+
+      (select() as HTMLSelectElement).value = 'b';
+      select()?.dispatchEvent(new Event('change'));
+      expect(await answer('', objectiveDetail({ parentId: 'parent', people, assignee: people[1] }))).toEqual({
+        assignedToUserId: 'b',
+      });
+      expect(select()?.value).toBe('b');
+
+      (select() as HTMLSelectElement).value = '';
+      select()?.dispatchEvent(new Event('change'));
+      expect(await answer('')).toEqual({ assignedToUserId: null });
+    });
+
+    it('only tells others who it is for', async () => {
+      await show(objectiveDetail({ parentId: 'parent', people, role: 'viewer', assignee: people[1] }));
+      expect(select()).toBeNull();
+      expect(element.querySelector('.assign small')?.textContent).toBe('Bob Martin');
+
+      await show(objectiveDetail({ parentId: 'parent', people, role: 'viewer' }));
+      expect(element.querySelector('.assign small')?.textContent).toBe('Personne');
+    });
+
+    it('does not apply to a top-level objective, or with nobody to assign', async () => {
+      await show(objectiveDetail({ people }));
+      expect(element.querySelector('.assign')).toBeNull();
+
+      await show(objectiveDetail({ parentId: 'parent' }));
+      expect(element.querySelector('.assign')).toBeNull();
+    });
+  });
+
   describe('owner’s edits', () => {
     it('renames inline and lets Escape cancel', async () => {
       await show(objectiveDetail());
@@ -465,6 +599,7 @@ describe('ObjectiveSummaryComponent', () => {
     component.updateDueReminder('none');
     component.setProgress(10);
     component.toggleCompleted();
+    component.assign('someone');
 
     http.expectNone({ method: 'PATCH' });
     http.expectNone({ method: 'PUT' });

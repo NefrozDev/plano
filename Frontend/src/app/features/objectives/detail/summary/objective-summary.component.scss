@@ -49,3 +49,10 @@ app-avatar-stack { --avatar-size: 1.75rem; }
 .drag-handle:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); }
 .add-child { justify-self: start; padding: .35rem 0; color: var(--color-primary); font-size: .78rem; font-weight: 700; text-decoration: none; }
 .row:disabled { cursor: default; }
+.contributions { margin-top: 1.2rem; }
+.contributions ul { display: grid; gap: .55rem; margin: .55rem 0 0; padding: 0; list-style: none; }
+.contributions li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .2rem .6rem; font-size: .76rem; }
+.contributions li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.contributions li i { display: block; grid-column: 1 / -1; height: .3rem; overflow: hidden; border-radius: 1rem; background: #eef1f6; }
+.contributions li em { display: block; height: 100%; border-radius: inherit; background: var(--color-primary); }
+.assign { cursor: default; }

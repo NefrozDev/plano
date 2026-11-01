@@ -14,4 +14,5 @@
 .not-found a { color: var(--color-primary); font-weight: 700; }
 .breadcrumb { display: flex; flex-wrap: wrap; gap: .1rem .3rem; align-items: center; margin: -.3rem 1.25rem .5rem; color: #8a93a3; font-size: .7rem; }
 .breadcrumb a { max-width: 9rem; overflow: hidden; color: #5b6476; font-weight: 650; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.hidden-crumb { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .action-error { margin: 0 1.25rem .5rem; }

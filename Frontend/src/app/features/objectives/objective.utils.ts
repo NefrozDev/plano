@@ -77,9 +77,22 @@ export function progressText(objective: ObjectiveSummary, showPercentage: boolea
     : `${formatNumber(amount.current)} / ${formatNumber(amount.target)} ${amount.unit}`;
 }
 
-export function dueCaption(objective: Pick<ObjectiveSummary, 'dueDate' | 'status' | 'completedAt'>): string {
+/** What sharing adds to a card: whose it is, or that it is shared; empty when private. */
+export function sharingLabel(objective: Pick<ObjectiveSummary, 'role' | 'owner' | 'sharing' | 'assignee'>): string {
+  const parts: string[] = [];
+  if (objective.role !== 'owner') parts.push(`Par ${objective.owner.name}`);
+  else if (objective.sharing === 'common') parts.push('Commun');
+  else if (objective.sharing === 'shared') parts.push('Partagé');
+  if (objective.assignee) parts.push(`Pour ${objective.assignee.name}`);
+  return parts.join(' · ');
+}
+
+export function dueCaption(
+  objective: Pick<ObjectiveSummary, 'dueDate' | 'status' | 'completedAt'> & Partial<Pick<ObjectiveSummary, 'completedBy'>>,
+): string {
   if (objective.status === 'completed' && objective.completedAt) {
-    return `Terminé le ${formatDate(toIsoDate(new Date(objective.completedAt)))}`;
+    const by = objective.completedBy ? ` par ${objective.completedBy.name}` : '';
+    return `Terminé le ${formatDate(toIsoDate(new Date(objective.completedAt)))}${by}`;
   }
   return objective.dueDate ? `Échéance : ${formatDate(objective.dueDate)}` : 'Sans échéance';
 }

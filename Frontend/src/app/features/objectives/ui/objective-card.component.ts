@@ -12,6 +12,8 @@ export interface ObjectiveCardView {
   caption: string;
   tint: string;
   timelapse: TimelapseView | null;
+  /** Whose it is, or how it is shared; empty when private. */
+  sharing?: string;
 }
 
 @Component({
@@ -49,6 +51,9 @@ export interface ObjectiveCardView {
             <em>Archivé</em>
           }
         </small>
+        @if (card().sharing; as sharing) {
+          <small class="sharing">{{ sharing }}</small>
+        }
         @if (!tile() && card().objective.percent !== null) {
           <i class="progress" aria-hidden="true"><b [style.width.%]="card().objective.percent"></b></i>
         }
@@ -71,6 +76,7 @@ export interface ObjectiveCardView {
     strong { overflow: hidden; font-size: .88rem; text-overflow: ellipsis; white-space: nowrap; }
     /* Flex so the 'En pause' pill is vertically centred on the caption (and can wrap in tiles). */
     small { display: flex; flex-wrap: wrap; gap: .25rem .35rem; align-items: center; color: #7b8292; font-size: .7rem; }
+    .sharing { color: var(--tint); font-weight: 650; }
     em { padding: .1rem .45rem; border-radius: 1rem; background: #fff4e5; color: #b45d00; font-style: normal; font-weight: 650; line-height: 1.2; }
     .progress { display: block; height: .3rem; margin-top: .15rem; overflow: hidden; border-radius: 1rem; background: color-mix(in srgb, var(--tint) 14%, #eef1f6); }
     .progress b { display: block; height: 100%; border-radius: inherit; background: var(--fill); transition: width .4s ease; }

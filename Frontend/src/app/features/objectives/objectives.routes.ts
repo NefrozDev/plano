@@ -37,6 +37,12 @@ export const OBJECTIVES_ROUTES: Routes = [
         title: 'Paramètres des objectifs | Plano',
       },
       {
+        path: ':id/share',
+        loadComponent: () =>
+          import('./share/objective-share.component').then((m) => m.ObjectiveShareComponent),
+        title: 'Partager un objectif | Plano',
+      },
+      {
         path: ':id/edit',
         loadComponent: () =>
           import('./form/objective-form.component').then((m) => m.ObjectiveFormComponent),

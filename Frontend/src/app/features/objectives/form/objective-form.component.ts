@@ -9,20 +9,25 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import type {
   CompletionMode,
+  Contact,
   CreateObjectiveRequest,
   MetricAggregation,
   ObjectiveCategory,
   ObjectiveDetail,
+  ObjectiveMemberRole,
   ObjectiveReminder,
   ObjectiveSettingsFields,
   UpdateObjectiveRequest,
 } from '@plano/common';
+import { firstValueFrom } from 'rxjs';
+import { FriendsService } from '../../../core/friends/friends.service';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { SwitchRowComponent } from '../../../shared/ui/switch-row.component';
 import { COMPLETION_LABELS, OBJECTIVE_CATEGORIES, WEEKDAY_LABELS } from '../objective.utils';
 import { ObjectivesStore } from '../objectives.store';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
+import { PeoplePickerComponent } from '../ui/people-picker.component';
 
 type BarMode = Exclude<CompletionMode, 'none'>;
 
@@ -36,7 +41,14 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
  */
 @Component({
   selector: 'app-objective-form',
-  imports: [ReactiveFormsModule, AutofocusDirective, PageHeaderComponent, ObjectiveIconComponent, SwitchRowComponent],
+  imports: [
+    ReactiveFormsModule,
+    AutofocusDirective,
+    PageHeaderComponent,
+    ObjectiveIconComponent,
+    PeoplePickerComponent,
+    SwitchRowComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-form.component.html',
   styleUrl: './objective-form.component.scss',
@@ -45,6 +57,7 @@ export class ObjectiveFormComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly friends = inject(FriendsService);
   readonly store = inject(ObjectivesStore);
 
   /** Set when editing an existing objective. */
@@ -64,6 +77,13 @@ export class ObjectiveFormComponent {
   readonly barOn = signal(false);
   readonly timelapseOn = signal(false);
   readonly childrenOn = signal(false);
+  readonly sharedOn = signal(false);
+  readonly commonOn = signal(false);
+  /** The signed-in user's contacts; null until a sharing option is opened. */
+  readonly contacts = signal<readonly Contact[] | null>(null);
+  /** Who follows the objective, and who contributes to it. */
+  readonly viewers = signal<readonly string[]>([]);
+  readonly contributors = signal<readonly string[]>([]);
   readonly saving = signal(false);
   /** The objective being edited is not available. */
   readonly missing = signal(false);
@@ -134,6 +154,19 @@ export class ObjectiveFormComponent {
     if (mode === 'children' && !this.objectiveId) this.childrenOn.set(true);
   }
 
+  toggleSharing(role: ObjectiveMemberRole): void {
+    const on = role === 'viewer' ? this.sharedOn : this.commonOn;
+    on.update((value) => !value);
+    if (on() && !this.contacts()) void this.loadContacts();
+  }
+
+  /** Someone either follows or contributes: picking one role takes them out of the other. */
+  togglePerson(role: ObjectiveMemberRole, userId: string): void {
+    const [picked, other] = role === 'viewer' ? [this.viewers, this.contributors] : [this.contributors, this.viewers];
+    picked.update((ids) => (ids.includes(userId) ? ids.filter((id) => id !== userId) : [...ids, userId]));
+    other.update((ids) => ids.filter((id) => id !== userId));
+  }
+
   addChildField(): void {
     this.form.controls.children.push(this.formBuilder.nonNullable.control('', Validators.maxLength(80)));
   }
@@ -193,10 +226,15 @@ export class ObjectiveFormComponent {
     const children = this.childrenOn()
       ? value.children.map((title) => title.trim()).filter(Boolean)
       : [];
+    const members = [
+      ...(this.sharedOn() ? this.viewers().map((userId) => ({ userId, role: 'viewer' as const })) : []),
+      ...(this.commonOn() ? this.contributors().map((userId) => ({ userId, role: 'contributor' as const })) : []),
+    ];
     const details = {
       ...this.settings(),
       ...(this.parentId && { parentId: this.parentId, weight: value.weight }),
       ...(children.length && { children }),
+      ...(members.length && { members }),
       reminder: { frequency: value.reminderFrequency, time: value.reminderTime, weekday: +value.reminderWeekday },
       dueReminder: this.store.settings().defaultDueReminder,
     } as CreateObjectiveRequest;
@@ -212,6 +250,14 @@ export class ObjectiveFormComponent {
       ...(this.showWeight() && { weight: this.form.getRawValue().weight }),
     };
     return (await this.store.update(id, changes)) ? id : null;
+  }
+
+  private async loadContacts(): Promise<void> {
+    try {
+      this.contacts.set(await firstValueFrom(this.friends.contacts()));
+    } catch {
+      this.contacts.set([]);
+    }
   }
 
   private async loadForEditing(id: string): Promise<void> {

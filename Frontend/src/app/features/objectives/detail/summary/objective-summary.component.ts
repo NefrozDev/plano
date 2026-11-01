@@ -10,6 +10,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { toPerson } from '../../../../core/people/people';
+import { AvatarStackComponent } from '../../../../shared/ui/avatar-stack.component';
 import type {
   DueReminder,
   ObjectiveDetail,
@@ -26,6 +28,7 @@ import {
   objectiveReminderLabel,
   objectiveTint,
   progressText,
+  sharingLabel,
   timelapseView,
 } from '../../objective.utils';
 import { ObjectivesStore } from '../../objectives.store';
@@ -44,7 +47,7 @@ interface StatTile {
 
 @Component({
   selector: 'app-objective-summary',
-  imports: [RouterLink, ObjectiveCardComponent, ObjectiveIconComponent, TimelapseBarComponent],
+  imports: [RouterLink, AvatarStackComponent, ObjectiveCardComponent, ObjectiveIconComponent, TimelapseBarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-summary.component.html',
   styleUrl: './objective-summary.component.scss',
@@ -94,6 +97,8 @@ export class ObjectiveSummaryComponent {
       reminder: objectiveReminderLabel(objective.reminder),
       dueReminder: DUE_REMINDER_LABELS[objective.dueReminder],
       children: objective.children.map((child) => this.toCard(child)),
+      people: objective.people.map(toPerson),
+      contributions: this.contributions(objective),
     };
   });
 
@@ -148,6 +153,11 @@ export class ObjectiveSummaryComponent {
     this.toggling.set('');
   }
 
+  assign(userId: string): void {
+    const objective = this.objective();
+    if (objective) void this.store.update(objective.id, { assignedToUserId: userId || null });
+  }
+
   moveChildWithKeyboard(id: string, event: KeyboardEvent): void {
     this.drag.keydown(id, event, this.childIds());
   }
@@ -160,7 +170,25 @@ export class ObjectiveSummaryComponent {
       caption: dueCaption(child),
       tint: objectiveTint(child.category, categoryColors),
       timelapse: timelapseView(child, this.store.today()),
+      sharing: sharingLabel(child),
     };
+  }
+
+  /** Each person's share, as soon as there is more than one person to compare. */
+  private contributions(objective: ObjectiveDetail): { name: string; value: string; share: number }[] {
+    if (objective.contributions.length < 2) return [];
+    const unit = this.contributionUnit(objective);
+    const top = Math.max(1, ...objective.contributions.map(({ value }) => value));
+    return objective.contributions.map(({ person, value }) => ({
+      name: person.name,
+      value: `${formatNumber(value)} ${unit}`,
+      share: Math.round((value / top) * 100),
+    }));
+  }
+
+  private contributionUnit(objective: ObjectiveDetail): string {
+    if (objective.completion === 'metric') return objective.metric?.unit ?? '';
+    return objective.completion === 'habit' ? 'j' : 'terminé(s)';
   }
 
   private trackingTiles(objective: ObjectiveDetail): StatTile[] {

@@ -5,19 +5,20 @@
     backLabel="Retour"
     [showHeading]="showTitle()"
   >
-    @if (isOwner()) {
-      <div class="menu-anchor">
-        <button
-          class="more-button"
-          type="button"
-          aria-label="Actions de l’objectif"
-          [attr.aria-expanded]="menuOpen()"
-          (click)="menuOpen.set(!menuOpen())"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="19" cy="12" r="1.4" /></svg>
-        </button>
-        @if (menuOpen()) {
-          <div class="menu">
+    <div class="menu-anchor">
+      <button
+        class="more-button"
+        type="button"
+        aria-label="Actions de l’objectif"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="19" cy="12" r="1.4" /></svg>
+      </button>
+      @if (menuOpen()) {
+        <div class="menu">
+          <a [routerLink]="['/objectives', objective.id, 'share']">{{ isOwner() ? 'Partager' : 'Personnes' }}</a>
+          @if (isOwner()) {
             <a [routerLink]="['/objectives', objective.id, 'edit']">Modifier</a>
             @if (objective.status !== 'completed') {
               <button type="button" (click)="togglePause()">
@@ -28,10 +29,10 @@
               {{ objective.archived ? 'Désarchiver' : 'Archiver' }}
             </button>
             <button class="danger" type="button" (click)="remove()">Supprimer</button>
-          </div>
-        }
-      </div>
-    }
+          }
+        </div>
+      }
+    </div>
   </app-page-header>
 
   @if (objective.breadcrumb.length) {

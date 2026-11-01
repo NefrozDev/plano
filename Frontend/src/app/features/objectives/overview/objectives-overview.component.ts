@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import type { ObjectiveSummary } from '@plano/common';
 import { FriendNotificationsService } from '../../../core/friends/friend-notifications.service';
-import { dueCaption, objectiveTint, progressText, timelapseView } from '../objective.utils';
+import { dueCaption, objectiveTint, progressText, sharingLabel, timelapseView } from '../objective.utils';
 import { ObjectiveTab, ObjectivesStore } from '../objectives.store';
 import { DragReorder } from '../ui/drag-reorder';
 import { ObjectiveCardComponent, ObjectiveCardView } from '../ui/objective-card.component';
@@ -86,6 +86,7 @@ export class ObjectivesOverviewComponent {
       caption: dueCaption(objective),
       tint: objectiveTint(objective.category, categoryColors),
       timelapse: timelapseView(objective, this.store.today()),
+      sharing: sharingLabel(objective),
     };
   }
 }

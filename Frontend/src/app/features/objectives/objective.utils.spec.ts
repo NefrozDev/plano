@@ -16,6 +16,7 @@ import {
   objectiveReminderLabel,
   objectiveTint,
   progressText,
+  sharingLabel,
   slugify,
   timelapseView,
   toImportRequest,
@@ -101,6 +102,27 @@ describe('objective utils', () => {
     });
   });
 
+  describe('sharingLabel', () => {
+    it('stays empty for a private objective', () => {
+      expect(sharingLabel(objectiveSummary())).toBe('');
+    });
+
+    it('tells the owner how it is shared', () => {
+      expect(sharingLabel(objectiveSummary({ sharing: 'shared' }))).toBe('Partagé');
+      expect(sharingLabel(objectiveSummary({ sharing: 'common' }))).toBe('Commun');
+    });
+
+    it('tells others whose it is', () => {
+      expect(sharingLabel(objectiveSummary({ role: 'viewer', sharing: 'shared' }))).toBe('Par Ada Lovelace');
+    });
+
+    it('adds who it is for', () => {
+      expect(
+        sharingLabel(objectiveSummary({ sharing: 'common', assignee: { id: 'b', name: 'Bob Martin' } })),
+      ).toBe('Commun · Pour Bob Martin');
+    });
+  });
+
   describe('dueCaption', () => {
     it('gives the deadline, the absence of one, or the day it was completed', () => {
       expect(dueCaption(objectiveSummary({ dueDate: '2026-11-30' }))).toBe('Échéance : 30 nov. 2026');
@@ -108,6 +130,15 @@ describe('objective utils', () => {
       expect(
         dueCaption(objectiveSummary({ status: 'completed', dueDate: '2026-11-30', completedAt: '2026-08-30T12:00:00.000Z' })),
       ).toBe('Terminé le 30 août 2026');
+      expect(
+        dueCaption(
+          objectiveSummary({
+            status: 'completed',
+            completedAt: '2026-08-30T12:00:00.000Z',
+            completedBy: { id: 'b', name: 'Bob Martin' },
+          }),
+        ),
+      ).toBe('Terminé le 30 août 2026 par Bob Martin');
     });
   });
 

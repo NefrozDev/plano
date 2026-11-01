@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import type {
+  AddObjectiveMemberRequest,
   AddObjectiveSessionRequest,
   CreateObjectiveRequest,
   ImportObjectivesRequest,
@@ -8,6 +9,7 @@ import type {
   IsoDate,
   ObjectiveAgendaItem,
   ObjectiveDetail,
+  ObjectiveMemberRole,
   ObjectiveSummary,
   UpdateObjectivePreferencesRequest,
   UpdateObjectiveRequest,
@@ -76,6 +78,22 @@ export class ObjectivesApiService {
 
   setCompleted(id: string, completed: boolean): Observable<ObjectiveDetail> {
     return this.http.put<ObjectiveDetail>(`${this.objectives}/${id}/completed`, { completed });
+  }
+
+  addMember(id: string, details: AddObjectiveMemberRequest): Observable<ObjectiveDetail> {
+    return this.http.post<ObjectiveDetail>(`${this.objectives}/${id}/members`, details);
+  }
+
+  updateMember(id: string, userId: string, role: ObjectiveMemberRole): Observable<ObjectiveDetail> {
+    return this.http.patch<ObjectiveDetail>(`${this.objectives}/${id}/members/${userId}`, { role });
+  }
+
+  removeMember(id: string, userId: string): Observable<ObjectiveDetail> {
+    return this.http.delete<ObjectiveDetail>(`${this.objectives}/${id}/members/${userId}`);
+  }
+
+  leave(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.objectives}/${id}/members/me`);
   }
 
   importLocal(details: ImportObjectivesRequest): Observable<ImportObjectivesResponse> {
