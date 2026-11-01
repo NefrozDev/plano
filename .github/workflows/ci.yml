@@ -31,8 +31,9 @@ jobs:
       - run: npm run build
       # Unit and end-to-end tests start PostgreSQL with Testcontainers,
       # which uses the Docker engine preinstalled on GitHub runners.
-      - run: npm run test:cov
-      - run: npm run test:e2e
+      # Failures also become annotations, readable without opening the log.
+      - run: npm run test:cov -- --reporter=default --reporter=github-actions
+      - run: npm run test:e2e -- --reporter=default --reporter=github-actions
 
   frontend:
     runs-on: ubuntu-latest
@@ -53,7 +54,8 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm run test:browser-install -- --with-deps
-      - run: npm run test:cov
+      # Failures also become annotations, readable without opening the log.
+      - run: npm run test:cov -- --reporters=default --reporters=github-actions
       - run: npm run build
 
   images:
