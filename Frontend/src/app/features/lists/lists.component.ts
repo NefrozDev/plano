@@ -3,8 +3,10 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import type { ListSummary } from '@plano/common';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
+import { type Person, toPerson } from '../../core/people/people';
 import { normalizeText } from '../../core/time/dates';
 import { AutofocusDirective } from '../../shared/ui/autofocus.directive';
+import { AvatarStackComponent } from '../../shared/ui/avatar-stack.component';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { SwitchRowComponent } from '../../shared/ui/switch-row.component';
@@ -22,20 +24,46 @@ export const SHARED_LIST_NOTICE = 'Seule la personne qui a créé cette liste pe
 export interface ListCard {
   list: ListSummary;
   caption: string;
+  /** Who shared it with the user, or whom the user shared it with. */
+  people: readonly Person[];
   surface: string;
   progress: number;
 }
 
-function caption(list: ListSummary): string {
-  const others = list.memberCount - 1;
-  if (list.ownership === 'shared') return 'Partagée avec vous';
-  if (!others) return 'Privée';
-  return `Partagée avec ${others} ${others > 1 ? 'personnes' : 'personne'}`;
+/** Names shown in full before the rest is counted: "Bob, Cyd et 2 autres". */
+const NAMED_PEOPLE = 3;
+
+const firstName = (name: string): string => name.trim().split(/\s+/)[0] ?? name;
+
+/** "Partagée par Ada Lovelace", "Partagée avec Bob, Cyd et Dan", "Privée"… */
+export function caption(list: ListSummary): string {
+  const [owner, ...others] = list.members;
+  if (list.ownership === 'shared') return owner ? `Partagée par ${owner.name}` : 'Partagée avec vous';
+  if (!others.length) return 'Privée';
+  if (others.length === 1) return `Partagée avec ${others[0].name}`;
+  const names = others.map(({ name }) => firstName(name));
+  if (names.length <= NAMED_PEOPLE) return `Partagée avec ${names.slice(0, -1).join(', ')} et ${names.at(-1)}`;
+  const shown = NAMED_PEOPLE - 1;
+  return `Partagée avec ${names.slice(0, shown).join(', ')} et ${names.length - shown} autres`;
+}
+
+/** The sharer of a list shared with the user; else the people the user shared it with. */
+function sharingPeople(list: ListSummary): Person[] {
+  const [owner, ...others] = list.members;
+  return (list.ownership === 'shared' ? (owner ? [owner] : []) : others).map(toPerson);
 }
 
 @Component({
   selector: 'app-lists',
-  imports: [NgTemplateOutlet, RouterLink, AutofocusDirective, BottomNavComponent, SwitchRowComponent, ToastComponent],
+  imports: [
+    NgTemplateOutlet,
+    RouterLink,
+    AutofocusDirective,
+    AvatarStackComponent,
+    BottomNavComponent,
+    SwitchRowComponent,
+    ToastComponent,
+  ],
   templateUrl: './lists.component.html',
   styleUrl: './lists.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,6 +127,7 @@ export class ListsComponent {
       .map((list) => ({
         list,
         caption: caption(list),
+        people: sharingPeople(list),
         surface: `color-mix(in srgb, ${list.color} 9%, white)`,
         progress: list.total ? (list.completed / list.total) * 100 : 0,
       }));

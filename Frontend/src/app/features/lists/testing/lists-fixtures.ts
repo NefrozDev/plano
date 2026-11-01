@@ -61,7 +61,7 @@ export function listDetail(changes: Partial<ListDetail> = {}): ListDetail {
 }
 
 export function listSummary(changes: Partial<ListSummary> = {}): ListSummary {
-  const { description: _description, members: _members, sections: _sections, ...summary } = listDetail();
+  const { description: _description, sections: _sections, ...summary } = listDetail();
   return { ...summary, ...changes };
 }
 

@@ -1,14 +1,17 @@
 import type { MockInstance } from 'vitest';
 import { HttpTestingController } from '@angular/common/http/testing';
+import type { ListMember } from '@plano/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
-import { ListsComponent, SHARED_LIST_NOTICE } from './lists.component';
+import { ListsComponent, SHARED_LIST_NOTICE, caption } from './lists.component';
 import { WHEEL_SWIPE_END_MS } from './list-detail/swipe-to-delete';
 import { ListsStore } from './lists.store';
 import { ConfirmService } from '../../shared/ui/confirm.service';
-import { listDetail, listSettings, listSummary } from './testing/lists-fixtures';
+import { OWNER_ID, listDetail, listSettings, listSummary } from './testing/lists-fixtures';
+
+const me: ListMember = { id: OWNER_ID, name: 'Ada Lovelace', role: 'owner' };
 
 describe('ListsComponent', () => {
   let fixture: ComponentFixture<ListsComponent>;
@@ -25,8 +28,14 @@ describe('ListsComponent', () => {
 
     http.expectOne('/api/v1/lists').flush([
       listSummary({ id: 'courses', name: 'Courses', memberCount: 2 }),
-      listSummary({ id: 'maison', name: 'Maison', memberCount: 1 }),
-      listSummary({ id: 'cadeaux', name: 'Cadeaux', ownership: 'shared', role: 'viewer' }),
+      listSummary({ id: 'maison', name: 'Maison', memberCount: 1, members: [me] }),
+      listSummary({
+        id: 'cadeaux',
+        name: 'Cadeaux',
+        ownership: 'shared',
+        role: 'viewer',
+        members: [{ id: 'user-cyd', name: 'Cyd Martin', role: 'owner' }, { ...me, role: 'viewer' }],
+      }),
       listSummary({ id: 'ete', name: 'Été', archived: true }),
     ]);
     http.expectOne('/api/v1/settings/lists').flush(listSettings());
@@ -39,7 +48,18 @@ describe('ListsComponent', () => {
   it('renders the lists from the API with sharing captions and the shared navigation', () => {
     expect(element.querySelector('h1')?.textContent).toBe('Listes');
     const captions = Array.from(element.querySelectorAll('.list-copy small')).map((caption) => caption.textContent);
-    expect(captions).toEqual(['Partagée avec 1 personne', 'Privée', 'Partagée avec vous']);
+    expect(captions).toEqual(['Partagée avec Bob Martin', 'Privée', 'Partagée par Cyd Martin']);
+    // Avatars of whom it is shared with, or of who shared it; none for a private list.
+    const avatars = (listId: string) =>
+      Array.from(element.querySelectorAll(`.list-item[data-list-id="${listId}"] .list-sharing .avatar`)).map(
+        (avatar) => avatar.textContent,
+      );
+    expect(avatars('courses')).toEqual(['BM']);
+    expect(avatars('maison')).toEqual([]);
+    expect(avatars('cadeaux')).toEqual(['CM']);
+    expect(
+      element.querySelector('.list-item[data-list-id="cadeaux"] app-avatar-stack [role="img"]')?.getAttribute('aria-label'),
+    ).toBe('Partagée par Cyd Martin');
     expect(element.querySelector('.list-progress b')?.textContent).toBe('2 / 6');
     expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
     // Nothing new: the bell leads to the friends settings without a badge.
@@ -56,6 +76,21 @@ describe('ListsComponent', () => {
     const bell = element.querySelector('.notifications-link') as HTMLAnchorElement;
     expect(bell.querySelector('.badge')?.textContent).toBe('2');
     expect(bell.getAttribute('aria-label')).toBe('Notifications : 2 nouvelle(s)');
+  });
+
+  it('names a few people a list is shared with, and counts the rest', () => {
+    const shared = (...names: string[]) =>
+      caption(
+        listSummary({
+          members: [me, ...names.map((name, index) => ({ id: `user-${index}`, name, role: 'editor' as const }))],
+        }),
+      );
+
+    expect(shared('Bob Martin', 'Cyd Durand')).toBe('Partagée avec Bob et Cyd');
+    expect(shared('Bob Martin', 'Cyd Durand', 'Dan Petit')).toBe('Partagée avec Bob, Cyd et Dan');
+    expect(shared('Bob Martin', 'Cyd Durand', 'Dan Petit', 'Eve Roux')).toBe('Partagée avec Bob, Cyd et 2 autres');
+    // An owner the app cannot name still reads sensibly.
+    expect(caption(listSummary({ ownership: 'shared', members: [] }))).toBe('Partagée avec vous');
   });
 
   it('filters personal, shared and archived lists', () => {

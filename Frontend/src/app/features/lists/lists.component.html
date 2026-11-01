@@ -154,7 +154,15 @@
           }
         }
       </span>
-      <span class="list-copy"><strong>{{ card.list.name }}</strong><small>{{ card.caption }}</small></span>
+      <span class="list-copy">
+        <strong>{{ card.list.name }}</strong>
+        <span class="list-sharing">
+          @if (card.people.length) {
+            <app-avatar-stack [people]="card.people" [max]="3" [label]="card.caption" />
+          }
+          <small>{{ card.caption }}</small>
+        </span>
+      </span>
       <span class="list-progress">
         @if (listsStore.settings()?.showCounts) {
           <b>{{ card.list.completed }} / {{ card.list.total }}</b>

@@ -392,6 +392,11 @@ app-lists .delete-list { position: absolute; top: 0; right: 0; bottom: 0; displa
 app-lists .list-item.revealed .delete-list { opacity: 1; pointer-events: auto; }
 app-lists .delete-list svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 app-lists .grid-view .delete-list { width: 100%; height: 3rem; top: auto; }
+app-lists .list-sharing { display: flex; min-width: 0; gap: .4rem; align-items: center; }
+app-lists .list-sharing app-avatar-stack { --avatar-size: 1.3rem; }
+app-lists .grid-view .list-sharing { min-height: 1.3rem; justify-content: center; }
+/* Names next to avatars need room: up to two lines instead of an ellipsis (outranks the component's nowrap). */
+app-lists .list-card .list-copy .list-sharing small { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.3; white-space: normal; }
 app-lists button.setting-row { cursor: pointer; }
 app-lists .setting-row input { max-width: 9rem; border: 0; outline: 0; background: transparent; color: #687187; font: inherit; font-size: .79rem; text-align: right; }
 app-lists .setting-row input[type='time'] { width: 5rem; }
