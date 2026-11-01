@@ -128,7 +128,11 @@ describe('ObjectivesOverviewComponent', () => {
     const pointer = (type: string, target: Element, x = 0, y = 0) =>
       target.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x, clientY: y, bubbles: true, cancelable: true }));
     const centre = (id: string) => {
-      const box = (element.querySelector(`.objective-item[data-objective-id="${id}"]`) as HTMLElement).getBoundingClientRect();
+      const target = element.querySelector(`.objective-item[data-objective-id="${id}"]`) as HTMLElement;
+      // elementFromPoint() only sees the visible part of the page, whose size and
+      // content differ between runs: bring the card into view before aiming at it.
+      target.scrollIntoView({ block: 'center' });
+      const box = target.getBoundingClientRect();
       return [box.left + box.width / 2, box.top + box.height / 2] as const;
     };
 
