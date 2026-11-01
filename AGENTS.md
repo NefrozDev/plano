@@ -71,6 +71,8 @@ Keep these root commands working when package scripts change.
 
 - Every face goes through `app-user-avatar` (or `app-avatar-stack`, which uses it): the picture when there is one, initials otherwise or if it fails to load. Never draw initials by hand, and have the API send `avatarVersion` with any person it names, or their picture will not show.
 
+- What can be deleted from a list swipes left (`SwipeToDelete`, `shared/ui`): touch, mouse, touchpad and the Delete key; the owner gets a confirmation, anyone else a toast saying why. On a card that is a link (`ObjectiveSwipeCardComponent`), stop the click ending a swipe in the capture phase, as `RouterLink` listens on the link itself, and prevent `dragstart`, or the link's native drag cancels a mouse swipe.
+
 ## Fresh NestJS scaffold checklist
 
 When creating a new backend in an existing repository:
