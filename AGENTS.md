@@ -69,6 +69,8 @@ Keep these root commands working when package scripts change.
 
 - On wide screens the app is drawn inside a phone frame by `MobileShellLayoutComponent`. Every signed-in screen must be routed as a child of a shell route (`app.routes.ts`, `agenda.routes.ts`, `objectives.routes.ts`) or wrap itself in `app-auth-shell` (groups pages); a top-level route stretches across the whole window. `app.routes.spec.ts` pins the shell's children.
 
+- Every face goes through `app-user-avatar` (or `app-avatar-stack`, which uses it): the picture when there is one, initials otherwise or if it fails to load. Never draw initials by hand, and have the API send `avatarVersion` with any person it names, or their picture will not show.
+
 ## Fresh NestJS scaffold checklist
 
 When creating a new backend in an existing repository:
