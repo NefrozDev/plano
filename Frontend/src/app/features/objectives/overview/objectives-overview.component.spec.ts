@@ -165,11 +165,12 @@ describe('ObjectivesOverviewComponent', () => {
     expect(filters?.closest('.header-actions')).not.toBeNull();
   });
 
-  it('opens the overflow menu with settings', () => {
-    (element.querySelector('.more-button') as HTMLButtonElement).click();
-    fixture.detectChanges();
+  it('leads straight to the settings, without a menu for a single choice', () => {
+    const settings = element.querySelector('.header-actions [aria-label="Paramètres des objectifs"]');
 
-    expect(element.querySelector('.overview-menu a')?.getAttribute('href')).toBe('/objectives/settings');
+    expect(settings?.getAttribute('href')).toBe('/objectives/settings');
+    expect(element.querySelector('.more-button')).toBeNull();
+    expect(element.querySelector('.overview-menu')).toBeNull();
   });
 
   describe('swipe to delete', () => {

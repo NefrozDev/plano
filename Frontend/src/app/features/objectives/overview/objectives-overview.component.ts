@@ -43,7 +43,6 @@ export class ObjectivesOverviewComponent {
     { label: 'Archivés', value: 'archived' },
   ];
   readonly activeTab = signal<ObjectiveTab>('all');
-  readonly menuOpen = signal(false);
   /** Why a card did not slide; empty when there is nothing to say. */
   readonly notice = signal('');
   readonly showAllCompleted = signal(false);
