@@ -196,21 +196,24 @@ describe('ListsComponent', () => {
       element.querySelector(`.list-item[data-list-id="${listId}"] .drag-handle`) as HTMLButtonElement;
     const pointer = (type: string, target: Element, x = 0, y = 0) =>
       target.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x, clientY: y, bubbles: true, cancelable: true }));
+    /**
+     * What lies under the pointer is the browser's business: the specs say which
+     * card it is, instead of depending on the test page's size and layout.
+     */
+    let under: Element | null = null;
+    let elementFromPoint: MockInstance<Document['elementFromPoint']>;
+    /** Puts the pointer over a card's name; returns arbitrary coordinates for the event. */
     const centre = (listId: string) => {
-      const target = element.querySelector(`.list-item[data-list-id="${listId}"]`) as HTMLElement;
-      // elementFromPoint() only sees the visible part of the page, whose size and
-      // content differ between runs: bring the card into view before aiming at it.
-      target.scrollIntoView({ block: 'center' });
-      const box = target.getBoundingClientRect();
-      return [box.left + box.width / 2, box.top + box.height / 2] as const;
+      under = element.querySelector(`.list-item[data-list-id="${listId}"] .list-copy strong`);
+      return [120, 340] as const;
     };
 
     beforeEach(() => {
-      // Real layout: the cards must be on screen for elementFromPoint().
-      document.body.append(element);
+      under = null;
+      elementFromPoint = vi.spyOn(document, 'elementFromPoint').mockImplementation(() => under);
     });
 
-    afterEach(() => element.remove());
+    afterEach(() => elementFromPoint.mockRestore());
 
     it('drags a list by its handle onto another card and saves the order on drop', () => {
       expect(order()).toEqual(['courses', 'maison', 'cadeaux']);
@@ -224,6 +227,7 @@ describe('ListsComponent', () => {
       expect(element.querySelector('.list-item.dragging')?.getAttribute('data-list-id')).toBe('cadeaux');
       pointer('pointermove', grip, ...centre('courses'));
       fixture.detectChanges();
+      expect(elementFromPoint).toHaveBeenLastCalledWith(120, 340);
       expect(order()).toEqual(['cadeaux', 'courses', 'maison']);
       http.expectNone('/api/v1/lists/order');
 
@@ -238,6 +242,8 @@ describe('ListsComponent', () => {
 
     it('saves nothing for a drag that moved nothing, and ignores moves without a drag', () => {
       pointer('pointermove', element, ...centre('maison'));
+      // Not dragging: the page is not even searched.
+      expect(elementFromPoint).not.toHaveBeenCalled();
       const grip = handle('courses');
       grip.setPointerCapture = vi.fn();
       pointer('pointerdown', grip);

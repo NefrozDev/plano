@@ -1,3 +1,4 @@
+import type { MockInstance } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FriendNotificationsService } from '../../../core/friends/friend-notifications.service';
 import { ObjectivesStore } from '../objectives.store';
@@ -127,17 +128,24 @@ describe('ObjectivesOverviewComponent', () => {
       element.querySelector(`.objective-item[data-objective-id="${id}"] .drag-handle`) as HTMLButtonElement;
     const pointer = (type: string, target: Element, x = 0, y = 0) =>
       target.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x, clientY: y, bubbles: true, cancelable: true }));
+    /**
+     * What lies under the pointer is the browser's business: the specs say which
+     * card it is, instead of depending on the test page's size and layout (on CI,
+     * the bottom navigation could cover the aimed-at card).
+     */
+    let under: Element | null = null;
+    let elementFromPoint: MockInstance<Document['elementFromPoint']>;
+    /** Puts the pointer over a card's title; returns arbitrary coordinates for the event. */
     const centre = (id: string) => {
-      const target = element.querySelector(`.objective-item[data-objective-id="${id}"]`) as HTMLElement;
-      // elementFromPoint() only sees the visible part of the page, whose size and
-      // content differ between runs: bring the card into view before aiming at it.
-      target.scrollIntoView({ block: 'center' });
-      const box = target.getBoundingClientRect();
-      return [box.left + box.width / 2, box.top + box.height / 2] as const;
+      under = element.querySelector(`.objective-item[data-objective-id="${id}"] app-objective-card strong`);
+      return [150, 260] as const;
     };
 
-    beforeEach(() => document.body.append(element));
-    afterEach(() => element.remove());
+    beforeEach(() => {
+      under = null;
+      elementFromPoint = vi.spyOn(document, 'elementFromPoint').mockImplementation(() => under);
+    });
+    afterEach(() => elementFromPoint.mockRestore());
 
     it('drags an objective by its grip onto another card, keeping the new order', () => {
       const [first, second, third] = ids() as string[];
@@ -153,6 +161,7 @@ describe('ObjectivesOverviewComponent', () => {
       pointer('pointerup', grip);
       fixture.detectChanges();
 
+      expect(elementFromPoint).toHaveBeenCalledExactlyOnceWith(150, 260);
       expect(ids().slice(0, 3)).toEqual([third, first, second]);
       expect(store.objectives().slice(0, 3).map(({ id }) => id)).toEqual([third, first, second]);
       expect(element.querySelector('.objective-item.dragging')).toBeNull();
