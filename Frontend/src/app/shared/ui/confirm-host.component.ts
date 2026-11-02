@@ -12,7 +12,7 @@ import { ModalDialogComponent } from './modal-dialog.component';
       <app-modal-dialog [heading]="request.heading" [tone]="request.tone ?? 'default'" [open]="true" (closed)="confirm.settle(false)">
         <p class="message">{{ request.message }}</p>
         <div class="dialog-actions">
-          <button class="cancel" type="button" (click)="confirm.settle(false)">Annuler</button>
+          <button class="cancel" type="button" (click)="confirm.settle(false)">{{ request.cancelLabel ?? 'Annuler' }}</button>
           <button class="confirm" type="button" [class.danger]="request.tone === 'danger'" (click)="confirm.settle(true)">
             {{ request.confirmLabel ?? 'Confirmer' }}
           </button>

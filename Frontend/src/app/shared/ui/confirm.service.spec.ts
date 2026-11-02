@@ -45,8 +45,20 @@ describe('ConfirmService', () => {
     const answer = service.ask({ heading: 'Continuer ?', message: 'Sûr ?' });
     detect();
     expect(element.querySelector('.confirm')?.textContent?.trim()).toBe('Confirmer');
+    expect(element.querySelector('.cancel')?.textContent?.trim()).toBe('Annuler');
 
     (element.querySelector('.cancel') as HTMLButtonElement).click();
+    expect(await answer).toBe(false);
+  });
+
+  it('names the refusal when it is a choice of its own', async () => {
+    const { element, detect } = renderHost();
+    const answer = service.ask({ heading: 'Supprimer aussi sa liste ?', message: '…', cancelLabel: 'Garder la liste' });
+    detect();
+
+    const keep = element.querySelector('.cancel') as HTMLButtonElement;
+    expect(keep.textContent?.trim()).toBe('Garder la liste');
+    keep.click();
     expect(await answer).toBe(false);
   });
 

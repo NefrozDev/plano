@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output } from '@angular/core';
-import { ConfirmService } from '../../../shared/ui/confirm.service';
+import { ObjectiveRemovalService } from '../objective-removal.service';
 import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
-import { ObjectivesStore } from '../objectives.store';
 import { ObjectiveCardComponent, ObjectiveCardView } from './objective-card.component';
 
 export const NOT_OWNER_NOTICE = 'Seule la personne qui a créé cet objectif peut le supprimer.';
@@ -50,8 +49,7 @@ export const NOT_OWNER_NOTICE = 'Seule la personne qui a créé cet objectif peu
   `,
 })
 export class ObjectiveSwipeCardComponent {
-  private readonly confirm = inject(ConfirmService);
-  private readonly store = inject(ObjectivesStore);
+  private readonly removal = inject(ObjectiveRemovalService);
 
   readonly card = input.required<ObjectiveCardView>();
   readonly tile = input(false);
@@ -75,13 +73,10 @@ export class ObjectiveSwipeCardComponent {
 
   /** Summaries do not count everything below, and archived sub-objectives go too. */
   async askToDelete(): Promise<void> {
-    const { id, title, sharing } = this.card().objective;
-    const confirmed = await this.confirm.ask({
-      heading: 'Supprimer l’objectif ?',
-      message: `« ${title} » et tout ce qu’il contient seront supprimés définitivement${sharing === 'private' ? '' : ', pour tout le monde'}.`,
-      confirmLabel: 'Supprimer',
-      tone: 'danger',
-    });
-    if (confirmed) await this.store.remove(id);
+    const objective = this.card().objective;
+    await this.removal.remove(
+      objective,
+      `« ${objective.title} » et tout ce qu’il contient seront supprimés définitivement${objective.sharing === 'private' ? '' : ', pour tout le monde'}.`,
+    );
   }
 }

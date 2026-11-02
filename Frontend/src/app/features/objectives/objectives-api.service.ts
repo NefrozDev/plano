@@ -53,8 +53,13 @@ export class ObjectivesApiService {
     return this.http.patch<ObjectiveDetail>(`${this.objectives}/${id}`, changes);
   }
 
-  remove(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.objectives}/${id}`);
+  /** `deleteLists` also deletes the lists linked to it and below. */
+  remove(id: string, deleteLists = false): Observable<void> {
+    return this.http.delete<void>(`${this.objectives}/${id}`, deleteLists ? { params: { deleteLists: 'true' } } : {});
+  }
+
+  restart(id: string): Observable<ObjectiveDetail> {
+    return this.http.post<ObjectiveDetail>(`${this.objectives}/${id}/restart`, {});
   }
 
   reorder(objectiveIds: readonly string[]): Observable<void> {

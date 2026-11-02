@@ -30,6 +30,7 @@ export function objectiveSummary(changes: Partial<ObjectiveSummary> = {}): Objec
     childCount: 0,
     completedChildCount: 0,
     onHome: false,
+    linkedListCount: 0,
     ...changes,
   };
 }

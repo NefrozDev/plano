@@ -93,7 +93,7 @@ describe('ObjectiveSwipeCardComponent', () => {
     );
     await settleObjectives();
 
-    expect(remove).toHaveBeenCalledExactlyOnceWith('obj-1');
+    expect(remove).toHaveBeenCalledExactlyOnceWith('obj-1', false);
     const request = http.expectOne('/api/v1/objectives/obj-1');
     expect(request.request.method).toBe('DELETE');
     request.flush(null);

@@ -8,9 +8,10 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { ObjectivesStore } from '../objectives.store';
-import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
+import { ObjectiveRemovalService } from '../objective-removal.service';
+import { ObjectiveCelebrationComponent } from './objective-celebration.component';
 import { ObjectiveContext } from './objective-context';
 import { readNotificationsWhileOpen } from '../../../core/notifications/notifications.store';
 
@@ -22,7 +23,14 @@ interface DetailTab {
 
 @Component({
   selector: 'app-objective-detail-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ModalDialogComponent, PageHeaderComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    ModalDialogComponent,
+    ObjectiveCelebrationComponent,
+    PageHeaderComponent,
+  ],
   providers: [ObjectiveContext],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-detail-layout.component.html',
@@ -31,7 +39,7 @@ interface DetailTab {
 export class ObjectiveDetailLayoutComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly confirm = inject(ConfirmService);
+  private readonly removal = inject(ObjectiveRemovalService);
   private readonly context = inject(ObjectiveContext);
   readonly store = inject(ObjectivesStore);
 
@@ -113,18 +121,8 @@ export class ObjectiveDetailLayoutComponent {
     const objective = this.objective();
     if (!objective) return;
     this.menuOpen.set(false);
-    const below = objective.descendantCount;
-    const confirmed = await this.confirm.ask({
-      heading: 'Supprimer l’objectif ?',
-      message: below
-        ? `« ${objective.title} » et ${below > 1 ? `ses ${below} sous-objectifs seront supprimés` : 'son sous-objectif seront supprimés'} définitivement.`
-        : `« ${objective.title} » sera supprimé définitivement.`,
-      confirmLabel: 'Supprimer',
-      tone: 'danger',
-    });
-    if (!confirmed) return;
     const back = this.backLink();
-    if (await this.store.remove(objective.id)) void this.router.navigate(back);
+    if (await this.removal.remove(objective, this.removal.messageFor(objective))) void this.router.navigate(back);
   }
 
   private async open(id: string): Promise<void> {

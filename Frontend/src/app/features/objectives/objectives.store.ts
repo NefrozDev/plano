@@ -80,6 +80,9 @@ export class ObjectivesStore {
   readonly objectives = this.objectivesState.asReadonly();
   /** The objective open in the detail screen, at any level. */
   readonly detail = this.detailState.asReadonly();
+  private readonly celebrationState = signal<ObjectiveDetail | null>(null);
+  /** The open objective just became complete: time to celebrate, once. */
+  readonly celebration = this.celebrationState.asReadonly();
   /** Dated items across every visible objective, for the agenda. */
   readonly agenda = this.agendaState.asReadonly();
   /** What is pinned to the home page; null until loaded. */
@@ -241,10 +244,10 @@ export class ObjectivesStore {
     return this.apply(this.api.update(id, changes));
   }
 
-  async remove(id: string): Promise<boolean> {
+  async remove(id: string, deleteLists = false): Promise<boolean> {
     const detail = this.detailState();
     const parentId = detail?.children.some((child) => child.id === id) ? detail.id : null;
-    const removed = await this.run(this.api.remove(id), () => {
+    const removed = await this.run(this.api.remove(id, deleteLists), () => {
       if (this.detailState()?.id === id) this.detailState.set(null);
       this.objectivesState.update((items) => items.filter((objective) => objective.id !== id));
     });
@@ -285,6 +288,15 @@ export class ObjectivesStore {
   /** The list stays; it no longer counts for the objective. */
   unlinkList(id: string, listId: string): Promise<boolean> {
     return this.apply(this.api.unlinkList(id, listId));
+  }
+
+  /** Starts a finished objective again from today; its result stays in its history. */
+  restart(id: string): Promise<boolean> {
+    return this.apply(this.api.restart(id));
+  }
+
+  dismissCelebration(): void {
+    this.celebrationState.set(null);
   }
 
   setProgress(id: string, percent: number): Promise<boolean> {
@@ -395,12 +407,21 @@ export class ObjectivesStore {
   }
 
   /** Any change in a tree can move the bars of what is open. */
+  /** The open objective, by one's own action or someone else's: reaching completion is celebrated. */
+  private showDetail(detail: ObjectiveDetail): void {
+    const before = this.detailState();
+    if (before?.id === detail.id && before.status !== 'completed' && detail.status === 'completed') {
+      this.celebrationState.set(detail);
+    }
+    this.detailState.set(detail);
+  }
+
   private async reloadOpenObjective(): Promise<void> {
     const id = this.detailState()?.id;
     if (!id) return;
     try {
       const detail = await firstValueFrom(this.api.findOne(id));
-      if (this.detailState()?.id === id) this.detailState.set(detail);
+      if (this.detailState()?.id === id) this.showDetail(detail);
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.status === 404 && this.detailState()?.id === id) {
         this.detailState.set(null);
@@ -447,7 +468,7 @@ export class ObjectivesStore {
   /** Runs a change that answers with the objective's new state. */
   private apply(request: Observable<ObjectiveDetail>): Promise<boolean> {
     return this.run(request, (detail) => {
-      this.detailState.set(detail);
+      this.showDetail(detail);
       this.objectivesState.update((items) =>
         items.map((objective) => (objective.id === detail.id ? detail : objective)),
       );

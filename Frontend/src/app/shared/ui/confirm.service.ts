@@ -4,6 +4,8 @@ export interface ConfirmOptions {
   heading: string;
   message: string;
   confirmLabel?: string;
+  /** 'Annuler' by default; name it when refusing is a choice of its own. */
+  cancelLabel?: string;
   tone?: 'default' | 'danger';
 }
 
