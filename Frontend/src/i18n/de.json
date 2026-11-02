@@ -49,6 +49,10 @@
       "heading": "Gruppen",
       "link": "Meine Gruppen verwalten"
     },
+    "legal": {
+      "heading": "Rechtliches",
+      "link": "Nutzungsbedingungen und Datenschutz"
+    },
     "logout": "Abmelden",
     "loggingOut": "Abmeldung…",
     "logoutFailed": "Abmelden fehlgeschlagen. Bitte versuche es erneut."

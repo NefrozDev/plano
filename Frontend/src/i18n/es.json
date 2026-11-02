@@ -49,6 +49,10 @@
       "heading": "Grupos",
       "link": "Gestionar mis grupos"
     },
+    "legal": {
+      "heading": "Información legal",
+      "link": "Condiciones de uso y privacidad"
+    },
     "logout": "Cerrar sesión",
     "loggingOut": "Cerrando sesión…",
     "logoutFailed": "No se pudo cerrar la sesión. Inténtalo de nuevo."

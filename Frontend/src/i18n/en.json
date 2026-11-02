@@ -49,6 +49,10 @@
       "heading": "Groups",
       "link": "Manage my groups"
     },
+    "legal": {
+      "heading": "Legal",
+      "link": "Terms of use and privacy"
+    },
     "logout": "Sign out",
     "loggingOut": "Signing out…",
     "logoutFailed": "Signing out failed. Please try again."

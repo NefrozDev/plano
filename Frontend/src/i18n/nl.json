@@ -49,6 +49,10 @@
       "heading": "Groepen",
       "link": "Mijn groepen beheren"
     },
+    "legal": {
+      "heading": "Juridisch",
+      "link": "Gebruiksvoorwaarden en privacy"
+    },
     "logout": "Afmelden",
     "loggingOut": "Afmelden…",
     "logoutFailed": "Afmelden is mislukt. Probeer het opnieuw."

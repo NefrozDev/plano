@@ -98,7 +98,7 @@ describe('SettingsComponent', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows the profile, every language under its own name, and the groups link', () => {
+  it('shows the profile, every language under its own name, and the groups and terms links', () => {
     expect(element.querySelector('h1')?.textContent).toBe('Paramètres');
     expect(element.querySelector('.identity')?.textContent).toContain('Ada Lovelace');
     expect(element.querySelector('.identity')?.textContent).toContain('@ada');
@@ -116,7 +116,12 @@ describe('SettingsComponent', () => {
       ['it', 'Italiano'],
     ]);
     expect(languages[0].querySelector('input')?.checked).toBe(true);
-    expect(element.querySelector('.row-link')?.getAttribute('href')).toBe('/groups');
+    const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('.row-link'));
+    expect(links.map((link) => [link.getAttribute('href'), link.textContent?.replace('›', '').trim()])).toEqual([
+      ['/groups', expect.any(String)],
+      ['/terms', 'Conditions d’utilisation et confidentialité'],
+    ]);
+    expect(element.querySelector('#legal-heading')?.textContent).toBe('Informations légales');
   });
 
   it('saves a language picked from the list', async () => {

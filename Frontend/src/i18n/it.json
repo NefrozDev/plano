@@ -49,6 +49,10 @@
       "heading": "Gruppi",
       "link": "Gestisci i miei gruppi"
     },
+    "legal": {
+      "heading": "Note legali",
+      "link": "Condizioni d’uso e privacy"
+    },
     "logout": "Esci",
     "loggingOut": "Uscita…",
     "logoutFailed": "Uscita non riuscita. Riprova."

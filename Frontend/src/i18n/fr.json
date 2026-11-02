@@ -49,6 +49,10 @@
       "heading": "Groupes",
       "link": "Gérer mes groupes"
     },
+    "legal": {
+      "heading": "Informations légales",
+      "link": "Conditions d’utilisation et confidentialité"
+    },
     "logout": "Se déconnecter",
     "loggingOut": "Déconnexion…",
     "logoutFailed": "La déconnexion a échoué. Veuillez réessayer."
