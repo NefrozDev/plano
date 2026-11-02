@@ -17,7 +17,7 @@ import { RouterOutlet } from '@angular/router';
     .mobile-shell { position: relative; display: flex; width: 100%; height: 100dvh; min-height: 0; flex-direction: column; overflow: hidden; background: #fff; }
     @media (min-width: 700px) {
       .app-canvas { display: grid; padding: 2rem; place-items: center; }
-      .mobile-shell { width: min(100%, 430px); height: min(844px, calc(100vh - 4rem)); border: 8px solid #171c2b; border-radius: 2.8rem; box-shadow: var(--shadow-page); }
+      .mobile-shell { width: var(--phone-width); height: var(--phone-height); border: var(--phone-bezel); border-radius: var(--phone-radius); box-shadow: var(--shadow-page); }
     }
   `,
 })

@@ -31,6 +31,12 @@
   --radius-card: 1rem;
   --shadow-card: 0 0.75rem 1.75rem rgb(15 23 42 / 14%), 0 0.125rem 0.3rem rgb(15 23 42 / 10%);
   --shadow-page: 0 2rem 5rem rgb(50 91 226 / 18%);
+
+  /* Phone frame drawn around signed-in screens on wide windows (mobile shell, splash screen). */
+  --phone-width: min(100%, 430px);
+  --phone-height: min(844px, calc(100vh - 4rem));
+  --phone-bezel: 8px solid #171c2b;
+  --phone-radius: 2.8rem;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
