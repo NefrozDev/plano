@@ -106,5 +106,8 @@
     "loadFailed": "Je contacten konden niet worden geladen.",
     "noMatch": "Geen contact gevonden.",
     "none": "Je hebt nog geen contacten: voeg vrienden toe in Instellingen of word lid van een groep."
+  },
+  "splash": {
+    "tagline": "Je ambities verdienen een plan"
   }
 }

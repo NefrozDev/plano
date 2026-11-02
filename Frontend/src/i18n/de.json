@@ -106,5 +106,8 @@
     "loadFailed": "Deine Kontakte konnten nicht geladen werden.",
     "noMatch": "Kein Kontakt gefunden.",
     "none": "Du hast noch keine Kontakte: Füge in den Einstellungen Freunde hinzu oder tritt einer Gruppe bei."
+  },
+  "splash": {
+    "tagline": "Deine Ziele verdienen einen Plan"
   }
 }

@@ -106,5 +106,8 @@
     "loadFailed": "Impossibile caricare i tuoi contatti.",
     "noMatch": "Nessun contatto trovato.",
     "none": "Non hai ancora contatti: aggiungi amici nelle Impostazioni o unisciti a un gruppo."
+  },
+  "splash": {
+    "tagline": "Le tue ambizioni meritano un piano"
   }
 }

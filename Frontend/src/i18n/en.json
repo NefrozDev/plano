@@ -106,5 +106,8 @@
     "loadFailed": "Your contacts couldn’t be loaded.",
     "noMatch": "No contact found.",
     "none": "You have no contacts yet: add friends in Settings or join a group."
+  },
+  "splash": {
+    "tagline": "Your ambitions deserve a plan"
   }
 }

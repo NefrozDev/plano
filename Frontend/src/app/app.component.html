@@ -3,3 +3,6 @@
 <div class="notification-toast">
   <app-toast tone="info" [duration]="5000" [message]="toast()" (dismissed)="dismissToast()" />
 </div>
+@if (splash()) {
+  <app-splash-screen (done)="splash.set(false)" />
+}
