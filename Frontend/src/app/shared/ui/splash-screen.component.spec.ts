@@ -24,12 +24,13 @@ describe('SplashScreenComponent', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it('shows the logo, the name and the tagline, hidden from screen readers', () => {
+  it('shows the logo, the name, the tagline and the company, hidden from screen readers', () => {
     render();
 
     expect(element.querySelector('svg.mark')).not.toBeNull();
     expect(element.querySelector('.name')?.textContent).toBe('Plano');
     expect(element.querySelector('.tagline')?.textContent).toBe('Vos ambitions méritent un plan');
+    expect(element.querySelector('.company')?.textContent).toBe('Synapse Engineering');
     expect(element.getAttribute('aria-hidden')).toBe('true');
   });
 

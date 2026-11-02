@@ -52,7 +52,10 @@ export const SPLASH_EXIT_MS = 320;
         <p class="name">Plano</p>
         <p class="tagline">{{ 'splash.tagline' | transloco }}</p>
       </div>
-      <div class="progress"><i></i></div>
+      <div class="footer">
+        <div class="progress"><i></i></div>
+        <p class="company">Synapse Engineering</p>
+      </div>
     </div>
   `,
   styles: `
@@ -113,16 +116,24 @@ export const SPLASH_EXIT_MS = 320;
       animation: rise 700ms 240ms cubic-bezier(.2, .8, .2, 1) both;
     }
 
-    .progress {
+    .footer {
       position: absolute;
-      bottom: calc(3.5rem + env(safe-area-inset-bottom));
-      left: 50%;
-      width: 3.5rem;
-      height: 3px;
-      overflow: hidden;
-      border-radius: 3px;
-      background: rgb(50 91 226 / 14%);
-      transform: translateX(-50%);
+      right: 0;
+      bottom: calc(2.2rem + env(safe-area-inset-bottom));
+      left: 0;
+      display: grid;
+      gap: 1.4rem;
+      justify-items: center;
+    }
+    .progress { width: min(11rem, 55%); height: 4px; overflow: hidden; border-radius: 4px; background: rgb(50 91 226 / 14%); }
+    .company {
+      margin: 0;
+      color: #8a93a3;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      animation: rise 700ms 360ms cubic-bezier(.2, .8, .2, 1) both;
     }
     .progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #6B2DEB, var(--palette-blue)); transform-origin: left; animation: fill var(--splash-duration) linear both; }
 
@@ -132,7 +143,7 @@ export const SPLASH_EXIT_MS = 320;
     @keyframes fill { from { transform: scaleX(0); } }
 
     @media (prefers-reduced-motion: reduce) {
-      .glow, .mark, .name, .tagline, .progress i { animation: none; }
+      .glow, .mark, .name, .tagline, .company, .progress i { animation: none; }
       :host(.leaving) .brand { transform: none; }
     }
   `,
