@@ -76,7 +76,7 @@ describe('ObjectivesOverviewComponent', () => {
 
   it('leads from the bell to the friends settings, with a badge for friend news', () => {
     const bell = element.querySelector('.notifications-link') as HTMLAnchorElement;
-    expect(bell.getAttribute('href')).toBe('/settings');
+    expect(bell.getAttribute('href')).toBe('/settings#friends');
     expect(bell.querySelector('.badge')).toBeNull();
 
     TestBed.inject(FriendNotificationsService).incoming.set(1);

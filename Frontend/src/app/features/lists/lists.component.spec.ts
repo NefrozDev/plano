@@ -65,7 +65,7 @@ describe('ListsComponent', () => {
     expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
     // Nothing new: the bell leads to the friends settings without a badge.
     const bell = element.querySelector('.notifications-link') as HTMLAnchorElement;
-    expect(bell.getAttribute('href')).toBe('/settings');
+    expect(bell.getAttribute('href')).toBe('/settings#friends');
     expect(bell.getAttribute('aria-label')).toBe('Notifications');
     expect(bell.querySelector('.badge')).toBeNull();
   });
