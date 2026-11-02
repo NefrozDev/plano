@@ -49,6 +49,12 @@ describe('AgendaCalendarComponent', () => {
     const filters = element().querySelector('[aria-label="Filtrer l’agenda"]');
     expect(filters?.getAttribute('href')).toBe('/agenda/filters');
     expect(filters?.querySelector('path')?.getAttribute('d')).toBe('M4 5h16l-6 7.5V19l-4-2v-4.5Z');
+    // As on the lists screen, search sits right next to the settings.
+    expect(Array.from(element().querySelectorAll('.header-actions > a'), (link) => link.getAttribute('href'))).toEqual([
+      '/agenda/filters',
+      '/agenda/search',
+      '/agenda/settings',
+    ]);
   });
 
   it('opens on today’s day view with a "now" marker between past and upcoming items', async () => {

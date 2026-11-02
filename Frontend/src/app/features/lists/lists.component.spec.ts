@@ -62,6 +62,9 @@ describe('ListsComponent', () => {
     ).toBe('Partagée par Cyd Martin');
     expect(element.querySelector('.list-progress b')?.textContent).toBe('2 / 6');
     expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
+    // Search sits right next to the settings, as on the agenda and objectives screens.
+    const search = element.querySelector('.header-actions [aria-label="Rechercher une liste"]');
+    expect(search?.nextElementSibling?.classList).toContain('action-button');
     // Notifications live in the home page bell and on the tabs, not here.
     expect(element.querySelector('.notifications-link')).toBeNull();
     expect(element.querySelector('[aria-label^="Notifications"]')).toBeNull();

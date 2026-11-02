@@ -148,6 +148,12 @@ describe('ObjectivesOverviewComponent', () => {
     // The agenda's funnel, so filters look the same on every screen.
     expect(filters?.querySelector('path')?.getAttribute('d')).toBe('M4 5h16l-6 7.5V19l-4-2v-4.5Z');
     expect(filters?.querySelectorAll('circle')).toHaveLength(0);
+    // As on the lists screen, search sits right next to the settings.
+    expect(Array.from(element.querySelectorAll('.header-actions > a'), (link) => link.getAttribute('href'))).toEqual([
+      '/objectives/filters',
+      '/objectives/search',
+      '/objectives/settings',
+    ]);
   });
 
   it('leads straight to the settings, without a menu for a single choice', () => {
