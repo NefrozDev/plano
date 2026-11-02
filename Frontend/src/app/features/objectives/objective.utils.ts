@@ -39,6 +39,7 @@ export const COMPLETION_LABELS: Readonly<Record<Exclude<CompletionMode, 'none'>,
   metric: { label: 'Objectif chiffré', hint: 'Comptez ou additionnez : sorties, km, euros…' },
   habit: { label: 'Habitude', hint: 'Cochez les jours réussis dans un calendrier' },
   manual: { label: 'Pourcentage manuel', hint: 'Vous déplacez la barre vous-même' },
+  list: { label: 'Liste', hint: 'Les éléments cochés de ses listes' },
 };
 
 /** How often a count or a habit starts again, offered next to its target. */

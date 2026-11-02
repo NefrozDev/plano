@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import type {
+  CreateListRequest,
+  LinkObjectiveListRequest,
   AddObjectiveCommentRequest,
   AddObjectiveMemberRequest,
   AddObjectiveSessionRequest,
@@ -78,6 +80,19 @@ export class ObjectivesApiService {
   setCheckIn(id: string, date: IsoDate, checked: boolean): Observable<ObjectiveDetail> {
     const url = `${this.objectives}/${id}/check-ins/${date}`;
     return checked ? this.http.put<ObjectiveDetail>(url, {}) : this.http.delete<ObjectiveDetail>(url);
+  }
+
+  linkList(id: string, listId: string): Observable<ObjectiveDetail> {
+    const body: LinkObjectiveListRequest = { listId };
+    return this.http.post<ObjectiveDetail>(`${this.objectives}/${id}/lists`, body);
+  }
+
+  createList(id: string, details: CreateListRequest): Observable<ObjectiveDetail> {
+    return this.http.post<ObjectiveDetail>(`${this.objectives}/${id}/lists/new`, details);
+  }
+
+  unlinkList(id: string, listId: string): Observable<ObjectiveDetail> {
+    return this.http.delete<ObjectiveDetail>(`${this.objectives}/${id}/lists/${listId}`);
   }
 
   setProgress(id: string, percent: number): Observable<ObjectiveDetail> {

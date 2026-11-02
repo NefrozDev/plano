@@ -38,6 +38,7 @@ import { ObjectivesStore } from '../../objectives.store';
 import { DragReorder } from '../../ui/drag-reorder';
 import type { ObjectiveCardView } from '../../ui/objective-card.component';
 import { ObjectiveSwipeCardComponent } from '../../ui/objective-swipe-card.component';
+import { ObjectiveListsComponent } from './objective-lists.component';
 import { ObjectiveIconComponent } from '../../ui/objective-icon.component';
 import { TimelapseBarComponent } from '../../ui/timelapse-bar.component';
 import { ObjectiveContext } from '../objective-context';
@@ -62,6 +63,7 @@ interface StatTile {
     RouterLink,
     AvatarStackComponent,
     ObjectiveIconComponent,
+    ObjectiveListsComponent,
     ObjectiveSwipeCardComponent,
     SwitchRowComponent,
     ToastComponent,
@@ -249,6 +251,11 @@ export class ObjectiveSummaryComponent {
         return [
           { value: `${objective.completedChildCount} / ${objective.childCount}`, label: 'Terminés' },
           { value: `${objective.childCount - objective.completedChildCount}`, label: 'À faire' },
+        ];
+      case 'list':
+        return [
+          { value: `${objective.amount?.current ?? 0} / ${objective.amount?.target ?? 0}`, label: 'Cochés' },
+          { value: `${objective.lists.length}`, label: objective.lists.length > 1 ? 'Listes' : 'Liste' },
         ];
       case 'manual':
       case 'none':

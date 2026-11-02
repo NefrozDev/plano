@@ -176,6 +176,22 @@ describe('ObjectiveFormComponent', () => {
       expect(await answerCreate()).toMatchObject({ completion: 'manual' });
     });
 
+    it('offers a bar made of its lists, without a pace, which the lists then fill', async () => {
+      type('title', 'Voyage');
+      toggle('Suivi et progression');
+      const listMode = Array.from(element.querySelectorAll('.modes .mode')).find((mode) => mode.textContent?.includes('Liste'));
+      expect(listMode?.textContent).toContain('Les éléments cochés de ses listes');
+      pickMode('Liste');
+
+      expect(element.querySelector('select.rhythm')).toBeNull();
+      await submit();
+
+      const body = (await answerCreate()) as object;
+      expect(body).toMatchObject({ completion: 'list', recurrence: 'none' });
+      expect(body).not.toHaveProperty('metric');
+      expect(body).not.toHaveProperty('habitTargetDays');
+    });
+
     it('ignores the settings of a bar switched back off', async () => {
       type('title', 'Nager');
       toggle('Suivi et progression');

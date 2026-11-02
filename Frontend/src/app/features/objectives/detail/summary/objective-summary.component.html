@@ -145,6 +145,8 @@
       </section>
     }
 
+    <app-objective-lists [objective]="objective" [owner]="isOwner()" />
+
     @if (view.periods.length) {
       <section class="periods" aria-labelledby="periods-title">
         <div class="heading"><h3 id="periods-title">Périodes passées</h3></div>

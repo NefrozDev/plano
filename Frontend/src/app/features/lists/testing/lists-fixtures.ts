@@ -33,6 +33,7 @@ export function listDetail(changes: Partial<ListDetail> = {}): ListDetail {
     total: 6,
     onHome: false,
     removeChecked: false,
+    objectiveId: null,
     description: '',
     members: [
       { id: OWNER_ID, name: 'Ada Lovelace', avatarVersion: null, role: 'owner' },

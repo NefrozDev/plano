@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type {
+  CreateListRequest,
   AddObjectiveMemberRequest,
   AddObjectiveSessionRequest,
   CreateObjectiveRequest,
@@ -270,6 +271,20 @@ export class ObjectivesStore {
 
   setCheckIn(id: string, date: IsoDate, checked: boolean): Promise<boolean> {
     return this.apply(this.api.setCheckIn(id, date, checked));
+  }
+
+  /** One of the owner's lists now counts for the objective. */
+  linkList(id: string, listId: string): Promise<boolean> {
+    return this.apply(this.api.linkList(id, listId));
+  }
+
+  createList(id: string, details: CreateListRequest): Promise<boolean> {
+    return this.apply(this.api.createList(id, details));
+  }
+
+  /** The list stays; it no longer counts for the objective. */
+  unlinkList(id: string, listId: string): Promise<boolean> {
+    return this.apply(this.api.unlinkList(id, listId));
   }
 
   setProgress(id: string, percent: number): Promise<boolean> {

@@ -51,6 +51,7 @@ export function objectiveDetail(changes: Partial<ObjectiveDetail> = {}): Objecti
     members: [{ id: ME, name: 'Ada Lovelace', avatarVersion: null, role: 'owner', inheritedFrom: null }],
     contributions: [],
     periods: [],
+    lists: [],
     reminder: { frequency: 'none', time: '09:00', weekday: 0 },
     dueReminder: 'none',
     ...changes,
