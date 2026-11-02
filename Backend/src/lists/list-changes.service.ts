@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Subject } from 'rxjs';
 import { DataSource, EntityManager } from 'typeorm';
 import { LiveEventsService } from '../live/live-events.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -12,6 +13,12 @@ import { List } from './entities/list.entity';
 @Injectable()
 export class ListChangesService {
   private readonly logger = new Logger(ListChangesService.name);
+  private readonly countedFor = new Subject<string>();
+  /**
+   * Objectives whose linked list changed or was deleted: their bar may move.
+   * Objectives listen here, so lists never depend on them.
+   */
+  readonly objectiveListsChanged = this.countedFor.asObservable();
 
   constructor(
     private readonly dataSource: DataSource,
@@ -36,9 +43,19 @@ export class ListChangesService {
         type: 'list.changed',
         listId,
       });
+      const list = await this.dataSource.manager.findOne(List, {
+        where: { id: listId },
+        select: { id: true, objectiveId: true },
+      });
+      if (list?.objectiveId) this.countedFor.next(list.objectiveId);
     } catch (error) {
       this.logger.warn(`No live event for list ${listId}: ${String(error)}`);
     }
+  }
+
+  /** A list linked to this objective was deleted. */
+  linkedListDeleted(objectiveId: string | null): void {
+    if (objectiveId) this.countedFor.next(objectiveId);
   }
 
   /** For users who just lost the list: it was deleted, or they were removed. Its news go too. */

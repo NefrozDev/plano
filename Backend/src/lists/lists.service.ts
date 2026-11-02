@@ -150,18 +150,24 @@ export class ListsService {
   }
 
   async remove(listId: string, userId: string): Promise<void> {
-    const audience = await this.writeLock.runExclusive(() =>
+    const deleted = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
-        await this.access.require(listId, userId, 'own', manager);
+        const { list } = await this.access.require(
+          listId,
+          userId,
+          'own',
+          manager,
+        );
         const audience = await this.changes.audience(listId, manager);
         await manager.delete(ListEntry, { listId });
         await manager.delete(ListSection, { listId });
         await manager.delete(ListMember, { listId });
         await manager.delete(List, { id: listId });
-        return audience;
+        return { audience, objectiveId: list.objectiveId };
       }),
     );
-    await this.changes.removed(listId, audience);
+    await this.changes.removed(listId, deleted.audience);
+    this.changes.linkedListDeleted(deleted.objectiveId);
   }
 
   /** Shares the list with one of the owner's contacts. */
@@ -360,6 +366,8 @@ export class ListsService {
       members,
       ...counts,
       onHome,
+      // Only the owner links lists: nobody else learns which objective it is.
+      objectiveId: list.ownerId === userId ? list.objectiveId : null,
     };
   }
 

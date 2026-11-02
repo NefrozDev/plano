@@ -3,6 +3,7 @@
  * are implemented by the API's validated DTOs. Objectives form a tree: every
  * sub-objective is a full objective, with its own bars and settings.
  */
+import type { ListIcon } from './lists';
 import type {
   DueReminder,
   IsoDate,
@@ -15,9 +16,11 @@ import type {
 /**
  * What drives the completion bar. `none`: no bar, completed by hand;
  * `children`: weighted average of the sub-objectives; `metric`: a numeric target;
- * `habit`: days checked; `manual`: a percentage set by hand.
+ * `habit`: days checked; `manual`: a percentage set by hand; `list`: the items
+ * checked in its linked lists.
  */
-export type CompletionMode = 'none' | 'children' | 'metric' | 'habit' | 'manual';
+export type CompletionMode =
+  'none' | 'children' | 'metric' | 'habit' | 'manual' | 'list';
 /** `elapsed` fills up from start to deadline; `remaining` starts full and empties. */
 export type TimelapseMode = 'off' | 'elapsed' | 'remaining';
 /** `max` keeps the best session (longest run), `sum` accumulates (money saved). */
@@ -30,7 +33,8 @@ export type ObjectiveMemberRole = Exclude<ObjectiveRole, 'owner'>;
 /** What the people on an objective can do with it, as far as the user can see. */
 export type ObjectiveSharing = 'private' | 'shared' | 'common';
 /** What the others hear about, in a toast and a badge. */
-export type ObjectiveNewsKind = 'invited' | 'contribution' | 'completed' | 'comment';
+export type ObjectiveNewsKind =
+  'invited' | 'contribution' | 'completed' | 'comment';
 export type ObjectiveActivityKind =
   | 'created'
   | 'edited'
@@ -166,9 +170,29 @@ export interface ObjectiveDetail extends ObjectiveSummary {
   contributions: ObjectiveContribution[];
   /** How the past periods of a recurring objective ended, latest first. */
   periods: ObjectivePeriodEntry[];
+  /** Its linked lists the user can open; others are left out, never named. */
+  lists: ObjectiveLinkedList[];
   /** The signed-in user's own reminders. */
   reminder: ObjectiveReminder;
   dueReminder: DueReminder;
+}
+
+/** A list linked to an objective: its items can make the objective's bar. */
+export interface ObjectiveLinkedList {
+  id: string;
+  name: string;
+  icon: ListIcon;
+  /** `#rrggbb`. */
+  color: string;
+  done: number;
+  total: number;
+  /** Checked items are deleted from it, so it cannot count towards a bar. */
+  removeChecked: boolean;
+}
+
+/** Links one of the owner's own lists, not yet linked to another objective. */
+export interface LinkObjectiveListRequest {
+  listId: string;
 }
 
 /** One line of history, on the objective or something below it. */

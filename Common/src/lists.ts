@@ -31,6 +31,8 @@ export interface ListSummary {
   onHome: boolean;
   /** Checking an item deletes it instead of keeping it as done (set by the owner, for everyone). */
   removeChecked: boolean;
+  /** The objective it counts for; only its owner is told. */
+  objectiveId: string | null;
 }
 
 /** The signed-in user's full order of their lists; lists left out go last. */

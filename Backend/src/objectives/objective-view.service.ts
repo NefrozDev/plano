@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type {
+  ObjectiveLinkedList,
   ObjectiveContribution,
   ObjectiveCrumb,
   ObjectiveDetail,
@@ -9,6 +10,9 @@ import type {
   ObjectiveSummary,
 } from '@plano/common';
 import { DataSource, In } from 'typeorm';
+import { ListEntry } from '../lists/entities/list-entry.entity';
+import { List } from '../lists/entities/list.entity';
+import { ListAccessService } from '../lists/list-access.service';
 import { displayName } from '../lists/list.mapper';
 import { User } from '../users/user.entity';
 import { avatarVersion } from '../users/user.mapper';
@@ -55,7 +59,10 @@ function visibleMemberships(
 /** Builds what the API answers about objectives: it is where privacy is enforced. */
 @Injectable()
 export class ObjectiveViewService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly listAccess: ListAccessService,
+  ) {}
 
   async summaries(
     accesses: readonly ObjectiveAccess[],
@@ -174,6 +181,7 @@ export class ObjectiveViewService {
         percent,
         completed,
       })),
+      lists: await this.linkedLists(node.id, userId),
       reminder: {
         frequency: preference?.reminderFrequency ?? 'none',
         time: preference?.reminderTime ?? '09:00',
@@ -367,6 +375,42 @@ export class ObjectiveViewService {
 
   private person(people: People, id: string): ObjectivePerson {
     return people.get(id) ?? { id, name: DELETED_ACCOUNT, avatarVersion: null };
+  }
+
+  /** Linking a list never shares it: only the lists the user could open anyway. */
+  private async linkedLists(
+    objectiveId: string,
+    userId: string,
+  ): Promise<ObjectiveLinkedList[]> {
+    const manager = this.dataSource.manager;
+    const lists = await this.listAccess.visibleTo(
+      await manager.find(List, {
+        where: { objectiveId },
+        order: { createdAt: 'ASC' },
+      }),
+      userId,
+    );
+    if (!lists.length) return [];
+    const counts = await manager
+      .createQueryBuilder(ListEntry, 'entry')
+      .select('entry.listId', 'listId')
+      .addSelect('COUNT(*)', 'total')
+      .addSelect('COUNT(*) FILTER (WHERE entry.done)', 'done')
+      .where('entry.listId IN (:...listIds)', {
+        listIds: lists.map(({ id }) => id),
+      })
+      .groupBy('entry.listId')
+      .getRawMany<{ listId: string; total: string; done: string }>();
+    const countOf = new Map(counts.map((row) => [row.listId, row]));
+    return lists.map(({ id, name, icon, color, removeChecked }) => ({
+      id,
+      name,
+      icon,
+      color,
+      done: Number(countOf.get(id)?.done ?? 0),
+      total: Number(countOf.get(id)?.total ?? 0),
+      removeChecked,
+    }));
   }
 
   private async people(

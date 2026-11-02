@@ -26,6 +26,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { ImportObjectivesDto } from './dto/import-objectives.dto';
 import {
+  LinkObjectiveListDto,
   AddObjectiveCommentDto,
   AddObjectiveMemberDto,
   AddObjectiveSessionDto,
@@ -40,10 +41,12 @@ import {
   UpdateObjectivePreferencesDto,
   UseObjectiveTemplateDto,
 } from './dto/objective.dto';
+import { CreateListDto } from '../lists/dto/list.dto';
 import { ObjectiveActivityService } from './objective-activity.service';
 import { ObjectiveAgendaService } from './objective-agenda.service';
 import { ObjectiveDateParamPipe } from './objective-date-param.pipe';
 import { ObjectiveImportService } from './objective-import.service';
+import { ObjectiveListsService } from './objective-lists.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { ObjectiveTemplatesService } from './objective-templates.service';
@@ -64,6 +67,7 @@ export class ObjectivesController {
     private readonly members: ObjectiveMembersService,
     private readonly activity: ObjectiveActivityService,
     private readonly templates: ObjectiveTemplatesService,
+    private readonly lists: ObjectiveListsService,
   ) {}
 
   @Get()
@@ -320,5 +324,34 @@ export class ObjectivesController {
     @Body() details: SetObjectiveCompletedDto,
   ): Promise<ObjectiveDetail> {
     return this.tracking.setCompleted(objectiveId, userId, details);
+  }
+
+  /** Links one of the owner's own lists: its items can make the bar. */
+  @Post(':objectiveId/lists')
+  linkList(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+    @Body() { listId }: LinkObjectiveListDto,
+  ): Promise<ObjectiveDetail> {
+    return this.lists.link(objectiveId, userId, listId);
+  }
+
+  /** A new list of the owner's, linked at once. */
+  @Post(':objectiveId/lists/new')
+  createList(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+    @Body() details: CreateListDto,
+  ): Promise<ObjectiveDetail> {
+    return this.lists.createList(objectiveId, userId, details);
+  }
+
+  @Delete(':objectiveId/lists/:listId')
+  unlinkList(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+    @Param('listId', ParseUUIDPipe) listId: string,
+  ): Promise<ObjectiveDetail> {
+    return this.lists.unlink(objectiveId, userId, listId);
   }
 }

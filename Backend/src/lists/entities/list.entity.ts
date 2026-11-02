@@ -9,12 +9,14 @@ import {
   OneToMany,
   PrimaryColumn,
 } from 'typeorm';
+import { Objective } from '../../objectives/entities/objective.entity';
 import { User } from '../../users/user.entity';
 import { ListMember } from './list-member.entity';
 import { ListSection } from './list-section.entity';
 
 @Entity({ name: 'lists' })
 @Index('IDX_lists_owner', ['ownerId'])
+@Index('IDX_lists_objective', ['objectiveId'])
 export class List {
   @PrimaryColumn({ type: 'varchar', length: 36 })
   id!: string;
@@ -44,6 +46,17 @@ export class List {
   /** Checking an item deletes it instead of keeping it as done. */
   @Column({ type: 'boolean', default: false })
   removeChecked!: boolean;
+
+  /** The objective whose bar its items can make; one at most. */
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  objectiveId!: string | null;
+
+  @ManyToOne(() => Objective, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({
+    name: 'objectiveId',
+    foreignKeyConstraintName: 'FK_lists_objective',
+  })
+  objective!: Objective | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;

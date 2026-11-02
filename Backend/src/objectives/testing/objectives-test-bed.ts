@@ -13,6 +13,7 @@ import { ObjectiveActivityService } from '../objective-activity.service';
 import { ObjectiveChangesService } from '../objective-changes.service';
 import { ObjectiveAgendaService } from '../objective-agenda.service';
 import { ObjectiveImportService } from '../objective-import.service';
+import { ObjectiveListsService } from '../objective-lists.service';
 import { ObjectiveMembersService } from '../objective-members.service';
 import { ObjectivePreferencesService } from '../objective-preferences.service';
 import { ObjectiveRecurrenceService } from '../objective-recurrence.service';
@@ -33,6 +34,7 @@ export interface ObjectivesTestBed extends ListsTestBed {
   recurrence: ObjectiveRecurrenceService;
   templates: ObjectiveTemplatesService;
   agenda: ObjectiveAgendaService;
+  objectiveLists: ObjectiveListsService;
 }
 
 /** The lists test bed's people and database, with the objectives services on top. */
@@ -60,7 +62,7 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     access,
     changes,
   );
-  const view = new ObjectiveViewService(bed.dataSource);
+  const view = new ObjectiveViewService(bed.dataSource, bed.listAccess);
   const recurrence = new ObjectiveRecurrenceService(
     bed.dataSource,
     writer,
@@ -90,8 +92,22 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     changes,
     recurrence,
   );
+  const objectiveLists = new ObjectiveListsService(
+    bed.dataSource,
+    access,
+    writer,
+    view,
+    changes,
+    bed.lists,
+    bed.listChanges,
+  );
   return {
     ...bed,
+    objectiveLists,
+    destroy: async () => {
+      objectiveLists.onModuleDestroy();
+      await bed.destroy();
+    },
     access,
     members,
     recurrence,

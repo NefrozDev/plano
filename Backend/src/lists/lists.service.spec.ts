@@ -73,6 +73,7 @@ describe('ListsService', () => {
       total: 0,
       onHome: false,
       removeChecked: false,
+      objectiveId: null,
       description: '',
       members: [
         { id: bed.ada, name: 'Ada Test', avatarVersion: null, role: 'owner' },

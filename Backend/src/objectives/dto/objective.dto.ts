@@ -1,4 +1,5 @@
 import type {
+  LinkObjectiveListRequest,
   AddObjectiveCommentRequest,
   AddObjectiveMemberRequest,
   AddObjectiveSessionRequest,
@@ -315,4 +316,9 @@ export class UpdateObjectivePreferencesDto implements UpdateObjectivePreferences
   @IsOptionalButNotNull()
   @IsIn(DUE_REMINDERS)
   dueReminder?: DueReminder;
+}
+
+export class LinkObjectiveListDto implements LinkObjectiveListRequest {
+  @IsUUID()
+  listId!: string;
 }

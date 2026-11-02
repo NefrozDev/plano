@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { ShareRole } from '@plano/common';
-import { DataSource, EntityManager } from 'typeorm';
+import { DataSource, EntityManager, In } from 'typeorm';
 import { ContactsService } from '../friends/contacts.service';
 import { ListMember } from './entities/list-member.entity';
 import { List } from './entities/list.entity';
@@ -81,6 +81,31 @@ export class ListAccessService {
           role: member.role,
         })),
     ];
+  }
+
+  /** Of these lists, those the user can open: their own, or shared by a contact. */
+  async visibleTo(
+    lists: readonly List[],
+    userId: string,
+    manager: EntityManager = this.dataSource.manager,
+  ): Promise<List[]> {
+    const shared = lists.filter(({ ownerId }) => ownerId !== userId);
+    if (!shared.length) return [...lists];
+    const memberOf = new Set(
+      (
+        await manager.find(ListMember, {
+          where: { userId, listId: In(shared.map(({ id }) => id)) },
+        })
+      ).map(({ listId }) => listId),
+    );
+    const contacts = memberOf.size
+      ? await this.contacts.contactIds(userId)
+      : new Set<string>();
+    return lists.filter(
+      (list) =>
+        list.ownerId === userId ||
+        (memberOf.has(list.id) && contacts.has(list.ownerId)),
+    );
   }
 
   private async find(

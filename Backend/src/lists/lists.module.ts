@@ -46,5 +46,6 @@ import { ListsService } from './lists.service';
     ListPreferencesService,
     ListSettingsService,
   ],
+  exports: [ListAccessService, ListChangesService, ListsService],
 })
 export class ListsModule {}

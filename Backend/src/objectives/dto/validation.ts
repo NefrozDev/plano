@@ -23,6 +23,7 @@ export const COMPLETION_MODES: readonly CompletionMode[] = [
   'metric',
   'habit',
   'manual',
+  'list',
 ];
 export const TIMELAPSE_MODES: readonly TimelapseMode[] = [
   'off',

@@ -6,6 +6,7 @@ import {
 import type { ObjectiveRole } from '@plano/common';
 import { DataSource, EntityManager, In, IsNull } from 'typeorm';
 import { ContactsService } from '../friends/contacts.service';
+import { ListEntry } from '../lists/entities/list-entry.entity';
 import { ObjectiveCheckInRow } from './entities/objective-check-in.entity';
 import { ObjectiveMember } from './entities/objective-member.entity';
 import { ObjectiveSession } from './entities/objective-session.entity';
@@ -123,6 +124,16 @@ export class ObjectiveAccessService {
     const members = await manager.find(ObjectiveMember, {
       where: { objectiveId: In(objectiveIds) },
     });
+    const listEntries = objectiveIds.length
+      ? await manager
+          .createQueryBuilder(ListEntry, 'entry')
+          .innerJoin('entry.list', 'list')
+          .select('list.objectiveId', 'objectiveId')
+          .addSelect('entry.done', 'done')
+          .where('list.objectiveId IN (:...objectiveIds)', { objectiveIds })
+          .andWhere('list.removeChecked = false')
+          .getRawMany<{ objectiveId: string; done: boolean }>()
+      : [];
 
     const nodesOf = new Map<string, Objective[]>();
     for (const node of nodes) {
@@ -152,6 +163,9 @@ export class ObjectiveAccessService {
           checkIns: checkIns.filter(
             ({ objectiveId, date }) =>
               ids.has(objectiveId) && date >= periodStart,
+          ),
+          listEntries: listEntries.filter(({ objectiveId }) =>
+            ids.has(objectiveId),
           ),
           // Losing both links (friend, group mate) revokes access at once.
           memberships: treeMembers.filter(({ userId }) =>

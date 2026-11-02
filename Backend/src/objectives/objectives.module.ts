@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { FriendsModule } from '../friends/friends.module';
+import { ListsModule } from '../lists/lists.module';
 import { LiveModule } from '../live/live.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { ObjectiveActivity } from './entities/objective-activity.entity';
@@ -19,6 +20,7 @@ import { ObjectiveActivityService } from './objective-activity.service';
 import { ObjectiveAgendaService } from './objective-agenda.service';
 import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveImportService } from './objective-import.service';
+import { ObjectiveListsService } from './objective-lists.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { ObjectiveRecurrenceService } from './objective-recurrence.service';
@@ -35,6 +37,7 @@ import { ObjectivesService } from './objectives.service';
     AuthModule,
     DatabaseModule,
     FriendsModule,
+    ListsModule,
     LiveModule,
     NotificationsModule,
     TypeOrmModule.forFeature([
@@ -64,6 +67,7 @@ import { ObjectivesService } from './objectives.service';
     ObjectiveActivityService,
     ObjectiveRecurrenceService,
     ObjectiveTemplatesService,
+    ObjectiveListsService,
   ],
 })
 export class ObjectivesModule {}

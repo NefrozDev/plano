@@ -31,6 +31,8 @@ export interface ListsTestBed {
   /** Receives the live events the services publish; spy on `publish`. */
   live: LiveEventsService;
   notifications: NotificationsService;
+  listAccess: ListAccessService;
+  listChanges: ListChangesService;
   /** Owner of the group. */
   ada: string;
   /** In Ada's group. */
@@ -113,6 +115,8 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
     content: new ListContentService(dataSource, writeLock, access, changes),
     live,
     notifications,
+    listAccess: access,
+    listChanges: changes,
     settings: new ListSettingsService(dataSource, writeLock),
     ada,
     bob,

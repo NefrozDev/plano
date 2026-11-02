@@ -12,6 +12,7 @@ import { AddObjectiveSharing1787740000000 } from './1787740000000-add-objective-
 import { AddObjectiveActivity1787820000000 } from './1787820000000-add-objective-activity';
 import { AddObjectiveRecurrenceAndTemplates1787900000000 } from './1787900000000-add-objective-recurrence-and-templates';
 import { CreateNotifications1787980000000 } from './1787980000000-create-notifications';
+import { AddListObjective1788060000000 } from './1788060000000-add-list-objective';
 
 /** Every migration, oldest first; shared by the app and the in-memory test database. */
 export const MIGRATIONS = [
@@ -29,4 +30,5 @@ export const MIGRATIONS = [
   AddObjectiveActivity1787820000000,
   AddObjectiveRecurrenceAndTemplates1787900000000,
   CreateNotifications1787980000000,
+  AddListObjective1788060000000,
 ];

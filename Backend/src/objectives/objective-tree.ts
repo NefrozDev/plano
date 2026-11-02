@@ -17,6 +17,8 @@ export interface TreeFacts {
     value: number;
   }[];
   checkIns: readonly { objectiveId: string; userId: string }[];
+  /** Items of the lists linked to each objective; lists that delete checked items are left out. */
+  listEntries?: readonly { objectiveId: string; done: boolean }[];
   /** Invitations still valid: people who are no longer contacts are left out. */
   memberships?: readonly TreeMembership[];
 }
@@ -42,6 +44,10 @@ export class ObjectiveTree {
   private readonly exact = new Map<string, number | null>();
   private readonly doneValues = new Map<string, number[]>();
   private readonly checkInCounts = new Map<string, Map<string, number>>();
+  private readonly listCounts = new Map<
+    string,
+    { done: number; total: number }
+  >();
   readonly root: Objective;
 
   private readonly memberships: readonly TreeMembership[];
@@ -81,6 +87,12 @@ export class ObjectiveTree {
         this.checkInCounts.get(objectiveId) ?? new Map<string, number>();
       counts.set(userId, (counts.get(userId) ?? 0) + 1);
       this.checkInCounts.set(objectiveId, counts);
+    }
+    for (const { objectiveId, done } of facts.listEntries ?? []) {
+      const counts = this.listCounts.get(objectiveId) ?? { done: 0, total: 0 };
+      counts.total += 1;
+      if (done) counts.done += 1;
+      this.listCounts.set(objectiveId, counts);
     }
   }
 
@@ -208,6 +220,10 @@ export class ObjectiveTree {
         unit: 'jours',
       };
     }
+    if (node?.completion === 'list') {
+      const { done, total } = this.listCounts.get(id) ?? { done: 0, total: 0 };
+      return { current: done, target: total, unit: 'éléments' };
+    }
     return null;
   }
 
@@ -227,6 +243,14 @@ export class ObjectiveTree {
         return this.habitProgress(node);
       case 'children':
         return this.childrenProgress(node);
+      case 'list': {
+        // No item yet is nothing done, not everything.
+        const { done, total } = this.listCounts.get(node.id) ?? {
+          done: 0,
+          total: 0,
+        };
+        return total ? (done / total) * 100 : 0;
+      }
     }
   }
 
