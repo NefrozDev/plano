@@ -4,6 +4,7 @@ import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { FriendsModule } from '../friends/friends.module';
 import { LiveModule } from '../live/live.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { ObjectiveActivity } from './entities/objective-activity.entity';
 import { ObjectiveComment } from './entities/objective-comment.entity';
 import { ObjectiveCheckInRow } from './entities/objective-check-in.entity';
@@ -35,6 +36,7 @@ import { ObjectivesService } from './objectives.service';
     DatabaseModule,
     FriendsModule,
     LiveModule,
+    NotificationsModule,
     TypeOrmModule.forFeature([
       Objective,
       ObjectiveSession,

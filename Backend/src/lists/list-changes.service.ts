@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { LiveEventsService } from '../live/live-events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ListMember } from './entities/list-member.entity';
 import { List } from './entities/list.entity';
 
@@ -15,6 +16,7 @@ export class ListChangesService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly live: LiveEventsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /** The owner and every member, the actor included: their other devices need it too. */
@@ -39,8 +41,36 @@ export class ListChangesService {
     }
   }
 
-  /** For users who just lost the list: it was deleted, or they were removed. */
-  removed(listId: string, userIds: Iterable<string>): void {
-    this.live.publish(userIds, { type: 'list.removed', listId });
+  /** For users who just lost the list: it was deleted, or they were removed. Its news go too. */
+  async removed(listId: string, userIds: Iterable<string>): Promise<void> {
+    const lost = [...userIds];
+    this.live.publish(lost, { type: 'list.removed', listId });
+    await this.notifications.forget(lost, [listId]);
+  }
+
+  /** Someone was given access to the list. */
+  async invited(list: List, userId: string, actorId: string): Promise<void> {
+    await this.notifications.notify([userId], {
+      area: 'lists',
+      kind: 'list.invited',
+      targetId: list.id,
+      title: list.name,
+      actorId,
+    });
+  }
+
+  /** Everyone else on the list hears that items were added, once while unread. */
+  async entriesAdded(list: List, actorId: string): Promise<void> {
+    try {
+      await this.notifications.notify(await this.audience(list.id), {
+        area: 'lists',
+        kind: 'list.entries',
+        targetId: list.id,
+        title: list.name,
+        actorId,
+      });
+    } catch (error) {
+      this.logger.warn(`No notification for list ${list.id}: ${String(error)}`);
+    }
   }
 }

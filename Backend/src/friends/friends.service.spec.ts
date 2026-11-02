@@ -17,6 +17,7 @@ import { GroupMembership } from '../groups/group-membership.entity';
 import { Group } from '../groups/group.entity';
 import { GroupsService } from '../groups/groups.service';
 import { LiveEventsService } from '../live/live-events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { User } from '../users/user.entity';
 import { ContactsService } from './contacts.service';
 import {
@@ -41,6 +42,12 @@ describe('FriendsService and ContactsService', () => {
     avatarVersion: null,
   });
   let friends: FriendsService;
+  let notifications: NotificationsService;
+  /** Live events about friends, without the bell's own `notifications.changed`. */
+  const friendEvents = () =>
+    publish.mock.calls.filter(
+      ([, event]) => event.type !== 'notifications.changed',
+    );
   let contacts: ContactsService;
   let ada: string;
   let bob: string;
@@ -104,7 +111,8 @@ describe('FriendsService and ContactsService', () => {
     const writeLock = new DatabaseWriteLockService();
     live = new LiveEventsService();
     publish = vi.spyOn(live, 'publish');
-    friends = new FriendsService(dataSource, writeLock, live);
+    notifications = new NotificationsService(dataSource, writeLock, live);
+    friends = new FriendsService(dataSource, writeLock, live, notifications);
     contacts = new ContactsService(
       new GroupsService(
         dataSource.getRepository(GroupMembership),
@@ -182,18 +190,23 @@ describe('FriendsService and ContactsService', () => {
     it('tells the recipient about a request, and the sender about its acceptance', async () => {
       await friends.sendRequest(ada, bob);
 
-      expect(publish).toHaveBeenCalledExactlyOnceWith([bob], {
-        type: 'friend.requested',
-        user: publicUser(ada, 'ada', 'Ada'),
-      });
+      expect(friendEvents()).toEqual([
+        [
+          [bob],
+          {
+            type: 'friend.requested',
+            user: publicUser(ada, 'ada', 'Ada'),
+          },
+        ],
+      ]);
 
       await friends.accept(bob, (await incomingIds(bob))[0]);
 
-      expect(publish).toHaveBeenCalledTimes(2);
-      expect(publish).toHaveBeenLastCalledWith([ada], {
-        type: 'friend.accepted',
-        user: publicUser(bob, 'bob', 'Bob'),
-      });
+      expect(friendEvents()).toHaveLength(2);
+      expect(friendEvents()[1]).toEqual([
+        [ada],
+        { type: 'friend.accepted', user: publicUser(bob, 'bob', 'Bob') },
+      ]);
     });
 
     it('tells the first asker when asking back makes them friends', async () => {
@@ -202,10 +215,15 @@ describe('FriendsService and ContactsService', () => {
 
       await friends.sendRequest(ada, bob);
 
-      expect(publish).toHaveBeenCalledExactlyOnceWith([bob], {
-        type: 'friend.accepted',
-        user: publicUser(ada, 'ada', 'Ada'),
-      });
+      expect(friendEvents()).toEqual([
+        [
+          [bob],
+          {
+            type: 'friend.accepted',
+            user: publicUser(ada, 'ada', 'Ada'),
+          },
+        ],
+      ]);
     });
 
     it('tells the other person when a request or a friendship goes', async () => {
@@ -213,25 +231,40 @@ describe('FriendsService and ContactsService', () => {
       publish.mockClear();
       // Declined by the recipient: the sender hears.
       await friends.removeRequest(bob, (await incomingIds(bob))[0]);
-      expect(publish).toHaveBeenCalledExactlyOnceWith([ada], {
-        type: 'friends.changed',
-      });
+      expect(friendEvents()).toEqual([
+        [
+          [ada],
+          {
+            type: 'friends.changed',
+          },
+        ],
+      ]);
 
       // Cancelled by the sender: the recipient hears.
       await friends.sendRequest(ada, bob);
       publish.mockClear();
       await friends.removeRequest(ada, (await incomingIds(bob))[0]);
-      expect(publish).toHaveBeenCalledExactlyOnceWith([bob], {
-        type: 'friends.changed',
-      });
+      expect(friendEvents()).toEqual([
+        [
+          [bob],
+          {
+            type: 'friends.changed',
+          },
+        ],
+      ]);
 
       await friends.sendRequest(ada, bob);
       await friends.accept(bob, (await incomingIds(bob))[0]);
       publish.mockClear();
       await friends.removeFriend(bob, ada);
-      expect(publish).toHaveBeenCalledExactlyOnceWith([ada], {
-        type: 'friends.changed',
-      });
+      expect(friendEvents()).toEqual([
+        [
+          [ada],
+          {
+            type: 'friends.changed',
+          },
+        ],
+      ]);
     });
 
     it('publishes nothing when the change is refused', async () => {
@@ -242,6 +275,95 @@ describe('FriendsService and ContactsService', () => {
       await expect(friends.removeFriend(ada, bob)).rejects.toThrow();
 
       expect(publish).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('notifications', () => {
+    const friendNews = async (userId: string) =>
+      (await notifications.list(userId)).items.map(
+        ({ kind, targetId, actor, read }) => ({
+          kind,
+          targetId,
+          actor: actor?.name,
+          read,
+        }),
+      );
+
+    it('keeps a request for the recipient and an acceptance for the sender, until read', async () => {
+      await friends.sendRequest(ada, bob);
+
+      expect(await friendNews(bob)).toEqual([
+        {
+          kind: 'friend.requested',
+          targetId: ada,
+          actor: 'Ada Test',
+          read: false,
+        },
+      ]);
+      expect((await notifications.list(bob)).unread.friends).toBe(1);
+      expect(await friendNews(ada)).toEqual([]);
+
+      await friends.accept(bob, (await incomingIds(bob))[0]);
+
+      expect(await friendNews(ada)).toEqual([
+        {
+          kind: 'friend.accepted',
+          targetId: bob,
+          actor: 'Bob Test',
+          read: false,
+        },
+      ]);
+      // The one who accepted is not told about their own action.
+      expect(await friendNews(bob)).toHaveLength(1);
+    });
+
+    it('tells the first asker when asking back makes them friends', async () => {
+      await friends.sendRequest(bob, ada);
+      await friends.sendRequest(ada, bob);
+
+      expect(await friendNews(bob)).toEqual([
+        {
+          kind: 'friend.accepted',
+          targetId: ada,
+          actor: 'Ada Test',
+          read: false,
+        },
+      ]);
+    });
+
+    it('drops the news between two people once the request or the friendship goes', async () => {
+      await friends.sendRequest(ada, bob);
+      await friends.sendRequest(cyd, bob);
+      await friends.removeRequest(
+        bob,
+        (await friends.listRequests(bob)).incoming.find(
+          ({ user }) => user.id === ada,
+        )!.id,
+      );
+
+      // Cyd's request is unrelated and stays.
+      expect(await friendNews(bob)).toEqual([
+        {
+          kind: 'friend.requested',
+          targetId: cyd,
+          actor: 'Cyd Test',
+          read: false,
+        },
+      ]);
+
+      await friends.sendRequest(ada, bob);
+      await friends.accept(
+        bob,
+        (await friends.listRequests(bob)).incoming.find(
+          ({ user }) => user.id === ada,
+        )!.id,
+      );
+      await friends.removeFriend(bob, ada);
+
+      expect(await friendNews(ada)).toEqual([]);
+      expect((await friendNews(bob)).map(({ targetId }) => targetId)).toEqual([
+        cyd,
+      ]);
     });
   });
 

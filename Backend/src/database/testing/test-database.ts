@@ -20,6 +20,7 @@ import { ObjectiveTemplate } from '../../objectives/entities/objective-template.
 import { ObjectivePreference } from '../../objectives/entities/objective-preference.entity';
 import { ObjectiveSession } from '../../objectives/entities/objective-session.entity';
 import { Objective } from '../../objectives/entities/objective.entity';
+import { Notification } from '../../notifications/notification.entity';
 import { User } from '../../users/user.entity';
 
 /** Every entity, for tests that build a DataSource without the Nest modules. */
@@ -45,6 +46,7 @@ export const ENTITIES = [
   ObjectiveComment,
   ObjectivePeriod,
   ObjectiveTemplate,
+  Notification,
 ];
 
 export interface TestDatabase {

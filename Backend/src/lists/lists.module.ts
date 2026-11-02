@@ -11,6 +11,7 @@ import { ListSection } from './entities/list-section.entity';
 import { ListSettings } from './entities/list-settings.entity';
 import { List } from './entities/list.entity';
 import { ListAccessService } from './list-access.service';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { ListChangesService } from './list-changes.service';
 import { ListContentService } from './list-content.service';
 import { ListPreferencesService } from './list-preferences.service';
@@ -26,6 +27,7 @@ import { ListsService } from './lists.service';
     DatabaseModule,
     FriendsModule,
     LiveModule,
+    NotificationsModule,
     TypeOrmModule.forFeature([
       List,
       ListMember,

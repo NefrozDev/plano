@@ -2,6 +2,7 @@ import type { MockInstance } from 'vitest';
 import type { ListDetail } from '@plano/common';
 import type { DataSource } from 'typeorm';
 import { LiveEventsService } from '../live/live-events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ListChangesService } from './list-changes.service';
 import {
   createListsTestBed,
@@ -14,12 +15,14 @@ describe('List live events', () => {
   let list: ListDetail;
   let publish: MockInstance<LiveEventsService['publish']>;
 
-  /** Recipients and event of every publish, recipients sorted. */
+  /** Recipients and event of every publish about the list (not the bell's own), recipients sorted. */
   const published = () =>
-    publish.mock.calls.map(([userIds, event]) => ({
-      to: [...userIds].sort(),
-      event,
-    }));
+    publish.mock.calls
+      .filter(([, event]) => event.type !== 'notifications.changed')
+      .map(([userIds, event]) => ({
+        to: [...userIds].sort(),
+        event,
+      }));
 
   beforeEach(async () => {
     bed = await createListsTestBed();
@@ -104,7 +107,9 @@ describe('List live events', () => {
     const spy = vi.spyOn(live, 'publish');
 
     await expect(
-      new ListChangesService(failing, live).changed('list-1'),
+      new ListChangesService(failing, live, {} as NotificationsService).changed(
+        'list-1',
+      ),
     ).resolves.toBeUndefined();
     expect(spy).not.toHaveBeenCalled();
     live.onApplicationShutdown();

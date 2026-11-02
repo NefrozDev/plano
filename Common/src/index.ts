@@ -6,3 +6,4 @@ export { createEmptyPlanoData } from './initial-data';
 export * from './friends';
 export * from './users';
 export * from './live';
+export * from './notifications';

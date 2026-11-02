@@ -3,6 +3,7 @@ import type { ObjectiveNewsKind } from '@plano/common';
 import { DataSource } from 'typeorm';
 import { displayName } from '../lists/list.mapper';
 import { LiveEventsService } from '../live/live-events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { User } from '../users/user.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveAccessService } from './objective-access.service';
@@ -57,12 +58,16 @@ export class ObjectiveChangesService {
     private readonly dataSource: DataSource,
     private readonly access: ObjectiveAccessService,
     private readonly live: LiveEventsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async published(change: ObjectiveChange): Promise<void> {
     try {
       const after = await this.access.loadTree(change.before.root.id);
-      this.announce(change, after);
+      const lost = this.announce(change, after);
+      for (const [id, userIds] of lost) {
+        await this.notifications.forget(userIds, [id]);
+      }
       if (after) await this.tellNews(change, after);
     } catch (error) {
       this.logger.warn(
@@ -88,6 +93,13 @@ export class ObjectiveChangesService {
         title: node.title,
         actor: await this.nameOf(actorId),
       });
+      await this.notifications.notify(userIds, {
+        area: 'objectives',
+        kind: 'objective.invited',
+        targetId: objectiveId,
+        title: node.title,
+        actorId,
+      });
     } catch (error) {
       this.logger.warn(
         `No invitation event for objective ${objectiveId}: ${String(error)}`,
@@ -103,10 +115,11 @@ export class ObjectiveChangesService {
     return row ? this.access.loadTree(row.rootId) : null;
   }
 
+  /** Returns who lost what, so their notifications about it go too. */
   private announce(
     { before, objectiveId }: ObjectiveChange,
     after: ObjectiveTree | null,
-  ): void {
+  ): Map<string, string[]> {
     // A deleted sub-objective changes its parent.
     const anchor = after?.node(objectiveId)
       ? objectiveId
@@ -142,6 +155,7 @@ export class ObjectiveChangesService {
         objectiveId: id,
       });
     }
+    return lost;
   }
 
   private async tellNews(
@@ -153,7 +167,7 @@ export class ObjectiveChangesService {
     if (!completed.length && !(news && node)) return;
 
     const actor = await this.nameOf(actorId);
-    const tell = (target: Objective, kind: ObjectiveNewsKind) => {
+    const tell = async (target: Objective, kind: ObjectiveNewsKind) => {
       const people = [...peopleAround(after, target.id)].filter(
         (userId) => userId !== actorId && after.roleOf(target.id, userId),
       );
@@ -165,10 +179,17 @@ export class ObjectiveChangesService {
         title: target.title,
         actor,
       });
+      await this.notifications.notify(people, {
+        area: 'objectives',
+        kind: `objective.${kind}`,
+        targetId: target.id,
+        title: target.title,
+        actorId: actorId || null,
+      });
     };
     // Completing it says more than contributing to it.
-    if (news && node && !completedHere) tell(node, news);
-    for (const target of completed) tell(target, 'completed');
+    if (news && node && !completedHere) await tell(node, news);
+    for (const target of completed) await tell(target, 'completed');
   }
 
   private async nameOf(userId: string): Promise<string> {

@@ -14,6 +14,7 @@ import { Friendship } from '../../friends/friendship.entity';
 import { GroupsService } from '../../groups/groups.service';
 import { User } from '../../users/user.entity';
 import { LiveEventsService } from '../../live/live-events.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { ListAccessService } from '../list-access.service';
 import { ListChangesService } from '../list-changes.service';
 import { ListContentService } from '../list-content.service';
@@ -29,6 +30,7 @@ export interface ListsTestBed {
   settings: ListSettingsService;
   /** Receives the live events the services publish; spy on `publish`. */
   live: LiveEventsService;
+  notifications: NotificationsService;
   /** Owner of the group. */
   ada: string;
   /** In Ada's group. */
@@ -62,6 +64,7 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
 
   const writeLock = new DatabaseWriteLockService();
   const live = new LiveEventsService();
+  const notifications = new NotificationsService(dataSource, writeLock, live);
   const groups = new GroupsService(
     dataSource.getRepository(GroupMembership),
     dataSource,
@@ -69,10 +72,10 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
   );
   const contacts = new ContactsService(
     groups,
-    new FriendsService(dataSource, writeLock, live),
+    new FriendsService(dataSource, writeLock, live, notifications),
   );
   const access = new ListAccessService(dataSource, contacts);
-  const changes = new ListChangesService(dataSource, live);
+  const changes = new ListChangesService(dataSource, live, notifications);
   const preferences = new ListPreferencesService(dataSource, writeLock, access);
 
   const [ada, bob, cyd] = await Promise.all(
@@ -109,6 +112,7 @@ export async function createListsTestBed(): Promise<ListsTestBed> {
     preferences,
     content: new ListContentService(dataSource, writeLock, access, changes),
     live,
+    notifications,
     settings: new ListSettingsService(dataSource, writeLock),
     ada,
     bob,

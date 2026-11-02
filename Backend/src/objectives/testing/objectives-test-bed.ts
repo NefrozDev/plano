@@ -45,10 +45,15 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
       bed.dataSource,
       writeLock,
     ),
-    new FriendsService(bed.dataSource, writeLock, bed.live),
+    new FriendsService(bed.dataSource, writeLock, bed.live, bed.notifications),
   );
   const access = new ObjectiveAccessService(bed.dataSource, contacts);
-  const changes = new ObjectiveChangesService(bed.dataSource, access, bed.live);
+  const changes = new ObjectiveChangesService(
+    bed.dataSource,
+    access,
+    bed.live,
+    bed.notifications,
+  );
   const writer = new ObjectiveWriterService(
     bed.dataSource,
     writeLock,

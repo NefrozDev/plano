@@ -161,7 +161,7 @@ export class ListsService {
         return audience;
       }),
     );
-    this.changes.removed(listId, audience);
+    await this.changes.removed(listId, audience);
   }
 
   /** Shares the list with one of the owner's contacts. */
@@ -170,9 +170,14 @@ export class ListsService {
     userId: string,
     details: AddListMemberDto,
   ): Promise<ListMemberResponse> {
-    const member = await this.writeLock.runExclusive(() =>
+    const { member, list } = await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
-        await this.access.require(listId, userId, 'own', manager);
+        const { list } = await this.access.require(
+          listId,
+          userId,
+          'own',
+          manager,
+        );
         if (details.userId === userId) {
           throw new BadRequestException(
             'Vous êtes déjà propriétaire de la liste.',
@@ -201,10 +206,11 @@ export class ListsService {
             role: details.role,
           }),
         );
-        return this.toMemberResponse(manager, member);
+        return { member: await this.toMemberResponse(manager, member), list };
       }),
     );
     await this.changes.changed(listId);
+    await this.changes.invited(list, details.userId, userId);
     return member;
   }
 
@@ -250,7 +256,7 @@ export class ListsService {
         await manager.delete(ListMember, { id: member.id });
       }),
     );
-    this.changes.removed(listId, [memberUserId]);
+    await this.changes.removed(listId, [memberUserId]);
     await this.changes.changed(listId);
   }
 
@@ -264,7 +270,7 @@ export class ListsService {
         return members.map((member) => member.userId);
       }),
     );
-    this.changes.removed(listId, formerMembers);
+    await this.changes.removed(listId, formerMembers);
     await this.changes.changed(listId);
   }
 

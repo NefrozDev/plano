@@ -18,15 +18,17 @@ describe('ObjectiveChangesService', () => {
 
   afterEach(() => bed.destroy());
 
-  /** Who received what, as `[event type, objective id, sorted recipients]`. */
+  /** Who received what, as `[event type, objective id, sorted recipients]`; the bell's own events left out. */
   const sent = () =>
-    publish.mock.calls.map(([userIds, event]) => {
-      const { type, objectiveId } = event as Extract<
-        LiveEvent,
-        { type: 'objective.changed' }
-      >;
-      return [type, objectiveId, [...userIds].sort()];
-    });
+    publish.mock.calls
+      .filter(([, event]) => event.type !== 'notifications.changed')
+      .map(([userIds, event]) => {
+        const { type, objectiveId } = event as Extract<
+          LiveEvent,
+          { type: 'objective.changed' }
+        >;
+        return [type, objectiveId, [...userIds].sort()];
+      });
   const sentOf = (type: LiveEvent['type']) =>
     sent().filter(([eventType]) => eventType === type);
   const newsTo = (userId: string) =>

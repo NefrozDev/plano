@@ -4,6 +4,7 @@ import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { GroupsModule } from '../groups/groups.module';
 import { LiveModule } from '../live/live.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { ContactsController } from './contacts.controller';
 import { ContactsService } from './contacts.service';
 import { FriendsController } from './friends.controller';
@@ -17,6 +18,7 @@ import { Friendship } from './friendship.entity';
     DatabaseModule,
     GroupsModule,
     LiveModule,
+    NotificationsModule,
     TypeOrmModule.forFeature([Friendship]),
   ],
   controllers: [FriendsController, ContactsController],

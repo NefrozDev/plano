@@ -17,6 +17,7 @@ import { randomUUID } from 'node:crypto';
 import { DataSource, In } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
 import { LiveEventsService } from '../live/live-events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { User } from '../users/user.entity';
 import { toPublicUser } from '../users/user.mapper';
 import { Friendship } from './friendship.entity';
@@ -50,6 +51,7 @@ export class FriendsService {
     private readonly dataSource: DataSource,
     private readonly writeLock: DatabaseWriteLockService,
     private readonly live: LiveEventsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -196,6 +198,13 @@ export class FriendsService {
         result.status === 'accepted' ? 'friend.accepted' : 'friend.requested',
       user: toPublicUser(result.sender),
     });
+    await this.notifications.notify([targetUserId], {
+      area: 'friends',
+      kind:
+        result.status === 'accepted' ? 'friend.accepted' : 'friend.requested',
+      targetId: userId,
+      actorId: userId,
+    });
     return { status: result.status };
   }
 
@@ -221,6 +230,12 @@ export class FriendsService {
       }),
     );
     this.live.publish([friend.id], { type: 'friend.accepted', user: accepter });
+    await this.notifications.notify([friend.id], {
+      area: 'friends',
+      kind: 'friend.accepted',
+      targetId: userId,
+      actorId: userId,
+    });
     return friend;
   }
 
@@ -242,6 +257,7 @@ export class FriendsService {
       }),
     );
     this.live.publish([otherId], { type: 'friends.changed' });
+    await this.notifications.forgetFriendship(userId, otherId);
   }
 
   async removeFriend(userId: string, friendId: string): Promise<void> {
@@ -262,6 +278,7 @@ export class FriendsService {
       }),
     );
     this.live.publish([friendId], { type: 'friends.changed' });
+    await this.notifications.forgetFriendship(userId, friendId);
   }
 
   private async relationsWith(

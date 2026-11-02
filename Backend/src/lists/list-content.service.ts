@@ -127,20 +127,28 @@ export class ListContentService {
     userId: string,
     details: CreateEntryDto,
   ): Promise<ListEntryResponse> {
-    return this.inTransaction(listId, userId, async (manager) => {
-      await this.requireSection(manager, listId, sectionId);
-      const entry = await manager.save(
-        manager.create(ListEntry, {
-          id: randomUUID(),
-          listId,
-          sectionId,
-          name: details.name,
-          addedByUserId: userId,
-          position: await manager.count(ListEntry, { where: { sectionId } }),
-        }),
-      );
-      return this.toResponse(manager, entry.id);
-    });
+    let addedTo: List | undefined;
+    const entry = await this.inTransaction(
+      listId,
+      userId,
+      async (manager, list) => {
+        addedTo = list;
+        await this.requireSection(manager, listId, sectionId);
+        const entry = await manager.save(
+          manager.create(ListEntry, {
+            id: randomUUID(),
+            listId,
+            sectionId,
+            name: details.name,
+            addedByUserId: userId,
+            position: await manager.count(ListEntry, { where: { sectionId } }),
+          }),
+        );
+        return this.toResponse(manager, entry.id);
+      },
+    );
+    if (addedTo) await this.changes.entriesAdded(addedTo, userId);
+    return entry;
   }
 
   async updateEntry(
