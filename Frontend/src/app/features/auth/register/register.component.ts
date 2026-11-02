@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -16,6 +24,8 @@ import {
   UNEXPECTED_ERROR_MESSAGE,
   httpErrorMessage,
 } from '../../../core/http/http-error-message';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
+import { TermsContentComponent } from '../../legal/terms-content.component';
 import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 
 export const matchingPasswordsValidator: ValidatorFn = (
@@ -41,7 +51,13 @@ type RegisterField =
 
 @Component({
   selector: 'app-register',
-  imports: [AuthShellComponent, ReactiveFormsModule, RouterLink],
+  imports: [
+    AuthShellComponent,
+    ModalDialogComponent,
+    ReactiveFormsModule,
+    RouterLink,
+    TermsContentComponent,
+  ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +67,8 @@ export class RegisterComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly language = inject(LanguageService);
+  private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+  private readonly injector = inject(Injector);
 
   readonly form = this.formBuilder.nonNullable.group(
     {
@@ -86,6 +104,8 @@ export class RegisterComponent {
   readonly submitted = signal(false);
   readonly submitting = signal(false);
   readonly submissionError = signal('');
+  /** The terms open in a dialog, so what was typed in the form stays. */
+  readonly termsOpen = signal(false);
 
   showError(controlName: RegisterField): boolean {
     const control = this.form.controls[controlName];
@@ -105,6 +125,27 @@ export class RegisterComponent {
     return this.form.hasError('passwordMismatch')
       ? 'Les mots de passe ne correspondent pas.'
       : '';
+  }
+
+  openTerms(section: 'terms' | 'privacy'): void {
+    this.termsOpen.set(true);
+    afterNextRender(
+      () => {
+        const scroller = this.host.nativeElement.querySelector('.terms-scroll');
+        const privacy = this.host.nativeElement.querySelector('#terms-privacy');
+        if (section === 'privacy') privacy?.scrollIntoView({ block: 'start' });
+        else scroller?.scrollTo({ top: 0 });
+      },
+      { injector: this.injector },
+    );
+  }
+
+  /** Accepting from the dialog ticks the box, as the user just read what it is about. */
+  acceptTerms(): void {
+    const accepted = this.form.controls.acceptedTerms;
+    accepted.setValue(true);
+    accepted.markAsTouched();
+    this.termsOpen.set(false);
   }
 
   submit(): void {

@@ -25,31 +25,128 @@
 
 .terms-field {
   display: grid;
-  grid-template-columns: 1rem 1fr;
-  gap: 0.55rem;
+  grid-template-columns: 1.35rem 1fr;
+  gap: 0.6rem;
   align-items: start;
-  margin: 0.15rem 0 0.4rem;
+  margin: 0.2rem 0 0.5rem;
 }
 
-.terms-field input {
-  width: 1rem;
-  height: 1rem;
-  margin: 0.08rem 0 0;
-  accent-color: var(--color-primary);
+/* The real checkbox stays (keyboard, forms, screen readers); only its look is drawn here. */
+.terms-check {
+  position: relative;
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.terms-check input {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 0.45rem;
+  background: #fff;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.terms-check input:checked {
+  border-color: var(--color-primary);
+  background: linear-gradient(145deg, #4b6cf0, var(--color-primary));
+  box-shadow: 0 0.3rem 0.7rem rgb(50 91 226 / 28%);
+}
+
+.terms-check input[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.terms-check input:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent);
+  outline-offset: 2px;
+}
+
+.terms-check svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  pointer-events: none;
+  stroke: #fff;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.6;
+  transition: stroke-dashoffset 220ms ease-out 60ms;
+}
+
+.terms-check input:checked + svg {
+  stroke-dashoffset: 0;
 }
 
 .terms-field label {
   color: var(--color-text);
-  font-size: 0.68rem;
-  line-height: 1.35;
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
-.inline-accent {
+.terms-link {
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--color-primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-color: rgb(50 91 226 / 35%);
+  text-underline-offset: 0.15em;
+}
+
+.terms-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.terms-scroll {
+  max-height: min(55vh, 28rem);
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.dialog-actions .cancel,
+.dialog-actions .confirm {
+  min-height: 2.6rem;
+  border: 0;
+  border-radius: 0.78rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.dialog-actions .cancel {
+  background: #eef1f6;
+  color: var(--color-text);
+}
+
+.dialog-actions .confirm {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terms-check input,
+  .terms-check svg {
+    transition: none;
+  }
 }
 
 .terms-error {
-  margin: -0.15rem 0 0.6rem 1.55rem;
+  margin: -0.25rem 0 0.6rem 1.95rem;
 }
 
 .account-prompt--compact {

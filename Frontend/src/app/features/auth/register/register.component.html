@@ -113,16 +113,22 @@
       </div>
 
       <div class="terms-field">
-        <input
-          id="register-terms"
-          type="checkbox"
-          formControlName="acceptedTerms"
-          [attr.aria-invalid]="showError('acceptedTerms')"
-          [attr.aria-describedby]="showError('acceptedTerms') ? 'register-terms-error' : null"
-        />
+        <span class="terms-check">
+          <input
+            id="register-terms"
+            type="checkbox"
+            formControlName="acceptedTerms"
+            [attr.aria-invalid]="showError('acceptedTerms')"
+            [attr.aria-describedby]="showError('acceptedTerms') ? 'register-terms-error' : null"
+          />
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9" /></svg>
+        </span>
+        <!-- The buttons open the texts: a click on them does not tick the box. -->
         <label for="register-terms">
-          J’accepte les <span class="inline-accent">conditions d’utilisation</span> et la
-          <span class="inline-accent">politique de confidentialité</span>.
+          J’accepte les
+          <button class="terms-link" type="button" (click)="openTerms('terms')">conditions d’utilisation</button>
+          et la
+          <button class="terms-link" type="button" (click)="openTerms('privacy')">politique de confidentialité</button>.
         </label>
       </div>
       @if (showError('acceptedTerms')) {
@@ -155,4 +161,13 @@
       <a routerLink="/login">Se connecter</a>
     </p>
   </section>
+
+  <app-modal-dialog heading="Conditions d’utilisation" [open]="termsOpen()" (closed)="termsOpen.set(false)">
+    <svg dialog-icon viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7Z" /><path d="M14 3v4h4M10 12h5M10 16h5" /></svg>
+    <div class="terms-scroll"><app-terms-content /></div>
+    <div class="dialog-actions">
+      <button class="cancel" type="button" (click)="termsOpen.set(false)">Fermer</button>
+      <button class="confirm" type="button" (click)="acceptTerms()">J’accepte</button>
+    </div>
+  </app-modal-dialog>
 </app-auth-shell>

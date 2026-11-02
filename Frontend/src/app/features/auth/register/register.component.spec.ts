@@ -1,7 +1,7 @@
 import type { MockedObject } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthUser } from '../../../core/auth/auth.models';
@@ -50,6 +50,106 @@ describe('RegisterComponent', () => {
       acceptedTerms: true,
     });
   }
+
+  describe('terms', () => {
+    let fixture: ComponentFixture<RegisterComponent>;
+    let element: HTMLElement;
+
+    beforeEach(() => {
+      fixture = TestBed.createComponent(RegisterComponent);
+      component = fixture.componentInstance;
+      element = fixture.nativeElement as HTMLElement;
+      fixture.detectChanges();
+    });
+
+    const checkbox = (): HTMLInputElement => element.querySelector('#register-terms') as HTMLInputElement;
+    const links = (): HTMLButtonElement[] => Array.from(element.querySelectorAll<HTMLButtonElement>('.terms-link'));
+    const dialog = (): HTMLDialogElement => element.querySelector('dialog') as HTMLDialogElement;
+    const dialogButton = (label: string): HTMLButtonElement =>
+      Array.from(dialog().querySelectorAll<HTMLButtonElement>('.dialog-actions button')).find(
+        (button) => button.textContent?.trim() === label,
+      )!;
+    const settle = async (): Promise<void> => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    };
+
+    it('links both texts from the box, which keeps its check mark icon', () => {
+      expect(links().map((link) => link.textContent?.trim())).toEqual([
+        'conditions d’utilisation',
+        'politique de confidentialité',
+      ]);
+      expect(element.querySelector('.terms-check svg')).not.toBeNull();
+      expect(dialog().open).toBe(false);
+    });
+
+    it('opens the terms over the form without ticking the box or losing what was typed', async () => {
+      component.form.controls.firstName.setValue('Ada');
+      links()[0].click();
+      await settle();
+
+      expect(dialog().open).toBe(true);
+      expect(dialog().textContent).toContain('1. Objet');
+      expect(dialog().textContent).toContain('Règles de conduite');
+      expect(checkbox().checked).toBe(false);
+      expect(component.form.controls.acceptedTerms.value).toBe(false);
+      expect(component.form.controls.firstName.value).toBe('Ada');
+      expect(auth.register).not.toHaveBeenCalled();
+    });
+
+    it('ticks the box when accepted from the dialog, and closes it', async () => {
+      links()[0].click();
+      await settle();
+      dialogButton('J’accepte').click();
+      await settle();
+
+      expect(dialog().open).toBe(false);
+      expect(checkbox().checked).toBe(true);
+      expect(component.form.controls.acceptedTerms.value).toBe(true);
+      expect(component.showError('acceptedTerms')).toBe(false);
+    });
+
+    it('closes without accepting', async () => {
+      links()[0].click();
+      await settle();
+      dialogButton('Fermer').click();
+      await settle();
+
+      expect(dialog().open).toBe(false);
+      expect(component.termsOpen()).toBe(false);
+      expect(component.form.controls.acceptedTerms.value).toBe(false);
+    });
+
+    it('opens the privacy policy at its own section', async () => {
+      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView');
+      links()[1].click();
+      await settle();
+
+      expect(dialog().open).toBe(true);
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView.mock.contexts[0]).toBe(element.querySelector('#terms-privacy'));
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+      scrollIntoView.mockRestore();
+    });
+
+    it('still ticks the box from the rest of its sentence, and refuses to submit without it', () => {
+      (element.querySelector('label[for="register-terms"]') as HTMLLabelElement).click();
+      fixture.detectChanges();
+      expect(component.form.controls.acceptedTerms.value).toBe(true);
+
+      checkbox().click();
+      fixture.detectChanges();
+      fillValidForm();
+      component.form.controls.acceptedTerms.setValue(false);
+      component.submit();
+      fixture.detectChanges();
+
+      expect(auth.register).not.toHaveBeenCalled();
+      expect(element.querySelector('#register-terms-error')?.textContent).toContain('accepter les conditions');
+      expect(checkbox().getAttribute('aria-invalid')).toBe('true');
+    });
+  });
 
   it('rejects mismatched password confirmation locally', () => {
     component.form.setValue({
