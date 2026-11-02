@@ -2,6 +2,7 @@
   [heading]="'settings.title' | transloco"
   backLink="/"
   [backLabel]="'settings.back' | transloco"
+  [returnToPrevious]="true"
 />
 
 <div class="content">
@@ -75,7 +76,7 @@
     }
   </section>
 
-  <section aria-labelledby="friends-heading">
+  <section id="friends" aria-labelledby="friends-heading">
     <app-friends-panel />
   </section>
 

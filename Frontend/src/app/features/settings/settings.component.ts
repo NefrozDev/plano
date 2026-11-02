@@ -1,5 +1,13 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  inject,
+  signal,
+} from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LOCALES, type Locale } from '@plano/common';
 import { firstValueFrom } from 'rxjs';
@@ -61,6 +69,11 @@ export class SettingsComponent {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.closeCropper());
+    // The notification bells of other screens lead to the friends panel, where their requests are.
+    if (inject(ActivatedRoute).snapshot.fragment === 'friends') {
+      const host: HTMLElement = inject(ElementRef).nativeElement;
+      afterNextRender(() => host.querySelector('#friends')?.scrollIntoView({ block: 'start' }));
+    }
   }
 
   /** Opens the cropper on the chosen picture; the upload waits for its area. */

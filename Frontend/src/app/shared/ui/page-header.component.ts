@@ -1,14 +1,24 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Location, NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 /** Top bar of secondary screens: back/close link, centred title, projected actions. */
 @Component({
   selector: 'app-page-header',
-  imports: [RouterLink],
+  imports: [NgTemplateOutlet, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header>
-      <a class="nav-link" [routerLink]="backLink()" [queryParams]="backQueryParams()" [attr.aria-label]="backLabel()">
+      @if (canReturn()) {
+        <button class="nav-link" type="button" [attr.aria-label]="backLabel()" (click)="location.back()">
+          <ng-container *ngTemplateOutlet="navIcon" />
+        </button>
+      } @else {
+        <a class="nav-link" [routerLink]="backLink()" [queryParams]="backQueryParams()" [attr.aria-label]="backLabel()">
+          <ng-container *ngTemplateOutlet="navIcon" />
+        </a>
+      }
+      <ng-template #navIcon>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           @if (variant() === 'close') {
             <path d="M6 6l12 12M18 6 6 18" />
@@ -16,14 +26,14 @@ import { RouterLink } from '@angular/router';
             <path d="m15 5-7 7 7 7" />
           }
         </svg>
-      </a>
+      </ng-template>
       <h1 [class.visually-hidden]="!showHeading()">{{ heading() }}</h1>
       <div class="actions"><ng-content /></div>
     </header>
   `,
   styles: `
     header { display: grid; grid-template-columns: minmax(2.5rem, 5.5rem) 1fr minmax(2.5rem, 5.5rem); gap: .5rem; align-items: center; padding: calc(1.35rem + env(safe-area-inset-top)) 1rem .7rem; }
-    .nav-link { display: grid; width: 2.5rem; height: 2.5rem; padding: .5rem; place-items: center; color: #253047; }
+    .nav-link { display: grid; width: 2.5rem; height: 2.5rem; padding: .5rem; place-items: center; border: 0; background: transparent; color: #253047; cursor: pointer; }
     svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
     h1 { overflow: hidden; margin: 0; font-size: 1.02rem; letter-spacing: -.02em; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
     /* A hidden title is taken out of the grid; without a fixed column the actions would slide into the middle one. */
@@ -37,4 +47,15 @@ export class PageHeaderComponent {
   readonly backLabel = input('Retour');
   readonly variant = input<'back' | 'close'>('back');
   readonly showHeading = input(true);
+  /**
+   * For a screen reached from several places: go back to the one the user came
+   * from, and to `backLink` only when the app was opened on this screen.
+   */
+  readonly returnToPrevious = input(false);
+
+  protected readonly location = inject(Location);
+  private readonly router = inject(Router);
+  readonly canReturn = computed(
+    () => this.returnToPrevious() && !!this.router.lastSuccessfulNavigation()?.previousNavigation,
+  );
 }

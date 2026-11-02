@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthUser } from '../../core/auth/auth.models';
@@ -96,6 +97,63 @@ describe('SettingsComponent', () => {
     http.verify();
     setItem.mockRestore();
     vi.restoreAllMocks();
+  });
+
+  describe('reached from several screens', () => {
+    const back = (): HTMLElement => element.querySelector('app-page-header .nav-link') as HTMLElement;
+
+    /** A second settings screen, as opened by a link; its panel asks for friends again. */
+    async function open(): Promise<HTMLElement> {
+      const opened = TestBed.createComponent(SettingsComponent);
+      opened.detectChanges();
+      for (const request of http.match((req) => req.url.startsWith('/api/v1/friends'))) {
+        request.flush(request.request.url.endsWith('/requests') ? { incoming: [], outgoing: [] } : []);
+      }
+      await settle();
+      opened.detectChanges();
+      return opened.nativeElement as HTMLElement;
+    }
+
+    it('goes home when the app was opened on it', () => {
+      expect(back().tagName).toBe('A');
+      expect(back().getAttribute('href')).toBe('/');
+      expect(back().getAttribute('aria-label')).toBe('Retour');
+    });
+
+    it('goes back to the screen it was opened from', async () => {
+      const router = TestBed.inject(Router);
+      await router.navigateByUrl('/?from=lists');
+      await router.navigateByUrl('/?from=bell');
+      fixture.detectChanges();
+      const goBack = vi.spyOn(TestBed.inject(Location), 'back').mockImplementation(() => undefined);
+      const navigate = vi.spyOn(router, 'navigateByUrl');
+
+      expect(back().tagName).toBe('BUTTON');
+      back().click();
+
+      expect(goBack).toHaveBeenCalledTimes(1);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('opens on the friends panel when a bell asks for it', async () => {
+      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+      await TestBed.inject(Router).navigateByUrl('/#friends');
+
+      const opened = await open();
+
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView.mock.contexts[0]).toBe(opened.querySelector('#friends'));
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+      expect(opened.querySelector('#friends #friends-heading')).not.toBeNull();
+    });
+
+    it('stays at the top otherwise', async () => {
+      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+
+      await open();
+
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
   });
 
   it('shows the profile, every language under its own name, and the groups and terms links', () => {
