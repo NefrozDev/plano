@@ -26,7 +26,8 @@ import { RouterLink } from '@angular/router';
     .nav-link { display: grid; width: 2.5rem; height: 2.5rem; padding: .5rem; place-items: center; color: #253047; }
     svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
     h1 { overflow: hidden; margin: 0; font-size: 1.02rem; letter-spacing: -.02em; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-    .actions { display: flex; justify-content: flex-end; }
+    /* A hidden title is taken out of the grid; without a fixed column the actions would slide into the middle one. */
+    .actions { display: flex; grid-column: 3; justify-content: flex-end; }
   `,
 })
 export class PageHeaderComponent {
