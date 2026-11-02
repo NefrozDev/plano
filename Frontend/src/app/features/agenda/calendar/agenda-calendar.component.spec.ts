@@ -41,6 +41,16 @@ describe('AgendaCalendarComponent', () => {
     expect(settings?.querySelectorAll('circle')).toHaveLength(1);
   });
 
+  it('opens the filters from the funnel used on every screen', async () => {
+    await harness.navigateByUrl('/agenda');
+    flushListReminders();
+    await settle();
+
+    const filters = element().querySelector('[aria-label="Filtrer l’agenda"]');
+    expect(filters?.getAttribute('href')).toBe('/agenda/filters');
+    expect(filters?.querySelector('path')?.getAttribute('d')).toBe('M4 5h16l-6 7.5V19l-4-2v-4.5Z');
+  });
+
   it('opens on today’s day view with a "now" marker between past and upcoming items', async () => {
     await harness.navigateByUrl('/agenda');
     flushListReminders();
