@@ -1,4 +1,5 @@
 import type {
+  RemoveObjectiveQuery,
   LinkObjectiveListRequest,
   AddObjectiveCommentRequest,
   AddObjectiveMemberRequest,
@@ -321,4 +322,10 @@ export class UpdateObjectivePreferencesDto implements UpdateObjectivePreferences
 export class LinkObjectiveListDto implements LinkObjectiveListRequest {
   @IsUUID()
   listId!: string;
+}
+
+export class RemoveObjectiveQueryDto implements RemoveObjectiveQuery {
+  @IsOptional()
+  @IsIn(['true', 'false'])
+  deleteLists?: 'true' | 'false';
 }

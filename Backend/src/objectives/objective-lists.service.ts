@@ -17,6 +17,7 @@ import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
+import { ObjectivesService } from './objectives.service';
 
 /**
  * Lists linked to an objective: their checked items can make its bar. Only the
@@ -36,6 +37,7 @@ export class ObjectiveListsService implements OnModuleDestroy {
     private readonly changes: ObjectiveChangesService,
     private readonly lists: ListsService,
     listChanges: ListChangesService,
+    private readonly objectives: ObjectivesService,
   ) {
     this.listening = listChanges.objectiveListsChanged.subscribe(
       (objectiveId) => void this.recount(objectiveId),
@@ -131,6 +133,33 @@ export class ObjectiveListsService implements OnModuleDestroy {
       this.logger.warn(
         `Objective ${objectiveId} not recounted: ${String(error)}`,
       );
+    }
+  }
+
+  /**
+   * Deletes the objective, everything below it and, when asked, the lists
+   * linked to them; otherwise they stay, unlinked. Only the owner's own lists
+   * can be linked, so they are theirs to delete.
+   */
+  async removeObjective(
+    objectiveId: string,
+    userId: string,
+    deleteLists: boolean,
+  ): Promise<void> {
+    const { tree, node } = await this.access.require(
+      objectiveId,
+      userId,
+      'own',
+    );
+    const listIds = deleteLists ? tree.linkedListsUnder(node.id) : [];
+    await this.objectives.remove(objectiveId, userId);
+    for (const listId of listIds) {
+      try {
+        await this.lists.remove(listId, userId);
+      } catch (error) {
+        // Already gone: nothing left to delete.
+        if (!(error instanceof NotFoundException)) throw error;
+      }
     }
   }
 

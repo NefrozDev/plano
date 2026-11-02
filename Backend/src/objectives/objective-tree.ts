@@ -19,6 +19,8 @@ export interface TreeFacts {
   checkIns: readonly { objectiveId: string; userId: string }[];
   /** Items of the lists linked to each objective; lists that delete checked items are left out. */
   listEntries?: readonly { objectiveId: string; done: boolean }[];
+  /** Every list linked to an objective of the tree. */
+  linkedLists?: readonly { objectiveId: string; listId: string }[];
   /** Invitations still valid: people who are no longer contacts are left out. */
   memberships?: readonly TreeMembership[];
 }
@@ -48,6 +50,7 @@ export class ObjectiveTree {
     string,
     { done: number; total: number }
   >();
+  private readonly linkedListIds = new Map<string, string[]>();
   readonly root: Objective;
 
   private readonly memberships: readonly TreeMembership[];
@@ -88,12 +91,25 @@ export class ObjectiveTree {
       counts.set(userId, (counts.get(userId) ?? 0) + 1);
       this.checkInCounts.set(objectiveId, counts);
     }
+    for (const { objectiveId, listId } of facts.linkedLists ?? []) {
+      this.linkedListIds.set(objectiveId, [
+        ...(this.linkedListIds.get(objectiveId) ?? []),
+        listId,
+      ]);
+    }
     for (const { objectiveId, done } of facts.listEntries ?? []) {
       const counts = this.listCounts.get(objectiveId) ?? { done: 0, total: 0 };
       counts.total += 1;
       if (done) counts.done += 1;
       this.listCounts.set(objectiveId, counts);
     }
+  }
+
+  /** The lists linked to the objective and everything below it. */
+  linkedListsUnder(id: string): string[] {
+    return [id, ...this.descendantsOf(id).map((node) => node.id)].flatMap(
+      (nodeId) => this.linkedListIds.get(nodeId) ?? [],
+    );
   }
 
   node(id: string): Objective | undefined {

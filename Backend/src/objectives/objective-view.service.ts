@@ -242,6 +242,8 @@ export class ObjectiveViewService {
         ({ status }) => status === 'completed',
       ).length,
       onHome,
+      linkedListCount:
+        node.ownerId === userId ? tree.linkedListsUnder(node.id).length : 0,
     };
   }
 

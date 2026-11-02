@@ -109,6 +109,8 @@ export interface ObjectiveSummary {
   completedChildCount: number;
   /** Shown on the signed-in user's home page (their own choice). */
   onHome: boolean;
+  /** Lists linked to it or below; told only to its owner, who alone may delete them with it. */
+  linkedListCount: number;
 }
 
 export interface ObjectiveSessionEntry {
@@ -383,4 +385,9 @@ export interface SaveObjectiveTemplateRequest {
 
 export interface UseObjectiveTemplateRequest {
   startDate: IsoDate;
+}
+
+/** `DELETE /objectives/:id?deleteLists=true` also deletes the lists linked to it and below. */
+export interface RemoveObjectiveQuery {
+  deleteLists?: 'true' | 'false';
 }

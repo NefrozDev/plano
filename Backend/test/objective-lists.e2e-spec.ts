@@ -147,4 +147,61 @@ describe('Objective lists (e2e)', () => {
     ).body as unknown[];
     expect(lists).toEqual([]);
   });
+
+  it('restarts a top-level objective, and deletes it with its lists only when asked', async () => {
+    const { id } = await objective(ada);
+    const withList = (
+      await http()
+        .post(`/api/v1/objectives/${id}/lists/new`)
+        .set('Cookie', ada.cookie)
+        .send({ name: 'Valise', icon: 'suitcase', color: '#3264ed' })
+        .expect(201)
+    ).body as ObjectiveDetail;
+    expect(withList.linkedListCount).toBe(1);
+
+    const restarted = (
+      await http()
+        .post(`/api/v1/objectives/${id}/restart`)
+        .set('Cookie', ada.cookie)
+        .expect(201)
+    ).body as ObjectiveDetail;
+    expect(restarted.periods).toHaveLength(1);
+    expect(restarted.status).toBe('active');
+
+    const invalid = await http()
+      .delete(`/api/v1/objectives/${id}?deleteLists=yes`)
+      .set('Cookie', ada.cookie)
+      .expect(400);
+    expect(invalid.body).toMatchObject({ statusCode: 400 });
+
+    await http()
+      .delete(`/api/v1/objectives/${id}?deleteLists=true`)
+      .set('Cookie', ada.cookie)
+      .expect(204);
+    const lists = (
+      await http().get('/api/v1/lists').set('Cookie', ada.cookie).expect(200)
+    ).body as unknown[];
+    expect(lists).toEqual([]);
+  });
+
+  it('keeps the lists by default when deleting', async () => {
+    const { id } = await objective(ada);
+    await http()
+      .post(`/api/v1/objectives/${id}/lists/new`)
+      .set('Cookie', ada.cookie)
+      .send({ name: 'Valise', icon: 'suitcase', color: '#3264ed' })
+      .expect(201);
+
+    await http()
+      .delete(`/api/v1/objectives/${id}`)
+      .set('Cookie', ada.cookie)
+      .expect(204);
+
+    const lists = (
+      await http().get('/api/v1/lists').set('Cookie', ada.cookie).expect(200)
+    ).body as { name: string; objectiveId: string | null }[];
+    expect(lists.map(({ name, objectiveId }) => [name, objectiveId])).toEqual([
+      ['Valise', null],
+    ]);
+  });
 });

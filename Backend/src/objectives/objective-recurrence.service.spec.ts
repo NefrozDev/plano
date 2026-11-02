@@ -370,4 +370,138 @@ describe('ObjectiveRecurrenceService', () => {
       expect(await periods()).toBe(2);
     });
   });
+
+  describe('restarting by hand', () => {
+    const create = (changes = {}) =>
+      bed.objectives.create(
+        bed.ada,
+        objectiveDetails({
+          title: 'Voyage',
+          startDate: '2026-10-01',
+          ...changes,
+        }),
+      );
+
+    it('starts a finished objective again today, its result kept in its history', async () => {
+      setToday('2026-10-20');
+      const objective = await create({
+        completion: 'manual',
+        dueDate: '2026-10-31',
+      });
+      await bed.tracking.setProgress(objective.id, bed.ada, { percent: 100 });
+
+      await bed.recurrence.restartNow(objective.id, bed.ada);
+
+      const restarted = await bed.objectives.findOne(objective.id, bed.ada);
+      expect(restarted).toMatchObject({
+        status: 'active',
+        percent: 0,
+        completedAt: null,
+        recurrence: 'none',
+        startDate: '2026-10-20',
+        dueDate: '2026-11-19',
+      });
+      expect(restarted.periods).toEqual([
+        {
+          startDate: '2026-10-01',
+          endDate: '2026-10-20',
+          percent: 100,
+          completed: true,
+        },
+      ]);
+      expect(
+        (await bed.activity.history(objective.id, bed.ada)).map(
+          ({ kind }) => kind,
+        ),
+      ).toContain('restarted');
+    });
+
+    it('stops counting what was done before', async () => {
+      setToday('2026-10-20');
+      const objective = await create({
+        completion: 'metric',
+        metric: { unit: 'km', target: 10, aggregation: 'sum' },
+      });
+      await bed.tracking.addSession(objective.id, bed.ada, {
+        date: '2026-10-05',
+        status: 'done',
+        label: '',
+        value: 10,
+      });
+
+      await bed.recurrence.restartNow(objective.id, bed.ada);
+
+      expect(await bed.objectives.findOne(objective.id, bed.ada)).toMatchObject(
+        { percent: 0, status: 'active' },
+      );
+    });
+
+    it('unchecks the lists that make the bar, not the lists linked as shortcuts', async () => {
+      setToday('2026-10-20');
+      const objective = await create({ completion: 'list' });
+      const shortcut = await create({ title: 'Lire', completion: 'manual' });
+      const packing = await bed.lists.create(bed.ada, {
+        name: 'Valise',
+        icon: 'suitcase',
+        color: '#3264ed',
+      });
+      const reading = await bed.lists.create(bed.ada, {
+        name: 'Livres',
+        icon: 'home',
+        color: '#3264ed',
+      });
+      await bed.objectiveLists.link(objective.id, bed.ada, packing.id);
+      await bed.objectiveLists.link(shortcut.id, bed.ada, reading.id);
+      for (const list of [packing, reading]) {
+        const section = await bed.content.addSection(list.id, bed.ada, {
+          name: 'Tout',
+          color: '#3264ed',
+        });
+        const entry = await bed.content.addEntry(list.id, section.id, bed.ada, {
+          name: 'Un',
+        });
+        await bed.content.updateEntry(list.id, entry.id, bed.ada, {
+          done: true,
+        });
+      }
+      await vi.waitFor(async () =>
+        expect(
+          (await bed.objectives.findOne(objective.id, bed.ada)).status,
+        ).toBe('completed'),
+      );
+
+      await bed.recurrence.restartNow(objective.id, bed.ada);
+
+      const done = async (listId: string) =>
+        (await bed.lists.findOne(listId, bed.ada)).sections
+          .flatMap(({ entries }) => entries)
+          .map((entry) => entry.done);
+      expect(await done(packing.id)).toEqual([false]);
+      expect(await done(reading.id)).toEqual([true]);
+      expect(await bed.objectives.findOne(objective.id, bed.ada)).toMatchObject(
+        { status: 'active', percent: 0 },
+      );
+    });
+
+    it('refuses a sub-objective and anyone but the owner, changing nothing', async () => {
+      setToday('2026-10-20');
+      const top = await create({ completion: 'children' });
+      const step = await create({ parentId: top.id, completion: 'manual' });
+      await bed.members.add(top.id, bed.ada, {
+        userId: bed.bob,
+        role: 'contributor',
+      });
+
+      await expect(bed.recurrence.restartNow(step.id, bed.ada)).rejects.toThrow(
+        'Seul un objectif principal',
+      );
+      await expect(
+        bed.recurrence.restartNow(top.id, bed.bob),
+      ).rejects.toThrow();
+
+      expect((await bed.objectives.findOne(top.id, bed.ada)).periods).toEqual(
+        [],
+      );
+    });
+  });
 });

@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import type {
@@ -26,6 +27,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { ImportObjectivesDto } from './dto/import-objectives.dto';
 import {
+  RemoveObjectiveQueryDto,
   LinkObjectiveListDto,
   AddObjectiveCommentDto,
   AddObjectiveMemberDto,
@@ -49,6 +51,7 @@ import { ObjectiveImportService } from './objective-import.service';
 import { ObjectiveListsService } from './objective-lists.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
+import { ObjectiveRecurrenceService } from './objective-recurrence.service';
 import { ObjectiveTemplatesService } from './objective-templates.service';
 import { ObjectiveTrackingService } from './objective-tracking.service';
 import { ObjectivesService } from './objectives.service';
@@ -68,6 +71,7 @@ export class ObjectivesController {
     private readonly activity: ObjectiveActivityService,
     private readonly templates: ObjectiveTemplatesService,
     private readonly lists: ObjectiveListsService,
+    private readonly recurrence: ObjectiveRecurrenceService,
   ) {}
 
   @Get()
@@ -166,8 +170,23 @@ export class ObjectivesController {
   remove(
     @CurrentUser('id') userId: string,
     @ObjectiveId() objectiveId: string,
+    @Query() { deleteLists }: RemoveObjectiveQueryDto,
   ): Promise<void> {
-    return this.objectives.remove(objectiveId, userId);
+    return this.lists.removeObjective(
+      objectiveId,
+      userId,
+      deleteLists === 'true',
+    );
+  }
+
+  /** Starts a finished top-level objective again from today, its history kept. */
+  @Post(':objectiveId/restart')
+  async restart(
+    @CurrentUser('id') userId: string,
+    @ObjectiveId() objectiveId: string,
+  ): Promise<ObjectiveDetail> {
+    await this.recurrence.restartNow(objectiveId, userId);
+    return this.objectives.findOne(objectiveId, userId);
   }
 
   @Put(':objectiveId/children/order')

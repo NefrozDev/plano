@@ -7,6 +7,7 @@ import type { ObjectiveRole } from '@plano/common';
 import { DataSource, EntityManager, In, IsNull } from 'typeorm';
 import { ContactsService } from '../friends/contacts.service';
 import { ListEntry } from '../lists/entities/list-entry.entity';
+import { List } from '../lists/entities/list.entity';
 import { ObjectiveCheckInRow } from './entities/objective-check-in.entity';
 import { ObjectiveMember } from './entities/objective-member.entity';
 import { ObjectiveSession } from './entities/objective-session.entity';
@@ -124,6 +125,12 @@ export class ObjectiveAccessService {
     const members = await manager.find(ObjectiveMember, {
       where: { objectiveId: In(objectiveIds) },
     });
+    const linkedLists = objectiveIds.length
+      ? await manager.find(List, {
+          where: { objectiveId: In(objectiveIds) },
+          select: { id: true, objectiveId: true },
+        })
+      : [];
     const listEntries = objectiveIds.length
       ? await manager
           .createQueryBuilder(ListEntry, 'entry')
@@ -166,6 +173,11 @@ export class ObjectiveAccessService {
           ),
           listEntries: listEntries.filter(({ objectiveId }) =>
             ids.has(objectiveId),
+          ),
+          linkedLists: linkedLists.flatMap(({ id, objectiveId }) =>
+            objectiveId && ids.has(objectiveId)
+              ? [{ objectiveId, listId: id }]
+              : [],
           ),
           // Losing both links (friend, group mate) revokes access at once.
           memberships: treeMembers.filter(({ userId }) =>

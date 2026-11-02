@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import type { ObjectiveRecurrence } from '@plano/common';
 import { randomUUID } from 'node:crypto';
 import { DataSource, In } from 'typeorm';
+import { ListEntry } from '../lists/entities/list-entry.entity';
+import { List } from '../lists/entities/list.entity';
+import { ListChangesService } from '../lists/list-changes.service';
 import { ObjectivePeriod } from './entities/objective-period.entity';
 import { Objective } from './entities/objective.entity';
 import { recordActivity } from './objective-activity.record';
@@ -66,6 +69,7 @@ export class ObjectiveRecurrenceService {
     private readonly writer: ObjectiveWriterService,
     private readonly access: ObjectiveAccessService,
     private readonly changes: ObjectiveChangesService,
+    private readonly listChanges: ListChangesService,
   ) {}
 
   /** `rootIds`: the trees about to be read. */
@@ -81,6 +85,75 @@ export class ObjectiveRecurrenceService {
       })
     ).filter((root) => this.isDue(root, today));
     for (const { id } of recurring) await this.restart(id, today);
+  }
+
+  /**
+   * Starts a top-level objective again today, by hand, as a new period would:
+   * how far it got is kept in its history, and its bar starts from zero. The
+   * items of the lists that make a bar ("Liste" mode) are unchecked, or it
+   * would be complete again at once; lists linked as shortcuts stay as they are.
+   */
+  async restartNow(
+    objectiveId: string,
+    userId: string,
+    today = toIso(new Date()),
+  ): Promise<void> {
+    let unchecked: string[] = [];
+    await this.writer.change(
+      objectiveId,
+      userId,
+      'own',
+      async ({ tree, node }, manager) => {
+        if (node.parentId) {
+          throw new BadRequestException(
+            'Seul un objectif principal peut recommencer.',
+          );
+        }
+        const { root } = tree;
+        const start = root.periodStart ?? root.startDate;
+        await manager.insert(ObjectivePeriod, {
+          id: randomUUID(),
+          objectiveId: root.id,
+          startDate: start,
+          endDate: today < start ? start : today,
+          percent: tree.percent(root.id),
+          completed: root.status === 'completed',
+        });
+        for (const objective of tree.nodes) {
+          if (objective.status === 'completed') objective.status = 'active';
+          objective.completedAt = null;
+          objective.completedByUserId = null;
+          objective.manualProgress = 0;
+          if (objective.dueDate) {
+            objective.dueDate = shift(objective.dueDate, start, today);
+          }
+          objective.startDate = shift(objective.startDate, start, today);
+        }
+        root.periodStart = today;
+        await manager.save([...tree.nodes]);
+
+        const listNodes = tree.nodes
+          .filter(({ completion }) => completion === 'list')
+          .map(({ id }) => id);
+        unchecked = listNodes.length
+          ? (
+              await manager.find(List, {
+                where: { objectiveId: In(listNodes) },
+                select: { id: true },
+              })
+            ).map(({ id }) => id)
+          : [];
+        if (unchecked.length) {
+          await manager.update(
+            ListEntry,
+            { listId: In(unchecked) },
+            { done: false },
+          );
+        }
+        await recordActivity(manager, root.id, userId, 'restarted');
+      },
+    );
+    for (const listId of unchecked) await this.listChanges.changed(listId);
   }
 
   private isDue(

@@ -68,6 +68,7 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     writer,
     access,
     changes,
+    bed.listChanges,
   );
   const objectivePreferences = new ObjectivePreferencesService(
     bed.dataSource,
@@ -100,6 +101,7 @@ export async function createObjectivesTestBed(): Promise<ObjectivesTestBed> {
     changes,
     bed.lists,
     bed.listChanges,
+    objectives,
   );
   return {
     ...bed,

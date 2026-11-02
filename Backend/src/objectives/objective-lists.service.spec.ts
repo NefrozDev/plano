@@ -308,3 +308,117 @@ describe('ObjectiveListsService', () => {
     });
   });
 });
+
+describe('ObjectiveListsService, counting and deleting', () => {
+  let bed: ObjectivesTestBed;
+
+  beforeEach(async () => {
+    bed = await createObjectivesTestBed();
+  });
+
+  afterEach(() => bed.destroy());
+
+  async function voyage() {
+    const top = await bed.objectives.create(
+      bed.ada,
+      objectiveDetails({ title: 'Voyage', completion: 'children' }),
+    );
+    const step = await bed.objectives.create(
+      bed.ada,
+      objectiveDetails({
+        title: 'Valise',
+        parentId: top.id,
+        completion: 'list',
+      }),
+    );
+    const topList = await bed.lists.create(bed.ada, {
+      name: 'Papiers',
+      icon: 'home',
+      color: '#3264ed',
+    });
+    const stepList = await bed.lists.create(bed.ada, {
+      name: 'Vêtements',
+      icon: 'suitcase',
+      color: '#3264ed',
+    });
+    await bed.lists.create(bed.ada, {
+      name: 'Courses',
+      icon: 'cart',
+      color: '#3264ed',
+    });
+    await bed.objectiveLists.link(top.id, bed.ada, topList.id);
+    await bed.objectiveLists.link(step.id, bed.ada, stepList.id);
+    await bed.members.add(top.id, bed.ada, {
+      userId: bed.bob,
+      role: 'contributor',
+    });
+    await bed.lists.addMember(stepList.id, bed.ada, {
+      userId: bed.bob,
+      role: 'editor',
+    });
+    return { top, step, stepList };
+  }
+  const listNames = async (userId = bed.ada) =>
+    (await bed.lists.findAll(userId)).map(({ name }) => name).sort();
+
+  it('tells the owner how many lists are linked to an objective and below, and nobody else', async () => {
+    const { top, step } = await voyage();
+
+    expect(
+      (await bed.objectives.findOne(top.id, bed.ada)).linkedListCount,
+    ).toBe(2);
+    expect(
+      (await bed.objectives.findOne(step.id, bed.ada)).linkedListCount,
+    ).toBe(1);
+    expect(
+      (await bed.objectives.findOne(top.id, bed.bob)).linkedListCount,
+    ).toBe(0);
+    expect(
+      (await bed.objectives.findAll(bed.ada)).find(({ id }) => id === top.id)
+        ?.linkedListCount,
+    ).toBe(2);
+  });
+
+  it('keeps the lists, unlinked, unless asked to delete them', async () => {
+    const { top } = await voyage();
+
+    await bed.objectiveLists.removeObjective(top.id, bed.ada, false);
+
+    expect(await listNames()).toEqual(['Courses', 'Papiers', 'Vêtements']);
+    expect(
+      (await bed.lists.findAll(bed.ada)).every(
+        ({ objectiveId }) => objectiveId === null,
+      ),
+    ).toBe(true);
+  });
+
+  it('deletes the lists linked to it and below when asked, never another list, and tells their members', async () => {
+    const { top, stepList } = await voyage();
+    const publish = vi.spyOn(bed.live, 'publish');
+
+    await bed.objectiveLists.removeObjective(top.id, bed.ada, true);
+
+    expect(await listNames()).toEqual(['Courses']);
+    expect(await listNames(bed.bob)).toEqual([]);
+    expect(publish).toHaveBeenCalledWith(expect.arrayContaining([bed.bob]), {
+      type: 'list.removed',
+      listId: stepList.id,
+    });
+    await expect(
+      bed.objectives.findOne(top.id, bed.ada),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('lets only the owner delete, and touches no list when refused', async () => {
+    const { top } = await voyage();
+
+    await expect(
+      bed.objectiveLists.removeObjective(top.id, bed.bob, true),
+    ).rejects.toThrow();
+
+    expect(await listNames()).toEqual(['Courses', 'Papiers', 'Vêtements']);
+    expect((await bed.objectives.findOne(top.id, bed.ada)).title).toBe(
+      'Voyage',
+    );
+  });
+});
