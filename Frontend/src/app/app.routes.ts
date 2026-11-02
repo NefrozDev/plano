@@ -39,6 +39,14 @@ export const routes: Routes = [
       ),
     title: 'Nouveau mot de passe | Plano',
   },
+  {
+    path: 'terms',
+    loadComponent: () =>
+      import('./features/legal/terms-page.component').then(
+        (component) => component.TermsPageComponent,
+      ),
+    title: 'Conditions d’utilisation | Plano',
+  },
   // Former single-group page, still reached from older links.
   { path: 'group/setup', redirectTo: 'groups' },
   {

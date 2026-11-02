@@ -44,6 +44,8 @@ describe('app routes', () => {
     expect(guardsOf('forgot-password')).toEqual([guestGuard]);
     // The e-mailed link must work even where someone is signed in.
     expect(guardsOf('reset-password')).toBeUndefined();
+    // The terms are read before signing up and from the settings.
+    expect(guardsOf('terms')).toBeUndefined();
     for (const path of ['groups', 'groups/:groupId', 'agenda', 'objectives']) {
       expect(guardsOf(path), path).toEqual([authenticatedGuard]);
     }
