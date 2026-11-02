@@ -71,6 +71,8 @@ Keep these root commands working when package scripts change.
 
 - Every face goes through `app-user-avatar` (or `app-avatar-stack`, which uses it): the picture when there is one, initials otherwise or if it fails to load. Never draw initials by hand, and have the API send `avatarVersion` with any person it names, or their picture will not show.
 
+- iOS Safari zooms in on any focused field under 16px and stays zoomed. `provideInputFocusZoomFix()` (`core/browser/input-focus-zoom.ts`) adds `maximum-scale=1` to the viewport on iOS only: iOS still allows pinch-zoom with it, Android would not and does not zoom on focus. Keep it when touching `index.html`'s viewport, or fields under 16px zoom again.
+
 - What can be deleted from a list swipes left (`SwipeToDelete`, `shared/ui`): touch, mouse, touchpad and the Delete key; the owner gets a confirmation, anyone else a toast saying why. On a card that is a link (`ObjectiveSwipeCardComponent`), stop the click ending a swipe in the capture phase, as `RouterLink` listens on the link itself, and prevent `dragstart`, or the link's native drag cancels a mouse swipe.
 
 ## Fresh NestJS scaffold checklist
