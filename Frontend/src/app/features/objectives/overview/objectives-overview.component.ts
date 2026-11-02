@@ -1,10 +1,8 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { ToastComponent } from '../../../shared/ui/toast.component';
 import type { ObjectiveSummary } from '@plano/common';
-import { FriendNotificationsService } from '../../../core/friends/friend-notifications.service';
-import { ObjectiveNotificationsService } from '../objective-notifications.service';
 import { dueCaption, objectiveTint, progressText, sharingLabel, timelapseView } from '../objective.utils';
 import { ObjectiveTab, ObjectivesStore } from '../objectives.store';
 import { DragReorder } from '../ui/drag-reorder';
@@ -24,8 +22,6 @@ import { ObjectiveSwipeCardComponent } from '../ui/objective-swipe-card.componen
   },
 })
 export class ObjectivesOverviewComponent {
-  /** Friend news, shown on the bell that leads to the friends list. */
-  readonly notifications = inject(FriendNotificationsService);
   readonly store = inject(ObjectivesStore);
   /** Grips show only in the custom order, the one dragging changes. */
   readonly reorderable = computed(() => this.store.filters().sort === 'manual');
@@ -66,10 +62,6 @@ export class ObjectivesOverviewComponent {
 
   constructor() {
     void this.store.load();
-    const news = inject(ObjectiveNotificationsService);
-    effect(() => {
-      if (news.unseen()) news.markSeen();
-    });
   }
 
   /** Same behaviour as the Lists header: the choice is saved as the default view. */

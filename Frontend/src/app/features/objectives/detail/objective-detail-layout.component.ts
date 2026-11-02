@@ -12,6 +12,7 @@ import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveContext } from './objective-context';
+import { readNotificationsWhileOpen } from '../../../core/notifications/notifications.store';
 
 interface DetailTab {
   label: string;
@@ -64,6 +65,7 @@ export class ObjectiveDetailLayoutComponent {
   });
 
   constructor() {
+    readNotificationsWhileOpen('objectives', this.context.id);
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const id = params.get('id') ?? '';
       this.context.id.set(id);

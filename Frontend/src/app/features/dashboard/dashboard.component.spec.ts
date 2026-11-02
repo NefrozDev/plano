@@ -9,7 +9,6 @@ import { AuthService } from '../../core/auth/auth.service';
 import { APP_CLOCK } from '../../core/time/dates';
 import { AgendaStore } from '../agenda/agenda.store';
 import { TEST_TODAY, flushListReminders, provideSeedData, settle } from '../../testing/plano-testing';
-import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { objectiveSummary } from '../objectives/testing/objectives-fixtures';
 import { DashboardComponent } from './dashboard.component';
 
@@ -194,20 +193,15 @@ describe('DashboardComponent', () => {
     expect(link.querySelector('img')?.getAttribute('src')).toBe('/api/v1/users/user-1/avatar?v=42');
   });
 
-  it('puts a badge with the friend news on the profile picture', () => {
+  it('puts the bell next to the profile picture, which carries no badge of its own', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
-    const link = (fixture.nativeElement as HTMLElement).querySelector('.profile-button') as HTMLAnchorElement;
+    const element = fixture.nativeElement as HTMLElement;
+    const link = element.querySelector('.profile-button') as HTMLAnchorElement;
+
+    expect(element.querySelector('.topbar-actions app-notifications-bell + .profile-button')).toBe(link);
     expect(link.querySelector('.badge')).toBeNull();
     expect(link.getAttribute('aria-label')).toBe('Ouvrir les paramètres');
-
-    const notifications = TestBed.inject(FriendNotificationsService);
-    notifications.incoming.set(1);
-    notifications.accepted.set([{ id: 'user-2', username: 'bob', firstName: 'Bob', lastName: '', avatarVersion: null }]);
-    fixture.detectChanges();
-
-    expect(link.querySelector('.badge')?.textContent).toBe('2');
-    expect(link.getAttribute('aria-label')).toBe('Ouvrir les paramètres, 2 nouveauté(s)');
   });
 
   it('shows no profile link while nobody is signed in', () => {

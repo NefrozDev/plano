@@ -3,7 +3,12 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { EnvironmentProviders, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Routes, provideRouter } from '@angular/router';
-import { createMockPlanoData, type ListReminder, type ObjectiveAgendaItem } from '@plano/common';
+import {
+  createMockPlanoData,
+  type ListReminder,
+  type NotificationsResponse,
+  type ObjectiveAgendaItem,
+} from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../core/data/plano-data.adapter';
 import { APP_CLOCK } from '../core/time/dates';
 
@@ -62,4 +67,9 @@ export function flushObjectiveAgenda(items: ObjectiveAgendaItem[] = []): void {
 /** Waits one macrotask, so every pending promise chain (e.g. after a flushed request) has run. */
 export function settle(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve));
+}
+
+/** What the API answers for a user without notifications. */
+export function emptyNotifications(): NotificationsResponse {
+  return { items: [], unread: { friends: 0, lists: 0, objectives: 0, agenda: 0 } };
 }

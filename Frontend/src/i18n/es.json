@@ -5,7 +5,7 @@
     "agenda": "Agenda",
     "lists": "Listas",
     "objectives": "Objetivos",
-    "objectivesWithNews": "Objetivos, {{count}} novedad(es)"
+    "withNews": "{{label}}, {{count}} novedad(es)"
   },
   "settings": {
     "title": "Ajustes",
@@ -58,8 +58,7 @@
     "logoutFailed": "No se pudo cerrar la sesión. Inténtalo de nuevo."
   },
   "dashboard": {
-    "openSettings": "Abrir ajustes",
-    "openSettingsWithNews": "Abrir los ajustes, {{count}} novedad(es)"
+    "openSettings": "Abrir ajustes"
   },
   "notifications": {
     "friendRequested": "{{name}} te ha enviado una solicitud de amistad.",
@@ -67,7 +66,21 @@
     "objectiveInvited": "{{name}} te ha invitado a «{{title}}».",
     "objectiveContribution": "{{name}} ha contribuido a «{{title}}».",
     "objectiveCompleted": "«{{title}}» se ha completado.",
-    "objectiveComment": "{{name}} ha comentado «{{title}}»."
+    "objectiveComment": "{{name}} ha comentado «{{title}}».",
+    "someone": "Alguien",
+    "bell": {
+      "label": "Notificaciones",
+      "withNews": "Notificaciones, {{count}} sin leer",
+      "heading": "Notificaciones",
+      "empty": "Todavía no hay notificaciones."
+    },
+    "items": {
+      "listInvited": "{{name}} ha compartido la lista «{{title}}» contigo.",
+      "listEntries": "{{name}} ha añadido un elemento a «{{title}}».",
+      "listEntriesMany": "{{count}} elementos añadidos a «{{title}}», el último por {{name}}.",
+      "contributionMany": "{{count}} contribuciones a «{{title}}», la última de {{name}}.",
+      "commentMany": "{{count}} comentarios en «{{title}}», el último de {{name}}."
+    }
   },
   "friends": {
     "heading": "Amigos",

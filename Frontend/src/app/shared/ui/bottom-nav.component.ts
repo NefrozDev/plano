@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ObjectiveNotificationsService } from '../../features/objectives/objective-notifications.service';
+import { NotificationsStore } from '../../core/notifications/notifications.store';
 
 export type MainSection = 'home' | 'agenda' | 'lists' | 'objectives';
 
@@ -22,7 +22,7 @@ const CALENDAR_ICON = 'M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-
           [routerLink]="item.link"
           [class.active]="active() === item.id"
           [attr.aria-current]="active() === item.id ? 'page' : null"
-          [attr.aria-label]="item.id === 'objectives' && news.unseen() ? ('nav.objectivesWithNews' | transloco: { count: news.unseen() }) : null"
+          [attr.aria-label]="unreadIn(item.id) ? ('nav.withNews' | transloco: { label: (item.label | transloco), count: unreadIn(item.id) }) : null"
         >
           @if (item.icon) {
             <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icon" /></svg>
@@ -30,8 +30,8 @@ const CALENDAR_ICON = 'M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-
             <span aria-hidden="true">{{ item.glyph }}</span>
           }
           {{ item.label | transloco }}
-          @if (item.id === 'objectives' && news.unseen()) {
-            <i class="badge" aria-hidden="true">{{ news.unseen() }}</i>
+          @if (unreadIn(item.id); as count) {
+            <i class="badge" aria-hidden="true">{{ count }}</i>
           }
         </a>
       }
@@ -48,8 +48,7 @@ const CALENDAR_ICON = 'M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-
   `,
 })
 export class BottomNavComponent {
-  /** What is new on objectives, shown on their tab from every screen. */
-  readonly news = inject(ObjectiveNotificationsService);
+  private readonly notifications = inject(NotificationsStore);
   readonly active = input.required<MainSection>();
   readonly items = [
     { id: 'home', label: 'nav.home', glyph: '⌂', link: '/' },
@@ -58,4 +57,9 @@ export class BottomNavComponent {
     { id: 'lists', label: 'nav.lists', glyph: '☷', link: '/lists' },
     { id: 'objectives', label: 'nav.objectives', glyph: '◎', link: '/objectives' },
   ] satisfies readonly NavItem[];
+
+  /** Unread notifications about a section, shown on its tab from every screen; the home page has the bell instead. */
+  unreadIn(section: MainSection): number {
+    return section === 'home' ? 0 : this.notifications.unread()[section];
+  }
 }

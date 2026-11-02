@@ -3,7 +3,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import type { ListDetail, ListSettings } from '@plano/common';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
-import { providePlanoTesting, settle } from '../../../testing/plano-testing';
+import { NotificationsStore } from '../../../core/notifications/notifications.store';
+import { notification } from '../../../testing/notifications-fixtures';
+import { emptyNotifications, providePlanoTesting, settle } from '../../../testing/plano-testing';
 import { ListsStore } from '../lists.store';
 import { entry, listDetail, listSettings } from '../testing/lists-fixtures';
 import { ListDetailComponent } from './list-detail.component';
@@ -58,6 +60,24 @@ describe('ListDetailComponent', () => {
   const entryNames = (sectionIndex = 0) => component.sectionViews()[sectionIndex].entries.map(({ name }) => name);
 
   afterEach(() => http.verify());
+
+  it('reads the notifications about this list while it is open, not those of other lists', async () => {
+    await create();
+    const notifications = TestBed.inject(NotificationsStore);
+    const loading = notifications.load();
+    http.expectOne('/api/v1/notifications').flush({
+      items: [notification({ id: 'here', targetId: 'list-1' }), notification({ id: 'there', targetId: 'list-2' })],
+      unread: { ...emptyNotifications().unread, lists: 2 },
+    });
+    await loading;
+    fixture.detectChanges();
+
+    const read = http.expectOne({ method: 'POST', url: '/api/v1/notifications/read' });
+    expect(read.request.body).toEqual({ area: 'lists', targetId: 'list-1' });
+    read.flush(null);
+    expect(notifications.hasUnread('lists', 'list-2')).toBe(true);
+    expect(notifications.unread().lists).toBe(1);
+  });
 
   it('renders the list from the API with its progress', async () => {
     await create();

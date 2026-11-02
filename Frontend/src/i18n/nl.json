@@ -5,7 +5,7 @@
     "agenda": "Agenda",
     "lists": "Lijsten",
     "objectives": "Doelen",
-    "objectivesWithNews": "Doelen, {{count}} nieuw"
+    "withNews": "{{label}}, {{count}} nieuw"
   },
   "settings": {
     "title": "Instellingen",
@@ -58,8 +58,7 @@
     "logoutFailed": "Afmelden is mislukt. Probeer het opnieuw."
   },
   "dashboard": {
-    "openSettings": "Instellingen openen",
-    "openSettingsWithNews": "Instellingen openen, {{count}} nieuw"
+    "openSettings": "Instellingen openen"
   },
   "notifications": {
     "friendRequested": "{{name}} heeft je een vriendschapsverzoek gestuurd.",
@@ -67,7 +66,21 @@
     "objectiveInvited": "{{name}} heeft je uitgenodigd voor “{{title}}”.",
     "objectiveContribution": "{{name}} heeft bijgedragen aan “{{title}}”.",
     "objectiveCompleted": "“{{title}}” is voltooid.",
-    "objectiveComment": "{{name}} heeft gereageerd op “{{title}}”."
+    "objectiveComment": "{{name}} heeft gereageerd op “{{title}}”.",
+    "someone": "Iemand",
+    "bell": {
+      "label": "Meldingen",
+      "withNews": "Meldingen, {{count}} ongelezen",
+      "heading": "Meldingen",
+      "empty": "Nog geen meldingen."
+    },
+    "items": {
+      "listInvited": "{{name}} heeft de lijst “{{title}}” met je gedeeld.",
+      "listEntries": "{{name}} heeft een item toegevoegd aan “{{title}}”.",
+      "listEntriesMany": "{{count}} items toegevoegd aan “{{title}}”, het laatste door {{name}}.",
+      "contributionMany": "{{count}} bijdragen aan “{{title}}”, de laatste van {{name}}.",
+      "commentMany": "{{count}} reacties op “{{title}}”, de laatste van {{name}}."
+    }
   },
   "friends": {
     "heading": "Vrienden",

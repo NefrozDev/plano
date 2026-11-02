@@ -31,7 +31,6 @@ describe('ObjectiveNotificationsService', () => {
   });
 
   it('starts with nothing to say', () => {
-    expect(notifications.unseen()).toBe(0);
     expect(notifications.message()).toBe('');
   });
 
@@ -40,18 +39,16 @@ describe('ObjectiveNotificationsService', () => {
     ['contribution', 'Bob Martin a contribué à « Courir ».'],
     ['completed', '« Courir » est terminé.'],
     ['comment', 'Bob Martin a commenté « Courir ».'],
-  ] as const)('says when %s, and counts it', (kind, message) => {
+  ] as const)('says when %s', (kind, message) => {
     hear(kind);
 
     expect(notifications.message()).toBe(message);
-    expect(notifications.unseen()).toBe(1);
   });
 
-  it('counts each piece of news, keeping the last message', () => {
+  it('keeps the last message', () => {
     hear('invited');
     hear('completed');
 
-    expect(notifications.unseen()).toBe(2);
     expect(notifications.message()).toBe('« Courir » est terminé.');
   });
 
@@ -59,7 +56,6 @@ describe('ObjectiveNotificationsService', () => {
     FakeEventSource.latest()?.emit({ type: 'objective.changed', objectiveId: 'obj-1' });
     FakeEventSource.latest()?.emit({ type: 'friends.changed' });
 
-    expect(notifications.unseen()).toBe(0);
     expect(notifications.message()).toBe('');
   });
 
@@ -68,19 +64,15 @@ describe('ObjectiveNotificationsService', () => {
 
     hear('invited');
 
-    expect(notifications.unseen()).toBe(0);
     expect(notifications.message()).toBe('');
   });
 
-  it('clears the badge and the message separately', () => {
+  it('clears the message when dismissed', () => {
     hear('invited');
 
     notifications.dismiss();
-    expect(notifications.message()).toBe('');
-    expect(notifications.unseen()).toBe(1);
 
-    notifications.markSeen();
-    expect(notifications.unseen()).toBe(0);
+    expect(notifications.message()).toBe('');
   });
 
   it('forgets everything when someone else signs in', () => {
@@ -89,7 +81,6 @@ describe('ObjectiveNotificationsService', () => {
     user.set(null);
     TestBed.tick();
 
-    expect(notifications.unseen()).toBe(0);
     expect(notifications.message()).toBe('');
   });
 });

@@ -5,7 +5,7 @@
     "agenda": "Calendar",
     "lists": "Lists",
     "objectives": "Goals",
-    "objectivesWithNews": "Goals, {{count}} new"
+    "withNews": "{{label}}, {{count}} new"
   },
   "settings": {
     "title": "Settings",
@@ -58,8 +58,7 @@
     "logoutFailed": "Signing out failed. Please try again."
   },
   "dashboard": {
-    "openSettings": "Open settings",
-    "openSettingsWithNews": "Open settings, {{count}} new"
+    "openSettings": "Open settings"
   },
   "notifications": {
     "friendRequested": "{{name}} sent you a friend request.",
@@ -67,7 +66,21 @@
     "objectiveInvited": "{{name}} invited you to “{{title}}”.",
     "objectiveContribution": "{{name}} contributed to “{{title}}”.",
     "objectiveCompleted": "“{{title}}” is complete.",
-    "objectiveComment": "{{name}} commented on “{{title}}”."
+    "objectiveComment": "{{name}} commented on “{{title}}”.",
+    "someone": "Someone",
+    "bell": {
+      "label": "Notifications",
+      "withNews": "Notifications, {{count}} unread",
+      "heading": "Notifications",
+      "empty": "No notifications yet."
+    },
+    "items": {
+      "listInvited": "{{name}} shared the list “{{title}}” with you.",
+      "listEntries": "{{name}} added an item to “{{title}}”.",
+      "listEntriesMany": "{{count}} items added to “{{title}}”, the last by {{name}}.",
+      "contributionMany": "{{count}} contributions to “{{title}}”, the last by {{name}}.",
+      "commentMany": "{{count}} comments on “{{title}}”, the last by {{name}}."
+    }
   },
   "friends": {
     "heading": "Friends",

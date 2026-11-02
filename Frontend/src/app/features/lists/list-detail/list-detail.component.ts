@@ -17,6 +17,7 @@ import { EntryRef } from './list-options';
 import { ListSectionCreatorComponent, NewSection } from './list-section-creator.component';
 import { ListSectionHeaderComponent } from './list-section-header.component';
 import { ListSharingPanelComponent } from './list-sharing-panel.component';
+import { readNotificationsWhileOpen } from '../../../core/notifications/notifications.store';
 
 /** What the template shows for a section, given the display settings. */
 export interface SectionView {
@@ -135,6 +136,7 @@ export class ListDetailComponent {
   constructor() {
     const route = inject(ActivatedRoute).snapshot;
     this.listId = route.paramMap.get('listId') ?? '';
+    readNotificationsWhileOpen('lists', () => this.listId);
     const openEditor = route.queryParamMap.has('edit');
     void this.store.open(this.listId).then((found) => {
       this.notFound.set(!found);

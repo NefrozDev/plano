@@ -20,6 +20,7 @@ const EVENT_TYPES: readonly LiveEvent['type'][] = [
   'objective.changed',
   'objective.removed',
   'objective.news',
+  'notifications.changed',
 ];
 
 /**

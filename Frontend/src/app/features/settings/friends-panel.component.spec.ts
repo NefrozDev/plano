@@ -1,8 +1,9 @@
 import type { MockInstance } from 'vitest';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { Friend, FriendRequests, PublicUser, UserSearchResult } from '@plano/common';
+import type { Friend, FriendRequests, NotificationsResponse, PublicUser, UserSearchResult } from '@plano/common';
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
+import { NotificationsStore } from '../../core/notifications/notifications.store';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { FriendsPanelComponent } from './friends-panel.component';
@@ -82,24 +83,33 @@ describe('FriendsPanelComponent', () => {
   });
 
   describe('friend news', () => {
-    it('counts the acceptances as seen once the panel shows, and keeps the badge in step with the requests', async () => {
-      const notifications = TestBed.inject(FriendNotificationsService);
-      expect(notifications.incoming()).toBe(1);
-      notifications.accepted.set([bob]);
+    it('reads the friend notifications while it shows, new ones included', async () => {
+      const store = TestBed.inject(NotificationsStore);
+      const unread = (friends: number): NotificationsResponse => ({
+        items: [],
+        unread: { friends, lists: 1, objectives: 0, agenda: 0 },
+      });
+      const loading = store.load();
+      http.expectOne('/api/v1/notifications').flush(unread(2));
+      await loading;
+      fixture.detectChanges();
 
-      // A new panel (the settings page opened again) marks them seen.
-      const again = TestBed.createComponent(FriendsPanelComponent);
-      again.detectChanges();
-      flushLists();
-      await settle();
+      const read = http.expectOne({ method: 'POST', url: '/api/v1/notifications/read' });
+      expect(read.request.body).toEqual({ area: 'friends' });
+      read.flush(null);
+      expect(store.unread()).toEqual({ friends: 0, lists: 1, objectives: 0, agenda: 0 });
 
-      expect(notifications.accepted()).toEqual([]);
-      expect(notifications.count()).toBe(1);
+      // One more arrives while the panel is open: read too.
+      const again = store.load();
+      http.expectOne('/api/v1/notifications').flush(unread(1));
+      await again;
+      fixture.detectChanges();
+      http.expectOne({ method: 'POST', url: '/api/v1/notifications/read' }).flush(null);
+      expect(store.unread().friends).toBe(0);
     });
 
     it('reloads both lists when a friend event arrives', async () => {
       const notifications = TestBed.inject(FriendNotificationsService);
-      notifications.accepted.set([bob]);
       // Signed out in this spec: emit the event the service relays.
       (notifications as unknown as { changesSubject: { next(): void } }).changesSubject.next();
 
@@ -107,8 +117,7 @@ describe('FriendsPanelComponent', () => {
       await render();
 
       expect(texts('.person strong')).toContain('Cyd Test');
-      expect(notifications.accepted()).toEqual([]);
-      expect(notifications.incoming()).toBe(0);
+      http.expectNone('/api/v1/notifications/read');
     });
   });
 

@@ -4,6 +4,9 @@ import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { FakeEventSource } from '../../../testing/fake-event-source';
+import { NotificationsStore } from '../../../core/notifications/notifications.store';
+import { notification } from '../../../testing/notifications-fixtures';
+import { emptyNotifications } from '../../../testing/plano-testing';
 import { OBJECTIVES_ROUTES } from '../objectives.routes';
 import { ObjectivesStore } from '../objectives.store';
 import { provideObjectivesTesting, provideSignedIn, settleObjectives } from '../objectives.testing';
@@ -75,6 +78,24 @@ describe('ObjectiveDetailLayoutComponent', () => {
     expect(tabLabels()).toEqual(['Aperçu', 'Calendrier', 'Statistiques', 'Activité']);
     expect(element().querySelector('h1')?.classList).toContain('visually-hidden');
     expect(element().querySelector('app-objective-summary h2')?.textContent).toContain('Courir 10 km');
+  });
+
+  it('reads the notifications about the objective it shows', async () => {
+    await visit('/objectives/obj-1');
+    http.expectOne('/api/v1/notifications').flush({
+      items: [
+        notification({ id: 'here', area: 'objectives', kind: 'objective.comment', targetId: 'obj-1' }),
+        notification({ id: 'there', area: 'objectives', kind: 'objective.comment', targetId: 'obj-2' }),
+      ],
+      unread: { ...emptyNotifications().unread, objectives: 2 },
+    });
+    await settleObjectives();
+    harness.detectChanges();
+
+    const read = http.expectOne({ method: 'POST', url: '/api/v1/notifications/read' });
+    expect(read.request.body).toEqual({ area: 'objectives', targetId: 'obj-1' });
+    read.flush(null);
+    expect(TestBed.inject(NotificationsStore).hasUnread('objectives', 'obj-2')).toBe(true);
   });
 
   it('shows the header title on other tabs and adapts tabs to the completion mode', async () => {
@@ -383,6 +404,8 @@ describe('ObjectiveDetailLayoutComponent', () => {
       await layout().remove();
 
       expect(confirm).not.toHaveBeenCalled();
+      // The signed-in user's notifications load with the app; nothing else was asked.
+      for (const request of http.match('/api/v1/notifications')) request.flush(emptyNotifications());
       http.verify();
       expect(layout().tabs()).toEqual([]);
     });

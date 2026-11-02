@@ -9,7 +9,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { ProfileService } from '../../core/users/profile.service';
 import { AVATAR_RESIZER, type AvatarResizer, MAX_SOURCE_BYTES, UnreadableImageError } from '../../core/users/resize-avatar';
-import { providePlanoTesting, settle } from '../../testing/plano-testing';
+import { emptyNotifications, providePlanoTesting, settle } from '../../testing/plano-testing';
 import { SettingsComponent } from './settings.component';
 
 describe('SettingsComponent', () => {
@@ -84,12 +84,11 @@ describe('SettingsComponent', () => {
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
-    // The friends panel loads its lists (covered by its own spec); the signed-in
-    // user's friend news count asks for the requests too.
+    // The friends panel loads its lists (covered by its own spec), and the
+    // signed-in user's notifications load with the app.
     http.expectOne('/api/v1/friends').flush([]);
-    const pending = http.match('/api/v1/friends/requests');
-    expect(pending).toHaveLength(2);
-    for (const request of pending) request.flush({ incoming: [], outgoing: [] });
+    http.expectOne('/api/v1/friends/requests').flush({ incoming: [], outgoing: [] });
+    http.expectOne('/api/v1/notifications').flush(emptyNotifications());
     await render();
   });
 

@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import type { ListSummary } from '@plano/common';
-import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { type Person, toPerson } from '../../core/people/people';
 import { normalizeText } from '../../core/time/dates';
 import { AutofocusDirective } from '../../shared/ui/autofocus.directive';
@@ -57,7 +56,6 @@ function sharingPeople(list: ListSummary): Person[] {
   selector: 'app-lists',
   imports: [
     NgTemplateOutlet,
-    RouterLink,
     AutofocusDirective,
     AvatarStackComponent,
     BottomNavComponent,
@@ -74,8 +72,6 @@ function sharingPeople(list: ListSummary): Person[] {
   },
 })
 export class ListsComponent {
-  /** Friend news, shown on the bell that leads to the friends list. */
-  readonly notifications = inject(FriendNotificationsService);
   readonly listsStore = inject(ListsStore);
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);

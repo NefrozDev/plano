@@ -18,6 +18,7 @@ import { AgendaItem, coveredDates } from '../agenda.utils';
 import { AgendaDayViewComponent, StripDay } from './agenda-day-view.component';
 import { AgendaMonthViewComponent } from './agenda-month-view.component';
 import { AgendaWeekViewComponent } from './agenda-week-view.component';
+import { readNotificationsWhileOpen } from '../../../core/notifications/notifications.store';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const WEEKDAY_SHORT = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
@@ -43,6 +44,7 @@ export class AgendaCalendarComponent {
 
   constructor() {
     this.store.loadTasks();
+    readNotificationsWhileOpen('agenda');
   }
 
   private readonly params = toSignal(this.route.queryParamMap, {

@@ -4,7 +4,6 @@ import type { ListMember } from '@plano/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
-import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { ListsComponent, SHARED_LIST_NOTICE, caption } from './lists.component';
 import { WHEEL_SWIPE_END_MS } from '../../shared/ui/swipe-to-delete';
 import { ListsStore } from './lists.store';
@@ -63,20 +62,9 @@ describe('ListsComponent', () => {
     ).toBe('Partagée par Cyd Martin');
     expect(element.querySelector('.list-progress b')?.textContent).toBe('2 / 6');
     expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
-    // Nothing new: the bell leads to the friends settings without a badge.
-    const bell = element.querySelector('.notifications-link') as HTMLAnchorElement;
-    expect(bell.getAttribute('href')).toBe('/settings#friends');
-    expect(bell.getAttribute('aria-label')).toBe('Notifications');
-    expect(bell.querySelector('.badge')).toBeNull();
-  });
-
-  it('shows friend news on the bell', () => {
-    TestBed.inject(FriendNotificationsService).incoming.set(2);
-    fixture.detectChanges();
-
-    const bell = element.querySelector('.notifications-link') as HTMLAnchorElement;
-    expect(bell.querySelector('.badge')?.textContent).toBe('2');
-    expect(bell.getAttribute('aria-label')).toBe('Notifications : 2 nouvelle(s)');
+    // Notifications live in the home page bell and on the tabs, not here.
+    expect(element.querySelector('.notifications-link')).toBeNull();
+    expect(element.querySelector('[aria-label^="Notifications"]')).toBeNull();
   });
 
   it('names a few people a list is shared with, and counts the rest', () => {

@@ -5,7 +5,7 @@
     "agenda": "Agenda",
     "lists": "Liste",
     "objectives": "Objectifs",
-    "objectivesWithNews": "Objectifs, {{count}} nouveauté(s)"
+    "withNews": "{{label}}, {{count}} nouveauté(s)"
   },
   "settings": {
     "title": "Paramètres",
@@ -58,8 +58,7 @@
     "logoutFailed": "La déconnexion a échoué. Veuillez réessayer."
   },
   "dashboard": {
-    "openSettings": "Ouvrir les paramètres",
-    "openSettingsWithNews": "Ouvrir les paramètres, {{count}} nouveauté(s)"
+    "openSettings": "Ouvrir les paramètres"
   },
   "notifications": {
     "friendRequested": "{{name}} vous a envoyé une demande d’ami.",
@@ -67,7 +66,21 @@
     "objectiveInvited": "{{name}} vous a invité(e) à « {{title}} ».",
     "objectiveContribution": "{{name}} a contribué à « {{title}} ».",
     "objectiveCompleted": "« {{title}} » est terminé.",
-    "objectiveComment": "{{name}} a commenté « {{title}} »."
+    "objectiveComment": "{{name}} a commenté « {{title}} ».",
+    "someone": "Quelqu’un",
+    "bell": {
+      "label": "Notifications",
+      "withNews": "Notifications, {{count}} non lue(s)",
+      "heading": "Notifications",
+      "empty": "Aucune notification pour l’instant."
+    },
+    "items": {
+      "listInvited": "{{name}} a partagé la liste « {{title}} » avec vous.",
+      "listEntries": "{{name}} a ajouté un élément à « {{title}} ».",
+      "listEntriesMany": "{{count}} éléments ajoutés à « {{title}} », le dernier par {{name}}.",
+      "contributionMany": "{{count}} contributions à « {{title}} », la dernière de {{name}}.",
+      "commentMany": "{{count}} commentaires sur « {{title}} », le dernier de {{name}}."
+    }
   },
   "friends": {
     "heading": "Amis",
