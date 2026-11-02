@@ -130,7 +130,7 @@ export class ListsService {
         }),
       ),
     );
-    await this.changes.changed(list.id);
+    await this.changes.changed(list.id, userId);
     return this.toDetail({ list, role: 'owner' }, userId);
   }
 
@@ -145,7 +145,7 @@ export class ListsService {
       await this.dataSource.manager.save(access.list);
       return access;
     });
-    await this.changes.changed(listId);
+    await this.changes.changed(listId, userId);
     return this.toDetail(access, userId);
   }
 
@@ -167,7 +167,7 @@ export class ListsService {
       }),
     );
     await this.changes.removed(listId, deleted.audience);
-    this.changes.linkedListDeleted(deleted.objectiveId);
+    this.changes.linkedListDeleted(deleted.objectiveId, userId);
   }
 
   /** Shares the list with one of the owner's contacts. */
@@ -215,7 +215,7 @@ export class ListsService {
         return { member: await this.toMemberResponse(manager, member), list };
       }),
     );
-    await this.changes.changed(listId);
+    await this.changes.changed(listId, userId);
     await this.changes.invited(list, details.userId, userId);
     return member;
   }
@@ -235,7 +235,7 @@ export class ListsService {
         return this.toMemberResponse(manager, member);
       }),
     );
-    await this.changes.changed(listId);
+    await this.changes.changed(listId, userId);
     return member;
   }
 
@@ -263,7 +263,7 @@ export class ListsService {
       }),
     );
     await this.changes.removed(listId, [memberUserId]);
-    await this.changes.changed(listId);
+    await this.changes.changed(listId, userId);
   }
 
   /** Stops sharing: everyone but the owner loses access. */
@@ -277,7 +277,7 @@ export class ListsService {
       }),
     );
     await this.changes.removed(listId, formerMembers);
-    await this.changes.changed(listId);
+    await this.changes.changed(listId, userId);
   }
 
   /** Entries with a reminder, across every list the user can see. */

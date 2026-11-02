@@ -240,6 +240,16 @@ describe('ObjectiveListsService', () => {
           (await bed.notifications.list(bed.bob)).items.map(({ kind }) => kind),
         ).toContain('objective.completed'),
       );
+      // Checking the last item completed it: Ada did, and is not told about it.
+      expect((await read(objective.id)).completedBy?.name).toBe('Ada Test');
+      expect(
+        (await bed.notifications.list(bed.bob)).items.find(
+          ({ kind }) => kind === 'objective.completed',
+        )?.actor?.name,
+      ).toBe('Ada Test');
+      expect(
+        (await bed.notifications.list(bed.ada)).items.map(({ kind }) => kind),
+      ).not.toContain('objective.completed');
 
       await check(list.id, second, false);
       await eventually(objective.id, { status: 'active', percent: 50 });

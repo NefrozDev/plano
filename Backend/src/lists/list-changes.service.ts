@@ -10,10 +10,16 @@ import { List } from './entities/list.entity';
  * Tells everyone who may have a list open that it changed. Called once the
  * write is committed: a failure here never undoes it, the event is just lost.
  */
+/** A linked list changed: the objective it counts for, and who did it. */
+export interface LinkedListChange {
+  objectiveId: string;
+  actorId: string | null;
+}
+
 @Injectable()
 export class ListChangesService {
   private readonly logger = new Logger(ListChangesService.name);
-  private readonly countedFor = new Subject<string>();
+  private readonly countedFor = new Subject<LinkedListChange>();
   /**
    * Objectives whose linked list changed or was deleted: their bar may move.
    * Objectives listen here, so lists never depend on them.
@@ -37,7 +43,8 @@ export class ListChangesService {
     return [list.ownerId, ...members.map(({ userId }) => userId)];
   }
 
-  async changed(listId: string): Promise<void> {
+  /** `actorId`: who changed it, so an objective it completes is theirs and they are not told. */
+  async changed(listId: string, actorId: string | null = null): Promise<void> {
     try {
       this.live.publish(await this.audience(listId), {
         type: 'list.changed',
@@ -47,15 +54,17 @@ export class ListChangesService {
         where: { id: listId },
         select: { id: true, objectiveId: true },
       });
-      if (list?.objectiveId) this.countedFor.next(list.objectiveId);
+      if (list?.objectiveId) {
+        this.countedFor.next({ objectiveId: list.objectiveId, actorId });
+      }
     } catch (error) {
       this.logger.warn(`No live event for list ${listId}: ${String(error)}`);
     }
   }
 
   /** A list linked to this objective was deleted. */
-  linkedListDeleted(objectiveId: string | null): void {
-    if (objectiveId) this.countedFor.next(objectiveId);
+  linkedListDeleted(objectiveId: string | null, actorId: string): void {
+    if (objectiveId) this.countedFor.next({ objectiveId, actorId });
   }
 
   /** For users who just lost the list: it was deleted, or they were removed. Its news go too. */

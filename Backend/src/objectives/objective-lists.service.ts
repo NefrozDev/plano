@@ -40,7 +40,7 @@ export class ObjectiveListsService implements OnModuleDestroy {
     private readonly objectives: ObjectivesService,
   ) {
     this.listening = listChanges.objectiveListsChanged.subscribe(
-      (objectiveId) => void this.recount(objectiveId),
+      ({ objectiveId, actorId }) => void this.recount(objectiveId, actorId),
     );
   }
 
@@ -112,7 +112,10 @@ export class ObjectiveListsService implements OnModuleDestroy {
    * A linked list changed or was deleted: the bar may have moved, and the
    * objective may complete or reopen. Its people hear it like any change.
    */
-  private async recount(objectiveId: string): Promise<void> {
+  private async recount(
+    objectiveId: string,
+    actorId: string | null,
+  ): Promise<void> {
     try {
       const row = await this.dataSource.manager.findOne(Objective, {
         where: { id: objectiveId },
@@ -121,12 +124,12 @@ export class ObjectiveListsService implements OnModuleDestroy {
       const before = row && (await this.access.loadTree(row.rootId));
       if (!row || !before) return;
       const changed = await this.writer.inTransaction((manager) =>
-        this.writer.settle(row.rootId, null, manager),
+        this.writer.settle(row.rootId, actorId, manager),
       );
       await this.changes.published({
         before,
         objectiveId,
-        actorId: '',
+        actorId: actorId ?? '',
         completed: changed.filter(({ status }) => status === 'completed'),
       });
     } catch (error) {

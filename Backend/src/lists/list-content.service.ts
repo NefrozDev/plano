@@ -221,7 +221,7 @@ export class ListContentService {
         return operation(manager, list);
       }),
     );
-    await this.changes.changed(listId);
+    await this.changes.changed(listId, userId);
     return result;
   }
 
