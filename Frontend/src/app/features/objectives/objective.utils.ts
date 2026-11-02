@@ -5,6 +5,7 @@ import type {
   IsoDate,
   Objective,
   ObjectiveCategory,
+  ObjectiveRecurrence,
   ObjectiveReminder,
   ObjectiveStatus,
   ObjectiveSummary,
@@ -35,9 +36,25 @@ export const STATUS_LABELS: Readonly<Record<ObjectiveStatus, string>> = {
 
 export const COMPLETION_LABELS: Readonly<Record<Exclude<CompletionMode, 'none'>, { label: string; hint: string }>> = {
   children: { label: 'Sous-objectifs', hint: 'Moyenne de leur progression' },
-  metric: { label: 'Objectif chiffré', hint: 'Distance, montant, nombre de livres…' },
-  habit: { label: 'Habitude', hint: 'Un jour réussi à la fois' },
+  metric: { label: 'Objectif chiffré', hint: 'Comptez ou additionnez : sorties, km, euros…' },
+  habit: { label: 'Habitude', hint: 'Cochez les jours réussis dans un calendrier' },
   manual: { label: 'Pourcentage manuel', hint: 'Vous déplacez la barre vous-même' },
+};
+
+/** How often a count or a habit starts again, offered next to its target. */
+export const RHYTHM_OPTIONS: readonly { value: ObjectiveRecurrence; label: string }[] = [
+  { value: 'none', label: 'En tout' },
+  { value: 'weekly', label: 'Par semaine' },
+  { value: 'monthly', label: 'Par mois' },
+  { value: 'yearly', label: 'Par an' },
+];
+
+export const PERIOD_LABELS: Readonly<
+  Record<Exclude<ObjectiveRecurrence, 'none'>, { per: string; every: string; current: string; reached: string }>
+> = {
+  weekly: { per: 'par semaine', every: 'chaque semaine', current: 'Cette semaine', reached: 'Semaines réussies' },
+  monthly: { per: 'par mois', every: 'chaque mois', current: 'Ce mois-ci', reached: 'Mois réussis' },
+  yearly: { per: 'par an', every: 'chaque année', current: 'Cette année', reached: 'Années réussies' },
 };
 
 export const DUE_REMINDER_LABELS: Readonly<Record<DueReminder, string>> = {

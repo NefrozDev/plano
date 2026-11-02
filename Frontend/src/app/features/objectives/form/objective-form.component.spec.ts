@@ -133,7 +133,7 @@ describe('ObjectiveFormComponent', () => {
 
     it('sends a numeric bar with its settings, and validates them only when on', async () => {
       type('title', 'Nager');
-      toggle('Barre de progression');
+      toggle('Suivi et progression');
       expect(element.querySelector('.modes')).not.toBeNull();
 
       await submit();
@@ -153,7 +153,7 @@ describe('ObjectiveFormComponent', () => {
 
     it('sends a habit, validating its number of days', async () => {
       type('title', 'Méditer');
-      toggle('Barre de progression');
+      toggle('Suivi et progression');
       pickMode('Habitude');
       type('habitTargetDays', '0');
       await submit();
@@ -169,7 +169,7 @@ describe('ObjectiveFormComponent', () => {
 
     it('sends a manual bar with nothing else to fill in', async () => {
       type('title', 'Peindre');
-      toggle('Barre de progression');
+      toggle('Suivi et progression');
       pickMode('Pourcentage manuel');
       await submit();
 
@@ -178,8 +178,8 @@ describe('ObjectiveFormComponent', () => {
 
     it('ignores the settings of a bar switched back off', async () => {
       type('title', 'Nager');
-      toggle('Barre de progression');
-      toggle('Barre de progression');
+      toggle('Suivi et progression');
+      toggle('Suivi et progression');
       await submit();
 
       const body = (await answerCreate()) as object;
@@ -189,7 +189,7 @@ describe('ObjectiveFormComponent', () => {
 
     it('opens the sub-objectives when the bar is made of them, and sends their names', async () => {
       type('title', 'Voyage');
-      toggle('Barre de progression');
+      toggle('Suivi et progression');
       pickMode('Sous-objectifs');
       expect(element.querySelector('[formArrayName="children"]')).not.toBeNull();
 
@@ -339,6 +339,100 @@ describe('ObjectiveFormComponent', () => {
       await submit();
 
       expect(await answerCreate()).toMatchObject({ recurrence: 'weekly' });
+    });
+  });
+
+  describe('pace of a count or a habit', () => {
+    const rhythm = (): HTMLSelectElement | null => element.querySelector('select.rhythm');
+    const pickRhythm = (value: string): void => {
+      const select = rhythm()!;
+      select.value = value;
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    };
+    const switches = (): string[] =>
+      Array.from(element.querySelectorAll('[role="switch"]')).map((row) => row.textContent ?? '');
+
+    beforeEach(() => {
+      setUp();
+      render();
+      type('title', 'Courir');
+      toggle('Suivi et progression');
+    });
+
+    it('offers it next to the target instead of a separate repeat option, once by default', async () => {
+      expect(rhythm()?.value).toBe('none');
+      expect(element.querySelector('.field .hint')).toBeNull();
+      expect(switches()).not.toContainEqual(expect.stringContaining('Répéter'));
+      type('unit', 'sorties');
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({ completion: 'metric', recurrence: 'none' });
+    });
+
+    it('sends "twice a week" as a weekly habit of 2 days', async () => {
+      pickMode('Habitude');
+      pickRhythm('weekly');
+      // 30 days cannot fit in a week: the target comes down to every day of it.
+      expect(component.form.controls.habitTargetDays.value).toBe(7);
+      expect(element.textContent).toContain('Jours à réussir par semaine');
+      expect(element.querySelector('.field .hint')?.textContent).toContain('Repart à zéro chaque semaine');
+
+      type('habitTargetDays', '2');
+      await submit();
+
+      const body = (await answerCreate()) as object;
+      expect(body).toMatchObject({ completion: 'habit', habitTargetDays: 2, recurrence: 'weekly' });
+      expect(body).not.toHaveProperty('metric');
+    });
+
+    it('refuses more days than the period has, without calling the API', async () => {
+      pickMode('Habitude');
+      pickRhythm('weekly');
+      type('habitTargetDays', '8');
+      await submit();
+
+      expect(errors()).toEqual(['Choisissez entre 1 et 7 jours.']);
+      http.expectNone('/api/v1/objectives');
+
+      pickRhythm('monthly');
+      expect(component.form.controls.habitTargetDays.valid).toBe(true);
+      expect(errors()).toEqual([]);
+    });
+
+    it('sends a count per month, saying so on its target', async () => {
+      pickRhythm('monthly');
+      expect(element.textContent).toContain('Cible par mois');
+      type('unit', 'km');
+      type('target', '40');
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({
+        completion: 'metric',
+        metric: { unit: 'km', target: 40, aggregation: 'sum' },
+        recurrence: 'monthly',
+      });
+    });
+
+    it('goes back to once', async () => {
+      pickMode('Habitude');
+      pickRhythm('yearly');
+      pickRhythm('none');
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({ habitTargetDays: 30, recurrence: 'none' });
+    });
+
+    it('leaves the repeat option to the other bars, keeping the pace picked', async () => {
+      pickRhythm('weekly');
+      pickMode('Pourcentage manuel');
+
+      expect(rhythm()).toBeNull();
+      expect(switches()).toContainEqual(expect.stringContaining('Répéter'));
+      expect(element.querySelector('.mode.selected input[name="recurrence"]')).not.toBeNull();
+      await submit();
+
+      expect(await answerCreate()).toMatchObject({ completion: 'manual', recurrence: 'weekly' });
     });
   });
 
@@ -537,6 +631,10 @@ describe('ObjectiveFormComponent', () => {
       );
       expect(component.form.controls.category.value).toBe('finance');
       expect(element.querySelector('.weight')).not.toBeNull();
+      toggle('Suivi et progression');
+      pickMode('Habitude');
+      expect(element.querySelector('select.rhythm')).toBeNull();
+      expect(component.habitMaxDays()).toBe(3660);
 
       type('title', 'Étape');
       type('weight', '3');
@@ -662,6 +760,20 @@ describe('ObjectiveFormComponent', () => {
       await submit();
 
       expect(await answerUpdate()).toMatchObject({ recurrence: 'yearly' });
+    });
+
+    it('shows the pace of a weekly habit next to its days, and keeps it', async () => {
+      await openObjective(objectiveDetail({ completion: 'habit', habitTargetDays: 2, recurrence: 'weekly', percent: 0 }));
+      render();
+      await settleObjectives();
+      fixture.detectChanges();
+
+      expect((element.querySelector('select.rhythm') as HTMLSelectElement).value).toBe('weekly');
+      expect(component.form.controls.habitTargetDays.value).toBe(2);
+      expect(component.form.controls.habitTargetDays.valid).toBe(true);
+      await submit();
+
+      expect(await answerUpdate()).toMatchObject({ completion: 'habit', habitTargetDays: 2, recurrence: 'weekly' });
     });
 
     it('keeps a deadline that has passed', async () => {

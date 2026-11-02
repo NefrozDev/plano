@@ -104,6 +104,45 @@ describe('ObjectiveHabitComponent', () => {
     });
   });
 
+  describe('for a habit that starts again each week', () => {
+    const tiles = (): string[] =>
+      Array.from(element.querySelectorAll('.stats div')).map((tile) =>
+        Array.from(tile.children, (part) => part.textContent?.trim()).join(' '),
+      );
+
+    it('shows this week against its target and the weeks reached, not a daily rate', async () => {
+      await setUp(
+        habitDetail({
+          recurrence: 'weekly',
+          habitTargetDays: 2,
+          amount: { current: 1, target: 2, unit: 'jours' },
+          periods: [
+            { startDate: '2026-10-05', endDate: '2026-10-11', percent: 100, completed: true },
+            { startDate: '2026-09-28', endDate: '2026-10-04', percent: 50, completed: false },
+          ],
+        }),
+      );
+
+      expect(tiles()).toEqual(['1 / 2 Cette semaine', '1 / 2 Semaines réussies', '3 Jours réussis']);
+      expect(element.querySelector('.stats')?.textContent).not.toContain('Taux de réussite');
+      // Days of past weeks stay in the calendar.
+      expect(element.querySelectorAll('.day.checked').length).toBe(3);
+    });
+
+    it('names the period of a monthly habit, with nothing reached yet', async () => {
+      await setUp(habitDetail({ recurrence: 'monthly', amount: { current: 0, target: 8, unit: 'jours' }, periods: [] }));
+
+      expect(tiles()).toEqual(['0 / 8 Ce mois-ci', '0 / 0 Mois réussis', '3 Jours réussis']);
+    });
+  });
+
+  it('keeps the daily rate for a habit that does not start again', async () => {
+    await setUp();
+
+    expect(component.period()).toBeNull();
+    expect(element.querySelector('.stats')?.textContent).toContain('Taux de réussite');
+  });
+
   it('only counts the signed-in person’s days', async () => {
     const checkIns: ObjectiveCheckIn[] = [
       { date: '2026-10-05', userId: ME },

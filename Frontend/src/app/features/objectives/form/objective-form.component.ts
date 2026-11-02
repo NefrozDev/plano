@@ -25,12 +25,26 @@ import { FriendsService } from '../../../core/friends/friends.service';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { SwitchRowComponent } from '../../../shared/ui/switch-row.component';
-import { COMPLETION_LABELS, OBJECTIVE_CATEGORIES, WEEKDAY_LABELS } from '../objective.utils';
+import {
+  COMPLETION_LABELS,
+  OBJECTIVE_CATEGORIES,
+  PERIOD_LABELS,
+  RHYTHM_OPTIONS,
+  WEEKDAY_LABELS,
+} from '../objective.utils';
 import { ObjectivesStore } from '../objectives.store';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 import { PeoplePickerComponent } from '../ui/people-picker.component';
 
 type BarMode = Exclude<CompletionMode, 'none'>;
+
+/** The most days a habit can have in one period: every day of it. */
+const HABIT_MAX_DAYS: Readonly<Record<ObjectiveRecurrence, number>> = {
+  none: 3660,
+  weekly: 7,
+  monthly: 31,
+  yearly: 366,
+};
 
 function notBlank(control: AbstractControl<string>): ValidationErrors | null {
   return control.value.trim() ? null : { required: true };
@@ -87,6 +101,7 @@ export class ObjectiveFormComponent implements OnInit {
     { value: 'monthly', label: 'Chaque mois' },
     { value: 'yearly', label: 'Chaque année' },
   ];
+  readonly rhythmOptions = RHYTHM_OPTIONS;
   /** The template picked to start from. */
   readonly templateId = signal('');
   /** The signed-in user's contacts; null until a sharing option is opened. */
@@ -107,7 +122,14 @@ export class ObjectiveFormComponent implements OnInit {
     target: [10, [Validators.required, Validators.min(0.1), Validators.max(1_000_000_000)]],
     unit: ['', [notBlank, Validators.maxLength(12)]],
     aggregation: ['sum' as MetricAggregation],
-    habitTargetDays: [30, [Validators.required, Validators.min(1), Validators.max(3660)]],
+    habitTargetDays: [
+      30,
+      [
+        Validators.required,
+        Validators.min(1),
+        (control: AbstractControl<number>) => (control.value > this.habitMaxDays() ? { max: true } : null),
+      ],
+    ],
     startDate: [this.store.today(), Validators.required],
     dueDate: [''],
     timelapse: ['elapsed' as 'elapsed' | 'remaining'],
@@ -139,7 +161,44 @@ export class ObjectiveFormComponent implements OnInit {
     return !!this.parentId || (!!this.objectiveId && !!this.store.detail()?.parentId);
   }
 
-  showError(name: 'title' | 'target' | 'unit' | 'habitTargetDays' | 'weight'): boolean {
+  /**
+   * A count or a habit on a top-level objective gets its pace next to its target
+   * ("2 days a week"): that pace is the objective's recurrence, so the separate
+   * repeat option is not shown with it.
+   */
+  showRhythm(): boolean {
+    const mode = this.form.controls.completion.value;
+    return this.isTopLevel() && this.barOn() && (mode === 'metric' || mode === 'habit');
+  }
+
+  rhythm(): ObjectiveRecurrence {
+    return this.recurrenceOn() ? this.recurrence() : 'none';
+  }
+
+  setRhythm(rhythm: ObjectiveRecurrence): void {
+    this.recurrenceOn.set(rhythm !== 'none');
+    if (rhythm !== 'none') this.recurrence.set(rhythm);
+    const days = this.form.controls.habitTargetDays;
+    if (days.value > this.habitMaxDays()) days.setValue(this.habitMaxDays());
+    days.updateValueAndValidity();
+  }
+
+  /** "par semaine" after a target, empty when it is reached once. */
+  perPeriod(): string {
+    const rhythm = this.rhythm();
+    return rhythm === 'none' ? '' : PERIOD_LABELS[rhythm].per;
+  }
+
+  everyPeriod(): string {
+    const rhythm = this.rhythm();
+    return rhythm === 'none' ? '' : PERIOD_LABELS[rhythm].every;
+  }
+
+  habitMaxDays(): number {
+    return HABIT_MAX_DAYS[this.rhythm()];
+  }
+
+  showError(name:'title' | 'target' | 'unit' | 'habitTargetDays' | 'weight'): boolean {
     const control = this.form.controls[name];
     return control.invalid && control.touched;
   }
@@ -298,8 +357,7 @@ export class ObjectiveFormComponent implements OnInit {
   private fill(objective: ObjectiveDetail): void {
     this.barOn.set(objective.completion !== 'none');
     this.timelapseOn.set(objective.timelapse !== 'off');
-    this.recurrenceOn.set(objective.recurrence !== 'none');
-    if (objective.recurrence !== 'none') this.recurrence.set(objective.recurrence);
+    this.setRhythm(objective.recurrence);
     this.form.patchValue({
       title: objective.title,
       category: objective.category,

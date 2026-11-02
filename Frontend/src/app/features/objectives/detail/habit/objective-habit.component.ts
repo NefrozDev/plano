@@ -8,7 +8,7 @@ import {
   parseIsoDate,
   toIsoDate,
 } from '../../../../core/time/dates';
-import { longestStreak } from '../../objective.utils';
+import { PERIOD_LABELS, longestStreak } from '../../objective.utils';
 import { ObjectivesStore } from '../../objectives.store';
 import { ObjectiveContext } from '../objective-context';
 
@@ -56,6 +56,24 @@ export class ObjectiveHabitComponent {
       successes,
       rate: trackedDays ? Math.min(100, Math.round((successes / trackedDays) * 100)) : 0,
       bestStreak: longestStreak([...this.checkIns()]),
+    };
+  });
+
+  /**
+   * A habit that starts again each period ("twice a week") is judged per period:
+   * a daily success rate would call two runs out of seven a 29 % failure.
+   */
+  readonly period = computed(() => {
+    const objective = this.objective();
+    if (!objective || objective.recurrence === 'none') return null;
+    const labels = PERIOD_LABELS[objective.recurrence];
+    return {
+      current: labels.current,
+      reached: labels.reached,
+      done: objective.amount?.current ?? 0,
+      target: objective.amount?.target ?? objective.habitTargetDays ?? 0,
+      reachedCount: objective.periods.filter(({ completed }) => completed).length,
+      pastCount: objective.periods.length,
     };
   });
 

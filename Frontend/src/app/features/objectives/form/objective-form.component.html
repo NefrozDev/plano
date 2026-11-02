@@ -29,7 +29,7 @@
           appAutofocus
           formControlName="title"
           maxlength="80"
-          placeholder="Ex. : Courir 10 km, Lire 12 livres…"
+          placeholder="Ex. : Courir 2 fois par semaine, Lire 12 livres…"
           [attr.aria-invalid]="showError('title')"
         />
         @if (showError('title')) {
@@ -75,8 +75,8 @@
 
       <section class="option">
         <app-switch-row
-          label="Barre de progression"
-          hint="Suivre l’avancement de l’objectif"
+          label="Suivi et progression"
+          hint="Cochez des jours, comptez ou suivez des sous-objectifs"
           [checked]="barOn()"
           (toggled)="toggleBar()"
         />
@@ -100,7 +100,7 @@
               @case ('metric') {
                 <div class="inline-fields">
                   <label class="field">
-                    <span>Cible</span>
+                    <span>Cible {{ perPeriod() }}</span>
                     <input class="form-control" type="number" min="0.1" step="0.1" formControlName="target" [attr.aria-invalid]="showError('target')" />
                   </label>
                   <label class="field">
@@ -121,13 +121,27 @@
               }
               @case ('habit') {
                 <label class="field">
-                  <span>Nombre de jours à réussir</span>
-                  <input class="form-control" type="number" min="1" max="3660" formControlName="habitTargetDays" [attr.aria-invalid]="showError('habitTargetDays')" />
+                  <span>{{ rhythm() === 'none' ? 'Nombre de jours à réussir' : 'Jours à réussir ' + perPeriod() }}</span>
+                  <input class="form-control" type="number" min="1" [max]="habitMaxDays()" formControlName="habitTargetDays" [attr.aria-invalid]="showError('habitTargetDays')" />
                   @if (showError('habitTargetDays')) {
-                    <span class="field-error">Choisissez entre 1 et 3660 jours.</span>
+                    <span class="field-error">Choisissez entre 1 et {{ habitMaxDays() }} jours.</span>
                   }
                 </label>
               }
+            }
+
+            @if (showRhythm()) {
+              <label class="field">
+                <span>Rythme</span>
+                <select class="form-control rhythm" (change)="setRhythm($any($event.target).value)">
+                  @for (option of rhythmOptions; track option.value) {
+                    <option [value]="option.value" [selected]="rhythm() === option.value">{{ option.label }}</option>
+                  }
+                </select>
+                @if (everyPeriod()) {
+                  <small class="hint">Repart à zéro {{ everyPeriod() }}, les résultats passés sont gardés.</small>
+                }
+              </label>
             }
           </div>
         }
@@ -154,7 +168,7 @@
         }
       </section>
 
-      @if (isTopLevel()) {
+      @if (isTopLevel() && !showRhythm()) {
         <section class="option">
           <app-switch-row
             label="Répéter"

@@ -38,9 +38,15 @@
     </p>
 
     <section class="stats" aria-label="Statistiques du mois">
-      <div><strong>{{ stats().successes }}</strong><span>Jours réussis</span></div>
-      <div><strong>{{ stats().rate }} %</strong><span>Taux de réussite</span></div>
-      <div><strong>{{ stats().bestStreak }}</strong><span>Meilleure série</span></div>
+      @if (period(); as period) {
+        <div><strong>{{ period.done }} / {{ period.target }}</strong><span>{{ period.current }}</span></div>
+        <div><strong>{{ period.reachedCount }} / {{ period.pastCount }}</strong><span>{{ period.reached }}</span></div>
+        <div><strong>{{ stats().successes }}</strong><span>Jours réussis</span></div>
+      } @else {
+        <div><strong>{{ stats().successes }}</strong><span>Jours réussis</span></div>
+        <div><strong>{{ stats().rate }} %</strong><span>Taux de réussite</span></div>
+        <div><strong>{{ stats().bestStreak }}</strong><span>Meilleure série</span></div>
+      }
     </section>
 
     <section class="reminder">
