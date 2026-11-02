@@ -73,6 +73,8 @@ Keep these root commands working when package scripts change.
 
 - Every face goes through `app-user-avatar` (or `app-avatar-stack`, which uses it): the picture when there is one, initials otherwise or if it fails to load. Never draw initials by hand, and have the API send `avatarVersion` with any person it names, or their picture will not show.
 
+- A screen reached from several places (the settings) sets `[returnToPrevious]="true"` on `app-page-header`: its arrow goes back in history, and to `backLink` only when the app was opened on it. The lists and objectives bells count friend news only, so they open `/settings#friends`.
+
 - Every launch opens on `SplashScreenComponent` (in `AppComponent`): 2 seconds or any tap, click or key, while the requested screen loads underneath. On wide windows it draws itself in the phone frame through the `--phone-*` variables in `styles.scss`, shared with `MobileShellLayoutComponent`: change the frame there, not in one of them.
 
 - iOS Safari zooms in on any focused field under 16px and stays zoomed. `provideInputFocusZoomFix()` (`core/browser/input-focus-zoom.ts`) adds `maximum-scale=1` to the viewport on iOS only: iOS still allows pinch-zoom with it, Android would not and does not zoom on focus. Keep it when touching `index.html`'s viewport, or fields under 16px zoom again.
