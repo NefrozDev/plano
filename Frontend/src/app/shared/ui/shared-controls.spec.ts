@@ -94,3 +94,16 @@ describe('shared form controls', () => {
     expect(element.querySelector('.avatars')?.getAttribute('aria-label')).toBe('Avec 3 personnes');
   });
 });
+
+describe('global form styles', () => {
+  it('draws every kind of field in the app font, which browsers do not do on their own', () => {
+    const fields = ['input', 'textarea', 'select', 'button'].map((tag) => document.body.appendChild(document.createElement(tag)));
+    try {
+      const appFont = getComputedStyle(document.body).fontFamily;
+      expect(appFont).toContain('Inter');
+      for (const field of fields) expect(getComputedStyle(field).fontFamily, field.tagName).toBe(appFont);
+    } finally {
+      fields.forEach((field) => field.remove());
+    }
+  });
+});

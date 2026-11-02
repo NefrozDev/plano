@@ -750,6 +750,12 @@ input {
   font: inherit;
 }
 
+/* Browsers give these their own font (monospace for a textarea); their size stays each screen's choice. */
+select,
+textarea {
+  font-family: inherit;
+}
+
 button,
 a,
 input {
