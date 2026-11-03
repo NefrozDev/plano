@@ -4,7 +4,55 @@
  */
 import type { LocalDateTime } from './models';
 
-export type ListIcon = 'cart' | 'home' | 'suitcase' | 'gift' | 'tools';
+/** Drawn by the app (`LIST_ICON_SHAPES`); stored by name, 16 characters at most. */
+export type ListIcon =
+  | 'cart'
+  | 'basket'
+  | 'home'
+  | 'kitchen'
+  | 'cleaning'
+  | 'laundry'
+  | 'plant'
+  | 'tools'
+  | 'key'
+  | 'food'
+  | 'apple'
+  | 'coffee'
+  | 'wine'
+  | 'cake'
+  | 'suitcase'
+  | 'plane'
+  | 'car'
+  | 'map'
+  | 'tent'
+  | 'beach'
+  | 'camera'
+  | 'gift'
+  | 'party'
+  | 'music'
+  | 'book'
+  | 'film'
+  | 'game'
+  | 'sport'
+  | 'bike'
+  | 'briefcase'
+  | 'laptop'
+  | 'pencil'
+  | 'school'
+  | 'idea'
+  | 'calendar'
+  | 'chart'
+  | 'pill'
+  | 'heart'
+  | 'baby'
+  | 'paw'
+  | 'wallet'
+  | 'piggy'
+  | 'star'
+  | 'flag'
+  | 'check'
+  | 'bell'
+  | 'phone';
 /** `mine`: you own the list; `shared`: someone in your group shared it with you. */
 export type ListOwnership = 'mine' | 'shared';
 export type ShareRole = 'owner' | 'editor' | 'viewer';

@@ -81,6 +81,29 @@ describe('Lists API (e2e)', () => {
       .expect(400);
   });
 
+  it('takes any icon of the catalog, at creation and when edited', async () => {
+    const created = await http()
+      .post('/api/v1/lists')
+      .set('Cookie', ada.cookie)
+      .send({ name: 'Voyage', icon: 'plane', color: '#2ecb70' })
+      .expect(201);
+    expect(created.body).toMatchObject({ icon: 'plane' });
+
+    const edited = await http()
+      .patch(`/api/v1/lists/${(created.body as { id: string }).id}`)
+      .set('Cookie', ada.cookie)
+      .send({ icon: 'paw' })
+      .expect(200);
+    expect(edited.body).toMatchObject({ icon: 'paw' });
+
+    const refused = await http()
+      .patch(`/api/v1/lists/${(created.body as { id: string }).id}`)
+      .set('Cookie', ada.cookie)
+      .send({ icon: 'rocket' })
+      .expect(400);
+    expect(refused.body).toMatchObject({ statusCode: 400 });
+  });
+
   it('edits content, shares it in the group and enforces roles', async () => {
     const section = (
       await http()

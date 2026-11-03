@@ -1,3 +1,4 @@
+import type { ListIcon } from '@plano/common';
 import { ValidateIf } from 'class-validator';
 
 /**
@@ -22,11 +23,55 @@ export function sentFields<T extends object>(dto: T): Partial<T> {
 
 export const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 export const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-export const LIST_ICONS = [
-  'cart',
-  'home',
-  'suitcase',
-  'gift',
-  'tools',
-] as const;
+/** A `Record`, so a new `ListIcon` cannot be forgotten here: the API would refuse it. */
+const KNOWN_ICONS: Record<ListIcon, true> = {
+  cart: true,
+  basket: true,
+  home: true,
+  kitchen: true,
+  cleaning: true,
+  laundry: true,
+  plant: true,
+  tools: true,
+  key: true,
+  food: true,
+  apple: true,
+  coffee: true,
+  wine: true,
+  cake: true,
+  suitcase: true,
+  plane: true,
+  car: true,
+  map: true,
+  tent: true,
+  beach: true,
+  camera: true,
+  gift: true,
+  party: true,
+  music: true,
+  book: true,
+  film: true,
+  game: true,
+  sport: true,
+  bike: true,
+  briefcase: true,
+  laptop: true,
+  pencil: true,
+  school: true,
+  idea: true,
+  calendar: true,
+  chart: true,
+  pill: true,
+  heart: true,
+  baby: true,
+  paw: true,
+  wallet: true,
+  piggy: true,
+  star: true,
+  flag: true,
+  check: true,
+  bell: true,
+  phone: true,
+};
+export const LIST_ICONS = Object.keys(KNOWN_ICONS) as ListIcon[];
 export const LIST_MEMBER_ROLES = ['editor', 'viewer'] as const;
