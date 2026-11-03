@@ -13,7 +13,8 @@ import type { ListDetail, ListIcon } from '@plano/common';
 import type { Person } from '../../../core/people/people';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { SwitchRowComponent } from '../../../shared/ui/switch-row.component';
-import { LIST_COLOR_CHOICES, LIST_ICON_CHOICES } from './list-options';
+import { ListIconPickerComponent } from '../ui/list-icon-picker.component';
+import { LIST_COLOR_CHOICES } from './list-options';
 
 export interface ListEdits {
   name: string;
@@ -26,7 +27,7 @@ export interface ListEdits {
 /** Full-screen list editor working on drafts: nothing changes until save. */
 @Component({
   selector: 'app-list-editor',
-  imports: [AvatarStackComponent, SwitchRowComponent],
+  imports: [ListIconPickerComponent, AvatarStackComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-editor.component.html',
   styles: `
@@ -47,7 +48,6 @@ export class ListEditorComponent implements OnInit {
   readonly delete = output<void>();
   readonly closed = output<void>();
 
-  readonly iconChoices = LIST_ICON_CHOICES;
   readonly colorChoices = LIST_COLOR_CHOICES;
   readonly draftName = signal('');
   readonly draftIcon = signal<ListIcon>('cart');

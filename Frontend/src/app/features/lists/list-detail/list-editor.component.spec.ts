@@ -30,6 +30,18 @@ describe('ListEditorComponent', () => {
     ]);
   });
 
+  it('lets an icon from the whole catalog be chosen, and saves it', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    (element.querySelector('.line .more') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (element.querySelector('.catalog [aria-label="Animaux"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(editor.draftIcon()).toBe('paw');
+    editor.submit();
+    expect(saved[0].icon).toBe('paw');
+  });
+
   it('opens with the name focused and selected, so typing replaces it', async () => {
     // Rendered in the document, where focus can land.
     document.body.append(fixture.nativeElement as HTMLElement);

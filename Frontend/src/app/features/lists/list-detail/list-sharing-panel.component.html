@@ -9,7 +9,7 @@
   <div class="sharing-content">
     <div class="shared-list-summary">
       <span class="shared-list-icon" [style.background]="list().color">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 6h4l2.5 14h13l3-10H9" /><circle cx="13" cy="25" r="1.5" /><circle cx="23" cy="25" r="1.5" /></svg>
+        <app-list-icon [icon]="list().icon" />
       </span>
       <div><strong>{{ list().name }}</strong><small>{{ list().memberCount > 1 ? 'Partagée' : 'Privée' }}</small></div>
     </div>

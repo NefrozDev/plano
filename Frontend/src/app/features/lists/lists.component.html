@@ -126,23 +126,7 @@
       (keydown.delete)="card.list.role === 'owner' && requestDelete(card.list)"
     >
       <span class="list-icon" aria-hidden="true">
-        @switch (card.list.icon) {
-          @case ('cart') {
-            <svg viewBox="0 0 32 32"><path d="M4 6h4l2.5 14h13l3-10H9" /><circle cx="13" cy="25" r="1.5" /><circle cx="23" cy="25" r="1.5" /></svg>
-          }
-          @case ('home') {
-            <svg viewBox="0 0 32 32"><path d="m5 15 11-9 11 9v12H5Z" /><path d="M13 27v-8h6v8" /></svg>
-          }
-          @case ('suitcase') {
-            <svg viewBox="0 0 32 32"><rect x="5" y="10" width="22" height="17" rx="2" /><path d="M12 10V7h8v3M10 14v9M22 14v9M5 17h22" /></svg>
-          }
-          @case ('gift') {
-            <svg viewBox="0 0 32 32"><rect x="5" y="12" width="22" height="15" rx="1" /><path d="M4 12h24v-5H4ZM16 7v20M16 7c-5 0-7-1-7-3 0-3 6-2 7 3Zm0 0c5 0 7-1 7-3 0-3-6-2-7 3Z" /></svg>
-          }
-          @case ('tools') {
-            <svg viewBox="0 0 32 32"><path d="m8 26 11-11M18 8l6-3 3 3-3 6-4-1-3-3Z" /><path d="m12 22-3-3-5 5 4 4Z" /></svg>
-          }
-        }
+        <app-list-icon [icon]="card.list.icon" />
       </span>
       <span class="list-copy">
         <strong>{{ card.list.name }}</strong>

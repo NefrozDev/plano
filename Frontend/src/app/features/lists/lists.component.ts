@@ -11,6 +11,7 @@ import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { SwitchRowComponent } from '../../shared/ui/switch-row.component';
 import { ToastComponent } from '../../shared/ui/toast.component';
 import { LIST_COLOR_CHOICES } from './list-detail/list-options';
+import { ListIconComponent } from './ui/list-icon.component';
 import { SwipeToDelete } from '../../shared/ui/swipe-to-delete';
 import { ListsStore } from './lists.store';
 
@@ -55,6 +56,7 @@ function sharingPeople(list: ListSummary): Person[] {
 @Component({
   selector: 'app-lists',
   imports: [
+    ListIconComponent,
     NgTemplateOutlet,
     AutofocusDirective,
     AvatarStackComponent,

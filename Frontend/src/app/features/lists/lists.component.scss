@@ -13,8 +13,7 @@
 .list-filters button.active::after { position: absolute; right: .4rem; bottom: 0; left: .4rem; height: .16rem; border-radius: 1rem; background: #3264ed; content: ''; }
 .lists-content { flex: 1; min-height: 0; padding: 1.2rem 1.25rem 7.2rem; overflow-y: auto; overscroll-behavior: contain; }
 .list-card { display: grid; width: 100%; min-height: 5.65rem; grid-template-columns: 2.6rem 1fr auto; gap: .75rem; align-items: center; margin-bottom: 1rem; padding: .9rem 1rem; border: 1px solid color-mix(in srgb, var(--list-color) 20%, white); border-radius: .9rem; background: var(--list-surface); box-shadow: 0 .22rem .65rem rgb(31 41 55 / 7%); color: var(--color-text); cursor: pointer; text-align: left; }
-.list-icon { color: var(--list-color); }
-.list-icon svg { width: 2.05rem; height: 2.05rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.2; }
+.list-icon { --list-icon-size: 2.05rem; --list-icon-stroke: 2.2; color: var(--list-color); }
 .list-copy { display: grid; min-width: 0; gap: .35rem; }
 .list-copy strong { overflow: hidden; font-size: .92rem; text-overflow: ellipsis; white-space: nowrap; }
 .list-copy small { overflow: hidden; color: #7b8292; font-size: .72rem; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
@@ -27,7 +26,7 @@
 .empty-state { margin: 3rem 0; color: var(--color-text-muted); font-size: .85rem; text-align: center; }
 .lists-content.grid-view { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-content: start; }
 .grid-view .list-card { min-height: 12.5rem; grid-template-columns: 1fr; grid-template-rows: 3.5rem auto auto; gap: .55rem; justify-items: center; margin: 0; padding: 1.2rem .9rem; text-align: center; }
-.grid-view .list-icon svg { width: 3rem; height: 3rem; }
+.grid-view .list-icon { --list-icon-size: 3rem; }
 .grid-view .list-copy { justify-items: center; }
 .grid-view .list-copy strong { font-size: .88rem; }
 .grid-view .list-copy small { display: none; }

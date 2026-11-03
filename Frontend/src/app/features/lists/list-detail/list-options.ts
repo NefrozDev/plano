@@ -1,12 +1,4 @@
-import type { ListIcon, ShareRole } from '@plano/common';
-
-export const LIST_ICON_CHOICES: readonly { value: ListIcon; label: string }[] = [
-  { value: 'cart', label: 'Courses' },
-  { value: 'home', label: 'Maison' },
-  { value: 'suitcase', label: 'Voyage' },
-  { value: 'gift', label: 'Cadeaux' },
-  { value: 'tools', label: 'Travaux' },
-];
+import type { ShareRole } from '@plano/common';
 
 export const LIST_COLOR_CHOICES: readonly string[] = [
   '#2ecb70',

@@ -330,21 +330,7 @@ app-list-detail .editor-options button {
   font-size: 1.25rem;
 }
 
-app-list-detail .icon-options button svg {
-  width: 1.45rem;
-  height: 1.45rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-}
 
-app-list-detail .icon-options button.selected {
-  border-color: var(--color-primary);
-  background: #EEF4FF;
-  color: var(--color-primary);
-}
 
 app-list-detail .color-options button {
   width: 1.75rem;

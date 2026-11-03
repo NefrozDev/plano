@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { ListIconComponent } from '../ui/list-icon.component';
 import { Router } from '@angular/router';
 import type { ListDetail, ListMemberRole } from '@plano/common';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -16,7 +17,7 @@ import { ROLE_LABELS } from './list-options';
  */
 @Component({
   selector: 'app-list-sharing-panel',
-  imports: [UserAvatarComponent],
+  imports: [ListIconComponent, UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-sharing-panel.component.html',
   styles: `:host { display: contents; }`,

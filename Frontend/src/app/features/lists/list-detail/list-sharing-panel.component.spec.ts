@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { LIST_ICON_SHAPES } from '../ui/list-icons';
 import { Router } from '@angular/router';
 import type { ListDetail } from '@plano/common';
 import type { AuthUser } from '../../../core/auth/auth.models';
@@ -42,6 +43,13 @@ describe('ListSharingPanelComponent', () => {
   }
 
   afterEach(() => http.verify());
+
+  it('shows the list with its own icon', async () => {
+    await create(listDetail({ icon: 'plane' }));
+
+    const drawn = Array.from(element.querySelectorAll('.shared-list-icon path'), (path) => path.getAttribute('d'));
+    expect(drawn).toEqual([...LIST_ICON_SHAPES.plane.paths]);
+  });
 
   it('shows each member’s picture, or their initials without one', async () => {
     await create(

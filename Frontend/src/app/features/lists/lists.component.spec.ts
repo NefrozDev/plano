@@ -2,6 +2,7 @@ import type { MockInstance } from 'vitest';
 import { HttpTestingController } from '@angular/common/http/testing';
 import type { ListMember } from '@plano/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { LIST_ICON_SHAPES } from './ui/list-icons';
 import { Router } from '@angular/router';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { ListsComponent, SHARED_LIST_NOTICE, caption } from './lists.component';
@@ -62,6 +63,10 @@ describe('ListsComponent', () => {
     ).toBe('Partagée par Cyd Martin');
     expect(element.querySelector('.list-progress b')?.textContent).toBe('2 / 6');
     expect(element.querySelector('app-bottom-nav a.active')?.getAttribute('href')).toBe('/lists');
+    // Each card draws its list's icon through the shared component.
+    expect(
+      Array.from(element.querySelectorAll('.list-item[data-list-id="courses"] .list-icon path'), (path) => path.getAttribute('d')),
+    ).toEqual([...LIST_ICON_SHAPES.cart.paths]);
     // Search sits right next to the settings, as on the agenda and objectives screens.
     const search = element.querySelector('.header-actions [aria-label="Rechercher une liste"]');
     expect(search?.nextElementSibling?.classList).toContain('action-button');
