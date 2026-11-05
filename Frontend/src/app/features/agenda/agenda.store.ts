@@ -1,5 +1,10 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  DEFAULT_AGENDA_CALENDARS,
+  DEFAULT_AGENDA_FILTERS,
+  type AgendaUserSettings,
+} from '@plano/common';
 import type {
   AgendaContact,
   AgendaEventView,
@@ -15,6 +20,7 @@ import type {
 import { Observable, filter, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { AgendaSettingsStore } from '../../core/settings/agenda-settings.store';
 import { FriendsService } from '../../core/friends/friends.service';
 import { httpErrorMessage } from '../../core/http/http-error-message';
 import { LiveUpdatesService } from '../../core/live/live-updates.service';
@@ -24,6 +30,7 @@ import { ListsStore } from '../lists/lists.store';
 import { categoryMeta, importBatches } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaApiService } from './agenda-api.service';
+
 import {
   AgendaItem,
   EVENT_COLORS,
@@ -52,13 +59,6 @@ export function toAgendaContact(contact: Contact): AgendaContact {
   };
 }
 
-export const DEFAULT_AGENDA_FILTERS: AgendaFilters = {
-  hiddenCalendarIds: [],
-  showEvents: true,
-  showTasks: true,
-  showPastEvents: true,
-};
-
 const MAX_RECENT = 5;
 /** The API takes at most this many events per import request. */
 const IMPORT_BATCH_EVENTS = 200;
@@ -77,6 +77,8 @@ export class AgendaStore {
   private readonly friends = inject(FriendsService);
   private readonly api = inject(AgendaApiService);
   private readonly auth = inject(AuthService);
+  private readonly preferences = inject(AgendaSettingsStore);
+  /** What this browser held before the agenda moved to the API, until imported. */
   private readonly data = computed(() => this.appData.data().agenda);
   private readonly invitableState = signal<readonly Contact[]>([]);
   private readonly userId = computed(() => this.auth.user()?.id ?? null);
@@ -91,7 +93,11 @@ export class AgendaStore {
   /** A screen asked for the events, so live changes refresh them. */
   private requested = false;
 
-  readonly calendars = computed(() => this.data().calendars);
+  /** The built-in calendars, in the colours the user chose. */
+  readonly calendars = computed(() => {
+    const colors = this.preferences.settings().calendarColors;
+    return DEFAULT_AGENDA_CALENDARS.map((calendar) => ({ ...calendar, color: colors[calendar.id] ?? calendar.color }));
+  });
   /** Contacts of the seed data, still shown on the events that mention them. */
   readonly contacts = computed(() => this.data().contacts);
   /** Who can be invited: the user's friends and group mates, from the API (see loadContacts). */
@@ -112,8 +118,8 @@ export class AgendaStore {
     }
     return people;
   });
-  readonly settings = computed(() => this.data().settings);
-  readonly filters = computed(() => this.data().filters);
+  readonly settings: Signal<AgendaUserSettings> = this.preferences.settings;
+  readonly filters: Signal<AgendaFilters> = this.preferences.settings;
   readonly activeFilterCount = computed(() => {
     const filters = this.filters();
     return (
@@ -124,7 +130,7 @@ export class AgendaStore {
     );
   });
   readonly recent = computed(() =>
-    this.data()
+    this.settings()
       .recentIds.map((id) => this.event(id))
       .filter((event): event is AgendaEventView => !!event),
   );
@@ -159,10 +165,12 @@ export class AgendaStore {
     return Promise.resolve();
   }
 
-  /** Loads the events the first time only. */
+  /** Loads the events (and the settings they are shown with) the first time only. */
   ensureLoaded(): Promise<void> {
-    if (this.loaded()) return Promise.resolve();
-    this.loading ??= this.refresh().finally(() => (this.loading = null));
+    if (this.loaded()) return this.preferences.load();
+    this.loading ??= Promise.all([this.refresh(), this.preferences.load()])
+      .then(() => undefined)
+      .finally(() => (this.loading = null));
     return this.loading;
   }
 
@@ -302,19 +310,19 @@ export class AgendaStore {
   }
 
   markViewed(id: string): void {
-    if (this.data().recentIds[0] === id) return;
-    this.updateData((data) => ({
-      ...data,
-      recentIds: [id, ...data.recentIds.filter((recentId) => recentId !== id)].slice(0, MAX_RECENT),
-    }));
+    const recentIds = this.settings().recentIds;
+    if (recentIds[0] === id) return;
+    this.preferences.update({
+      recentIds: [id, ...recentIds.filter((recentId) => recentId !== id)].slice(0, MAX_RECENT),
+    });
   }
 
   updateSettings(changes: Partial<AgendaSettings>): void {
-    this.updateData((data) => ({ ...data, settings: { ...data.settings, ...changes } }));
+    this.preferences.update(changes);
   }
 
   updateFilters(changes: Partial<AgendaFilters>): void {
-    this.updateData((data) => ({ ...data, filters: { ...data.filters, ...changes } }));
+    this.preferences.update(changes);
   }
 
   toggleCalendar(id: string): void {
@@ -327,10 +335,7 @@ export class AgendaStore {
   /** Recolors a calendar: its events follow, except those with a color of their own. */
   setCalendarColor(id: string, color: string): void {
     if (!EVENT_COLORS.includes(color) || !this.calendar(id)) return;
-    this.updateData((data) => ({
-      ...data,
-      calendars: data.calendars.map((calendar) => (calendar.id === id ? { ...calendar, color } : calendar)),
-    }));
+    this.preferences.update({ calendarColors: { ...this.settings().calendarColors, [id]: color } });
   }
 
   resetFilters(): void {
@@ -467,8 +472,9 @@ export class AgendaStore {
   }
 
   private forgetRecent(id: string): void {
-    if (!this.data().recentIds.includes(id)) return;
-    this.updateData((data) => ({ ...data, recentIds: data.recentIds.filter((recentId) => recentId !== id) }));
+    const recentIds = this.settings().recentIds;
+    if (!recentIds.includes(id)) return;
+    this.preferences.update({ recentIds: recentIds.filter((recentId) => recentId !== id) });
   }
 
   /**

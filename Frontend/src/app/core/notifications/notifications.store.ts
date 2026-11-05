@@ -10,7 +10,8 @@ import type {
 } from '@plano/common';
 import { filter, firstValueFrom } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
-import { PlanoDataStore } from '../data/plano-data.store';
+import { AgendaSettingsStore } from '../settings/agenda-settings.store';
+import { ObjectiveSettingsStore } from '../settings/objective-settings.store';
 import { API_BASE_URL } from '../http/api-base-url';
 import { LiveUpdatesService } from '../live/live-updates.service';
 
@@ -42,15 +43,15 @@ export class NotificationsStore {
   private readonly url = `${inject(API_BASE_URL)}/notifications`;
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
-  private readonly appData = inject(PlanoDataStore);
+  private readonly agendaSettings = inject(AgendaSettingsStore);
+  private readonly objectiveSettings = inject(ObjectiveSettingsStore);
   private readonly response = signal<NotificationsResponse>({ items: [], unread: NO_UNREAD });
 
-  /** The objectives and agenda settings can turn their notifications off on this device. */
+  /** The objectives and agenda settings can turn their notifications off. */
   private readonly hidden = computed((): ReadonlySet<NotificationArea> => {
-    const { objectives, agenda } = this.appData.data();
     return new Set<NotificationArea>([
-      ...(objectives.settings.notifications ? [] : (['objectives'] as const)),
-      ...(agenda.settings.invitationNotifications ? [] : (['agenda'] as const)),
+      ...(this.objectiveSettings.settings().notifications ? [] : (['objectives'] as const)),
+      ...(this.agendaSettings.settings().invitationNotifications ? [] : (['agenda'] as const)),
     ]);
   });
   readonly items = computed(() => this.response().items.filter(({ area }) => !this.hidden().has(area)));

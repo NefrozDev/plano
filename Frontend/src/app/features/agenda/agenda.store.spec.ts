@@ -5,6 +5,7 @@ import type { AgendaEventView, SaveAgendaEventRequest } from '@plano/common';
 import { AuthService } from '../../core/auth/auth.service';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../../core/data/plano-data.adapter';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { AgendaSettingsStore } from '../../core/settings/agenda-settings.store';
 import { personColor } from '../../core/people/people';
 import { CONTACTS, contact } from '../../testing/contacts';
 import { FakeEventSource } from '../../testing/fake-event-source';
@@ -229,12 +230,17 @@ describe('AgendaStore', () => {
     });
 
     it('keeps the five most recently opened events', () => {
+      const preferences = TestBed.inject(AgendaSettingsStore);
+      preferences.update({ recentIds: ['rendez-vous-projet', 'courses', 'anniversaire-camille', 'sport'] });
+      const update = vi.spyOn(preferences, 'update');
       store.markViewed('cinema');
       store.markViewed('cinema');
       store.markViewed('dentiste');
       expect(store.recent().map((event) => event.id)).toEqual([
         'dentiste', 'cinema', 'rendez-vous-projet', 'courses', 'anniversaire-camille',
       ]);
+      // Opening the latest one again changes nothing to save.
+      expect(update).toHaveBeenCalledTimes(2);
     });
 
     it('recolors a calendar for its events that have no color of their own', () => {
@@ -395,15 +401,23 @@ describe('AgendaStore', () => {
     expect(store.now()).toBe('2026-10-15T10:30');
   });
 
-  it('persists settings through the data adapter', () => {
+  it('keeps settings on the account, not in this browser', () => {
     const adapter = TestBed.inject(PLANO_DATA_ADAPTER) as MemoryPlanoDataAdapter;
     const save = vi.spyOn(adapter, 'save');
+    const update = vi.spyOn(TestBed.inject(AgendaSettingsStore), 'update');
     store.updateSettings({ hourFormat: '12h' });
+    store.updateFilters({ showTasks: false });
+    store.setCalendarColor('sport', '#3264ed');
 
-    // One write per change, carrying the whole data set.
-    expect(save).toHaveBeenCalledTimes(1);
-    expect(save.mock.calls[0][0].agenda.settings.hourFormat).toBe('12h');
-    expect(adapter.load()?.agenda.settings.hourFormat).toBe('12h');
+    expect(update.mock.calls).toEqual([
+      [{ hourFormat: '12h' }],
+      [{ showTasks: false }],
+      [{ calendarColors: { sport: '#3264ed' } }],
+    ]);
+    expect(store.settings()).toEqual(
+      expect.objectContaining({ hourFormat: '12h', showTasks: false, calendarColors: { sport: '#3264ed' } }),
+    );
+    expect(save).not.toHaveBeenCalled();
   });
 });
 

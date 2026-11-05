@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { createMockPlanoData } from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../../core/data/plano-data.adapter';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { ObjectiveSettingsStore } from '../../core/settings/objective-settings.store';
 import { FakeEventSource } from '../../testing/fake-event-source';
 import { settle } from '../../testing/plano-testing';
 import { ObjectivesStore, REMOVED_MESSAGE } from './objectives.store';
@@ -689,7 +690,7 @@ describe('ObjectivesStore', () => {
       });
     });
 
-    describe('in this browser', () => {
+    describe('recent objectives and display settings', () => {
       it('remembers what was viewed, most recent first, once each, five at most', async () => {
         const items = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => objectiveSummary({ id }));
         await load(items);
@@ -709,11 +710,13 @@ describe('ObjectivesStore', () => {
         expect(store.recent().map(({ id }) => id)).toEqual(['a']);
       });
 
-      it('saves display settings without calling the API', () => {
+      it('keeps display settings on the account, not in this browser', () => {
+        const update = vi.spyOn(TestBed.inject(ObjectiveSettingsStore), 'update');
         store.updateSettings({ showPercentage: false });
 
+        expect(update).toHaveBeenCalledExactlyOnceWith({ showPercentage: false });
         expect(store.settings().showPercentage).toBe(false);
-        expect(TestBed.inject(PlanoDataStore).data().objectives.settings.showPercentage).toBe(false);
+        expect(TestBed.inject(PlanoDataStore).data().objectives.settings.showPercentage).toBe(true);
       });
 
       it('knows who is signed in', () => {

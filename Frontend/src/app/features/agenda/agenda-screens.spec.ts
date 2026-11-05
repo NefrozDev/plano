@@ -1,6 +1,8 @@
 import { Type } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DEFAULT_AGENDA_USER_SETTINGS, createMockPlanoData } from '@plano/common';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { AgendaSettingsStore } from '../../core/settings/agenda-settings.store';
 import { flushListReminders, loadAgendaEvents, providePlanoTesting, settle } from '../../testing/plano-testing';
 import { AgendaStore } from './agenda.store';
 import { AgendaFiltersComponent } from './filters/agenda-filters.component';
@@ -53,6 +55,7 @@ describe('Agenda secondary screens', () => {
 
   describe('search (screen 9)', () => {
     it('lists recent events and suggestions before typing', () => {
+      TestBed.inject(AgendaSettingsStore).update({ recentIds: createMockPlanoData().agenda.recentIds });
       const { element } = render(AgendaSearchComponent);
 
       expect(Array.from(element.querySelectorAll('.result strong')).map((title) => title.textContent)).toEqual([
@@ -117,6 +120,7 @@ describe('Agenda secondary screens', () => {
       fixture.detectChanges();
 
       expect(store.settings()).toEqual({
+        ...DEFAULT_AGENDA_USER_SETTINGS,
         weekStartsOn: 0,
         defaultDurationMinutes: 30,
         timeZone: 'Europe/London',

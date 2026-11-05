@@ -4,7 +4,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import type { LiveEvent, ObjectiveNewsKind } from '@plano/common';
 import { filter } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
-import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { ObjectiveSettingsStore } from '../../core/settings/objective-settings.store';
 import { LiveUpdatesService } from '../../core/live/live-updates.service';
 
 type ObjectiveNews = Extract<LiveEvent, { type: 'objective.news' }>;
@@ -24,7 +24,7 @@ const MESSAGE_KEYS: Readonly<Record<ObjectiveNewsKind, string>> = {
 @Injectable({ providedIn: 'root' })
 export class ObjectiveNotificationsService {
   private readonly transloco = inject(TranslocoService);
-  private readonly appData = inject(PlanoDataStore);
+  private readonly settings = inject(ObjectiveSettingsStore);
   private readonly auth = inject(AuthService);
   private readonly userId = computed(() => this.auth.user()?.id ?? null);
 
@@ -49,7 +49,7 @@ export class ObjectiveNotificationsService {
   }
 
   private receive({ kind, title, actor }: ObjectiveNews): void {
-    if (!this.appData.data().objectives.settings.notifications) return;
+    if (!this.settings.settings().notifications) return;
     this.message.set(this.transloco.translate(MESSAGE_KEYS[kind], { name: actor, title }));
   }
 

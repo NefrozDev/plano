@@ -1,9 +1,11 @@
-import { provideHttpClient } from '@angular/common/http';
+import { HttpInterceptorFn, HttpResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { EnvironmentProviders, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Routes, provideRouter } from '@angular/router';
 import {
+  DEFAULT_AGENDA_USER_SETTINGS,
+  DEFAULT_OBJECTIVE_USER_SETTINGS,
   createMockPlanoData,
   type AgendaEvent,
   type AgendaEventView,
@@ -12,20 +14,32 @@ import {
   type ObjectiveAgendaItem,
 } from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../core/data/plano-data.adapter';
+import { of } from 'rxjs';
 import { APP_CLOCK } from '../core/time/dates';
 import { AgendaStore } from '../features/agenda/agenda.store';
 
 /** "Today" for every spec: Thursday 15 October 2026, 10:30, matching the seed data. */
 export const TEST_TODAY = new Date(2026, 9, 15, 10, 30);
 
+export interface PlanoTestingOptions {
+  /**
+   * The agenda and objectives settings are answered in memory, as the API
+   * would (see fakeSettingsApi). False leaves their requests to the spec.
+   */
+  settingsApi?: boolean;
+}
+
 /**
  * Fresh in-memory seed data, a frozen clock, a router and a fake HTTP backend:
  * specs never touch localStorage or a server (flush API calls with HttpTestingController).
  */
-export function providePlanoTesting(routes: Routes = []): (Provider | EnvironmentProviders)[] {
+export function providePlanoTesting(
+  routes: Routes = [],
+  { settingsApi = true }: PlanoTestingOptions = {},
+): (Provider | EnvironmentProviders)[] {
   return [
     provideRouter(routes),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors(settingsApi ? [fakeSettingsApi()] : [])),
     provideHttpClientTesting(),
     { provide: APP_CLOCK, useValue: () => new Date(TEST_TODAY) },
     provideSeedData(),
@@ -48,6 +62,24 @@ export function provideSeedData(): Provider {
         agenda: { ...data.agenda, events: [] },
       });
     },
+  };
+}
+
+/**
+ * The settings resources, answered from memory and changed by PATCH as the API
+ * does, so every screen reads its settings without each spec flushing them.
+ * Read what a spec saved from the settings stores.
+ */
+function fakeSettingsApi(): HttpInterceptorFn {
+  const stored: Record<string, object> = {
+    '/api/v1/settings/agenda': structuredClone(DEFAULT_AGENDA_USER_SETTINGS),
+    '/api/v1/settings/objectives': structuredClone(DEFAULT_OBJECTIVE_USER_SETTINGS),
+  };
+  return (request, next) => {
+    const current = stored[request.url];
+    if (!current) return next(request);
+    if (request.method === 'PATCH') stored[request.url] = { ...current, ...(request.body as object) };
+    return of(new HttpResponse({ status: 200, body: structuredClone(stored[request.url]) }));
   };
 }
 

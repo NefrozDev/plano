@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type {
   CreateListRequest,
@@ -15,6 +15,7 @@ import type {
   ObjectiveStatus,
   ObjectiveSummary,
   ObjectiveTemplateSummary,
+  ObjectiveUserSettings,
   ObjectivesData,
   UpdateObjectivePreferencesRequest,
   UpdateObjectiveRequest,
@@ -23,6 +24,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
+import { ObjectiveSettingsStore } from '../../core/settings/objective-settings.store';
 import { httpErrorMessage } from '../../core/http/http-error-message';
 import { LiveUpdatesService } from '../../core/live/live-updates.service';
 import { APP_CLOCK, compareDueDates, normalizeText, toIsoDate } from '../../core/time/dates';
@@ -53,8 +55,8 @@ export const REMOVED_MESSAGE = 'Cet objectif a été supprimé ou ne vous est pl
 
 /**
  * Client state of the objectives feature, backed by the objectives API: every
- * change comes back as the objective's new state, computed by the server. Only
- * the display settings and recent searches stay in this browser. Failures are
+ * change comes back as the objective's new state, computed by the server; the
+ * display settings follow the account (`ObjectiveSettingsStore`). Failures are
  * exposed as `error` for the screens to display.
  */
 @Injectable({ providedIn: 'root' })
@@ -63,6 +65,8 @@ export class ObjectivesStore {
   private readonly appData = inject(PlanoDataStore);
   private readonly auth = inject(AuthService);
   private readonly clock = inject(APP_CLOCK);
+  private readonly preferences = inject(ObjectiveSettingsStore);
+  /** What this browser held before objectives moved to the API, until imported. */
   private readonly data = computed(() => this.appData.data().objectives);
 
   private readonly objectivesState = signal<readonly ObjectiveSummary[]>([]);
@@ -92,10 +96,10 @@ export class ObjectivesStore {
   readonly loading = signal(false);
   /** Message of the last failed request, until cleared. */
   readonly error = signal('');
-  readonly settings = computed(() => this.data().settings);
+  readonly settings: Signal<ObjectiveUserSettings> = this.preferences.settings;
   readonly currentUserId = computed(() => this.auth.user()?.id ?? '');
   readonly recent = computed(() =>
-    this.data()
+    this.settings()
       .recentIds.map((id) => this.find(id))
       .filter((objective): objective is ObjectiveSummary => !!objective),
   );
@@ -123,7 +127,10 @@ export class ObjectivesStore {
     this.listRequested = true;
     this.loading.set(true);
     if (this.data().items.length) await this.importLocal();
-    await this.run(this.api.findAll(), (objectives) => this.objectivesState.set(objectives));
+    await Promise.all([
+      this.run(this.api.findAll(), (objectives) => this.objectivesState.set(objectives)),
+      this.preferences.load(),
+    ]);
     this.loading.set(false);
   }
 
@@ -251,8 +258,11 @@ export class ObjectivesStore {
       if (this.detailState()?.id === id) this.detailState.set(null);
       this.objectivesState.update((items) => items.filter((objective) => objective.id !== id));
     });
+    const recentIds = this.settings().recentIds;
+    if (removed && recentIds.includes(id)) {
+      this.preferences.update({ recentIds: recentIds.filter((recentId) => recentId !== id) });
+    }
     if (removed) {
-      this.updateData((data) => ({ ...data, recentIds: data.recentIds.filter((recentId) => recentId !== id) }));
       if (parentId) await this.apply(this.api.findOne(parentId));
     }
     return removed;
@@ -364,15 +374,15 @@ export class ObjectivesStore {
 
   /** Remembers a top-level objective for the search screen. */
   markViewed(id: string): void {
-    if (this.data().recentIds[0] === id) return;
-    this.updateData((data) => ({
-      ...data,
-      recentIds: [id, ...data.recentIds.filter((recentId) => recentId !== id)].slice(0, MAX_RECENT),
-    }));
+    const recentIds = this.settings().recentIds;
+    if (recentIds[0] === id) return;
+    this.preferences.update({
+      recentIds: [id, ...recentIds.filter((recentId) => recentId !== id)].slice(0, MAX_RECENT),
+    });
   }
 
   updateSettings(changes: Partial<ObjectiveSettings>): void {
-    this.updateData((data) => ({ ...data, settings: { ...data.settings, ...changes } }));
+    this.preferences.update(changes);
   }
 
   resetFilters(): void {
