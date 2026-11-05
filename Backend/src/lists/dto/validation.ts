@@ -21,6 +21,8 @@ export function sentFields<T extends object>(dto: T): Partial<T> {
   ) as Partial<T>;
 }
 
+/** Items a settings resource remembers as recently opened. */
+export const MAX_RECENT_IDS = 10;
 export const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 export const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 /** A `Record`, so a new `ListIcon` cannot be forgotten here: the API would refuse it. */

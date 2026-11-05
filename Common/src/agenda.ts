@@ -1,9 +1,10 @@
-import type { AgendaEvent } from './models';
+import type { AgendaEvent, AgendaFilters, AgendaSettings } from './models';
 
 /**
  * REST contract of the agenda API (`/api/v1/agenda/events`). The organiser
  * invites contacts; each guest accepts or declines, and both sides are told.
- * Calendars, settings and filters stay in the browser.
+ * The calendars are built in; their colours, the settings and the filters
+ * follow the account (`/api/v1/settings/agenda`).
  */
 
 /** A guest's answer. The organiser is always `accepted`. */
@@ -56,3 +57,13 @@ export interface ImportAgendaEventsRequest {
 export interface ImportAgendaEventsResponse {
   imported: number;
 }
+
+/** What the agenda screens remember for a person, on every device (`/api/v1/settings/agenda`). */
+export interface AgendaUserSettings extends AgendaSettings, AgendaFilters {
+  /** Colour chosen for a built-in calendar, by its id; the others keep their own. */
+  calendarColors: Record<string, string>;
+  /** Events opened lately, most recent first. */
+  recentIds: string[];
+}
+
+export type UpdateAgendaUserSettingsRequest = Partial<AgendaUserSettings>;

@@ -14,6 +14,7 @@ import { AddObjectiveRecurrenceAndTemplates1787900000000 } from './1787900000000
 import { CreateNotifications1787980000000 } from './1787980000000-create-notifications';
 import { AddListObjective1788060000000 } from './1788060000000-add-list-objective';
 import { CreateAgendaEvents1788140000000 } from './1788140000000-create-agenda-events';
+import { CreateAccountSettings1788220000000 } from './1788220000000-create-account-settings';
 
 /** Every migration, oldest first; shared by the app and the in-memory test database. */
 export const MIGRATIONS = [
@@ -33,4 +34,5 @@ export const MIGRATIONS = [
   CreateNotifications1787980000000,
   AddListObjective1788060000000,
   CreateAgendaEvents1788140000000,
+  CreateAccountSettings1788220000000,
 ];

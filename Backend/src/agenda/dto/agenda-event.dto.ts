@@ -45,7 +45,7 @@ const RECURRENCES = Object.keys(KNOWN_RECURRENCES) as EventRecurrence[];
 export const MAX_GUESTS = 50;
 const MAX_ATTACHMENTS = 5;
 /** Four weeks before the start. */
-const MAX_REMINDER_MINUTES = 40_320;
+export const MAX_REMINDER_MINUTES = 40_320;
 
 class AgendaAttachmentDto implements AgendaAttachment {
   @IsString()

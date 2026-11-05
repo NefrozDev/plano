@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
 import { AgendaEvent } from '../../agenda/entities/agenda-event.entity';
 import { AgendaGuest } from '../../agenda/entities/agenda-guest.entity';
+import { AgendaSettings } from '../../agenda/entities/agenda-settings.entity';
 import { Session } from '../../auth/session.entity';
 import { Friendship } from '../../friends/friendship.entity';
 import { GroupMembership } from '../../groups/group-membership.entity';
@@ -21,6 +22,7 @@ import { ObjectivePeriod } from '../../objectives/entities/objective-period.enti
 import { ObjectiveTemplate } from '../../objectives/entities/objective-template.entity';
 import { ObjectivePreference } from '../../objectives/entities/objective-preference.entity';
 import { ObjectiveSession } from '../../objectives/entities/objective-session.entity';
+import { ObjectiveSettings } from '../../objectives/entities/objective-settings.entity';
 import { Objective } from '../../objectives/entities/objective.entity';
 import { Notification } from '../../notifications/notification.entity';
 import { User } from '../../users/user.entity';
@@ -41,6 +43,7 @@ export const ENTITIES = [
   PasswordReset,
   Objective,
   ObjectiveSession,
+  ObjectiveSettings,
   ObjectiveCheckInRow,
   ObjectivePreference,
   ObjectiveMember,
@@ -51,6 +54,7 @@ export const ENTITIES = [
   Notification,
   AgendaEvent,
   AgendaGuest,
+  AgendaSettings,
 ];
 
 export interface TestDatabase {

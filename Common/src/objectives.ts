@@ -9,6 +9,7 @@ import type {
   IsoDate,
   ObjectiveCategory,
   ObjectiveReminder,
+  ObjectiveSettings,
   ObjectiveSessionStatus,
   ObjectiveStatus,
 } from './models';
@@ -391,3 +392,11 @@ export interface UseObjectiveTemplateRequest {
 export interface RemoveObjectiveQuery {
   deleteLists?: 'true' | 'false';
 }
+
+/** What the objectives screens remember for a person, on every device (`/api/v1/settings/objectives`). */
+export interface ObjectiveUserSettings extends ObjectiveSettings {
+  /** Objectives opened lately, most recent first. */
+  recentIds: string[];
+}
+
+export type UpdateObjectiveUserSettingsRequest = Partial<ObjectiveUserSettings>;

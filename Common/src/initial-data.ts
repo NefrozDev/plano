@@ -1,4 +1,6 @@
+import type { AgendaUserSettings } from './agenda';
 import type { AgendaData, ObjectivesData, PlanoData } from './models';
+import type { ObjectiveUserSettings } from './objectives';
 
 /** Preferences a new account starts with; the mock data shares them. */
 export const DEFAULT_OBJECTIVE_SETTINGS: ObjectivesData['settings'] = {
@@ -20,6 +22,26 @@ export const DEFAULT_AGENDA_SETTINGS: AgendaData['settings'] = {
   invitationNotifications: true,
   showWeekNumbers: false,
   hourFormat: '24h',
+};
+
+export const DEFAULT_AGENDA_FILTERS: AgendaData['filters'] = {
+  hiddenCalendarIds: [],
+  showEvents: true,
+  showTasks: true,
+  showPastEvents: true,
+};
+
+/** What the API answers for an account that never changed its settings (see the migrations' defaults). */
+export const DEFAULT_AGENDA_USER_SETTINGS: AgendaUserSettings = {
+  ...DEFAULT_AGENDA_SETTINGS,
+  ...DEFAULT_AGENDA_FILTERS,
+  calendarColors: {},
+  recentIds: [],
+};
+
+export const DEFAULT_OBJECTIVE_USER_SETTINGS: ObjectiveUserSettings = {
+  ...DEFAULT_OBJECTIVE_SETTINGS,
+  recentIds: [],
 };
 
 /** Built-in calendars events are filed under; the event form needs at least one. */
@@ -48,7 +70,7 @@ export function createEmptyPlanoData(): PlanoData {
       contacts: [],
       events: [],
       settings: DEFAULT_AGENDA_SETTINGS,
-      filters: { hiddenCalendarIds: [], showEvents: true, showTasks: true, showPastEvents: true },
+      filters: DEFAULT_AGENDA_FILTERS,
       recentIds: [],
     },
   });

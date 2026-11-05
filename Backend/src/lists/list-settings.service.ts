@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import type { ListSettings as ListSettingsResponse } from '@plano/common';
-import { DataSource, EntityManager } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
+import { ensureUserSettings } from '../database/user-settings';
 import type { UpdateListSettingsDto } from './dto/member-settings.dto';
 import { sentFields } from './dto/validation';
 import { ListSettings } from './entities/list-settings.entity';
@@ -16,7 +17,9 @@ export class ListSettingsService {
 
   find(userId: string): Promise<ListSettingsResponse> {
     return this.writeLock.runExclusive(async () =>
-      toResponse(await this.ensure(this.dataSource.manager, userId)),
+      toResponse(
+        await ensureUserSettings(this.dataSource.manager, ListSettings, userId),
+      ),
     );
   }
 
@@ -26,28 +29,10 @@ export class ListSettingsService {
   ): Promise<ListSettingsResponse> {
     return this.writeLock.runExclusive(async () => {
       const manager = this.dataSource.manager;
-      const settings = await this.ensure(manager, userId);
+      const settings = await ensureUserSettings(manager, ListSettings, userId);
       Object.assign(settings, sentFields(changes));
       return toResponse(await manager.save(settings));
     });
-  }
-
-  /**
-   * The row is created on first use, so the defaults live in one place: the
-   * column defaults of the migration.
-   */
-  private async ensure(
-    manager: EntityManager,
-    userId: string,
-  ): Promise<ListSettings> {
-    await manager
-      .createQueryBuilder()
-      .insert()
-      .into(ListSettings)
-      .values({ userId })
-      .orIgnore()
-      .execute();
-    return manager.findOneByOrFail(ListSettings, { userId });
   }
 }
 

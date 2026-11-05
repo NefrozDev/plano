@@ -14,6 +14,7 @@ import { ObjectivePeriod } from './entities/objective-period.entity';
 import { ObjectivePreference } from './entities/objective-preference.entity';
 import { ObjectiveTemplate } from './entities/objective-template.entity';
 import { ObjectiveSession } from './entities/objective-session.entity';
+import { ObjectiveSettings } from './entities/objective-settings.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveActivityService } from './objective-activity.service';
@@ -24,6 +25,8 @@ import { ObjectiveListsService } from './objective-lists.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { ObjectiveRecurrenceService } from './objective-recurrence.service';
+import { ObjectiveSettingsController } from './objective-settings.controller';
+import { ObjectiveSettingsService } from './objective-settings.service';
 import { ObjectiveTemplatesService } from './objective-templates.service';
 import { ObjectiveTrackingService } from './objective-tracking.service';
 import { ObjectiveViewService } from './objective-view.service';
@@ -31,7 +34,7 @@ import { ObjectiveWriterService } from './objective-writer.service';
 import { ObjectivesController } from './objectives.controller';
 import { ObjectivesService } from './objectives.service';
 
-/** Objectives as trees of sub-objectives, with their progress. */
+/** Objectives as trees of sub-objectives, with their progress, and each person's objectives settings. */
 @Module({
   imports: [
     AuthModule,
@@ -50,9 +53,10 @@ import { ObjectivesService } from './objectives.service';
       ObjectiveComment,
       ObjectivePeriod,
       ObjectiveTemplate,
+      ObjectiveSettings,
     ]),
   ],
-  controllers: [ObjectivesController],
+  controllers: [ObjectivesController, ObjectiveSettingsController],
   providers: [
     ObjectiveAccessService,
     ObjectiveChangesService,
@@ -68,6 +72,7 @@ import { ObjectivesService } from './objectives.service';
     ObjectiveRecurrenceService,
     ObjectiveTemplatesService,
     ObjectiveListsService,
+    ObjectiveSettingsService,
   ],
 })
 export class ObjectivesModule {}
