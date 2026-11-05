@@ -54,6 +54,26 @@
   }
 </div>
 
+@if (invitations().length) {
+  <section class="invitations" aria-labelledby="invitations-heading">
+    <h2 id="invitations-heading">Invitations en attente ({{ invitations().length }})</h2>
+    <ul>
+      @for (invitation of invitations(); track invitation.event.id) {
+        <li>
+          <a [routerLink]="['/agenda/events', invitation.event.id]" [queryParams]="{ date: invitation.date }">
+            <app-user-avatar [user]="invitation.organiser" [size]="30" />
+            <span>
+              <strong>{{ invitation.event.title }}</strong>
+              <small>{{ invitation.organiser.name }} · {{ invitation.caption }}</small>
+            </span>
+            <em>Répondre</em>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
 <div class="view-body" [class.week]="view() === 'week'">
   @switch (view()) {
     @case ('day') {

@@ -8,7 +8,7 @@ import { AuthUser } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { APP_CLOCK } from '../../core/time/dates';
 import { AgendaStore } from '../agenda/agenda.store';
-import { TEST_TODAY, flushListReminders, provideSeedData, settle } from '../../testing/plano-testing';
+import { TEST_TODAY, flushAgendaEvents, flushListReminders, provideSeedData, settle } from '../../testing/plano-testing';
 import { objectiveSummary } from '../objectives/testing/objectives-fixtures';
 import { DashboardComponent } from './dashboard.component';
 
@@ -58,10 +58,10 @@ describe('DashboardComponent', () => {
   });
 
   it('renders the French landing page for the restored user', () => {
-    const loadTasks = vi.spyOn(TestBed.inject(AgendaStore), 'loadTasks');
+    const load = vi.spyOn(TestBed.inject(AgendaStore), 'load');
     const fixture = TestBed.createComponent(DashboardComponent);
-    // The week dots need the dated list tasks: loaded once on creation.
-    expect(loadTasks).toHaveBeenCalledTimes(1);
+    // The week dots need the events and the dated list tasks: loaded once on creation.
+    expect(load).toHaveBeenCalledTimes(1);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('h1')?.textContent).toContain('Bonjour Ada');
@@ -214,6 +214,7 @@ describe('DashboardComponent', () => {
 
   it('has no agenda preview, but marks the week days that have agenda items', async () => {
     const fixture = TestBed.createComponent(DashboardComponent);
+    flushAgendaEvents();
     flushListReminders();
     await settle();
     fixture.detectChanges();

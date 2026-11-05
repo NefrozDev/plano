@@ -197,7 +197,7 @@ describe('NotificationsStore', () => {
       commands: ['/settings'],
       fragment: 'friends',
     });
-    expect(notificationLink(notification({ area: 'agenda', targetId: 'e' }))).toEqual({ commands: ['/agenda'] });
+    expect(notificationLink(notification({ area: 'agenda', targetId: 'e' }))).toEqual({ commands: ['/agenda/events', 'e'] });
   });
 
   describe('while a screen is open', () => {

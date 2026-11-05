@@ -20,6 +20,9 @@ const MESSAGE_KEYS: Readonly<Record<NotificationKind, { one: string; many?: stri
   },
   'objective.completed': { one: 'notifications.objectiveCompleted' },
   'objective.comment': { one: 'notifications.objectiveComment', many: 'notifications.items.commentMany' },
+  'agenda.invited': { one: 'notifications.items.agendaInvited' },
+  'agenda.accepted': { one: 'notifications.items.agendaAccepted', many: 'notifications.items.agendaAcceptedMany' },
+  'agenda.declined': { one: 'notifications.items.agendaDeclined', many: 'notifications.items.agendaDeclinedMany' },
 };
 
 const MINUTE = 60_000;

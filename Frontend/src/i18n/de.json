@@ -79,7 +79,12 @@
       "listEntries": "{{name}} hat einen Eintrag zu „{{title}}“ hinzugefügt.",
       "listEntriesMany": "{{count}} Einträge zu „{{title}}“ hinzugefügt, der letzte von {{name}}.",
       "contributionMany": "{{count}} Beiträge zu „{{title}}“, der letzte von {{name}}.",
-      "commentMany": "{{count}} Kommentare zu „{{title}}“, der letzte von {{name}}."
+      "commentMany": "{{count}} Kommentare zu „{{title}}“, der letzte von {{name}}.",
+      "agendaInvited": "{{name}} hat dich zu „{{title}}“ eingeladen.",
+      "agendaAccepted": "{{name}} nimmt an „{{title}}“ teil.",
+      "agendaAcceptedMany": "{{count}} Personen nehmen an „{{title}}“ teil, zuletzt {{name}}.",
+      "agendaDeclined": "{{name}} hat „{{title}}“ abgesagt.",
+      "agendaDeclinedMany": "{{count}} Personen haben „{{title}}“ abgesagt, zuletzt {{name}}."
     }
   },
   "friends": {

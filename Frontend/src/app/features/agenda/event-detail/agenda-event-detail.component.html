@@ -25,11 +25,10 @@
           {{ d.event.location }}
         </li>
       }
-      @if (d.people.length) {
-        <li>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-4 3-6 6.5-6s6.5 2 6.5 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.5.5 4 2.5 4 6" /></svg>
-          <span>Avec</span>
-          <app-avatar-stack [people]="d.people" />
+      @if (!d.event.mine) {
+        <li class="organiser">
+          <app-user-avatar [user]="d.organiser" [size]="22" />
+          Organisé par {{ d.organiser.name }}
         </li>
       }
       @if (d.event.conferenceUrl) {
@@ -39,6 +38,46 @@
         </li>
       }
     </ul>
+
+    @if (!d.event.mine) {
+      <section class="answer" [class.pending]="d.event.status === 'pending'" aria-live="polite">
+        @switch (d.event.status) {
+          @case ('pending') {
+            <p>{{ d.organiser.name }} vous invite à cet événement.</p>
+            <div class="answer-actions">
+              <button class="decline" type="button" [disabled]="busy()" (click)="respond('declined')">Refuser</button>
+              <button class="accept" type="button" [disabled]="busy()" (click)="respond('accepted')">Accepter</button>
+            </div>
+          }
+          @case ('accepted') {
+            <p>Vous participez à cet événement.</p>
+            <button class="link" type="button" [disabled]="busy()" (click)="respond('declined')">Ne plus participer</button>
+          }
+          @case ('declined') {
+            <p>Vous avez refusé cette invitation.</p>
+            <button class="link" type="button" [disabled]="busy()" (click)="respond('accepted')">Participer finalement</button>
+          }
+        }
+      </section>
+    }
+    @if (store.error()) {
+      <p class="error" role="alert">{{ store.error() }}</p>
+    }
+
+    @if (d.people.length) {
+      <section class="block">
+        <h3>Participants</h3>
+        <ul class="people">
+          @for (entry of d.people; track entry.person.id) {
+            <li [class.declined]="entry.declined">
+              <app-user-avatar [user]="entry.person" [size]="28" />
+              <span>{{ entry.person.name }}</span>
+              <small>{{ entry.status }}</small>
+            </li>
+          }
+        </ul>
+      </section>
+    }
 
     @if (d.event.description) {
       <p class="text">{{ d.event.description }}</p>
@@ -61,15 +100,20 @@
     }
 
     <dl class="rows">
-      <div><dt>Rappel</dt><dd>{{ d.reminder }}</dd></div>
-      <div><dt>Calendrier</dt><dd><i [style.background]="d.calendarColor" aria-hidden="true"></i>{{ d.calendarName }}</dd></div>
+      <!-- A guest's own reminder and calendar: set when they accept. -->
+      @if (d.event.status === 'accepted') {
+        <div><dt>Rappel</dt><dd>{{ d.reminder }}</dd></div>
+        <div><dt>Calendrier</dt><dd><i [style.background]="d.calendarColor" aria-hidden="true"></i>{{ d.calendarName }}</dd></div>
+      }
       <div><dt>Récurrence</dt><dd>{{ d.recurrence }}</dd></div>
     </dl>
 
-    <div class="actions">
-      <a class="primary-button" [routerLink]="['/agenda/events', d.event.id, 'edit']">Modifier</a>
-      <button class="delete" type="button" (click)="deleteOpen.set(true)">Supprimer</button>
-    </div>
+    @if (d.event.mine) {
+      <div class="actions">
+        <a class="primary-button" [routerLink]="['/agenda/events', d.event.id, 'edit']">Modifier</a>
+        <button class="delete" type="button" (click)="deleteOpen.set(true)">Supprimer</button>
+      </div>
+    }
   </div>
 
   <app-modal-dialog heading="Supprimer l’événement" tone="danger" [open]="deleteOpen()" (closed)="deleteOpen.set(false)">
@@ -79,13 +123,16 @@
       @if (d.event.recurrence !== 'none') {
         Toutes les occurrences de cet événement récurrent seront supprimées.
       }
+      @if (d.event.attendees.length) {
+        Il disparaîtra aussi de l’agenda des participants.
+      }
     </p>
     <div class="dialog-actions">
       <button class="cancel" type="button" (click)="deleteOpen.set(false)">Annuler</button>
-      <button class="confirm" type="button" (click)="remove()">Supprimer</button>
+      <button class="confirm" type="button" [disabled]="busy()" (click)="remove()">Supprimer</button>
     </div>
   </app-modal-dialog>
-} @else {
+} @else if (searched()) {
   <p class="missing">
     Cet événement n’existe pas ou a été supprimé.
     <a routerLink="/agenda">Retour à l’agenda</a>

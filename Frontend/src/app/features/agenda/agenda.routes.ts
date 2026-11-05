@@ -1,10 +1,14 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 import { MobileShellLayoutComponent } from '../../shared/ui/mobile-shell-layout.component';
+import { AgendaStore } from './agenda.store';
 
 export const AGENDA_ROUTES: Routes = [
   {
     path: '',
     component: MobileShellLayoutComponent,
+    // Screens read events at once (an edit form fills itself from its event): load them first.
+    resolve: { events: () => inject(AgendaStore).enter() },
     children: [
       {
         path: '',

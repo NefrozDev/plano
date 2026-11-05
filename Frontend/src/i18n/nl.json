@@ -79,7 +79,12 @@
       "listEntries": "{{name}} heeft een item toegevoegd aan “{{title}}”.",
       "listEntriesMany": "{{count}} items toegevoegd aan “{{title}}”, het laatste door {{name}}.",
       "contributionMany": "{{count}} bijdragen aan “{{title}}”, de laatste van {{name}}.",
-      "commentMany": "{{count}} reacties op “{{title}}”, de laatste van {{name}}."
+      "commentMany": "{{count}} reacties op “{{title}}”, de laatste van {{name}}.",
+      "agendaInvited": "{{name}} nodigt je uit voor “{{title}}”.",
+      "agendaAccepted": "{{name}} komt naar “{{title}}”.",
+      "agendaAcceptedMany": "{{count}} mensen komen naar “{{title}}”, als laatste {{name}}.",
+      "agendaDeclined": "{{name}} heeft “{{title}}” afgeslagen.",
+      "agendaDeclinedMany": "{{count}} mensen hebben “{{title}}” afgeslagen, als laatste {{name}}."
     }
   },
   "friends": {

@@ -6,7 +6,7 @@
   variant="close"
 >
   @if (!missing) {
-    <button class="save" type="submit" form="event-form" aria-label="Enregistrer l’événement">
+    <button class="save" type="submit" form="event-form" aria-label="Enregistrer l’événement" [disabled]="saving()">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
     </button>
   }
@@ -16,6 +16,9 @@
   <p class="missing">Cet événement n’existe plus.</p>
 } @else {
   <form id="event-form" class="body" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    @if (store.error()) {
+      <p class="field-error" role="alert">{{ store.error() }}</p>
+    }
     @if (step() === 1) {
       <label class="field">
         <span>Titre</span>
@@ -92,6 +95,9 @@
           <span class="value">Inviter des personnes ›</span>
         }
       </button>
+      @if (newGuests()) {
+        <p class="hint">Chaque nouveau participant reçoit une invitation à accepter.</p>
+      }
       <label class="field">
         <span>Description</span>
         <textarea class="form-control" rows="3" formControlName="description" maxlength="500" placeholder="Ajouter une description"></textarea>

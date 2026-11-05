@@ -1,6 +1,8 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type {
   AgendaContact,
+  AgendaEventView,
   Contact,
   AgendaData,
   AgendaEvent,
@@ -8,15 +10,20 @@ import type {
   AgendaSettings,
   IsoDate,
   LocalDateTime,
+  SaveAgendaEventRequest,
 } from '@plano/common';
-import { firstValueFrom } from 'rxjs';
+import { Observable, filter, firstValueFrom } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
 import { FriendsService } from '../../core/friends/friends.service';
-import { initialsOf, personColor } from '../../core/people/people';
-import { APP_CLOCK, createId, normalizeText, toIsoDate, toTimeOfDay } from '../../core/time/dates';
+import { httpErrorMessage } from '../../core/http/http-error-message';
+import { LiveUpdatesService } from '../../core/live/live-updates.service';
+import { initialsOf, personColor, toPerson } from '../../core/people/people';
+import { APP_CLOCK, normalizeText, toIsoDate, toTimeOfDay } from '../../core/time/dates';
 import { ListsStore } from '../lists/lists.store';
-import { categoryMeta } from '../objectives/objective.utils';
+import { categoryMeta, importBatches } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
+import { AgendaApiService } from './agenda-api.service';
 import {
   AgendaItem,
   EVENT_COLORS,
@@ -27,6 +34,7 @@ import {
   minutesBetween,
   nextOccurrence,
   occurrencesBetween,
+  toImportRequest,
   toLocalDateTime,
 } from './agenda.utils';
 
@@ -52,6 +60,13 @@ export const DEFAULT_AGENDA_FILTERS: AgendaFilters = {
 };
 
 const MAX_RECENT = 5;
+/** The API takes at most this many events per import request. */
+const IMPORT_BATCH_EVENTS = 200;
+
+/** An organiser or guest as the agenda screens show participants. */
+function toEventContact(person: Pick<AgendaContact, 'id' | 'name' | 'avatarVersion'>): AgendaContact {
+  return { ...toPerson(person), frequent: false };
+}
 
 @Injectable({ providedIn: 'root' })
 export class AgendaStore {
@@ -60,15 +75,43 @@ export class AgendaStore {
   private readonly lists = inject(ListsStore);
   private readonly objectives = inject(ObjectivesStore);
   private readonly friends = inject(FriendsService);
+  private readonly api = inject(AgendaApiService);
+  private readonly auth = inject(AuthService);
   private readonly data = computed(() => this.appData.data().agenda);
   private readonly invitableState = signal<readonly Contact[]>([]);
+  private readonly userId = computed(() => this.auth.user()?.id ?? null);
+  /** What the API sent, and for whom: another account starts empty. */
+  private readonly served = signal<{ userId: string | null; events: readonly AgendaEventView[] } | null>(null);
+  private readonly all = computed(() => {
+    const served = this.served();
+    return served && served.userId === this.userId() ? served.events : [];
+  });
+  private loading: Promise<void> | null = null;
+  private importing: Promise<void> | null = null;
+  /** A screen asked for the events, so live changes refresh them. */
+  private requested = false;
 
   readonly calendars = computed(() => this.data().calendars);
   /** Contacts of the seed data, still shown on the events that mention them. */
   readonly contacts = computed(() => this.data().contacts);
   /** Who can be invited: the user's friends and group mates, from the API (see loadContacts). */
   readonly invitable = this.invitableState.asReadonly();
-  readonly events = computed(() => this.data().events);
+  /** What the agenda shows: the user's own events and the invitations they accepted. */
+  readonly events = computed(() => this.all().filter((event) => event.status === 'accepted'));
+  /** Invitations waiting for an answer, soonest first. */
+  readonly invitations = computed(() => this.all().filter((event) => event.status === 'pending'));
+  /** Message of the last failed change, until the next one succeeds. */
+  readonly error = signal('');
+  /** Organisers and guests of the events, so they show by name even when they are no contact. */
+  private readonly people = computed(() => {
+    const people = new Map<string, AgendaContact>();
+    for (const event of this.all()) {
+      for (const person of [event.owner, ...event.attendees]) {
+        if (!people.has(person.id)) people.set(person.id, toEventContact(person));
+      }
+    }
+    return people;
+  });
   readonly settings = computed(() => this.data().settings);
   readonly filters = computed(() => this.data().filters);
   readonly activeFilterCount = computed(() => {
@@ -83,13 +126,60 @@ export class AgendaStore {
   readonly recent = computed(() =>
     this.data()
       .recentIds.map((id) => this.event(id))
-      .filter((event): event is AgendaEvent => !!event),
+      .filter((event): event is AgendaEventView => !!event),
   );
+
+  constructor() {
+    inject(LiveUpdatesService)
+      .events.pipe(
+        filter(({ type }) => type === 'agenda.changed'),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => {
+        if (this.requested) void this.refresh();
+      });
+  }
 
   /** Fetches the dated items of other features served by the API (reminders, objectives). */
   loadTasks(): void {
     void this.lists.loadReminders();
     void this.objectives.loadAgenda();
+  }
+
+  /** The events and the dated items of other features, for a screen outside the agenda. */
+  load(): Promise<void> {
+    this.loadTasks();
+    return this.refresh();
+  }
+
+  /** Entering the agenda: the first visit waits for the events, the next ones refresh them behind. */
+  enter(): Promise<void> {
+    if (!this.loaded()) return this.ensureLoaded();
+    void this.refresh();
+    return Promise.resolve();
+  }
+
+  /** Loads the events the first time only. */
+  ensureLoaded(): Promise<void> {
+    if (this.loaded()) return Promise.resolve();
+    this.loading ??= this.refresh().finally(() => (this.loading = null));
+    return this.loading;
+  }
+
+  private loaded(): boolean {
+    const served = this.served();
+    return !!served && served.userId === this.userId();
+  }
+
+  /** An event the agenda does not hold (a declined invitation opened from a link); false when hidden. */
+  async open(id: string): Promise<boolean> {
+    if (this.event(id)) return true;
+    try {
+      this.upsert(await firstValueFrom(this.api.findOne(id)));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   today(): IsoDate {
@@ -101,8 +191,9 @@ export class AgendaStore {
     return toLocalDateTime(toIsoDate(now), toTimeOfDay(now));
   }
 
-  event(id: string): AgendaEvent | undefined {
-    return this.events().find((event) => event.id === id);
+  /** Any event the user can open, invitations included. */
+  event(id: string): AgendaEventView | undefined {
+    return this.all().find((event) => event.id === id);
   }
 
   calendar(id: string) {
@@ -111,7 +202,8 @@ export class AgendaStore {
 
   contact(id: string): AgendaContact | undefined {
     const invitable = this.invitableState().find((contact) => contact.id === id);
-    return invitable ? toAgendaContact(invitable) : this.contacts().find((contact) => contact.id === id);
+    if (invitable) return toAgendaContact(invitable);
+    return this.people().get(id) ?? this.contacts().find((contact) => contact.id === id);
   }
 
   /** Refreshes who can be invited; false when the API could not answer. */
@@ -168,26 +260,45 @@ export class AgendaStore {
     return datePart(nextOccurrence(event, this.today())?.start ?? event.start);
   }
 
-  create(draft: AgendaEventDraft): AgendaEvent {
-    const event = this.normalized({ ...draft, id: createId('event') });
-    this.updateData((data) => ({ ...data, events: [...data.events, event] }));
-    return event;
+  create(draft: AgendaEventDraft): Promise<AgendaEventView | null> {
+    return this.save(this.api.create(this.normalized(draft)));
   }
 
-  update(id: string, draft: AgendaEventDraft): void {
-    this.updateData((data) => ({
-      ...data,
-      events: data.events.map((event) => (event.id === id ? this.normalized({ ...draft, id }) : event)),
-    }));
+  /** Organiser only: guests no longer listed lose it, new ones are invited. */
+  update(id: string, draft: AgendaEventDraft): Promise<AgendaEventView | null> {
+    return this.save(this.api.update(id, this.normalized(draft)));
   }
 
-  /** Deletes the event and, for recurring ones, the whole series. */
-  remove(id: string): void {
-    this.updateData((data) => ({
-      ...data,
-      events: data.events.filter((event) => event.id !== id),
-      recentIds: data.recentIds.filter((recentId) => recentId !== id),
-    }));
+  /** Deletes the event for everyone on it and, for recurring ones, the whole series. */
+  async remove(id: string): Promise<boolean> {
+    try {
+      await firstValueFrom(this.api.remove(id));
+    } catch (error) {
+      this.error.set(
+        httpErrorMessage(error, { fallback: 'La suppression a échoué. Réessayez.', useServerMessage: true }),
+      );
+      return false;
+    }
+    this.error.set('');
+    this.served.update(
+      (served) => served && { ...served, events: served.events.filter((event) => event.id !== id) },
+    );
+    this.forgetRecent(id);
+    return true;
+  }
+
+  /** A guest's answer. Accepting files the event in their first visible calendar, with their usual reminder. */
+  async respond(id: string, status: 'accepted' | 'declined'): Promise<boolean> {
+    const hidden = this.filters().hiddenCalendarIds;
+    const calendar =
+      this.calendars().find((candidate) => !hidden.includes(candidate.id)) ?? this.calendars()[0];
+    const answer =
+      status === 'accepted'
+        ? { status, calendarId: calendar?.id, reminderMinutes: this.settings().defaultReminderMinutes }
+        : { status };
+    const view = await this.save(this.api.respond(id, answer));
+    if (view && status === 'declined') this.forgetRecent(id);
+    return !!view;
   }
 
   markViewed(id: string): void {
@@ -226,10 +337,10 @@ export class AgendaStore {
     this.updateFilters(DEFAULT_AGENDA_FILTERS);
   }
 
-  /** Guarantees a positive duration; all-day events cover whole days. */
-  private normalized(draft: AgendaEvent): AgendaEvent {
-    // Only people from the contact list can be invited.
-    const event = { ...draft, participantIds: draft.participantIds.filter((id) => this.contact(id)) };
+  /** Guarantees a positive duration; all-day events cover whole days. Guests once each, never the user. */
+  private normalized(draft: AgendaEventDraft): SaveAgendaEventRequest {
+    const userId = this.userId();
+    const event = { ...draft, participantIds: [...new Set(draft.participantIds)].filter((id) => id !== userId) };
     const title = event.title.trim();
     if (event.allDay) {
       const lastDay = datePart(event.end) < datePart(event.start) ? datePart(event.start) : datePart(event.end);
@@ -314,6 +425,73 @@ export class AgendaStore {
       }));
 
     return [...listTasks, ...objectiveTasks];
+  }
+
+  private async refresh(): Promise<void> {
+    this.requested = true;
+    if (this.data().events.length) await this.importLocal();
+    const userId = this.userId();
+    try {
+      const events = await firstValueFrom(this.api.findAll());
+      this.served.set({ userId, events });
+    } catch {
+      // Offline: what is shown stays; the next visit or live event catches up.
+    }
+  }
+
+  private async save(request: Observable<AgendaEventView>): Promise<AgendaEventView | null> {
+    try {
+      const view = await firstValueFrom(request);
+      this.error.set('');
+      this.upsert(view);
+      return view;
+    } catch (error) {
+      this.error.set(
+        httpErrorMessage(error, { fallback: 'L’enregistrement a échoué. Réessayez.', useServerMessage: true }),
+      );
+      return null;
+    }
+  }
+
+  private upsert(view: AgendaEventView): void {
+    const userId = this.userId();
+    this.served.update((served) => {
+      const events = served && served.userId === userId ? served.events : [];
+      return {
+        userId,
+        events: events.some(({ id }) => id === view.id)
+          ? events.map((event) => (event.id === view.id ? view : event))
+          : [...events, view],
+      };
+    });
+  }
+
+  private forgetRecent(id: string): void {
+    if (!this.data().recentIds.includes(id)) return;
+    this.updateData((data) => ({ ...data, recentIds: data.recentIds.filter((recentId) => recentId !== id) }));
+  }
+
+  /**
+   * Sends what this browser still holds to the API, then forgets it. On failure
+   * it stays here and goes again on the next load. Runs once at a time.
+   */
+  private importLocal(): Promise<void> {
+    const { events } = this.data();
+    this.importing ??= (async () => {
+      try {
+        // Sending a batch twice is harmless: the API recognises what it already has.
+        for (const batch of importBatches(events.map(toImportRequest), IMPORT_BATCH_EVENTS)) {
+          await firstValueFrom(this.api.importLocal({ events: batch }));
+        }
+        // Their ids change on the way: the recent searches would point nowhere.
+        this.updateData((data) => ({ ...data, events: [], contacts: [], recentIds: [] }));
+      } catch {
+        // Nothing is lost: the events are still in this browser.
+      } finally {
+        this.importing = null;
+      }
+    })();
+    return this.importing;
   }
 
   private updateData(change: (data: AgendaData) => AgendaData): void {

@@ -10,18 +10,23 @@ export const EVENT_SOURCE_FACTORY = new InjectionToken<(url: string) => EventSou
   factory: () => (url) => new EventSource(url, { withCredentials: true }),
 });
 
-/** The named events the API sends; anything else (the heartbeat) is ignored. */
-const EVENT_TYPES: readonly LiveEvent['type'][] = [
-  'list.changed',
-  'list.removed',
-  'friend.requested',
-  'friend.accepted',
-  'friends.changed',
-  'objective.changed',
-  'objective.removed',
-  'objective.news',
-  'notifications.changed',
-];
+/**
+ * The named events the API sends; anything else (the heartbeat) is ignored. A
+ * `Record`, so a new kind of event cannot be forgotten here: it would never arrive.
+ */
+const KNOWN_EVENTS: Readonly<Record<LiveEvent['type'], true>> = {
+  'list.changed': true,
+  'list.removed': true,
+  'friend.requested': true,
+  'friend.accepted': true,
+  'friends.changed': true,
+  'objective.changed': true,
+  'objective.removed': true,
+  'objective.news': true,
+  'agenda.changed': true,
+  'notifications.changed': true,
+};
+const EVENT_TYPES = Object.keys(KNOWN_EVENTS) as LiveEvent['type'][];
 
 /**
  * One Server-Sent Events stream while signed in, closed on sign-out. The

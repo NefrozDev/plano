@@ -3,16 +3,26 @@ import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { providePlanoTesting, settle } from '../../../testing/plano-testing';
+import type { SaveAgendaEventRequest } from '@plano/common';
+import {
+  agendaView,
+  loadAgendaEvents,
+  providePlanoTesting,
+  seedAgendaEvents,
+  settle,
+} from '../../../testing/plano-testing';
 import { AGENDA_ROUTES } from '../agenda.routes';
 import { AgendaStore } from '../agenda.store';
 import { AgendaEventFormComponent } from './agenda-event-form.component';
 import { CONTACTS } from '../../../testing/contacts';
 
+const EVENTS_URL = '/api/v1/agenda/events';
+
 describe('AgendaEventFormComponent', () => {
   let harness: RouterTestingHarness;
   let store: AgendaStore;
   let navigate: Mock;
+  let http: HttpTestingController;
 
   const element = (): HTMLElement => harness.routeNativeElement as HTMLElement;
   const form = (): AgendaEventFormComponent =>
@@ -21,6 +31,15 @@ describe('AgendaEventFormComponent', () => {
   const submit = (): void => {
     (element().querySelector('#event-form') as HTMLFormElement).dispatchEvent(new Event('submit'));
     harness.detectChanges();
+  };
+  /** Answers the save the form sent, as the API echoes it, and lets the form go on. */
+  const answerSave = async (method: 'POST' | 'PUT', id: string): Promise<SaveAgendaEventRequest> => {
+    const request = http.expectOne((candidate) => candidate.method === method && candidate.url.startsWith(EVENTS_URL));
+    const body = request.request.body as SaveAgendaEventRequest;
+    request.flush(agendaView({ ...body, id }));
+    await settle();
+    harness.detectChanges();
+    return body;
   };
   const setInput = (selector: string, value: string, event = 'input'): void => {
     const input = element().querySelector(selector) as HTMLInputElement | HTMLSelectElement;
@@ -34,6 +53,8 @@ describe('AgendaEventFormComponent', () => {
       providers: providePlanoTesting([{ path: 'agenda', children: AGENDA_ROUTES }]),
     });
     store = TestBed.inject(AgendaStore);
+    http = TestBed.inject(HttpTestingController);
+    await loadAgendaEvents();
     harness = await RouterTestingHarness.create();
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   });
@@ -163,17 +184,22 @@ describe('AgendaEventFormComponent', () => {
       setInput('input[formcontrolname="endTime"]', '16:00');
       submit();
       expect(create).toHaveBeenCalledTimes(1);
-      // The form hands over the raw title; the store trims it (see `created` below).
+      // The form hands over the raw title; the store trims it before sending.
       expect(create).toHaveBeenCalledWith(
         expect.objectContaining({ title: '  Atelier ', start: '2026-10-20T14:00', end: '2026-10-20T16:00' }),
       );
       expect(update).not.toHaveBeenCalled();
-      const created = store.events().find((event) => event.title === 'Atelier');
-      expect(created).toEqual(
-        expect.objectContaining({ start: '2026-10-20T14:00', end: '2026-10-20T16:00' }),
-      );
+      // Saving: a second tap sends nothing more.
+      expect((element().querySelector('.save') as HTMLButtonElement).disabled).toBe(true);
+      submit();
+      expect(create).toHaveBeenCalledTimes(1);
+      expect(navigate).not.toHaveBeenCalled();
+
+      const sent = await answerSave('POST', 'atelier');
+      expect(sent).toEqual(expect.objectContaining({ title: 'Atelier', start: '2026-10-20T14:00', end: '2026-10-20T16:00' }));
+      expect(store.event('atelier')?.title).toBe('Atelier');
       expect(navigate).toHaveBeenCalledTimes(1);
-      expect(navigate).toHaveBeenCalledWith(['/agenda/events', created!.id], {
+      expect(navigate).toHaveBeenCalledWith(['/agenda/events', 'atelier'], {
         queryParams: { date: '2026-10-20' },
         replaceUrl: true,
       });
@@ -205,6 +231,7 @@ describe('AgendaEventFormComponent', () => {
 
       setInput('input[formcontrolname="endDate"]', '2026-11-03');
       submit();
+      await answerSave('POST', 'vacances');
       const saved = store.events().find((event) => event.title === 'Vacances');
       expect(saved).toEqual(
         expect.objectContaining({
@@ -239,6 +266,7 @@ describe('AgendaEventFormComponent', () => {
       harness.detectChanges();
       setInput('select[formcontrolname="visibility"]', 'private', 'change');
       submit();
+      await answerSave('POST', 'revue');
 
       expect(store.events().find((event) => event.title === 'Revue')).toEqual(
         expect.objectContaining({
@@ -306,6 +334,27 @@ describe('AgendaEventFormComponent', () => {
 
       expect(form().participantIds()).toEqual(['user-bob']);
       expect(element().querySelector('.participants-row .avatar')?.textContent?.trim()).toBe('BT');
+      expect(element().querySelector('.hint')?.textContent).toContain('invitation à accepter');
+
+      setInput('input[formcontrolname="title"]', 'Réunion');
+      submit();
+      expect((await answerSave('POST', 'reunion')).participantIds).toEqual(['user-bob']);
+    });
+
+    it('stays on the form with the reason when the API refuses', async () => {
+      await harness.navigateByUrl('/agenda/new?date=2026-10-20&time=14:00');
+      setInput('input[formcontrolname="title"]', 'Réunion');
+      submit();
+      http
+        .expectOne((request) => request.method === 'POST')
+        .flush({ message: 'Seuls vos contacts peuvent être invités.' }, { status: 400, statusText: 'Bad Request' });
+      await settle();
+      harness.detectChanges();
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(element().querySelector('[role="alert"]')?.textContent).toBe('Seuls vos contacts peuvent être invités.');
+      expect((element().querySelector('.save') as HTMLButtonElement).disabled).toBe(false);
+      expect(form().form.controls.title.value).toBe('Réunion');
     });
   });
 
@@ -327,11 +376,16 @@ describe('AgendaEventFormComponent', () => {
 
       const create = vi.spyOn(store, 'create');
       const update = vi.spyOn(store, 'update');
+      // No new guest: nothing to warn about.
+      expect(element().querySelector('.hint')).toBeNull();
       setInput('input[formcontrolname="location"]', 'Marché');
       submit();
       expect(update).toHaveBeenCalledTimes(1);
       expect(update).toHaveBeenCalledWith('courses', expect.objectContaining({ location: 'Marché' }));
       expect(create).not.toHaveBeenCalled();
+      const sent = await answerSave('PUT', 'courses');
+      // Its guests stay invited.
+      expect(sent.participantIds).toEqual(['alex']);
       expect(store.event('courses')?.location).toBe('Marché');
       expect(store.events().filter((event) => event.title === 'Courses').length).toBe(1);
       expect(navigate).toHaveBeenCalledTimes(1);
@@ -353,8 +407,25 @@ describe('AgendaEventFormComponent', () => {
 
       expect(element().querySelector('.missing')).not.toBeNull();
       expect(element().querySelector('.save')).toBeNull();
-      form().save();
+      await form().save();
       expect(navigate).not.toHaveBeenCalled();
+      http.expectNone((request) => request.method !== 'GET');
+    });
+
+    it('never lets a guest edit someone else’s event', async () => {
+      const opening = store.open('chez-bob');
+      http.expectOne(`${EVENTS_URL}/chez-bob`).flush(
+        agendaView(seedAgendaEvents()[0], {
+          id: 'chez-bob',
+          mine: false,
+          owner: { id: 'user-bob', name: 'Bob Test', avatarVersion: null },
+        }),
+      );
+      await opening;
+      await harness.navigateByUrl('/agenda/events/chez-bob/edit');
+
+      expect(element().querySelector('.missing')).not.toBeNull();
+      expect(element().querySelector('.save')).toBeNull();
     });
   });
 });

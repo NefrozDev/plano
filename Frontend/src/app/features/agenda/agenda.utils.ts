@@ -3,6 +3,7 @@ import type {
   AgendaEvent,
   AgendaSettings,
   EventRecurrence,
+  ImportAgendaEventRequest,
   IsoDate,
   LocalDateTime,
 } from '@plano/common';
@@ -258,4 +259,47 @@ export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} o`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
   return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
+}
+
+const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+const MAX_ATTACHMENTS = 5;
+
+/**
+ * An event as this browser stored it, in the shape the API accepts. Old data may
+ * hold values the API refuses (long texts, a broken link): they are made valid
+ * here, or one bad event would keep the others from ever being imported. Guests
+ * stay behind: they were never told about it.
+ */
+export function toImportRequest(event: AgendaEvent): ImportAgendaEventRequest {
+  const start = LOCAL_DATE_TIME.test(event.start) ? event.start : '2000-01-01T09:00';
+  const end = LOCAL_DATE_TIME.test(event.end) && event.end >= start ? event.end : start;
+  const text = (value: string | undefined, max: number) => (value ?? '').trim().slice(0, max);
+  const url = text(event.conferenceUrl, 300);
+  return {
+    localId: event.id.slice(0, 64),
+    title: text(event.title, 120) || 'Sans titre',
+    calendarId: text(event.calendarId, 40) || 'personnel',
+    allDay: !!event.allDay,
+    start,
+    end,
+    location: text(event.location, 120),
+    description: text(event.description, 500),
+    recurrence: event.recurrence in RECURRENCE_LABELS ? event.recurrence : 'none',
+    reminderMinutes:
+      Number.isInteger(event.reminderMinutes) && event.reminderMinutes! >= 0 && event.reminderMinutes! <= 40_320
+        ? event.reminderMinutes
+        : null,
+    color: event.color && HEX_COLOR.test(event.color) ? event.color : null,
+    conferenceUrl: url && isSafeUrl(url) ? url : '',
+    attachments: (event.attachments ?? []).slice(0, MAX_ATTACHMENTS).map((file) => ({
+      id: text(file.id, 40) || 'file',
+      name: text(file.name, 200) || 'fichier',
+      size: Number.isInteger(file.size) && file.size >= 0 ? file.size : 0,
+      type: text(file.type, 100),
+    })),
+    notes: text(event.notes, 1000),
+    availability: event.availability === 'free' ? 'free' : 'busy',
+    visibility: event.visibility === 'private' ? 'private' : 'default',
+  };
 }

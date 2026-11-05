@@ -16,7 +16,7 @@ import { LiveUpdatesService } from '../live/live-updates.service';
 
 const NO_UNREAD: Readonly<Record<NotificationArea, number>> = { friends: 0, lists: 0, objectives: 0, agenda: 0 };
 
-/** Where a notification leads: the list, the objective, or the friends panel. */
+/** Where a notification leads: the list, the objective, the event, or the friends panel. */
 export function notificationLink(notification: NotificationEntry): { commands: string[]; fragment?: string } {
   switch (notification.area) {
     case 'lists':
@@ -26,7 +26,7 @@ export function notificationLink(notification: NotificationEntry): { commands: s
     case 'friends':
       return { commands: ['/settings'], fragment: 'friends' };
     case 'agenda':
-      return { commands: ['/agenda'] };
+      return { commands: ['/agenda/events', notification.targetId] };
   }
 }
 
@@ -45,11 +45,14 @@ export class NotificationsStore {
   private readonly appData = inject(PlanoDataStore);
   private readonly response = signal<NotificationsResponse>({ items: [], unread: NO_UNREAD });
 
-  /** The objectives settings can turn their notifications off on this device. */
-  private readonly hidden = computed(
-    (): ReadonlySet<NotificationArea> =>
-      new Set(this.appData.data().objectives.settings.notifications ? [] : ['objectives']),
-  );
+  /** The objectives and agenda settings can turn their notifications off on this device. */
+  private readonly hidden = computed((): ReadonlySet<NotificationArea> => {
+    const { objectives, agenda } = this.appData.data();
+    return new Set<NotificationArea>([
+      ...(objectives.settings.notifications ? [] : (['objectives'] as const)),
+      ...(agenda.settings.invitationNotifications ? [] : (['agenda'] as const)),
+    ]);
+  });
   readonly items = computed(() => this.response().items.filter(({ area }) => !this.hidden().has(area)));
   readonly unread = computed((): Record<NotificationArea, number> => {
     const counts = { ...this.response().unread };

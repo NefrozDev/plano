@@ -79,7 +79,12 @@
       "listEntries": "{{name}} added an item to “{{title}}”.",
       "listEntriesMany": "{{count}} items added to “{{title}}”, the last by {{name}}.",
       "contributionMany": "{{count}} contributions to “{{title}}”, the last by {{name}}.",
-      "commentMany": "{{count}} comments on “{{title}}”, the last by {{name}}."
+      "commentMany": "{{count}} comments on “{{title}}”, the last by {{name}}.",
+      "agendaInvited": "{{name}} invited you to “{{title}}”.",
+      "agendaAccepted": "{{name}} is coming to “{{title}}”.",
+      "agendaAcceptedMany": "{{count}} people accepted “{{title}}”, the last was {{name}}.",
+      "agendaDeclined": "{{name}} declined “{{title}}”.",
+      "agendaDeclinedMany": "{{count}} people declined “{{title}}”, the last was {{name}}."
     }
   },
   "friends": {

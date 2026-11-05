@@ -223,19 +223,20 @@ export function slugify(value: string): string {
 const IMPORT_BATCH_CHARACTERS = 60_000;
 
 /**
- * Splits what a browser holds into requests the API accepts, keeping the order.
- * An objective too large for any request goes alone, and is refused alone.
+ * Splits what a browser holds into requests the API accepts, keeping the order:
+ * under the body limit, and at most `maxCount` items each. An item too large for
+ * any request goes alone, and is refused alone.
  */
-export function importBatches(objectives: readonly ImportObjectiveRequest[]): ImportObjectiveRequest[][] {
-  const batches: ImportObjectiveRequest[][] = [];
+export function importBatches<T>(items: readonly T[], maxCount = Number.POSITIVE_INFINITY): T[][] {
+  const batches: T[][] = [];
   let size = 0;
-  for (const objective of objectives) {
-    const length = JSON.stringify(objective).length;
-    if (!batches.length || size + length > IMPORT_BATCH_CHARACTERS) {
+  for (const item of items) {
+    const length = JSON.stringify(item).length;
+    if (!batches.length || size + length > IMPORT_BATCH_CHARACTERS || batches[batches.length - 1].length >= maxCount) {
       batches.push([]);
       size = 0;
     }
-    batches[batches.length - 1].push(objective);
+    batches[batches.length - 1].push(item);
     size += length;
   }
   return batches;

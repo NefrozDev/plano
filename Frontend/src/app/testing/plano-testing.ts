@@ -5,12 +5,15 @@ import { TestBed } from '@angular/core/testing';
 import { Routes, provideRouter } from '@angular/router';
 import {
   createMockPlanoData,
+  type AgendaEvent,
+  type AgendaEventView,
   type ListReminder,
   type NotificationsResponse,
   type ObjectiveAgendaItem,
 } from '@plano/common';
 import { MemoryPlanoDataAdapter, PLANO_DATA_ADAPTER } from '../core/data/plano-data.adapter';
 import { APP_CLOCK } from '../core/time/dates';
+import { AgendaStore } from '../features/agenda/agenda.store';
 
 /** "Today" for every spec: Thursday 15 October 2026, 10:30, matching the seed data. */
 export const TEST_TODAY = new Date(2026, 9, 15, 10, 30);
@@ -31,16 +34,54 @@ export function providePlanoTesting(routes: Routes = []): (Provider | Environmen
 
 /**
  * Starts the data store from the mock data (new accounts start empty), without its
- * objectives: those come from the API, and the browser only holds them to import.
+ * objectives and events: those come from the API, and the browser only holds them
+ * to import (see flushAgendaEvents).
  */
 export function provideSeedData(): Provider {
   return {
     provide: PLANO_DATA_ADAPTER,
     useFactory: () => {
       const data = createMockPlanoData();
-      return new MemoryPlanoDataAdapter({ ...data, objectives: { ...data.objectives, items: [], recentIds: [] } });
+      return new MemoryPlanoDataAdapter({
+        ...data,
+        objectives: { ...data.objectives, items: [], recentIds: [] },
+        agenda: { ...data.agenda, events: [] },
+      });
     },
   };
+}
+
+/** The signed-in user of the agenda fixtures, as the API names them. */
+export const TEST_AGENDA_OWNER = { id: 'me', name: 'Vous', avatarVersion: null };
+
+/** A seed event as the API serves it to its organiser; its participants accepted. */
+export function agendaView(event: AgendaEvent, changes: Partial<AgendaEventView> = {}): AgendaEventView {
+  const contacts = createMockPlanoData().agenda.contacts;
+  const attendees = event.participantIds.flatMap((id) => {
+    const contact = contacts.find((candidate) => candidate.id === id);
+    return contact ? [{ id, name: contact.name, avatarVersion: null, status: 'accepted' as const }] : [];
+  });
+  return { ...event, owner: TEST_AGENDA_OWNER, mine: true, status: 'accepted', attendees, ...changes };
+}
+
+/** The seed events (Rendez-vous projet, Déjeuner…) as GET /agenda/events answers them. */
+export function seedAgendaEvents(): AgendaEventView[] {
+  return createMockPlanoData().agenda.events.map((event) => agendaView(event));
+}
+
+/** Answers the pending GET /agenda/events request (made by the agenda and the dashboard). */
+export function flushAgendaEvents(events: AgendaEventView[] = seedAgendaEvents()): void {
+  TestBed.inject(HttpTestingController).expectOne('/api/v1/agenda/events').flush(events);
+}
+
+/**
+ * Puts the events in the agenda store, as entering the agenda does the first
+ * time. The routes then refresh them behind: that request stays unanswered.
+ */
+export async function loadAgendaEvents(events: AgendaEventView[] = seedAgendaEvents()): Promise<void> {
+  const loading = TestBed.inject(AgendaStore).ensureLoaded();
+  flushAgendaEvents(events);
+  await loading;
 }
 
 /** The list reminder the agenda shows on TEST_TODAY, as the lists API serves it. */

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { flushListReminders, providePlanoTesting } from '../../../testing/plano-testing';
+import { flushListReminders, loadAgendaEvents, providePlanoTesting } from '../../../testing/plano-testing';
 import { AGENDA_ROUTES } from '../agenda.routes';
 import { AgendaStore } from '../agenda.store';
 import { AgendaCalendarComponent } from './agenda-calendar.component';
@@ -27,6 +27,7 @@ describe('AgendaCalendarComponent', () => {
       providers: providePlanoTesting([{ path: 'agenda', children: AGENDA_ROUTES }]),
     });
     router = TestBed.inject(Router);
+    await loadAgendaEvents();
     harness = await RouterTestingHarness.create();
   });
 

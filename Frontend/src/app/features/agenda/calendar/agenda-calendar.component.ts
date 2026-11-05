@@ -12,13 +12,14 @@ import {
   startOfWeek,
   toIsoDate,
 } from '../../../core/time/dates';
+import { toPerson } from '../../../core/people/people';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
+import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
 import { AgendaStore } from '../agenda.store';
-import { AgendaItem, coveredDates } from '../agenda.utils';
+import { AgendaItem, coveredDates, datePart, formatTime, timePart } from '../agenda.utils';
 import { AgendaDayViewComponent, StripDay } from './agenda-day-view.component';
 import { AgendaMonthViewComponent } from './agenda-month-view.component';
 import { AgendaWeekViewComponent } from './agenda-week-view.component';
-import { readNotificationsWhileOpen } from '../../../core/notifications/notifications.store';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const WEEKDAY_SHORT = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
@@ -29,6 +30,7 @@ const WEEKDAY_SHORT = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
   imports: [
     RouterLink,
     BottomNavComponent,
+    UserAvatarComponent,
     AgendaDayViewComponent,
     AgendaWeekViewComponent,
     AgendaMonthViewComponent,
@@ -43,8 +45,8 @@ export class AgendaCalendarComponent {
   readonly store = inject(AgendaStore);
 
   constructor() {
+    // The routes load the events; notifications are read on the event they are about.
     this.store.loadTasks();
-    readNotificationsWhileOpen('agenda');
   }
 
   private readonly params = toSignal(this.route.queryParamMap, {
@@ -67,6 +69,15 @@ export class AgendaCalendarComponent {
     return date && ISO_DATE.test(date) ? date : this.today;
   });
   readonly settings = this.store.settings;
+
+  /** Invitations waiting for an answer: they join the calendar once accepted. */
+  readonly invitations = computed(() =>
+    this.store.invitations().map((event) => {
+      const date = datePart(event.start);
+      const time = event.allDay ? '' : ` à ${formatTime(timePart(event.start), this.settings().hourFormat)}`;
+      return { event, date, organiser: toPerson(event.owner), caption: `${formatShortDate(date)}${time}` };
+    }),
+  );
 
   readonly weekDays = computed<StripDay[]>(() => {
     const first = startOfWeek(this.date(), this.settings().weekStartsOn);

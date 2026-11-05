@@ -62,9 +62,10 @@ export class AgendaEventFormComponent {
   readonly store = inject(AgendaStore);
 
   readonly editingId = this.route.snapshot.paramMap.get('id');
+  /** Only the organiser changes an event; guests answer from its detail. */
   private readonly editing = this.editingId ? this.store.event(this.editingId) : undefined;
-  /** Editing an id that no longer exists (deleted, stale link). */
-  readonly missing = !!this.editingId && !this.editing;
+  /** Editing an id that no longer exists (deleted, stale link), or someone else's event. */
+  readonly missing = !!this.editingId && !this.editing?.mine;
 
   readonly calendars = this.store.calendars;
   readonly recurrences = Object.entries(RECURRENCE_LABELS) as [EventRecurrence, string][];
@@ -77,6 +78,8 @@ export class AgendaEventFormComponent {
   readonly recoloringId = signal<string | null>(null);
   readonly advancedOpen = signal(false);
   readonly submitted = signal(false);
+  /** Sent to the API, waiting for its answer. */
+  readonly saving = signal(false);
   readonly attachmentError = signal('');
   readonly participantIds = signal<string[]>(this.editing?.participantIds ?? []);
   readonly attachments = signal<AgendaAttachment[]>(this.editing?.attachments ?? []);
@@ -108,6 +111,10 @@ export class AgendaEventFormComponent {
       .map((id) => this.store.contact(id))
       .filter((contact): contact is AgendaContact => !!contact),
   );
+  /** Someone invited here who was not on the event yet. */
+  readonly newGuests = computed(() =>
+    this.participantIds().some((id) => !this.editing?.participantIds.includes(id)),
+  );
   readonly cancelLink = computed(() => (this.editingId ? ['/agenda/events', this.editingId] : ['/agenda']));
   readonly cancelParams = { date: '' };
 
@@ -115,6 +122,7 @@ export class AgendaEventFormComponent {
   private lastStart = '09:00';
 
   constructor() {
+    this.store.error.set('');
     this.initialize();
     this.cancelParams.date = this.form.controls.date.value;
   }
@@ -182,7 +190,8 @@ export class AgendaEventFormComponent {
     return formatFileSize(bytes);
   }
 
-  save(): void {
+  async save(): Promise<void> {
+    if (this.saving()) return;
     this.submitted.set(true);
     this.form.markAllAsTouched();
     if (this.form.invalid) {
@@ -211,9 +220,13 @@ export class AgendaEventFormComponent {
       visibility: value.visibility,
     };
     if (this.missing) return;
-    const id = this.editingId ?? this.store.create(draft).id;
-    if (this.editingId) this.store.update(id, draft);
-    void this.router.navigate(['/agenda/events', id], { queryParams: { date: value.date }, replaceUrl: true });
+    this.saving.set(true);
+    const saved = this.editingId ? await this.store.update(this.editingId, draft) : await this.store.create(draft);
+    this.saving.set(false);
+    // On failure the form stays as it is, with the store's message.
+    if (saved) {
+      void this.router.navigate(['/agenda/events', saved.id], { queryParams: { date: value.date }, replaceUrl: true });
+    }
   }
 
   private chronology(group: AbstractControl): ValidationErrors | null {

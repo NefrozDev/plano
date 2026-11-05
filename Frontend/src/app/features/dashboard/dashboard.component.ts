@@ -76,7 +76,7 @@ export class DashboardComponent {
 
   constructor() {
     // The week strip's event dots include list reminders served by the API.
-    this.agendaStore.loadTasks();
+    void this.agendaStore.load();
     void this.listsStore.loadHome();
     void this.objectivesStore.loadHome();
   }
