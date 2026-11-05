@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
+import { AgendaEvent } from '../../agenda/entities/agenda-event.entity';
+import { AgendaGuest } from '../../agenda/entities/agenda-guest.entity';
 import { Session } from '../../auth/session.entity';
 import { Friendship } from '../../friends/friendship.entity';
 import { GroupMembership } from '../../groups/group-membership.entity';
@@ -47,6 +49,8 @@ export const ENTITIES = [
   ObjectivePeriod,
   ObjectiveTemplate,
   Notification,
+  AgendaEvent,
+  AgendaGuest,
 ];
 
 export interface TestDatabase {

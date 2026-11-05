@@ -17,7 +17,12 @@ export type NotificationKind =
   | 'objective.invited'
   | 'objective.contribution'
   | 'objective.completed'
-  | 'objective.comment';
+  | 'objective.comment'
+  /** The user was invited to an event. */
+  | 'agenda.invited'
+  /** A guest answered one of the user's events. */
+  | 'agenda.accepted'
+  | 'agenda.declined';
 
 /** Who did it, as far as the user may see them: never an e-mail address. */
 export interface NotificationActor {
@@ -32,7 +37,7 @@ export interface NotificationEntry {
   area: NotificationArea;
   kind: NotificationKind;
   /**
-   * What to open: the list or objective, or the other person for friend news.
+   * What to open: the list, objective or event, or the other person for friend news.
    * Only ever an id the user could open when it was sent.
    */
   targetId: string;

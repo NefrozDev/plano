@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AgendaModule } from './agenda/agenda.module';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { FriendsModule } from './friends/friends.module';
@@ -25,6 +26,7 @@ import { UsersModule } from './users/users.module';
     FriendsModule,
     ListsModule,
     ObjectivesModule,
+    AgendaModule,
     LiveModule,
     NotificationsModule,
     UsersModule,

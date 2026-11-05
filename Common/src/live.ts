@@ -21,6 +21,8 @@ export type LiveEvent =
   /** It was deleted, or the user lost access to it. */
   | { type: 'objective.removed'; objectiveId: string }
   /** Worth telling: the user was invited, `actor` contributed, or it was completed. */
+  /** An event the user organises or is invited to changed, appeared or went away. */
+  | { type: 'agenda.changed'; eventId: string }
   /** The user's notifications changed: one was added, grouped or read on another device. */
   | { type: 'notifications.changed' }
   | {
