@@ -490,8 +490,8 @@ describe('ListsStore', () => {
     /** The signed-in app's stream (LiveUpdatesService opens it on sign-in). */
     async function signedInStream(): Promise<FakeEventSource> {
       FakeEventSource.created = [];
-      TestBed.inject(AuthService).login({ username: 'ada', password: 'secret' }).subscribe();
-      http.expectOne('/api/v1/auth/login').flush({ id: 'user-1', locale: 'fr', avatarVersion: null });
+      TestBed.inject(AuthService).restoreSession().subscribe();
+      http.expectOne('/api/v1/auth/session').flush({ id: 'user-1', locale: 'fr', avatarVersion: null });
       TestBed.tick();
       return FakeEventSource.latest() as FakeEventSource;
     }

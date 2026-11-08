@@ -11,8 +11,11 @@ import { ProfileService } from '../../core/users/profile.service';
 import { AVATAR_RESIZER, type AvatarResizer, MAX_SOURCE_BYTES, UnreadableImageError } from '../../core/users/resize-avatar';
 import { emptyNotifications, providePlanoTesting, settle } from '../../testing/plano-testing';
 import { SettingsComponent } from './settings.component';
+import { SYNAPSE_ACCOUNT_URL } from '../../core/auth/synapse-account';
+import { BROWSER_LOCATION } from '../../core/browser/browser-location';
 
 describe('SettingsComponent', () => {
+  const assign = vi.fn<(url: string) => void>();
   let fixture: ComponentFixture<SettingsComponent>;
   let component: SettingsComponent;
   let element: HTMLElement;
@@ -28,6 +31,7 @@ describe('SettingsComponent', () => {
     email: 'ada@example.com',
     locale: 'fr',
     avatarVersion: null,
+    termsAccepted: true,
   };
 
   /** A real 400×200 PNG, so the cropper can decode it. */
@@ -72,14 +76,20 @@ describe('SettingsComponent', () => {
     // The language choice must not reach this browser's real storage.
     setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => undefined);
     resize = vi.fn<AvatarResizer>().mockName('resizeAvatar');
+    assign.mockReset();
     TestBed.configureTestingModule({
       imports: [SettingsComponent],
-      providers: [...providePlanoTesting(), { provide: AVATAR_RESIZER, useValue: resize }],
+      providers: [
+        ...providePlanoTesting(),
+        { provide: AVATAR_RESIZER, useValue: resize },
+        { provide: BROWSER_LOCATION, useValue: { assign } },
+        { provide: SYNAPSE_ACCOUNT_URL, useValue: 'https://auth.example/account' },
+      ],
     });
     auth = TestBed.inject(AuthService);
     http = TestBed.inject(HttpTestingController);
-    auth.login({ username: 'ada', password: 'secret' }).subscribe();
-    http.expectOne('/api/v1/auth/login').flush(user);
+    auth.restoreSession().subscribe();
+    http.expectOne('/api/v1/auth/session').flush(user);
     fixture = TestBed.createComponent(SettingsComponent);
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
@@ -179,6 +189,16 @@ describe('SettingsComponent', () => {
       ['/terms', 'Conditions d’utilisation et confidentialité'],
     ]);
     expect(element.querySelector('#legal-heading')?.textContent).toBe('Informations légales');
+  });
+
+  it('leaves the name, username, e-mail and password to the Synapse account, in a new tab', () => {
+    const account = element.querySelector<HTMLAnchorElement>('.account a')!;
+
+    expect(account.textContent?.trim()).toBe('Gérer mon compte Synapse');
+    expect(account.getAttribute('href')).toBe('https://auth.example/account');
+    expect(account.target).toBe('_blank');
+    expect(element.querySelector('app-username-editor')).toBeNull();
+    expect(element.querySelector('.identity input')).toBeNull();
   });
 
   it('saves a language picked from the list', async () => {
@@ -336,15 +356,19 @@ describe('SettingsComponent', () => {
   });
 
   describe('sign-out', () => {
-    it('signs out and returns to the login page', async () => {
+    it('signs out of Plano, then goes to the identity service to sign out everywhere', () => {
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
       (element.querySelector('.logout') as HTMLButtonElement).click();
-      http.expectOne('/api/v1/auth/logout').flush(null);
+      http
+        .expectOne('/api/v1/auth/logout')
+        .flush({ redirectTo: 'https://auth.example/oidc/session/end?client_id=plano' });
 
-      expect(navigate).toHaveBeenCalledTimes(1);
-      expect(navigate).toHaveBeenCalledWith('/login');
-      expect(component.logoutPending()).toBe(false);
+      expect(assign).toHaveBeenCalledExactlyOnceWith(
+        'https://auth.example/oidc/session/end?client_id=plano',
+      );
+      expect(navigate).not.toHaveBeenCalled();
+      expect(auth.user()).toBeNull();
     });
 
     it('ignores a second click while signing out, and stays when it fails', async () => {
@@ -361,6 +385,7 @@ describe('SettingsComponent', () => {
 
       // Still signed in on the server: stay on the page.
       expect(navigate).not.toHaveBeenCalled();
+      expect(assign).not.toHaveBeenCalled();
       expect(element.querySelector('[role="alert"]')?.textContent).toContain('La déconnexion a échoué');
       expect(component.logoutPending()).toBe(false);
     });

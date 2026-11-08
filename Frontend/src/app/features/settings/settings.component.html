@@ -13,7 +13,7 @@
         <app-user-avatar [user]="user" [size]="72" />
         <div>
           <strong>{{ user.firstName }} {{ user.lastName }}</strong>
-          <app-username-editor [username]="user.username" />
+          <span class="username">&#64;{{ user.username }}</span>
         </div>
       </div>
       <div class="photo-actions">
@@ -37,6 +37,10 @@
       @if (photoError()) {
         <p class="field-error" role="alert">{{ photoError() | transloco }}</p>
       }
+      <p class="account">
+        <a class="button secondary" [href]="accountUrl" target="_blank" rel="noopener">{{ 'settings.profile.account' | transloco }}</a>
+        <small>{{ 'settings.profile.accountHint' | transloco }}</small>
+      </p>
     </section>
   }
 

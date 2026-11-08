@@ -39,8 +39,11 @@ describe('TermsContentComponent', () => {
   it('states the durations the app actually uses', () => {
     const text = element.textContent ?? '';
 
-    // Same as SESSION_TTL_DAYS in production and the reset link lifetime (AGENTS.md).
+    // Same as SESSION_TTL_DAYS in production and SIGN_IN_COOKIE_MINUTES (auth.constants.ts).
     expect(text).toContain('pendant 30 jours au plus');
-    expect(text).toContain('valables 30 minutes');
+    expect(text).toContain('pendant 10 minutes au plus');
+    // Passwords and their recovery belong to the Synapse account now.
+    expect(text).toContain('compte Synapse');
+    expect(text).not.toContain('réinitialisation');
   });
 });

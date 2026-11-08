@@ -1,11 +1,11 @@
 .auth-card h2 {
-  margin-bottom: 1.35rem;
+  margin-bottom: 0.75rem;
 }
 
-.forgot-password {
-  display: block;
-  width: fit-content;
-  margin: -0.25rem 0 1.35rem auto;
+.intro {
+  margin: 0 0 1.35rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
 }
 
 .primary-button {

@@ -1,12 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import type { UsernameAvailability } from '@plano/common';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { AuthUser } from '../auth/auth.models';
 import { AuthService } from '../auth/auth.service';
 import { API_BASE_URL } from '../http/api-base-url';
 
-/** The signed-in user's username and picture; every answer refreshes the user held by AuthService. */
+/** The signed-in user's picture; every answer refreshes the user held by AuthService. */
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   private readonly http = inject(HttpClient);
@@ -19,20 +18,6 @@ export class ProfileService {
     const body = new FormData();
     body.append('avatar', picture, picture.type === 'image/png' ? 'avatar.png' : 'avatar.webp');
     return this.http.put<AuthUser>(this.apiUrl, body).pipe(tap((user) => this.auth.updateUser(user)));
-  }
-
-  /** Fails with HTTP 409 when someone else has the name. */
-  changeUsername(username: string): Observable<AuthUser> {
-    return this.http
-      .patch<AuthUser>(`${this.usersUrl}/me`, { username })
-      .pipe(tap((user) => this.auth.updateUser(user)));
-  }
-
-  /** The caller's own name counts as available. */
-  isUsernameAvailable(username: string): Observable<boolean> {
-    return this.http
-      .get<UsernameAvailability>(`${this.usersUrl}/username-availability`, { params: { username } })
-      .pipe(map(({ available }) => available));
   }
 
   removeAvatar(): Observable<AuthUser> {

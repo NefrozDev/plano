@@ -1,0 +1,24 @@
+<app-auth-shell>
+  <section class="auth-card" aria-labelledby="welcome-title">
+    <h2 id="welcome-title">Bienvenue{{ user() ? ', ' + user()!.firstName : '' }}&nbsp;!</h2>
+    <p>
+      Votre compte Synapse vous connecte. Pour utiliser Plano, acceptez aussi ses
+      <a routerLink="/terms" target="_blank" rel="noopener">conditions d’utilisation et sa politique
+      de confidentialité</a>.
+    </p>
+
+    @if (failed()) {
+      <div class="form-error" role="alert">L’enregistrement a échoué. Veuillez réessayer.</div>
+    }
+
+    <button
+      class="primary-button"
+      type="button"
+      [disabled]="accepting()"
+      [attr.aria-busy]="accepting()"
+      (click)="accept()"
+    >
+      J’accepte et je continue
+    </button>
+  </section>
+</app-auth-shell>

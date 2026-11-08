@@ -8,7 +8,7 @@ import { PlanoDataStore } from './plano-data.store';
 describe('PlanoDataStore', () => {
   const user = signal<AuthUser | null>(null);
   const signIn = (id: string) =>
-    user.set({ id, firstName: '', lastName: '', username: id, email: `${id}@example.com`, locale: 'fr', avatarVersion: null });
+    user.set({ id, firstName: '', lastName: '', username: id, email: `${id}@example.com`, locale: 'fr', avatarVersion: null, termsAccepted: true });
   const addTask = (store: PlanoDataStore, label: string) =>
     store.update((data) => ({
       ...data,

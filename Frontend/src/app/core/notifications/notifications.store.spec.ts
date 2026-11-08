@@ -19,6 +19,7 @@ const user: AuthUser = {
   email: 'ada@example.com',
   locale: 'fr',
   avatarVersion: null,
+  termsAccepted: true,
 };
 
 describe('NotificationsStore', () => {
@@ -31,8 +32,8 @@ describe('NotificationsStore', () => {
     unread: { ...emptyNotifications().unread, ...unread },
   });
   async function signIn(answer = emptyNotifications()): Promise<FakeEventSource> {
-    auth.login({ username: 'ada', password: 'secret' }).subscribe();
-    http.expectOne('/api/v1/auth/login').flush(user);
+    auth.restoreSession().subscribe();
+    http.expectOne('/api/v1/auth/session').flush(user);
     TestBed.tick();
     http.expectOne('/api/v1/notifications').flush(answer);
     await settle();

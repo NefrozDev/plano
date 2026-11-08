@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authenticatedGuard, guestGuard } from './core/auth/auth.guard';
+import { authenticatedGuard, guestGuard, signedInGuard } from './core/auth/auth.guard';
 import { MobileShellLayoutComponent } from './shared/ui/mobile-shell-layout.component';
 
 export const routes: Routes = [
@@ -13,32 +13,19 @@ export const routes: Routes = [
     title: 'Connexion | Plano',
   },
   {
-    path: 'register',
-    canActivate: [guestGuard],
+    // The first screen after a first sign-in: Plano's own terms.
+    path: 'welcome',
+    canActivate: [signedInGuard],
     loadComponent: () =>
-      import('./features/auth/register/register.component').then(
-        (component) => component.RegisterComponent,
+      import('./features/auth/welcome/welcome.component').then(
+        (component) => component.WelcomeComponent,
       ),
-    title: 'Créer un compte | Plano',
+    title: 'Bienvenue | Plano',
   },
-  {
-    path: 'forgot-password',
-    canActivate: [guestGuard],
-    loadComponent: () =>
-      import('./features/auth/forgot-password/forgot-password.component').then(
-        (component) => component.ForgotPasswordComponent,
-      ),
-    title: 'Mot de passe oublié | Plano',
-  },
-  {
-    // Opened from the recovery e-mail, signed in or not: the token decides.
-    path: 'reset-password',
-    loadComponent: () =>
-      import('./features/auth/reset-password/reset-password.component').then(
-        (component) => component.ResetPasswordComponent,
-      ),
-    title: 'Nouveau mot de passe | Plano',
-  },
+  // Accounts, passwords and their recovery moved to the Synapse account.
+  { path: 'register', redirectTo: 'login' },
+  { path: 'forgot-password', redirectTo: 'login' },
+  { path: 'reset-password', redirectTo: 'login' },
   {
     path: 'terms',
     loadComponent: () =>

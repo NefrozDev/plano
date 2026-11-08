@@ -1,174 +1,76 @@
-import type { MockedObject } from 'vitest';
-import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
-import { AuthUser } from '../../../core/auth/auth.models';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { BROWSER_LOCATION } from '../../../core/browser/browser-location';
+import { providePlanoTesting } from '../../../testing/plano-testing';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
-  let auth: MockedObject<Pick<AuthService, 'login'>>;
-  let component: LoginComponent;
-  let router: Router;
-  let returnUrl: string | null;
+  const assign = vi.fn<(url: string) => void>();
 
-  const user: AuthUser = {
-    id: 'user-1',
-    firstName: 'Ada',
-    lastName: 'Lovelace',
-    username: 'ada',
-    email: 'ada@example.com',
-    locale: 'fr',
-    avatarVersion: null,
-  };
-
-  beforeEach(async () => {
-    returnUrl = null;
-    auth = {
-      login: vi.fn().mockName('AuthService.login'),
-    };
-    await TestBed.configureTestingModule({
+  function render(query: Record<string, string> = {}): HTMLElement {
+    assign.mockReset();
+    TestBed.configureTestingModule({
       imports: [LoginComponent],
       providers: [
-        provideRouter([]),
-        { provide: AuthService, useValue: auth },
+        providePlanoTesting(),
+        { provide: BROWSER_LOCATION, useValue: { assign } },
         {
           provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              queryParamMap: { get: () => returnUrl },
-            },
-          },
+          useValue: { snapshot: { queryParamMap: convertToParamMap(query) } },
         },
       ],
-    }).compileComponents();
-
-    component = TestBed.createComponent(LoginComponent).componentInstance;
-    router = TestBed.inject(Router);
-  });
-
-  function fillValidForm(): void {
-    component.form.setValue({ username: 'ada', password: 'password123' });
-  }
-
-  it('marks empty fields as touched without calling the API', () => {
-    component.submit();
-
-    expect(component.form.controls.username.touched).toBe(true);
-    expect(component.form.controls.password.touched).toBe(true);
-    expect(auth.login).not.toHaveBeenCalled();
-  });
-
-  it('exposes required and maximum-length field errors', () => {
-    component.form.controls.username.markAsTouched();
-    expect(component.showError('username')).toBe(true);
-    expect(component.fieldError('username')).toContain('Saisissez');
-    expect(component.fieldError('password')).toContain('Saisissez');
-
-    component.form.controls.username.setValue('a'.repeat(31));
-    component.form.controls.password.setValue('p'.repeat(129));
-    expect(component.fieldError('username')).toContain('30 caractères');
-    expect(component.fieldError('password')).toContain('128 caractères');
-  });
-
-  it('links to password recovery', () => {
+    });
     const fixture = TestBed.createComponent(LoginComponent);
     fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
 
-    const link = (fixture.nativeElement as HTMLElement).querySelector('.forgot-password') as HTMLAnchorElement;
-    expect(link.tagName).toBe('A');
-    expect(link.getAttribute('href')).toBe('/forgot-password');
-    expect(link.textContent).toContain('Mot de passe oublié');
-    expect(auth.login).not.toHaveBeenCalled();
+  function button(host: HTMLElement): HTMLButtonElement {
+    return host.querySelector<HTMLButtonElement>('button.primary-button')!;
+  }
+
+  it('explains the Synapse account and has one way in, with no password field', () => {
+    const host = render();
+
+    expect(host.querySelector('h2')?.textContent).toContain('Connexion');
+    expect(host.textContent).toContain('votre compte Synapse');
+    expect(button(host).textContent).toContain('Se connecter ou créer un compte');
+    expect(host.querySelector('input')).toBeNull();
+    expect(host.querySelector('[role="alert"]')).toBeNull();
   });
 
-  it('submits trimmed username, keeps the password intact, and navigates', () => {
-    auth.login.mockReturnValue(of(user));
-    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    component.form.setValue({ username: '  ada  ', password: ' pass word ' });
+  it('sends the browser to the sign-in with where it was going and the language', () => {
+    const host = render({ returnUrl: '/lists/42' });
+    const signInUrl = vi.spyOn(TestBed.inject(AuthService), 'signInUrl');
 
-    component.submit();
+    button(host).click();
 
-    expect(auth.login).toHaveBeenCalledTimes(1);
-
-    expect(auth.login).toHaveBeenCalledWith({
-      username: 'ada',
-      password: ' pass word ',
-    });
-    expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith('/');
-    expect(component.submitting()).toBe(false);
-  });
-
-  it('accepts a local return URL and rejects a protocol-relative one', () => {
-    auth.login.mockReturnValue(of(user));
-    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    fillValidForm();
-    returnUrl = '/plan?week=2';
-
-    component.submit();
-    expect(navigate).toHaveBeenCalledWith('/plan?week=2');
-
-    returnUrl = '//attacker.example';
-    component.submit();
-    expect(navigate).toHaveBeenCalledTimes(2);
-    expect(navigate).toHaveBeenLastCalledWith('/');
-  });
-
-  it('does not submit twice while a request is pending', () => {
-    fillValidForm();
-    component.submitting.set(true);
-
-    component.submit();
-
-    expect(auth.login).not.toHaveBeenCalled();
-  });
-
-  it('shows a useful message for rejected credentials', () => {
-    const navigate = vi.spyOn(router, 'navigateByUrl');
-    auth.login.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' })),
+    expect(signInUrl).toHaveBeenCalledExactlyOnceWith('/lists/42', 'fr');
+    expect(assign).toHaveBeenCalledExactlyOnceWith(
+      '/api/v1/auth/login?returnTo=%2Flists%2F42&lang=fr',
     );
-    component.form.setValue({ username: 'ada', password: 'wrong-pass' });
-
-    component.submit();
-
-    expect(auth.login).toHaveBeenCalledTimes(1);
-    expect(auth.login).toHaveBeenCalledWith({ username: 'ada', password: 'wrong-pass' });
-    expect(component.submissionError()).toContain('incorrect');
-    expect(component.submitting()).toBe(false);
-    expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('maps offline, unexpected, and server failures', () => {
-    const navigate = vi.spyOn(router, 'navigateByUrl');
-    fillValidForm();
-    auth.login
-      .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 0 })))
-      .mockReturnValueOnce(throwError(() => new Error('unexpected')))
-      .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 503 })));
+  it('never sends the browser back to another site', () => {
+    const host = render({ returnUrl: '//evil.example' });
 
-    component.submit();
-    expect(component.submissionError()).toContain('Impossible de joindre');
-    component.submit();
-    expect(component.submissionError()).toContain('inattendue');
-    component.submit();
-    expect(component.submissionError()).toContain('connexion a échoué');
-    expect(auth.login).toHaveBeenCalledTimes(3);
-    expect(navigate).not.toHaveBeenCalled();
+    button(host).click();
+
+    expect(assign).toHaveBeenCalledExactlyOnceWith('/api/v1/auth/login?returnTo=%2F&lang=fr');
   });
 
-  it('asks the user to wait when the API rate limits login attempts', () => {
-    const navigate = vi.spyOn(router, 'navigateByUrl');
-    fillValidForm();
-    auth.login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 429 })));
+  it('says when the last sign-in was cancelled', () => {
+    const host = render({ signIn: 'cancelled' });
 
-    component.submit();
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain(
+      'La connexion a été annulée.',
+    );
+  });
 
-    expect(auth.login).toHaveBeenCalledTimes(1);
-    expect(component.submissionError()).toContain('Trop de tentatives');
-    expect(component.submitting()).toBe(false);
-    expect(navigate).not.toHaveBeenCalled();
+  it('says when the last sign-in failed', () => {
+    const host = render({ signIn: 'failed' });
+
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain('La connexion a échoué.');
   });
 });

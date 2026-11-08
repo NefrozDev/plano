@@ -23,12 +23,13 @@ describe('LanguageService', () => {
     email: 'ada@example.com',
     locale: 'fr',
     avatarVersion: null,
+    termsAccepted: true,
   };
 
   /** Signs Ada in the way a login response would, and lets the language follow. */
   async function signIn(locale: AuthUser['locale']): Promise<void> {
-    auth.login({ username: 'ada', password: 'secret' }).subscribe();
-    http.expectOne('/api/v1/auth/login').flush({ ...user, locale });
+    auth.restoreSession().subscribe();
+    http.expectOne('/api/v1/auth/session').flush({ ...user, locale });
     TestBed.tick();
     await settle();
   }

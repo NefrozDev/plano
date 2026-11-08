@@ -1,19 +1,19 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import type { ConfirmPasswordResetRequest, PasswordResetRequest } from '@plano/common';
-import { Observable, catchError, finalize, of, shareReplay, tap } from 'rxjs';
+import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
 import { API_BASE_URL } from '../http/api-base-url';
-import {
-  AuthStatus,
-  AuthUser,
-  LoginRequest,
-  RegisterRequest,
-} from './auth.models';
+import { AuthStatus, AuthUser } from './auth.models';
 
+/**
+ * The signed-in user. Signing in happens on the Synapse identity service:
+ * the API's /auth/login sends the browser there and opens Plano's session on
+ * the way back, so this service only restores and ends that session.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${inject(API_BASE_URL)}/auth`;
+  private readonly apiBase = inject(API_BASE_URL);
+  private readonly apiUrl = `${this.apiBase}/auth`;
   private readonly userState = signal<AuthUser | null>(null);
   private readonly statusState = signal<AuthStatus>('loading');
   private restoreRequest?: Observable<AuthUser | null>;
@@ -21,16 +21,10 @@ export class AuthService {
   readonly user = this.userState.asReadonly();
   readonly status = this.statusState.asReadonly();
 
-  login(credentials: LoginRequest): Observable<AuthUser> {
-    return this.http
-      .post<AuthUser>(`${this.apiUrl}/login`, credentials)
-      .pipe(tap((user) => this.setAuthenticated(user)));
-  }
-
-  register(details: RegisterRequest): Observable<AuthUser> {
-    return this.http
-      .post<AuthUser>(`${this.apiUrl}/register`, details)
-      .pipe(tap((user) => this.setAuthenticated(user)));
+  /** Where the browser goes to sign in, coming back to `returnUrl`. */
+  signInUrl(returnUrl: string, language: string): string {
+    const params = new URLSearchParams({ returnTo: returnUrl, lang: language });
+    return `${this.apiUrl}/login?${params.toString()}`;
   }
 
   restoreSession(): Observable<AuthUser | null> {
@@ -57,22 +51,24 @@ export class AuthService {
     return this.restoreRequest;
   }
 
-  /** Answers the same whether or not the address has an account. */
-  requestPasswordReset(email: string): Observable<void> {
-    const details: PasswordResetRequest = { email };
-    return this.http.post<void>(`${this.apiUrl}/password-reset`, details);
-  }
-
-  /** Sets the new password; every session of the account ends, this one included. */
-  confirmPasswordReset(token: string, password: string): Observable<void> {
-    const details: ConfirmPasswordResetRequest = { token, password };
-    return this.http.post<void>(`${this.apiUrl}/password-reset/confirm`, details);
-  }
-
-  logout(): Observable<void> {
+  /** Accepts Plano's own terms, asked once on the welcome screen. */
+  acceptTerms(): Observable<AuthUser> {
     return this.http
-      .post<void>(`${this.apiUrl}/logout`, null)
-      .pipe(tap(() => this.setAnonymous()));
+      .post<AuthUser>(`${this.apiBase}/users/me/terms`, null)
+      .pipe(tap((user) => this.setAuthenticated(user)));
+  }
+
+  /**
+   * Ends Plano's session and emits where to send the browser next: the
+   * identity service, which signs out of every Synapse app.
+   */
+  logout(): Observable<string> {
+    return this.http
+      .post<{ redirectTo: string }>(`${this.apiUrl}/logout`, null)
+      .pipe(
+        tap(() => this.setAnonymous()),
+        map(({ redirectTo }) => redirectTo),
+      );
   }
 
   /** Applies a fresher copy of the signed-in user, e.g. after a profile change. */
@@ -90,3 +86,4 @@ export class AuthService {
     this.statusState.set('anonymous');
   }
 }
+

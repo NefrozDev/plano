@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 /** Shown on the terms; change it with any change to the text below. */
-export const TERMS_UPDATED_ON = '2 novembre 2026';
+export const TERMS_UPDATED_ON = '8 novembre 2026';
 
 /**
  * Plano's terms of use and privacy notice, shown on their own page and in the
@@ -18,8 +18,8 @@ export const TERMS_UPDATED_ON = '2 novembre 2026';
       <h3>1. Objet</h3>
       <p>
         Plano est une application de planification (listes, agenda, objectifs, groupes et amis) éditée par
-        Synapse Engineering, établie en Belgique. Ces conditions encadrent son utilisation. Créer un compte
-        signifie que vous les acceptez.
+        Synapse Engineering, établie en Belgique. Ces conditions encadrent son utilisation. Les accepter
+        est demandé à votre première visite.
       </p>
       <p>Contact : <a href="mailto:contact@synapseengineering.dev">contact&#64;synapseengineering.dev</a></p>
     </section>
@@ -27,8 +27,12 @@ export const TERMS_UPDATED_ON = '2 novembre 2026';
     <section>
       <h3>2. Votre compte</h3>
       <ul>
-        <li>Vous devez avoir au moins 13 ans pour créer un compte.</li>
-        <li>Les informations que vous donnez (nom, adresse e-mail) doivent être exactes.</li>
+        <li>
+          Vous vous connectez avec votre compte Synapse, le même pour toutes les applications de Synapse
+          Engineering. Il a ses propres conditions, sur auth.synapseengineering.dev.
+        </li>
+        <li>Vous devez avoir au moins 13 ans.</li>
+        <li>Les informations de votre compte (nom, adresse e-mail) doivent être exactes.</li>
         <li>Votre mot de passe est personnel : gardez-le secret. Vous êtes responsable de ce qui est fait avec votre compte.</li>
         <li>Un compte correspond à une seule personne.</li>
       </ul>
@@ -73,8 +77,10 @@ export const TERMS_UPDATED_ON = '2 novembre 2026';
     <section>
       <h3>6. Suspension et suppression</h3>
       <p>
-        Nous pouvons suspendre ou supprimer un compte qui ne respecte pas ces conditions. Vous pouvez demander la
-        suppression de votre compte et de vos données à tout moment en écrivant à l’adresse de contact.
+        Nous pouvons suspendre ou supprimer un compte qui ne respecte pas ces conditions. Vous pouvez supprimer
+        votre compte à tout moment depuis la page de votre compte Synapse : Plano efface alors tout ce qu’il garde
+        à votre sujet (vos listes, objectifs, groupes créés, agenda, amis et notifications ; votre nom disparaît
+        de ce que vous partagiez). Vous pouvez aussi l’écrire à l’adresse de contact.
       </p>
     </section>
 
@@ -95,8 +101,10 @@ export const TERMS_UPDATED_ON = '2 novembre 2026';
       </p>
       <h4>Ce que nous conservons</h4>
       <ul>
-        <li>Votre prénom, votre nom, votre nom d’utilisateur, votre adresse e-mail et votre langue.</li>
-        <li>Votre mot de passe, jamais en clair : seulement une empreinte qui ne permet pas de le retrouver.</li>
+        <li>
+          Votre prénom, votre nom, votre nom d’utilisateur et votre adresse e-mail, recopiés de votre compte
+          Synapse à chaque connexion, et votre langue. Votre mot de passe n’est gardé que par le compte Synapse.
+        </li>
         <li>Votre photo de profil, si vous en ajoutez une.</li>
         <li>Ce que vous créez dans l’application et la date à laquelle vous avez accepté ces conditions.</li>
         <li>Votre adresse IP, le temps de limiter les abus (trop de tentatives de connexion par exemple).</li>
@@ -109,14 +117,14 @@ export const TERMS_UPDATED_ON = '2 novembre 2026';
       </p>
       <h4>Cookies</h4>
       <p>
-        Un seul cookie, indispensable : celui qui vous garde connecté, pendant 30 jours au plus. Votre
-        navigateur garde aussi quelques préférences d’affichage sur votre appareil.
+        Uniquement des cookies indispensables : celui qui vous garde connecté, pendant 30 jours au plus, et
+        celui qui protège une connexion en cours, pendant 10 minutes au plus. Votre navigateur garde aussi
+        quelques préférences d’affichage sur votre appareil.
       </p>
       <h4>Où et combien de temps</h4>
       <p>
-        Vos données sont hébergées sur un serveur loué à OVHcloud (OVH SAS, France). Les e-mails, comme les liens
-        de réinitialisation du mot de passe (valables 30 minutes), partent de notre propre serveur de messagerie.
-        Nous gardons vos données tant que votre compte existe, puis nous les supprimons.
+        Vos données sont hébergées sur un serveur loué à OVHcloud (OVH SAS, France). Nous les gardons tant que
+        votre compte existe, puis nous les supprimons.
       </p>
       <h4>Vos droits</h4>
       <p>

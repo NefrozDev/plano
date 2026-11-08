@@ -20,11 +20,12 @@ describe('LiveUpdatesService', () => {
     email: 'ada@example.com',
     locale: 'fr',
     avatarVersion: null,
+    termsAccepted: true,
   };
 
   function signIn(): void {
-    auth.login({ username: 'ada', password: 'secret' }).subscribe();
-    http.expectOne('/api/v1/auth/login').flush(user);
+    auth.restoreSession().subscribe();
+    http.expectOne('/api/v1/auth/session').flush(user);
     TestBed.tick();
   }
 
@@ -68,18 +69,17 @@ describe('LiveUpdatesService', () => {
     ]);
   });
 
-  it('closes the stream on sign-out, and opens a new one on the next sign-in', () => {
+  // Signing out then leaves for the identity service: the next sign-in is a new page load.
+  it('closes the stream on sign-out', () => {
     signIn();
     const first = FakeEventSource.latest() as FakeEventSource;
 
     auth.logout().subscribe();
-    http.expectOne('/api/v1/auth/logout').flush(null);
+    http.expectOne('/api/v1/auth/logout').flush({ redirectTo: 'https://auth.example/oidc/session/end' });
     TestBed.tick();
-    expect(first.closed).toBe(true);
 
-    signIn();
-    expect(FakeEventSource.created).toHaveLength(2);
-    expect(FakeEventSource.latest()?.closed).toBe(false);
+    expect(first.closed).toBe(true);
+    expect(FakeEventSource.created).toHaveLength(1);
   });
 
   it('closes the stream when the app is torn down', () => {

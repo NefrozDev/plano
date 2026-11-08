@@ -1,7 +1,7 @@
 import { Type, reflectComponentType } from '@angular/core';
 import { Route, Routes } from '@angular/router';
 import { routes } from './app.routes';
-import { authenticatedGuard, guestGuard } from './core/auth/auth.guard';
+import { authenticatedGuard, guestGuard, signedInGuard } from './core/auth/auth.guard';
 import { MobileShellLayoutComponent } from './shared/ui/mobile-shell-layout.component';
 
 /** Resolves a lazy loader the way the router does: a default export or the value itself. */
@@ -28,7 +28,7 @@ describe('app routes', () => {
   it('lazy-loads a real component for every routed screen', async () => {
     const lazy = (await flatten(routes)).filter(({ route }) => route.loadComponent);
 
-    // Login, register, group setup, dashboard, lists and the agenda/objectives screens.
+    // Login, welcome, group setup, dashboard, lists and the agenda/objectives screens.
     expect(lazy.length).toBeGreaterThan(10);
     for (const { path, route } of lazy) {
       const component = await load<Type<unknown>>(route.loadComponent as () => unknown);
@@ -36,14 +36,15 @@ describe('app routes', () => {
     }
   });
 
-  it('keeps sign-in, sign-up and recovery requests for guests, the e-mailed link open, the rest for signed-in users', () => {
+  it('keeps sign-in for guests, the welcome screen for any signed-in user, the rest for users who accepted the terms', () => {
     const guardsOf = (path: string) => routes.find((route) => route.path === path)?.canActivate;
 
     expect(guardsOf('login')).toEqual([guestGuard]);
-    expect(guardsOf('register')).toEqual([guestGuard]);
-    expect(guardsOf('forgot-password')).toEqual([guestGuard]);
-    // The e-mailed link must work even where someone is signed in.
-    expect(guardsOf('reset-password')).toBeUndefined();
+    expect(guardsOf('welcome')).toEqual([signedInGuard]);
+    // Accounts and their recovery moved to the Synapse account: old links land on the sign-in.
+    for (const path of ['register', 'forgot-password', 'reset-password']) {
+      expect(routes.find((route) => route.path === path)?.redirectTo, path).toBe('login');
+    }
     // The terms are read before signing up and from the settings.
     expect(guardsOf('terms')).toBeUndefined();
     for (const path of ['groups', 'groups/:groupId', 'agenda', 'objectives']) {

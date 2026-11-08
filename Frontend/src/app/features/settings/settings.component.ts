@@ -7,7 +7,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SYNAPSE_ACCOUNT_URL } from '../../core/auth/synapse-account';
+import { BROWSER_LOCATION } from '../../core/browser/browser-location';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LOCALES, type Locale } from '@plano/common';
 import { firstValueFrom } from 'rxjs';
@@ -20,7 +22,6 @@ import { PageHeaderComponent } from '../../shared/ui/page-header.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
 import { AvatarCropperComponent } from './avatar-cropper.component';
 import { FriendsPanelComponent } from './friends-panel.component';
-import { UsernameEditorComponent } from './username-editor.component';
 
 /** Each language under its own name, so anyone finds theirs whatever is shown. */
 export const LANGUAGE_NAMES: Record<Locale, string> = {
@@ -43,14 +44,15 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
     RouterLink,
     TranslocoPipe,
     UserAvatarComponent,
-    UsernameEditorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
 export class SettingsComponent {
-  private readonly router = inject(Router);
+  private readonly location = inject(BROWSER_LOCATION);
+  /** Name, username, e-mail, password and deletion live on the Synapse account. */
+  readonly accountUrl = inject(SYNAPSE_ACCOUNT_URL);
   private readonly profile = inject(ProfileService);
   private readonly resize = inject(AVATAR_RESIZER);
   readonly auth = inject(AuthService);
@@ -143,10 +145,8 @@ export class SettingsComponent {
     this.logoutError.set(false);
     this.logoutPending.set(true);
     this.auth.logout().subscribe({
-      next: () => {
-        this.logoutPending.set(false);
-        void this.router.navigateByUrl('/login');
-      },
+      // The identity service signs out of every Synapse app, then comes back.
+      next: (redirectTo) => this.location.assign(redirectTo),
       error: () => {
         this.logoutPending.set(false);
         this.logoutError.set(true);

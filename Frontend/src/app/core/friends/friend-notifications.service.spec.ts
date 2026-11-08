@@ -20,12 +20,13 @@ describe('FriendNotificationsService', () => {
     email: 'ada@example.com',
     locale: 'fr',
     avatarVersion: null,
+    termsAccepted: true,
   };
   const bob: PublicUser = { id: 'user-2', username: 'bob', firstName: 'Bob', lastName: 'Martin', avatarVersion: null };
   /** Signs in: the live stream opens, and no request is made for friend news. */
   async function signIn(): Promise<FakeEventSource> {
-    auth.login({ username: 'ada', password: 'secret' }).subscribe();
-    http.expectOne('/api/v1/auth/login').flush(user);
+    auth.restoreSession().subscribe();
+    http.expectOne('/api/v1/auth/session').flush(user);
     TestBed.tick();
     await settle();
     return FakeEventSource.latest() as FakeEventSource;

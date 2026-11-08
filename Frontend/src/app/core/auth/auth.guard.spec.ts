@@ -9,7 +9,7 @@ import {
 } from '@angular/router';
 import { Observable, firstValueFrom, of } from 'rxjs';
 import { AuthUser } from './auth.models';
-import { authenticatedGuard, guestGuard } from './auth.guard';
+import { authenticatedGuard, guestGuard, signedInGuard } from './auth.guard';
 import { AuthService } from './auth.service';
 
 describe('authentication guards', () => {
@@ -24,6 +24,7 @@ describe('authentication guards', () => {
     email: 'ada@example.com',
     locale: 'fr',
     avatarVersion: null,
+    termsAccepted: true,
   };
 
   beforeEach(() => {
@@ -54,6 +55,24 @@ describe('authentication guards', () => {
     expect(result instanceof UrlTree).toBe(true);
     expect(router.serializeUrl(result as UrlTree)).toBe('/login?returnUrl=%2Fplan%3Fweek%3D2');
     expect(auth.restoreSession).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends a user who has not accepted Plano's terms to the welcome screen first", async () => {
+    auth.restoreSession.mockReturnValue(of({ ...user, termsAccepted: false }));
+
+    const result = await runGuard(authenticatedGuard, '/lists');
+
+    expect(result instanceof UrlTree).toBe(true);
+    expect(router.serializeUrl(result as UrlTree)).toBe('/welcome?returnUrl=%2Flists');
+  });
+
+  it('opens the welcome screen to any signed-in user, terms accepted or not', async () => {
+    auth.restoreSession.mockReturnValue(of({ ...user, termsAccepted: false }));
+    expect(await runGuard(signedInGuard, '/welcome')).toBe(true);
+
+    auth.restoreSession.mockReturnValue(of(null));
+    const result = await runGuard(signedInGuard, '/welcome');
+    expect(router.serializeUrl(result as UrlTree)).toBe('/login');
   });
 
   it('allows an anonymous user to open a guest route', async () => {

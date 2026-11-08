@@ -19,19 +19,6 @@
       "tooLarge": "This image is too large (20 MB maximum).",
       "unreadable": "This image can’t be read. Choose a JPEG, PNG or WebP photo.",
       "failed": "The photo couldn’t be saved. Please try again.",
-      "username": {
-        "label": "Username",
-        "edit": "Edit username @{{username}}",
-        "unchanged": "This is your current username.",
-        "invalid": "3 to 30 letters, numbers, dots, hyphens or underscores.",
-        "checking": "Checking…",
-        "available": "This name is available.",
-        "taken": "This username is already taken.",
-        "unknown": "Availability unknown: it will be checked when you save.",
-        "cancel": "Cancel",
-        "save": "Save",
-        "failed": "The username couldn’t be changed. Please try again."
-      },
       "crop": {
         "heading": "Crop your photo",
         "area": "Photo area",
@@ -39,7 +26,9 @@
         "zoom": "Zoom",
         "cancel": "Cancel",
         "save": "Save"
-      }
+      },
+      "account": "Manage my Synapse account",
+      "accountHint": "Name, username, e-mail, password and account deletion, for every Synapse app."
     },
     "language": {
       "heading": "Language",

@@ -19,19 +19,6 @@
       "tooLarge": "Deze afbeelding is te groot (maximaal 20 MB).",
       "unreadable": "Deze afbeelding kan niet worden gelezen. Kies een JPEG-, PNG- of WebP-foto.",
       "failed": "De foto kon niet worden opgeslagen. Probeer het opnieuw.",
-      "username": {
-        "label": "Gebruikersnaam",
-        "edit": "Gebruikersnaam @{{username}} wijzigen",
-        "unchanged": "Dit is je huidige gebruikersnaam.",
-        "invalid": "3 tot 30 letters, cijfers, punten, koppeltekens of underscores.",
-        "checking": "Controleren…",
-        "available": "Deze naam is beschikbaar.",
-        "taken": "Deze gebruikersnaam is al in gebruik.",
-        "unknown": "Beschikbaarheid onbekend: dit wordt gecontroleerd bij het opslaan.",
-        "cancel": "Annuleren",
-        "save": "Opslaan",
-        "failed": "De gebruikersnaam kon niet worden gewijzigd. Probeer het opnieuw."
-      },
       "crop": {
         "heading": "Foto bijsnijden",
         "area": "Fotogebied",
@@ -39,7 +26,9 @@
         "zoom": "Zoom",
         "cancel": "Annuleren",
         "save": "Opslaan"
-      }
+      },
+      "account": "Mijn Synapse-account beheren",
+      "accountHint": "Naam, gebruikersnaam, e-mail, wachtwoord en account verwijderen, voor alle Synapse-apps."
     },
     "language": {
       "heading": "Taal",

@@ -22,6 +22,7 @@ describe('DashboardComponent', () => {
     email: 'ada@example.com',
     locale: 'fr',
     avatarVersion: null,
+    termsAccepted: true,
   };
 
   let http: HttpTestingController;
