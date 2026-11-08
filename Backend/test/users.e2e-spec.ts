@@ -6,12 +6,11 @@ import {
   type TestApp,
   createTestApp,
   registerUser,
-  validRegistration,
 } from './e2e-helpers';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2]);
 
-describe('Profile: username, language and picture (e2e)', () => {
+describe('Profile: language, picture and terms (e2e)', () => {
   let testApp: TestApp;
   let ada: RegisteredUser;
 
@@ -31,26 +30,11 @@ describe('Profile: username, language and picture (e2e)', () => {
 
   afterEach(() => testApp.close());
 
-  it('registers in the language sent, and changes it later', async () => {
-    const english = await http()
-      .post('/api/v1/auth/register')
-      .send({
-        ...validRegistration,
-        username: 'eve',
-        email: 'eve@example.com',
-        locale: 'en',
-      })
-      .expect(201);
-    expect((english.body as AuthUser).locale).toBe('en');
-    await http()
-      .post('/api/v1/auth/register')
-      .send({
-        ...validRegistration,
-        username: 'zed',
-        email: 'zed@example.com',
-        locale: 'klingon',
-      })
-      .expect(400);
+  it("starts in the account's language, and changes it later", async () => {
+    const eve = await registerUser(testApp.app, 'eve', { locale: 'en' });
+    expect(eve.user.locale).toBe('en');
+    const zed = await registerUser(testApp.app, 'zed', { locale: 'klingon' });
+    expect(zed.user.locale).toBe('fr');
 
     expect((await session()).locale).toBe('fr');
     await http()
@@ -71,57 +55,34 @@ describe('Profile: username, language and picture (e2e)', () => {
     expect((await session()).locale).toBe('es');
   });
 
-  it('changes the username only to a free, well-formed one', async () => {
-    await registerUser(testApp.app, 'bob');
-    const available = async (username: string) =>
-      (
-        await http()
-          .get('/api/v1/users/username-availability')
-          .query({ username })
-          .set('Cookie', ada.cookie)
-          .expect(200)
-      ).body as { available: boolean };
-
-    await expect(available('BOB')).resolves.toEqual({ available: false });
-    await expect(available('ada')).resolves.toEqual({ available: true });
-    await expect(available('lovelace')).resolves.toEqual({ available: true });
-    await http()
-      .get('/api/v1/users/username-availability')
-      .query({ username: 'a b' })
+  it('leaves the username and the name to the Synapse account', async () => {
+    const refused = await http()
+      .patch('/api/v1/users/me')
       .set('Cookie', ada.cookie)
+      .send({ username: 'lovelace' })
       .expect(400);
+    expect((refused.body as { message: string[] }).message).toEqual([
+      'property username should not exist',
+    ]);
     await http()
       .get('/api/v1/users/username-availability')
       .query({ username: 'bob' })
-      .expect(401);
+      .set('Cookie', ada.cookie)
+      .expect(404);
+    expect((await session()).username).toBe('ada');
+  });
 
-    const taken = await http()
-      .patch('/api/v1/users/me')
-      .set('Cookie', ada.cookie)
-      .send({ username: 'Bob' })
-      .expect(409);
-    expect((taken.body as { message: string }).message).toBe(
-      "Ce nom d'utilisateur est déjà pris.",
-    );
-    await http()
-      .patch('/api/v1/users/me')
-      .set('Cookie', ada.cookie)
-      .send({ username: 'no' })
-      .expect(400);
+  it("records the acceptance of Plano's terms, once", async () => {
+    expect((await session()).termsAccepted).toBe(false);
+    await http().post('/api/v1/users/me/terms').expect(401);
 
-    const renamed = await http()
-      .patch('/api/v1/users/me')
+    const accepted = await http()
+      .post('/api/v1/users/me/terms')
       .set('Cookie', ada.cookie)
-      .send({ username: ' Lovelace ' })
       .expect(200);
-    expect((renamed.body as AuthUser).username).toBe('lovelace');
-    expect((await session()).username).toBe('lovelace');
-    // The new name signs in; the old one is free again.
-    await http()
-      .post('/api/v1/auth/login')
-      .send({ username: 'LOVELACE', password: validRegistration.password })
-      .expect(200);
-    await expect(available('ada')).resolves.toEqual({ available: true });
+
+    expect((accepted.body as AuthUser).termsAccepted).toBe(true);
+    expect((await session()).termsAccepted).toBe(true);
   });
 
   it('uploads, serves and removes a profile picture', async () => {

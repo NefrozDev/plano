@@ -4,21 +4,16 @@ import {
   TestingModule,
   type TestingModuleBuilder,
 } from '@nestjs/testing';
-import request from 'supertest';
 import { App } from 'supertest/types';
 import { configureApp } from './../src/app.config';
 import { AppModule } from './../src/app.module';
+import { randomUUID } from 'node:crypto';
+import { SESSION_COOKIE_NAME } from './../src/auth/auth.constants';
+import { AuthService } from './../src/auth/auth.service';
 import type { AuthUser } from './../src/auth/auth.types';
+import type { IdentityClaims } from './../src/auth/oidc-client.service';
+import { TEST_ISSUER } from './fake-identity';
 import { createTestDatabase } from './../src/database/testing/test-database';
-
-export const validRegistration = {
-  firstName: 'Jamie',
-  lastName: 'Doe',
-  username: 'jamie.doe',
-  email: 'jamie@example.com',
-  password: 'correct horse battery staple',
-  acceptedTerms: true,
-};
 
 export function readSetCookie(headers: Record<string, unknown>): string[] {
   const value = headers['set-cookie'];
@@ -44,7 +39,7 @@ export interface TestApp {
   close(): Promise<void>;
 }
 
-/** Replaces providers of the real AppModule, e.g. the mailer. */
+/** Replaces providers of the real AppModule, e.g. the identity service. */
 export type ModuleOverrides = (
   builder: TestingModuleBuilder,
 ) => TestingModuleBuilder;
@@ -54,9 +49,8 @@ async function startApp(
   overrides: ModuleOverrides = (builder) => builder,
 ): Promise<INestApplication<App>> {
   process.env.DATABASE_URL = databaseUrl;
-  process.env.AUTH_SCRYPT_COST = '1024';
-  process.env.AUTH_SCRYPT_BLOCK_SIZE = '8';
-  process.env.AUTH_SCRYPT_PARALLELIZATION = '1';
+  process.env.OIDC_ISSUER = TEST_ISSUER;
+  process.env.OIDC_CLIENT_ID = 'plano';
 
   const moduleFixture: TestingModule = await overrides(
     Test.createTestingModule({ imports: [AppModule] }),
@@ -92,22 +86,27 @@ export interface RegisteredUser {
   cookie: string;
 }
 
-/** Registers `username` and returns the user with their session cookie. */
+/**
+ * Signs `username` in as the identity service would have, and returns the user
+ * with their Plano session cookie.
+ */
 export async function registerUser(
   app: INestApplication<App>,
   username: string,
+  overrides: Partial<IdentityClaims> = {},
 ): Promise<RegisteredUser> {
-  const response = await request(app.getHttpServer())
-    .post('/api/v1/auth/register')
-    .send({
-      ...validRegistration,
-      firstName: username.charAt(0).toUpperCase() + username.slice(1),
-      username,
-      email: `${username}@example.com`,
-    })
-    .expect(201);
+  const issued = await app.get(AuthService).signIn({
+    sub: randomUUID(),
+    username,
+    firstName: username.charAt(0).toUpperCase() + username.slice(1),
+    lastName: 'Doe',
+    email: `${username}@example.com`,
+    locale: null,
+    sid: null,
+    ...overrides,
+  });
   return {
-    user: response.body as AuthUser,
-    cookie: cookiePair(readSetCookie(response.headers)[0]),
+    user: issued.user,
+    cookie: `${SESSION_COOKIE_NAME}=${issued.token}`,
   };
 }

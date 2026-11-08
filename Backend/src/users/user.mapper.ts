@@ -27,6 +27,7 @@ export function toAuthUser(user: User): AuthUser {
     email: user.email,
     locale: user.locale,
     avatarVersion: avatarVersion(user),
+    termsAccepted: user.termsAcceptedAt !== null,
   };
 }
 

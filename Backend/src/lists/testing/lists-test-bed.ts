@@ -174,7 +174,6 @@ async function insertUser(
     normalizedUsername: username,
     email: `${username}@example.com`,
     normalizedEmail: `${username}@example.com`,
-    passwordHash: 'not-a-real-hash',
     termsAcceptedAt: new Date(),
   });
   return id;

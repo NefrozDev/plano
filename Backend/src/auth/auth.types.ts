@@ -10,6 +10,8 @@ export interface AuthUser {
   locale: Locale;
   /** Null without a profile picture; see PublicUser.avatarVersion. */
   avatarVersion: number | null;
+  /** False until Plano's own terms are accepted, on its first screen. */
+  termsAccepted: boolean;
 }
 
 export type AuthenticatedRequest = Omit<Request, 'cookies'> & {

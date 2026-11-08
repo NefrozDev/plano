@@ -15,6 +15,7 @@ import { CreateNotifications1787980000000 } from './1787980000000-create-notific
 import { AddListObjective1788060000000 } from './1788060000000-add-list-objective';
 import { CreateAgendaEvents1788140000000 } from './1788140000000-create-agenda-events';
 import { CreateAccountSettings1788220000000 } from './1788220000000-create-account-settings';
+import { SignInWithSynapse1788300000000 } from './1788300000000-sign-in-with-synapse';
 
 /** Every migration, oldest first; shared by the app and the in-memory test database. */
 export const MIGRATIONS = [
@@ -35,4 +36,5 @@ export const MIGRATIONS = [
   AddListObjective1788060000000,
   CreateAgendaEvents1788140000000,
   CreateAccountSettings1788220000000,
+  SignInWithSynapse1788300000000,
 ];

@@ -10,8 +10,10 @@ import type { AvatarType, Locale } from '@plano/common';
 import { Session } from '../auth/session.entity';
 
 @Entity({ name: 'users' })
-@Index('UQ_users_normalized_username', ['normalizedUsername'], { unique: true })
-@Index('UQ_users_normalized_email', ['normalizedEmail'], { unique: true })
+// Not unique here: the identity service owns usernames and e-mail addresses,
+// and a copy can lag behind a rename until its owner signs in again.
+@Index('IDX_users_normalized_username', ['normalizedUsername'])
+@Index('IDX_users_normalized_email', ['normalizedEmail'])
 export class User {
   @PrimaryColumn({ type: 'varchar', length: 36 })
   id!: string;
@@ -34,11 +36,9 @@ export class User {
   @Column({ type: 'varchar', length: 254, select: false })
   normalizedEmail!: string;
 
-  @Column({ type: 'text', select: false })
-  passwordHash!: string;
-
-  @Column({ type: 'timestamptz' })
-  termsAcceptedAt!: Date;
+  /** When Plano's own terms were accepted; null until the first screen asks. */
+  @Column({ type: 'timestamptz', nullable: true })
+  termsAcceptedAt!: Date | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;

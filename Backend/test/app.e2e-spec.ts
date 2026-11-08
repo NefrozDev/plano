@@ -4,20 +4,7 @@ import { App } from 'supertest/types';
 import type { AuthUser } from './../src/auth/auth.types';
 import type { HealthStatus } from './../src/health/health.service';
 import type { GroupDetails, GroupSummary } from './../src/groups/group.types';
-import {
-  type TestApp,
-  cookiePair,
-  createTestApp,
-  readSetCookie,
-  registerUser,
-  validRegistration,
-} from './e2e-helpers';
-
-interface ErrorResponse {
-  statusCode: number;
-  message: string | string[];
-  error: string;
-}
+import { type TestApp, createTestApp, registerUser } from './e2e-helpers';
 
 describe('Plano API (e2e)', () => {
   let app: INestApplication<App>;
@@ -40,156 +27,22 @@ describe('Plano API (e2e)', () => {
     expect(body.timestamp).toBeDefined();
   });
 
-  it('registers a user and restores the persistent cookie session', async () => {
-    const registration = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send(validRegistration)
-      .expect(201);
-    const user = registration.body as unknown as AuthUser;
-    const setCookie = readSetCookie(registration.headers)[0];
-
-    expect(user).toEqual({
-      id: expect.any(String) as string,
-      firstName: 'Jamie',
-      lastName: 'Doe',
-      username: 'jamie.doe',
-      email: 'jamie@example.com',
-      locale: 'fr',
-      avatarVersion: null,
-    });
-    expect(registration.body).not.toHaveProperty('password');
-    expect(registration.body).not.toHaveProperty('passwordHash');
-    expect(setCookie).toContain('plano_session=');
-    expect(setCookie).toContain('HttpOnly');
-    expect(setCookie).toContain('SameSite=Lax');
-    expect(setCookie).toContain('Path=/api/v1');
-    expect(setCookie).toMatch(/Max-Age=\d+/);
-
-    await request(app.getHttpServer())
-      .get('/api/v1/auth/session')
-      .set('Cookie', cookiePair(setCookie))
-      .expect(200)
-      .expect(user);
-  });
-
-  it('rejects invalid and unexpected registration fields', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        ...validRegistration,
-        acceptedTerms: false,
-        administrator: true,
-      })
-      .expect(400);
-
-    expect((response.body as { message: string[] }).message).toContain(
-      'property administrator should not exist',
-    );
-    // No account means no session.
-    expect(response.headers['set-cookie']).toBeUndefined();
-  });
-
-  it('normalizes unique email addresses and usernames', async () => {
-    await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send(validRegistration)
-      .expect(201);
-
-    const sameEmail = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        ...validRegistration,
-        username: 'someone.else',
-        email: ' JAMIE@EXAMPLE.COM ',
-      })
-      .expect(409);
-    expect(sameEmail.headers['set-cookie']).toBeUndefined();
-
-    const sameUsername = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        ...validRegistration,
-        username: 'JAMIE.DOE',
-        email: 'other@example.com',
-      })
-      .expect(409);
-    expect(sameUsername.headers['set-cookie']).toBeUndefined();
-  });
-
-  it('serializes concurrent registrations for the single-connection database', async () => {
-    const [first, second] = await Promise.all([
-      request(app.getHttpServer())
-        .post('/api/v1/auth/register')
-        .send(validRegistration),
-      request(app.getHttpServer())
-        .post('/api/v1/auth/register')
-        .send({
-          ...validRegistration,
-          username: 'grace.hopper',
-          email: 'grace@example.com',
-        }),
-    ]);
-
-    expect(first.status).toBe(201);
-    expect(second.status).toBe(201);
-  });
-
   it('rejects unsafe browser requests from an untrusted origin', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
+    const { cookie } = await registerUser(app, 'jamie.doe');
+
+    await request(app.getHttpServer())
+      .post('/api/v1/groups')
+      .set('Cookie', cookie)
       .set('Origin', 'https://attacker.example')
-      .send(validRegistration)
+      .send({ name: 'Forged' })
       .expect(403);
 
-    expect(response.headers['set-cookie']).toBeUndefined();
-    // Nothing was created: the same account can still register normally.
-    const accepted = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send(validRegistration)
-      .expect(201);
-    expect(accepted.body).toMatchObject({ username: 'jamie.doe' });
-  });
-
-  it('logs in and uses the same response for unknown users and bad passwords', async () => {
-    await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send(validRegistration)
-      .expect(201);
-
-    const login = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ username: 'JAMIE.DOE', password: validRegistration.password })
+    // Nothing was created.
+    const groups = await request(app.getHttpServer())
+      .get('/api/v1/groups')
+      .set('Cookie', cookie)
       .expect(200);
-
-    expect(login.body).toMatchObject({ username: 'jamie.doe' });
-    expect(readSetCookie(login.headers)[0]).toContain('HttpOnly');
-
-    const wrongPassword = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ username: 'jamie.doe', password: 'definitely-wrong' })
-      .expect(401);
-    const unknownUser = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ username: 'unknown.user', password: 'definitely-wrong' })
-      .expect(401);
-
-    expect(wrongPassword.body as ErrorResponse).toEqual(
-      unknownUser.body as ErrorResponse,
-    );
-  });
-
-  it('rate limits repeated login attempts from the same client', async () => {
-    const attempt = () =>
-      request(app.getHttpServer())
-        .post('/api/v1/auth/login')
-        .send({ username: 'unknown.user', password: 'definitely-wrong' });
-
-    for (let i = 0; i < 10; i++) {
-      await attempt().expect(401);
-    }
-    const blocked = await attempt().expect(429);
-
-    expect(Number(blocked.headers['retry-after'])).toBeGreaterThan(0);
+    expect(groups.body).toEqual([]);
   });
 
   it('does not rate limit the health check', async () => {
@@ -204,33 +57,9 @@ describe('Plano API (e2e)', () => {
     expect([...statuses]).toEqual([200]);
   });
 
-  it('revokes the session and clears the cookie on logout', async () => {
-    const registration = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send(validRegistration)
-      .expect(201);
-    const originalCookie = cookiePair(readSetCookie(registration.headers)[0]);
-    const logout = await request(app.getHttpServer())
-      .post('/api/v1/auth/logout')
-      .set('Cookie', originalCookie)
-      .expect(204);
-
-    expect(readSetCookie(logout.headers)[0]).toContain('plano_session=;');
-
-    await request(app.getHttpServer())
-      .get('/api/v1/auth/session')
-      .set('Cookie', originalCookie)
-      .expect(401);
-
-    await request(app.getHttpServer()).post('/api/v1/auth/logout').expect(204);
-  });
-
   it('creates several groups for the authenticated user and lists them', async () => {
-    const registration = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send(validRegistration)
-      .expect(201);
-    const cookie = cookiePair(readSetCookie(registration.headers)[0]);
+    const registered = await registerUser(app, 'jamie.doe');
+    const cookie = registered.cookie;
 
     await request(app.getHttpServer()).get('/api/v1/groups').expect(401);
     await request(app.getHttpServer())
@@ -289,39 +118,20 @@ describe('Plano API (e2e)', () => {
   });
 
   it('handles joining, group administration, ownership transfer, and departure', async () => {
-    const ownerRegistration = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send(validRegistration)
-      .expect(201);
-    const ownerCookie = cookiePair(readSetCookie(ownerRegistration.headers)[0]);
+    const ownerRegistered = await registerUser(app, 'jamie.doe');
+    const ownerCookie = ownerRegistered.cookie;
 
-    const memberRegistration = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        ...validRegistration,
-        firstName: 'Morgan',
-        username: 'morgan.doe',
-        email: 'morgan@example.com',
-      })
-      .expect(201);
-    const member = memberRegistration.body as unknown as AuthUser;
-    const memberCookie = cookiePair(
-      readSetCookie(memberRegistration.headers)[0],
-    );
+    const memberRegistered = await registerUser(app, 'morgan.doe', {
+      firstName: 'Morgan',
+    });
+    const member = memberRegistered.user;
+    const memberCookie = memberRegistered.cookie;
 
-    const visitorRegistration = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send({
-        ...validRegistration,
-        firstName: 'Robin',
-        username: 'robin.doe',
-        email: 'robin@example.com',
-      })
-      .expect(201);
-    const visitor = visitorRegistration.body as unknown as AuthUser;
-    const visitorCookie = cookiePair(
-      readSetCookie(visitorRegistration.headers)[0],
-    );
+    const visitorRegistered = await registerUser(app, 'robin.doe', {
+      firstName: 'Robin',
+    });
+    const visitor = visitorRegistered.user;
+    const visitorCookie = visitorRegistered.cookie;
 
     const createdGroup = (
       await request(app.getHttpServer())
@@ -494,11 +304,8 @@ describe('Plano API (e2e)', () => {
   });
 
   it('keeps a valid user session after the backend restarts', async () => {
-    const registration = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
-      .send(validRegistration)
-      .expect(201);
-    const originalCookie = cookiePair(readSetCookie(registration.headers)[0]);
+    const registered = await registerUser(app, 'jamie.doe');
+    const originalCookie = registered.cookie;
 
     app = await testApp.restart();
 

@@ -1,387 +1,233 @@
-import type { Mock } from 'vitest';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
-import { QueryFailedError, type DataSource, type Repository } from 'typeorm';
+import { UnauthorizedException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import { DataSource } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
+import { MIGRATIONS } from '../database/migrations';
+import {
+  createTestDatabase,
+  ENTITIES,
+  type TestDatabase,
+} from '../database/testing/test-database';
+import { List } from '../lists/entities/list.entity';
 import { User } from '../users/user.entity';
 import { AuthService } from './auth.service';
-import type { PasswordService } from './password.service';
+import type { IdentityClaims } from './oidc-client.service';
 import { Session } from './session.entity';
 import type { SessionSettingsService } from './session-settings.service';
 
 describe('AuthService', () => {
-  const user = Object.assign(new User(), {
-    id: '1c785224-24f1-45d4-953e-a6df91568d4a',
-    firstName: 'Jamie',
-    lastName: 'Doe',
-    username: 'jamie.doe',
-    email: 'jamie@example.com',
-    passwordHash: 'stored-password-hash',
-    locale: 'fr',
-    avatarUpdatedAt: null,
-  });
-  let users: {
-    findOne: Mock;
-    createQueryBuilder: Mock;
-  };
-  let sessions: {
-    create: Mock;
-    save: Mock;
-    createQueryBuilder: Mock;
-    delete: Mock;
-  };
-  let userQuery: {
-    addSelect: Mock;
-    where: Mock;
-    getOne: Mock;
-  };
-  let sessionQuery: {
-    leftJoinAndSelect: Mock;
-    where: Mock;
-    getOne: Mock;
-  };
-  let passwords: {
-    hash: Mock;
-    verify: Mock;
-  };
-  let manager: {
-    findOne: Mock;
-    delete: Mock;
-    create: Mock;
-    save: Mock;
-  };
-  let managerCreated: object[];
-  let dataSource: {
-    transaction: Mock;
-  };
-  let createdSession: Session | undefined;
+  let database: TestDatabase;
+  let dataSource: DataSource;
   let service: AuthService;
 
-  beforeEach(() => {
-    userQuery = {
-      addSelect: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      getOne: vi.fn(),
-    };
-    sessionQuery = {
-      leftJoinAndSelect: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      getOne: vi.fn(),
-    };
-    users = {
-      findOne: vi.fn().mockResolvedValue(null),
-      createQueryBuilder: vi.fn().mockReturnValue(userQuery),
-    };
-    createdSession = undefined;
-    sessions = {
-      create: vi.fn((session: Session) => {
-        createdSession = session;
-        return session;
-      }),
-      save: vi.fn((session: Session) => Promise.resolve(session)),
-      createQueryBuilder: vi.fn().mockReturnValue(sessionQuery),
-      delete: vi.fn().mockResolvedValue({ affected: 1, raw: [] }),
-    };
-    passwords = {
-      hash: vi.fn().mockResolvedValue('new-password-hash'),
-      verify: vi.fn(),
-    };
-    managerCreated = [];
-    manager = {
-      findOne: vi.fn().mockResolvedValue(null),
-      delete: vi.fn().mockResolvedValue({ affected: 0, raw: [] }),
-      create: vi.fn((_entity: unknown, values: object) => {
-        managerCreated.push(values);
-        return values;
-      }),
-      save: vi.fn((entity: object) => Promise.resolve(entity)),
-    };
-    dataSource = {
-      transaction: vi.fn(
-        (operation: (transactionManager: unknown) => Promise<unknown>) =>
-          operation(manager),
-      ),
-    };
+  const claimsFor = (
+    overrides: Partial<IdentityClaims> = {},
+  ): IdentityClaims => ({
+    sub: randomUUID(),
+    username: 'Jamie.Doe',
+    firstName: ' Jamie ',
+    lastName: 'Doe',
+    email: 'Jamie@Example.com',
+    locale: 'en-GB',
+    sid: 'identity-session-1',
+    ...overrides,
+  });
+
+  async function addList(ownerId: string): Promise<void> {
+    await dataSource.manager.insert(List, {
+      id: randomUUID(),
+      ownerId,
+      name: 'Courses',
+      icon: 'cart',
+      color: '#123456',
+    });
+  }
+
+  beforeEach(async () => {
+    database = await createTestDatabase();
+    dataSource = new DataSource({
+      type: 'postgres',
+      url: database.url,
+      entities: ENTITIES,
+      migrations: MIGRATIONS,
+    });
+    await dataSource.initialize();
+    await dataSource.runMigrations();
     service = new AuthService(
-      users as unknown as Repository<User>,
-      sessions as unknown as Repository<Session>,
-      dataSource as unknown as DataSource,
-      passwords as unknown as PasswordService,
+      dataSource.getRepository(User),
+      dataSource.getRepository(Session),
+      dataSource,
       { ttlMilliseconds: 60_000 } as SessionSettingsService,
       new DatabaseWriteLockService(),
     );
   });
 
-  it('registers a normalized user and the first session atomically', async () => {
-    const authentication = await service.register({
-      firstName: '  Ada ',
-      lastName: ' Lovelace  ',
-      username: 'ADA',
-      email: ' ADA@EXAMPLE.COM ',
-      password: 'password123',
-      acceptedTerms: true,
-    });
-    const createdUser = managerCreated[0] as User;
-    const createdSession = managerCreated[1] as Session;
-
-    expect(passwords.hash).toHaveBeenCalledWith('password123');
-    expect(createdUser).toMatchObject({
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      username: 'ada',
-      normalizedUsername: 'ada',
-      email: 'ada@example.com',
-      normalizedEmail: 'ada@example.com',
-      passwordHash: 'new-password-hash',
-      // Without a language from the client, the account starts in French.
-      locale: 'fr',
-    });
-    expect(createdSession.userId).toBe(createdUser.id);
-    expect(createdSession.tokenHash).toMatch(/^[a-f0-9]{64}$/);
-    expect(authentication.user).toMatchObject({
-      username: 'ada',
-      email: 'ada@example.com',
-    });
-    expect(authentication.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    expect(manager.delete).toHaveBeenCalled();
+  afterEach(async () => {
+    await dataSource.destroy();
+    await database.drop();
   });
 
-  it('keeps the language the user registered in', async () => {
-    await service.register({
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      username: 'ada',
-      email: 'ada@example.com',
-      password: 'password123',
-      acceptedTerms: true,
-      locale: 'de',
+  describe('signIn', () => {
+    it('creates the Plano user on a first visit, with the identity id and terms still to accept', async () => {
+      const claims = claimsFor();
+
+      const issued = await service.signIn(claims);
+
+      expect(issued.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+      expect(issued.user).toEqual({
+        id: claims.sub,
+        firstName: 'Jamie',
+        lastName: 'Doe',
+        username: 'jamie.doe',
+        email: 'Jamie@Example.com',
+        locale: 'en',
+        avatarVersion: null,
+        termsAccepted: false,
+      });
+      const session = await dataSource.manager.findOneByOrFail(Session, {
+        userId: claims.sub,
+      });
+      expect(session.oidcSid).toBe('identity-session-1');
+      expect(session.expiresAt.getTime()).toBeGreaterThan(Date.now());
     });
 
-    expect(managerCreated[0]).toMatchObject({ username: 'ada', locale: 'de' });
-  });
+    it('keeps an existing user and its Plano data, refreshing only what the account owns', async () => {
+      const claims = claimsFor({ locale: 'de' });
+      await service.signIn(claims);
+      await dataSource.manager.update(
+        User,
+        { id: claims.sub },
+        { locale: 'it', termsAcceptedAt: new Date() },
+      );
+      await addList(claims.sub);
 
-  it('rejects an existing username or email before hashing', async () => {
-    users.findOne.mockResolvedValue(user);
+      const again = await service.signIn({
+        ...claims,
+        username: 'jamie.renamed',
+        firstName: 'Jay',
+        email: 'jay@example.com',
+        sid: 'identity-session-2',
+      });
 
-    await expect(
-      service.register({
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-        username: 'ada',
-        email: 'ada@example.com',
-        password: 'password123',
-        acceptedTerms: true,
-      }),
-    ).rejects.toBeInstanceOf(ConflictException);
-    expect(passwords.hash).not.toHaveBeenCalled();
-    expect(dataSource.transaction).not.toHaveBeenCalled();
-  });
-
-  it('rejects a duplicate detected inside the registration transaction', async () => {
-    manager.findOne.mockResolvedValue(user);
-
-    await expect(
-      service.register({
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-        username: 'ada',
-        email: 'ada@example.com',
-        password: 'password123',
-        acceptedTerms: true,
-      }),
-    ).rejects.toBeInstanceOf(ConflictException);
-    // The re-check runs inside the transaction and stops before any write.
-    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
-    expect(manager.findOne).toHaveBeenCalledTimes(1);
-    expect(manager.save).not.toHaveBeenCalled();
-    expect(managerCreated).toEqual([]);
-  });
-
-  it('uses the same unauthorized result for an unknown user', async () => {
-    userQuery.getOne.mockResolvedValue(null);
-    passwords.verify.mockResolvedValue(false);
-
-    await expect(
-      service.login({ username: 'unknown.user', password: 'wrong password' }),
-    ).rejects.toEqual(
-      new UnauthorizedException(
-        "Le nom d'utilisateur ou le mot de passe est incorrect.",
-      ),
-    );
-    // Verifying even without a user keeps the timing of both failures alike.
-    expect(passwords.verify).toHaveBeenCalledTimes(1);
-    expect(passwords.verify).toHaveBeenCalledWith('wrong password', undefined);
-    expect(sessions.save).not.toHaveBeenCalled();
-  });
-
-  it('stores only a digest of a newly issued session token', async () => {
-    userQuery.getOne.mockResolvedValue(user);
-    passwords.verify.mockResolvedValue(true);
-
-    const authentication = await service.login({
-      username: 'JAMIE.DOE',
-      password: 'correct password',
+      expect(again.user).toEqual(
+        expect.objectContaining({
+          id: claims.sub,
+          username: 'jamie.renamed',
+          firstName: 'Jay',
+          email: 'jay@example.com',
+          // Plano's own settings stay Plano's.
+          locale: 'it',
+          termsAccepted: true,
+        }),
+      );
+      expect(await dataSource.manager.countBy(User, {})).toBe(1);
+      expect(
+        await dataSource.manager.countBy(List, { ownerId: claims.sub }),
+      ).toBe(1);
+      expect(
+        await dataSource.manager.countBy(Session, { userId: claims.sub }),
+      ).toBe(2);
     });
-    const storedSession = createdSession;
 
-    expect(authentication.user).toEqual({
-      id: user.id,
-      firstName: 'Jamie',
-      lastName: 'Doe',
-      username: 'jamie.doe',
-      email: 'jamie@example.com',
-      locale: 'fr',
-      avatarVersion: null,
-    });
-    expect(authentication.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    expect(storedSession?.tokenHash).toMatch(/^[a-f0-9]{64}$/);
-    expect(storedSession?.tokenHash).not.toBe(authentication.token);
-    expect(storedSession?.userId).toBe(user.id);
-    expect(storedSession?.expiresAt).toEqual(authentication.expiresAt);
-    // Usernames are matched case-insensitively.
-    expect(userQuery.where).toHaveBeenCalledWith(
-      'user.normalizedUsername = :normalizedUsername',
-      { normalizedUsername: 'jamie.doe' },
-    );
-    expect(passwords.verify).toHaveBeenCalledWith(
-      'correct password',
-      'stored-password-hash',
-    );
-    expect(sessions.save).toHaveBeenCalledTimes(1);
-    expect(sessions.save).toHaveBeenCalledWith(storedSession);
-  });
+    it('takes a username another copy still holds, as the identity service already moved it', async () => {
+      await service.signIn(claimsFor({ username: 'sam' }));
 
-  it('rejects a wrong password for an existing user', async () => {
-    userQuery.getOne.mockResolvedValue(user);
-    passwords.verify.mockResolvedValue(false);
-
-    await expect(
-      service.login({ username: 'jamie.doe', password: 'wrong password' }),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(passwords.verify).toHaveBeenCalledWith(
-      'wrong password',
-      'stored-password-hash',
-    );
-    expect(sessions.create).not.toHaveBeenCalled();
-    expect(sessions.save).not.toHaveBeenCalled();
-  });
-
-  it('rejects missing, malformed, and unknown sessions', async () => {
-    await expect(service.getSessionUser(undefined)).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
-    await expect(service.getSessionUser('bad-token')).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
-    // Malformed tokens never reach the database.
-    expect(sessions.createQueryBuilder).not.toHaveBeenCalled();
-    sessionQuery.getOne.mockResolvedValue(null);
-    await expect(service.getSessionUser('a'.repeat(43))).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
-    expect(sessions.createQueryBuilder).toHaveBeenCalledTimes(1);
-    expect(sessions.delete).not.toHaveBeenCalled();
-  });
-
-  it('returns the user for a valid unexpired session', async () => {
-    sessionQuery.getOne.mockResolvedValue(
-      Object.assign(new Session(), {
-        id: 'active-session',
-        expiresAt: new Date(Date.now() + 60_000),
-        user,
-      }),
-    );
-
-    await expect(service.getSessionUser('a'.repeat(43))).resolves.toEqual({
-      id: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      username: user.username,
-      email: user.email,
-      locale: 'fr',
-      avatarVersion: null,
-    });
-    // Looked up by digest, never by the raw token.
-    expect(sessionQuery.where).toHaveBeenCalledTimes(1);
-    expect(sessionQuery.where).toHaveBeenCalledWith(
-      'session.tokenHash = :tokenHash',
-      { tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/) as string },
-    );
-    expect(sessionQuery.where).not.toHaveBeenCalledWith(expect.anything(), {
-      tokenHash: 'a'.repeat(43),
-    });
-    expect(sessions.delete).not.toHaveBeenCalled();
-  });
-
-  it('deletes an expired session before rejecting it', async () => {
-    const expiredSession = Object.assign(new Session(), {
-      id: 'expired-session',
-      expiresAt: new Date(Date.now() - 1_000),
-      user,
-    });
-    sessionQuery.getOne.mockResolvedValue(expiredSession);
-
-    await expect(service.getSessionUser('a'.repeat(43))).rejects.toBeInstanceOf(
-      UnauthorizedException,
-    );
-    expect(sessions.delete).toHaveBeenCalledTimes(1);
-    expect(sessions.delete).toHaveBeenCalledWith({ id: 'expired-session' });
-  });
-
-  it('makes logout idempotent and deletes valid session digests', async () => {
-    await service.logout(undefined);
-    await service.logout('malformed');
-    expect(sessions.delete).not.toHaveBeenCalled();
-
-    await service.logout('a'.repeat(43));
-    expect(sessions.delete).toHaveBeenCalledTimes(1);
-    expect(sessions.delete).toHaveBeenCalledWith({
-      tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/) as string,
-    });
-  });
-
-  describe('when the database rejects the registration', () => {
-    const details = {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      username: 'ada',
-      email: 'ada@example.com',
-      password: 'password123',
-      acceptedTerms: true,
-    };
-
-    it('turns a unique-constraint race into a conflict', async () => {
-      // Two concurrent sign-ups can both pass the duplicate checks; the
-      // database unique index is the last line of defence.
-      manager.save.mockRejectedValueOnce(
-        new QueryFailedError(
-          'INSERT',
-          [],
-          new Error('UNIQUE constraint failed: users.normalizedEmail'),
-        ),
+      const second = await service.signIn(
+        claimsFor({ username: 'SAM', email: 'other@example.com' }),
       );
 
-      await expect(service.register(details)).rejects.toEqual(
-        new ConflictException(
-          "Ce nom d'utilisateur ou cette adresse e-mail est déjà utilisé.",
-        ),
-      );
-      // The user insert failed first: no session was written for it.
-      expect(manager.save).toHaveBeenCalledTimes(1);
+      expect(second.user.username).toBe('sam');
+      expect(
+        await dataSource.manager.countBy(User, { normalizedUsername: 'sam' }),
+      ).toBe(2);
     });
 
-    it('rethrows other database and runtime errors unchanged', async () => {
-      const queryError = new QueryFailedError(
-        'INSERT',
-        [],
-        new Error('disk I/O error'),
-      );
-      manager.save.mockRejectedValueOnce(queryError);
-      await expect(service.register(details)).rejects.toBe(queryError);
-      expect(manager.save).toHaveBeenCalledTimes(1);
+    it("starts in French when the account language is not one of Plano's", async () => {
+      const issued = await service.signIn(claimsFor({ locale: 'pt-BR' }));
 
-      const runtimeError = new Error('connection lost');
-      manager.save.mockRejectedValueOnce(runtimeError);
-      await expect(service.register(details)).rejects.toBe(runtimeError);
+      expect(issued.user.locale).toBe('fr');
+    });
+  });
+
+  describe('sessions', () => {
+    it('reads the user of a valid session and refuses others', async () => {
+      const issued = await service.signIn(claimsFor());
+
+      await expect(service.getSessionUser(issued.token)).resolves.toEqual(
+        issued.user,
+      );
+      await expect(
+        service.getSessionUser('a'.repeat(43)),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      await expect(service.getSessionUser(undefined)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+    });
+
+    it('ends only the session that signs out', async () => {
+      const claims = claimsFor();
+      const here = await service.signIn(claims);
+      const there = await service.signIn(claims);
+
+      await service.logout(here.token);
+
+      await expect(service.getSessionUser(here.token)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      await expect(service.getSessionUser(there.token)).resolves.toBeDefined();
+    });
+
+    it('ends the sessions opened from an identity session that ended', async () => {
+      const claims = claimsFor();
+      const fromA = await service.signIn({ ...claims, sid: 'a' });
+      const fromB = await service.signIn({ ...claims, sid: 'b' });
+
+      await expect(
+        service.endSessions({ sid: 'a', sub: claims.sub }),
+      ).resolves.toBe(1);
+
+      await expect(service.getSessionUser(fromA.token)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      await expect(service.getSessionUser(fromB.token)).resolves.toBeDefined();
+    });
+
+    it('ends every session of the account when the logout names no session', async () => {
+      const claims = claimsFor();
+      await service.signIn({ ...claims, sid: 'a' });
+      await service.signIn({ ...claims, sid: 'b' });
+      const someoneElse = await service.signIn(
+        claimsFor({ username: 'other' }),
+      );
+
+      await expect(service.endSessions({ sub: claims.sub })).resolves.toBe(2);
+
+      await expect(
+        service.getSessionUser(someoneElse.token),
+      ).resolves.toBeDefined();
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('erases the user and what it owns, and is harmless twice', async () => {
+      const claims = claimsFor();
+      const issued = await service.signIn(claims);
+      await addList(claims.sub);
+      const kept = await service.signIn(claimsFor({ username: 'kept' }));
+
+      await service.deleteAccount(claims.sub);
+      await service.deleteAccount(claims.sub);
+
+      expect(await dataSource.manager.countBy(User, { id: claims.sub })).toBe(
+        0,
+      );
+      expect(
+        await dataSource.manager.countBy(List, { ownerId: claims.sub }),
+      ).toBe(0);
+      await expect(service.getSessionUser(issued.token)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      await expect(service.getSessionUser(kept.token)).resolves.toBeDefined();
     });
   });
 });

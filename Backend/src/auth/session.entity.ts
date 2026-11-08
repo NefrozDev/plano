@@ -26,6 +26,14 @@ export class Session {
   @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'FK_sessions_user' })
   user!: User;
 
+  /**
+   * The identity service's session this one was opened from: a back-channel
+   * logout names it. Null for sessions opened before Plano used it.
+   */
+  @Index('IDX_sessions_oidc_sid')
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  oidcSid!: string | null;
+
   @Column({ type: 'timestamptz' })
   expiresAt!: Date;
 

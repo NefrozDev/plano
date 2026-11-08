@@ -5,9 +5,10 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  HttpCode,
   Patch,
+  Post,
   Put,
-  Query,
   Res,
   StreamableFile,
   UploadedFile,
@@ -17,13 +18,11 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { AllowedOriginGuard } from '../auth/allowed-origin.guard';
-import type { UsernameAvailability } from '@plano/common';
 import type { AuthUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { MAX_AVATAR_BYTES, type UploadedImage } from './avatar-image';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { UsernameAvailabilityQuery } from './dto/username-availability.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -39,15 +38,11 @@ export class UsersController {
     return this.users.updateProfile(userId, details);
   }
 
-  /** Lets the profile page warn before saving; PATCH me still enforces it. */
-  @Get('username-availability')
-  async usernameAvailability(
-    @CurrentUser('id') userId: string,
-    @Query() { username }: UsernameAvailabilityQuery,
-  ): Promise<UsernameAvailability> {
-    return {
-      available: await this.users.isUsernameAvailable(userId, username),
-    };
+  /** Plano's own terms, accepted on its first screen after signing in. */
+  @Post('me/terms')
+  @HttpCode(200)
+  acceptTerms(@CurrentUser('id') userId: string): Promise<AuthUser> {
+    return this.users.acceptTerms(userId);
   }
 
   /**

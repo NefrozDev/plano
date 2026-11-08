@@ -11,6 +11,7 @@ describe('CurrentUser', () => {
     email: 'ada@example.com',
     locale: 'fr',
     avatarVersion: null,
+    termsAccepted: true,
   };
   const contextFor = (request: Partial<AuthenticatedRequest>) =>
     ({

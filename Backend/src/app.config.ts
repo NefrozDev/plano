@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
-import type { Express } from 'express';
+import { type Express, text } from 'express';
 
 export function configureApp(app: INestApplication): void {
   // In production, requests arrive through Mailcow's nginx and Caddy on private
@@ -15,6 +15,11 @@ export function configureApp(app: INestApplication): void {
     credentials: true,
   });
   app.use(cookieParser());
+  // The identity service sends deletion notices as a signed token, not JSON.
+  app.use(
+    '/api/v1/auth/account-deleted',
+    text({ type: 'application/secevent+jwt', limit: '16kb' }),
+  );
   app.useGlobalPipes(
     new ValidationPipe({
       forbidNonWhitelisted: true,

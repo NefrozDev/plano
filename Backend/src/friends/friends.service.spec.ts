@@ -66,7 +66,6 @@ describe('FriendsService and ContactsService', () => {
       normalizedUsername: username,
       email: `${username}@example.com`,
       normalizedEmail: `${username}@example.com`,
-      passwordHash: 'hash',
       termsAcceptedAt: new Date(),
     });
     return id;
