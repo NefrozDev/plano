@@ -97,7 +97,9 @@ describe('NotificationsStore', () => {
       expect(store.total()).toBe(1);
 
       auth.logout().subscribe();
-      http.expectOne('/api/v1/auth/logout').flush(null);
+      http
+        .expectOne('/api/v1/auth/logout')
+        .flush({ redirectTo: 'https://auth.example/oidc/session/end' });
       TestBed.tick();
 
       expect(store.items()).toEqual([]);

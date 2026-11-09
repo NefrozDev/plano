@@ -83,7 +83,9 @@ describe('FriendNotificationsService', () => {
     stream.emit({ type: 'friend.accepted', user: bob });
 
     auth.logout().subscribe();
-    http.expectOne('/api/v1/auth/logout').flush(null);
+    http
+      .expectOne('/api/v1/auth/logout')
+      .flush({ redirectTo: 'https://auth.example/oidc/session/end' });
     TestBed.tick();
 
     expect(notifications.message()).toBe('');
