@@ -36,14 +36,11 @@ export class SignInWithSynapse1788300000000 implements MigrationInterface {
 
     await queryRunner.dropTable('password_resets');
     await queryRunner.dropColumn('users', 'passwordHash');
-    await queryRunner.changeColumn(
-      'users',
-      'termsAcceptedAt',
-      new TableColumn({
-        name: 'termsAcceptedAt',
-        type: 'timestamptz',
-        isNullable: true,
-      }),
+    // Someone coming from another Synapse app has not accepted Plano's terms yet.
+    // Plain SQL: changeColumn read the type as "timestamp with time zone", saw
+    // a change from "timestamptz", and recreated the column, losing every date.
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "termsAcceptedAt" DROP NOT NULL`,
     );
 
     // A copy may lag behind a rename at the identity service: no longer unique here.
@@ -81,10 +78,8 @@ export class SignInWithSynapse1788300000000 implements MigrationInterface {
     await queryRunner.query(
       `UPDATE "users" SET "termsAcceptedAt" = now() WHERE "termsAcceptedAt" IS NULL`,
     );
-    await queryRunner.changeColumn(
-      'users',
-      'termsAcceptedAt',
-      new TableColumn({ name: 'termsAcceptedAt', type: 'timestamptz' }),
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "termsAcceptedAt" SET NOT NULL`,
     );
     await queryRunner.addColumn(
       'users',
