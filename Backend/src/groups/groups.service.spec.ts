@@ -169,7 +169,7 @@ describe('GroupsService', () => {
       memberships.findOne.mockResolvedValue(null);
 
       await expect(service.findOneForUser('user-9', 'group-1')).rejects.toThrow(
-        'Ce groupe est introuvable.',
+        'Group not found.',
       );
       expect(memberships.find).not.toHaveBeenCalled();
     });
@@ -304,7 +304,7 @@ describe('GroupsService', () => {
 
       await expect(
         service.join('user-2', { inviteCode: 'ABC12345' }),
-      ).rejects.toThrow('Vous faites déjà partie de ce groupe.');
+      ).rejects.toThrow('You are already in this group.');
       expect(manager.count).not.toHaveBeenCalled();
       expect(manager.save).not.toHaveBeenCalled();
     });
@@ -326,7 +326,7 @@ describe('GroupsService', () => {
 
       await expect(
         service.join('user-2', { inviteCode: 'NOPE0000' }),
-      ).rejects.toThrow("Ce code d'invitation est invalide.");
+      ).rejects.toThrow('This invite code is invalid.');
       expect(manager.findOne).toHaveBeenCalledTimes(1);
       expect(manager.create).not.toHaveBeenCalled();
       expect(manager.save).not.toHaveBeenCalled();
@@ -372,7 +372,7 @@ describe('GroupsService', () => {
 
       await expect(
         service.rotateInviteCode('user-1', 'group-1'),
-      ).rejects.toThrow("Impossible de générer un code d'invitation unique.");
+      ).rejects.toThrow('Could not generate a unique invite code.');
       // 1 owner lookup + 10 collision checks.
       expect(manager.findOne).toHaveBeenCalledTimes(11);
       expect(manager.save).not.toHaveBeenCalled();
@@ -385,7 +385,7 @@ describe('GroupsService', () => {
         service.update('user-2', 'group-1', { name: 'Pris' }),
       ).rejects.toBeInstanceOf(ForbiddenException);
       await expect(service.delete('user-2', 'group-1')).rejects.toThrow(
-        'Seul le propriétaire peut effectuer cette action.',
+        'Only the owner can do this.',
       );
       expect(manager.save).not.toHaveBeenCalled();
       expect(manager.delete).not.toHaveBeenCalled();
@@ -452,7 +452,7 @@ describe('GroupsService', () => {
 
       await expect(
         service.transferOwnership('user-1', 'group-1', 'user-9'),
-      ).rejects.toThrow("Ce membre n'appartient pas au groupe.");
+      ).rejects.toThrow('This member is not in the group.');
       expect(manager.save).not.toHaveBeenCalled();
     });
   });
@@ -493,7 +493,7 @@ describe('GroupsService', () => {
       ).rejects.toBeInstanceOf(NotFoundException);
       await expect(
         service.removeMember('user-1', 'group-1', 'user-3'),
-      ).rejects.toThrow('Le propriétaire ne peut pas être retiré.');
+      ).rejects.toThrow('The owner cannot be removed.');
       expect(manager.delete).not.toHaveBeenCalled();
     });
   });

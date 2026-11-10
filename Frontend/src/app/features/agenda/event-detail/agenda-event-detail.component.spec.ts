@@ -157,13 +157,13 @@ describe('AgendaEventDetailComponent', () => {
       expect(element().querySelector('dialog')?.textContent).toContain('agenda des participants');
 
       (element().querySelector('dialog .confirm') as HTMLButtonElement).click();
-      http.expectOne(`${EVENTS_URL}/courses`).flush({ message: 'Hors service' }, { status: 500, statusText: 'Error' });
+      http.expectOne(`${EVENTS_URL}/courses`).flush({ errorCode: 'agenda.organizerOnly' }, { status: 500, statusText: 'Error' });
       await settle();
       harness.detectChanges();
 
       expect(navigate).not.toHaveBeenCalled();
       expect(store.event('courses')).toBeDefined();
-      expect(element().querySelector('.error')?.textContent).toBe('Hors service');
+      expect(element().querySelector('.error')?.textContent).toBe('Seul l’organisateur peut modifier ou supprimer cet événement.');
     });
 
     it('can cancel the deletion', async () => {
@@ -188,7 +188,7 @@ describe('AgendaEventDetailComponent', () => {
       // Not "missing" before the API has answered.
       expect(element().querySelector('.missing')).toBeNull();
 
-      http.expectOne(`${EVENTS_URL}/inconnu`).flush({ message: 'Événement introuvable.' }, { status: 404, statusText: 'Not Found' });
+      http.expectOne(`${EVENTS_URL}/inconnu`).flush({ errorCode: 'agenda.eventNotFound' }, { status: 404, statusText: 'Not Found' });
       await settle();
       harness.detectChanges();
 
@@ -258,11 +258,11 @@ describe('AgendaEventDetailComponent', () => {
       (element().querySelector('.decline') as HTMLButtonElement).click();
       http
         .expectOne(`${EVENTS_URL}/reunion-bob/response`)
-        .flush({ message: 'Événement introuvable.' }, { status: 404, statusText: 'Not Found' });
+        .flush({ errorCode: 'agenda.eventNotFound' }, { status: 404, statusText: 'Not Found' });
       await settle();
       harness.detectChanges();
 
-      expect(element().querySelector('.error')?.textContent).toBe('Événement introuvable.');
+      expect(element().querySelector('.error')?.textContent).toBe('Cet événement n’existe plus.');
       expect((element().querySelector('.decline') as HTMLButtonElement).disabled).toBe(false);
       expect(store.invitations().map(({ id }) => id)).toEqual(['reunion-bob']);
     });

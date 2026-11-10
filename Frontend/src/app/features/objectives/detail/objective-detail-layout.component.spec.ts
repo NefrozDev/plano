@@ -187,11 +187,11 @@ describe('ObjectiveDetailLayoutComponent', () => {
     await visit('/objectives/obj-1');
 
     const updating = store.update('obj-1', { title: 'X' });
-    http.expectOne('/api/v1/objectives/obj-1').flush({ message: 'Interdit' }, { status: 403, statusText: 'Forbidden' });
+    http.expectOne('/api/v1/objectives/obj-1').flush({ errorCode: 'objectives.ownerOnly' }, { status: 403, statusText: 'Forbidden' });
     await updating;
     harness.detectChanges();
 
-    expect(element().querySelector('.action-error')?.textContent).toBe('Interdit');
+    expect(element().querySelector('.action-error')?.textContent).toBe('Seul le propriétaire de l’objectif peut effectuer cette action.');
   });
 
   describe('actions menu', () => {

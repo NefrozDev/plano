@@ -16,3 +16,4 @@ export * from './users';
 export * from './live';
 export * from './notifications';
 export * from './agenda';
+export * from './api-errors';

@@ -226,7 +226,7 @@ export class GroupDetailComponent implements OnInit {
 
   private errorMessage(error: unknown): string {
     return httpErrorMessage(error, {
-      useServerMessage: true,
+      useServerCode: true,
       fallback: 'L’action a échoué. Veuillez réessayer.',
     });
   }

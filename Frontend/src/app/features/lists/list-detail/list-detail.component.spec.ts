@@ -43,7 +43,7 @@ describe('ListDetailComponent', () => {
 
     const detailRequest = http.expectOne('/api/v1/lists/list-1');
     if (options.detail === null) {
-      detailRequest.flush({ message: 'Liste introuvable.' }, { status: 404, statusText: 'Not Found' });
+      detailRequest.flush({ errorCode: 'lists.notFound' }, { status: 404, statusText: 'Not Found' });
     } else {
       detailRequest.flush(options.detail ?? listDetail());
     }
@@ -566,7 +566,7 @@ describe('ListDetailComponent', () => {
     await create({ detail: null });
 
     expect(element.querySelector('[role="alert"]')?.textContent).toContain('n’existe pas');
-    expect(element.querySelector('app-toast')?.textContent).toContain('Liste introuvable.');
+    expect(element.querySelector('app-toast')?.textContent).toContain('Cette liste n’existe plus ou ne vous est plus partagée.');
   });
 
   describe('owner actions', () => {

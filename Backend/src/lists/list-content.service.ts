@@ -26,6 +26,7 @@ import { List } from './entities/list.entity';
 import { ListAccessService } from './list-access.service';
 import { ListChangesService } from './list-changes.service';
 import { toEntryResponse, toSectionResponse } from './list.mapper';
+import { errorCode } from '../errors/error-code';
 
 /** True when `ids` names every row exactly once, in any order. */
 function isPermutation(ids: string[], rows: { id: string }[]): boolean {
@@ -111,7 +112,8 @@ export class ListContentService {
       const sections = await manager.find(ListSection, { where: { listId } });
       if (!isPermutation(sectionIds, sections)) {
         throw new BadRequestException(
-          'L’ordre doit contenir chaque section de la liste une seule fois.',
+          'The order must contain each section of the list exactly once.',
+          errorCode('lists.sectionOrderInvalid'),
         );
       }
       for (const section of sections) {
@@ -195,7 +197,8 @@ export class ListContentService {
       const entries = await manager.find(ListEntry, { where: { sectionId } });
       if (!isPermutation(entryIds, entries)) {
         throw new BadRequestException(
-          'L’ordre doit contenir chaque élément de la section une seule fois.',
+          'The order must contain each item of the section exactly once.',
+          errorCode('lists.entryOrderInvalid'),
         );
       }
       for (const entry of entries) {
@@ -233,7 +236,11 @@ export class ListContentService {
     const section = await manager.findOne(ListSection, {
       where: { id: sectionId, listId },
     });
-    if (!section) throw new NotFoundException('Section introuvable.');
+    if (!section)
+      throw new NotFoundException(
+        'Section not found.',
+        errorCode('lists.sectionNotFound'),
+      );
     return section;
   }
 
@@ -245,7 +252,11 @@ export class ListContentService {
     const entry = await manager.findOne(ListEntry, {
       where: { id: entryId, listId },
     });
-    if (!entry) throw new NotFoundException('Élément introuvable.');
+    if (!entry)
+      throw new NotFoundException(
+        'Item not found.',
+        errorCode('lists.entryNotFound'),
+      );
     return entry;
   }
 
@@ -262,7 +273,8 @@ export class ListContentService {
       }));
     if (!isMember) {
       throw new BadRequestException(
-        'Un élément ne peut être assigné qu’à un membre de la liste.',
+        'An item can only be assigned to a member of the list.',
+        errorCode('lists.assigneeNotMember'),
       );
     }
   }

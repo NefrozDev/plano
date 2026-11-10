@@ -24,6 +24,7 @@ import type {
 } from './dto/agenda-event.dto';
 import { AgendaEvent } from './entities/agenda-event.entity';
 import { AgendaGuest } from './entities/agenda-guest.entity';
+import { errorCode } from '../errors/error-code';
 
 /** A whole agenda is loaded per request: this keeps it small enough. */
 export const MAX_OWNED_EVENTS = 5000;
@@ -160,7 +161,8 @@ export class AgendaEventsService {
         const guest = event.guests.find((row) => row.userId === userId);
         if (!guest) {
           throw new ForbiddenException(
-            'Vous organisez cet événement : il n’y a pas d’invitation à accepter.',
+            'You organize this event: there is no invitation to answer.',
+            errorCode('agenda.organizerCannotRespond'),
           );
         }
         const answered = guest.status !== dto.status;
@@ -255,7 +257,10 @@ export class AgendaEventsService {
       (event.ownerId !== userId &&
         (!invited || !(await this.contacts.areContacts(userId, event.ownerId))))
     ) {
-      throw new NotFoundException('Événement introuvable.');
+      throw new NotFoundException(
+        'Event not found.',
+        errorCode('agenda.eventNotFound'),
+      );
     }
     return event;
   }
@@ -268,7 +273,8 @@ export class AgendaEventsService {
     const event = await this.require(eventId, userId, manager);
     if (event.ownerId !== userId) {
       throw new ForbiddenException(
-        'Seul l’organisateur peut modifier ou supprimer cet événement.',
+        'Only the organizer can change or delete this event.',
+        errorCode('agenda.organizerOnly'),
       );
     }
     return event;
@@ -294,7 +300,10 @@ export class AgendaEventsService {
     if (!guestIds.length) return [];
     const contacts = await this.contacts.contactIds(userId);
     if (!guestIds.every((id) => contacts.has(id))) {
-      throw new BadRequestException('Seuls vos contacts peuvent être invités.');
+      throw new BadRequestException(
+        'Only your contacts can be invited.',
+        errorCode('agenda.guestsMustBeContacts'),
+      );
     }
     return guestIds;
   }
@@ -326,7 +335,8 @@ export class AgendaEventsService {
     });
     if (owned + adding > MAX_OWNED_EVENTS) {
       throw new BadRequestException(
-        `${MAX_OWNED_EVENTS} événements maximum dans un agenda.`,
+        `A calendar holds at most ${MAX_OWNED_EVENTS} events.`,
+        errorCode('agenda.tooManyEvents'),
       );
     }
   }
@@ -370,7 +380,8 @@ export class AgendaEventsService {
 function checkChronology({ start, end }: { start: string; end: string }): void {
   if (end < start) {
     throw new BadRequestException(
-      'L’événement ne peut pas finir avant de commencer.',
+      'The event cannot end before it starts.',
+      errorCode('agenda.endBeforeStart'),
     );
   }
 }

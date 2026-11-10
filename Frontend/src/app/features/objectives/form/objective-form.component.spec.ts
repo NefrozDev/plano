@@ -304,11 +304,11 @@ describe('ObjectiveFormComponent', () => {
     it('shows a refusal from the API, stays, and lets the user try again', async () => {
       type('title', 'Voyage');
       await submit();
-      http.expectOne('/api/v1/objectives').flush({ message: 'Trop de niveaux' }, { status: 400, statusText: 'Bad Request' });
+      http.expectOne('/api/v1/objectives').flush({ errorCode: 'objectives.tooDeep' }, { status: 400, statusText: 'Bad Request' });
       await settleObjectives();
       fixture.detectChanges();
 
-      expect(errors()).toEqual(['Trop de niveaux']);
+      expect(errors()).toEqual(['Un objectif ne peut pas dépasser 10 niveaux.']);
       expect(navigate).not.toHaveBeenCalled();
       expect(component.saving()).toBe(false);
     });
@@ -499,12 +499,12 @@ describe('ObjectiveFormComponent', () => {
 
       pick('t1');
       useIt()?.click();
-      http.expectOne('/api/v1/objectives/templates/t1/use').flush({ message: 'Modèle introuvable.' }, { status: 404, statusText: 'Not Found' });
+      http.expectOne('/api/v1/objectives/templates/t1/use').flush({ errorCode: 'objectives.templateNotFound' }, { status: 404, statusText: 'Not Found' });
       await settleObjectives();
       fixture.detectChanges();
 
       expect(navigate).not.toHaveBeenCalled();
-      expect(errors()).toEqual(['Modèle introuvable.']);
+      expect(errors()).toEqual(['Ce modèle n’existe plus.']);
     });
 
     it('does nothing without a choice, or twice', async () => {
@@ -824,12 +824,12 @@ describe('ObjectiveFormComponent', () => {
       fixture.detectChanges();
 
       await submit();
-      http.expectOne('/api/v1/objectives/obj-1').flush({ message: 'Interdit' }, { status: 403, statusText: 'Forbidden' });
+      http.expectOne('/api/v1/objectives/obj-1').flush({ errorCode: 'objectives.ownerOnly' }, { status: 403, statusText: 'Forbidden' });
       await settleObjectives();
       fixture.detectChanges();
 
       expect(navigate).not.toHaveBeenCalled();
-      expect(errors()).toEqual(['Interdit']);
+      expect(errors()).toEqual(['Seul le propriétaire de l’objectif peut effectuer cette action.']);
     });
 
     it('loads the objective when it is not open yet', async () => {

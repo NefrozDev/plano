@@ -5,6 +5,7 @@ import { DatabaseWriteLockService } from '../database/database-write-lock.servic
 import { ListEntry } from './entities/list-entry.entity';
 import { ListPreference } from './entities/list-preference.entity';
 import { ListAccess, ListAccessService } from './list-access.service';
+import { errorCode } from '../errors/error-code';
 
 /** Unchecked items shown per list on the home page. */
 export const HOME_ENTRY_LIMIT = 5;
@@ -68,7 +69,10 @@ export class ListPreferencesService {
       (await this.access.findAll(userId)).map(({ list }) => list.id),
     );
     if (listIds.some((listId) => !reachable.has(listId))) {
-      throw new NotFoundException('Liste introuvable.');
+      throw new NotFoundException(
+        'List not found.',
+        errorCode('lists.notFound'),
+      );
     }
     await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {

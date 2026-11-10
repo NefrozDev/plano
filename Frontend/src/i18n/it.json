@@ -121,5 +121,97 @@
   },
   "splash": {
     "tagline": "Le tue ambizioni meritano un piano"
+  },
+  "errors": {
+    "network": "Impossibile raggiungere Plano. Controlla la connessione."
+  },
+  "apiErrors": {
+    "agenda": {
+      "organizerCannotRespond": "Sei tu a organizzare questo evento: non c’è nessun invito da accettare.",
+      "eventNotFound": "Questo evento non esiste più.",
+      "organizerOnly": "Solo l’organizzatore può modificare o eliminare questo evento.",
+      "guestsMustBeContacts": "Puoi invitare solo i tuoi contatti.",
+      "tooManyEvents": "La tua agenda contiene già 5000 eventi, il massimo.",
+      "endBeforeStart": "L’evento non può finire prima di iniziare."
+    },
+    "friends": {
+      "cannotAddYourself": "Non puoi aggiungere te stesso.",
+      "userNotFound": "Questo utente non esiste più.",
+      "alreadyFriends": "Siete già amici.",
+      "alreadyRequested": "La tua richiesta è già stata inviata.",
+      "tooManyPending": "Troppe richieste in sospeso: aspetta qualche risposta prima di inviarne altre.",
+      "requestNotFound": "Questa richiesta non esiste più.",
+      "notFriends": "Questa persona non è tra i tuoi amici."
+    },
+    "groups": {
+      "notFound": "Questo gruppo non è stato trovato.",
+      "invalidInviteCode": "Questo codice d’invito non è valido.",
+      "alreadyMember": "Fai già parte di questo gruppo.",
+      "alreadyOwner": "Sei già il proprietario del gruppo.",
+      "memberNotFound": "Questo membro non fa parte del gruppo.",
+      "useLeaveAction": "Usa l’azione apposita per lasciare o eliminare il gruppo.",
+      "ownerCannotBeRemoved": "Il proprietario non può essere rimosso.",
+      "transferBeforeLeaving": "Trasferisci la proprietà o elimina il gruppo prima di lasciarlo.",
+      "tooManyGroups": "Fai già parte di 20 gruppi, il massimo.",
+      "ownerOnly": "Solo il proprietario può farlo.",
+      "inviteCodeUnavailable": "Impossibile creare un codice d’invito. Riprova."
+    },
+    "lists": {
+      "notFound": "Questa lista non esiste più o non è più condivisa con te.",
+      "viewOnly": "Puoi solo consultare questa lista.",
+      "ownerOnly": "Solo il proprietario della lista può farlo.",
+      "sectionOrderInvalid": "Nel frattempo la lista è cambiata. Riprova.",
+      "entryOrderInvalid": "Nel frattempo la sezione è cambiata. Riprova.",
+      "sectionNotFound": "Questa sezione non esiste più.",
+      "entryNotFound": "Questo elemento non esiste più.",
+      "assigneeNotMember": "Un elemento può essere assegnato solo a un membro della lista.",
+      "alreadyOwner": "Sei già il proprietario della lista.",
+      "shareWithContactsOnly": "Puoi condividere una lista solo con i tuoi amici e i membri dei tuoi gruppi.",
+      "alreadyMember": "Questa persona ha già accesso alla lista.",
+      "ownerOnlyRemovesMembers": "Solo il proprietario della lista può rimuovere un membro.",
+      "memberNotFound": "Questa persona non ha accesso alla lista."
+    },
+    "notifications": {
+      "notFound": "Questa notifica non esiste più."
+    },
+    "objectives": {
+      "notFound": "Questo obiettivo non esiste più o non è più condiviso con te.",
+      "viewOnly": "Puoi solo consultare questo obiettivo.",
+      "ownerOnly": "Solo il proprietario dell’obiettivo può farlo.",
+      "commentNotFound": "Questo commento non esiste più.",
+      "ownCommentsOnly": "Puoi rimuovere solo i tuoi commenti.",
+      "invalidDate": "Questa data non è valida.",
+      "listUsedElsewhere": "Questa lista conta già per un altro obiettivo.",
+      "alreadyOwner": "Sei già il proprietario di questo obiettivo.",
+      "shareWithContactsOnly": "Puoi condividere un obiettivo solo con i tuoi amici e i membri dei tuoi gruppi.",
+      "alreadyMember": "Questa persona ha già accesso a questo obiettivo.",
+      "ownerCannotLeave": "Il proprietario non può lasciare il proprio obiettivo.",
+      "memberNotFound": "Questa persona non è stata invitata a questo obiettivo.",
+      "topLevelOnlyRestarts": "Solo un obiettivo principale può ricominciare.",
+      "tooManyTemplates": "Non puoi conservare più di 100 modelli.",
+      "templateNotFound": "Questo modello non esiste più.",
+      "wrongTracking": "Questa azione non corrisponde al modo in cui viene seguito questo obiettivo.",
+      "futureSessionDone": "Una sessione futura non può essere già svolta.",
+      "sessionNotFound": "Questa sessione non esiste più.",
+      "ownSessionsOnly": "Puoi rimuovere solo le tue sessioni.",
+      "futureDay": "Non si può spuntare un giorno che deve ancora venire.",
+      "paused": "Questo obiettivo è in pausa.",
+      "numericNeedsTarget": "Un obiettivo numerico ha bisogno di un traguardo e di un’unità.",
+      "habitNeedsDays": "Un’abitudine ha bisogno di un numero di giorni da completare.",
+      "dueBeforeStart": "La scadenza non può precedere la data d’inizio.",
+      "timeBarNeedsDue": "Una barra del tempo ha bisogno di una scadenza.",
+      "topLevelOnlyRepeats": "Solo un obiettivo principale può ripetersi.",
+      "assigneeNeedsAccess": "Un obiettivo può essere assegnato solo a chi vi ha accesso.",
+      "childOrderInvalid": "Nel frattempo i sotto-obiettivi sono cambiati. Riprova.",
+      "completedCannotPause": "Un obiettivo completato non può essere messo in pausa.",
+      "tooDeep": "Un obiettivo non può superare i 10 livelli.",
+      "tooManyChildren": "Un obiettivo non può raggruppare più di 500 sotto-obiettivi."
+    },
+    "users": {
+      "imageRequired": "Scegli un’immagine.",
+      "imageType": "Scegli un’immagine JPEG, PNG o WebP.",
+      "noAvatar": "Nessuna foto del profilo.",
+      "notFound": "Questo account non esiste più."
+    }
   }
 }

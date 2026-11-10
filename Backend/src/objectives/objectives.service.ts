@@ -25,6 +25,7 @@ import { ObjectiveRecurrenceService } from './objective-recurrence.service';
 import { MAX_OBJECTIVE_LEVELS, MAX_TREE_NODES } from './objective-tree';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
+import { errorCode } from '../errors/error-code';
 
 /** Applies settings to an objective, then checks they make sense together. */
 export function applySettings(
@@ -43,29 +44,34 @@ export function applySettings(
     node.metricAggregation = null;
   } else if (node.metricTarget === null) {
     throw new BadRequestException(
-      'Un objectif chiffré a besoin d’une cible et d’une unité.',
+      'A numeric goal needs a target and a unit.',
+      errorCode('objectives.numericNeedsTarget'),
     );
   }
   if (node.completion !== 'habit') {
     node.habitTargetDays = null;
   } else if (node.habitTargetDays === null) {
     throw new BadRequestException(
-      'Une habitude a besoin d’un nombre de jours à réussir.',
+      'A habit needs a number of days to succeed.',
+      errorCode('objectives.habitNeedsDays'),
     );
   }
   if (node.dueDate && node.dueDate < node.startDate) {
     throw new BadRequestException(
-      'L’échéance ne peut pas précéder la date de début.',
+      'The due date cannot come before the start date.',
+      errorCode('objectives.dueBeforeStart'),
     );
   }
   if (node.timelapse !== 'off' && !node.dueDate) {
     throw new BadRequestException(
-      'Une barre de temps a besoin d’une échéance.',
+      'A time bar needs a due date.',
+      errorCode('objectives.timeBarNeedsDue'),
     );
   }
   if (node.recurrence !== 'none' && node.parentId) {
     throw new BadRequestException(
-      'Seul un objectif principal peut se répéter.',
+      'Only a top-level goal can repeat.',
+      errorCode('objectives.topLevelOnlyRepeats'),
     );
   }
   // Changing what repeats starts a new period from the objective's start.
@@ -249,7 +255,8 @@ export class ObjectivesService {
         if (assignedToUserId !== undefined) {
           if (assignedToUserId && !tree.roleOf(node.id, assignedToUserId)) {
             throw new BadRequestException(
-              'Un objectif ne peut être assigné qu’à une personne qui y a accès.',
+              'A goal can only be assigned to someone who has access to it.',
+              errorCode('objectives.assigneeNeedsAccess'),
             );
           }
           node.assignedToUserId = assignedToUserId;
@@ -294,7 +301,8 @@ export class ObjectivesService {
           children.every((child) => objectiveIds.includes(child.id));
         if (!sameIds) {
           throw new BadRequestException(
-            'L’ordre doit contenir chaque sous-objectif une seule fois.',
+            'The order must contain each sub-goal exactly once.',
+            errorCode('objectives.childOrderInvalid'),
           );
         }
         for (const child of children) {
@@ -310,7 +318,8 @@ export class ObjectivesService {
   private setPaused(node: Objective, paused: boolean): void {
     if (paused && node.status === 'completed') {
       throw new BadRequestException(
-        'Un objectif terminé ne peut pas être mis en pause.',
+        'A completed goal cannot be paused.',
+        errorCode('objectives.completedCannotPause'),
       );
     }
     if (paused) node.status = 'paused';
@@ -333,12 +342,14 @@ export class ObjectivesService {
     const level = tree.levelOf(node.id) + 1;
     if (level + (extraNodes ? 1 : 0) > MAX_OBJECTIVE_LEVELS) {
       throw new BadRequestException(
-        `Un objectif ne peut pas dépasser ${MAX_OBJECTIVE_LEVELS} niveaux.`,
+        `A goal cannot go deeper than ${MAX_OBJECTIVE_LEVELS} levels.`,
+        errorCode('objectives.tooDeep'),
       );
     }
     if (tree.nodes.length + 1 + extraNodes > MAX_TREE_NODES) {
       throw new BadRequestException(
-        `Un objectif ne peut pas regrouper plus de ${MAX_TREE_NODES} sous-objectifs.`,
+        `A goal cannot hold more than ${MAX_TREE_NODES} sub-goals.`,
+        errorCode('objectives.tooManyChildren'),
       );
     }
     const siblings = tree.childrenOf(node.id);

@@ -188,7 +188,13 @@ describe('Lists API (e2e)', () => {
       .post(`/api/v1/lists/${list.id}/sections/${section.id}/entries`)
       .set('Cookie', bob.cookie)
       .send({ name: 'Pain' })
-      .expect(403);
+      .expect(403)
+      .expect((response) => {
+        expect(response.body).toMatchObject({
+          statusCode: 403,
+          errorCode: 'lists.viewOnly',
+        });
+      });
     await http()
       .patch(`/api/v1/lists/${list.id}/members/${bob.user.id}`)
       .set('Cookie', ada.cookie)

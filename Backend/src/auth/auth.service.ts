@@ -98,7 +98,7 @@ export class AuthService {
 
   async getSessionUser(token: string | undefined): Promise<AuthUser> {
     if (!token || !SESSION_TOKEN_PATTERN.test(token)) {
-      throw new UnauthorizedException('Session invalide ou expirée.');
+      throw new UnauthorizedException('Invalid or expired session.');
     }
 
     const tokenHash = hashSessionToken(token);
@@ -109,14 +109,14 @@ export class AuthService {
       .getOne();
 
     if (!session) {
-      throw new UnauthorizedException('Session invalide ou expirée.');
+      throw new UnauthorizedException('Invalid or expired session.');
     }
 
     if (session.expiresAt.getTime() <= Date.now()) {
       await this.writeLock.runExclusive(() =>
         this.sessions.delete({ id: session.id }).then(() => undefined),
       );
-      throw new UnauthorizedException('Session invalide ou expirée.');
+      throw new UnauthorizedException('Invalid or expired session.');
     }
 
     return toAuthUser(session.user);

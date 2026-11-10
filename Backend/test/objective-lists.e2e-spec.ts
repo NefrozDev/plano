@@ -113,7 +113,7 @@ describe('Objective lists (e2e)', () => {
       .set('Cookie', ada.cookie)
       .send({ listId: bobs.id })
       .expect(404);
-    expect(foreign.body).toMatchObject({ message: 'Liste introuvable.' });
+    expect(foreign.body).toMatchObject({ message: 'List not found.' });
 
     const linked = (
       await http()

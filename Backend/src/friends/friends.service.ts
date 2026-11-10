@@ -21,6 +21,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { User } from '../users/user.entity';
 import { toPublicUser } from '../users/user.mapper';
 import { Friendship } from './friendship.entity';
+import { errorCode } from '../errors/error-code';
 
 /** Pending requests a user may have sent at once: keeps request spam bounded. */
 export const MAX_PENDING_REQUESTS = 50;
@@ -145,7 +146,8 @@ export class FriendsService {
   ): Promise<SendFriendRequestResult> {
     if (userId === targetUserId) {
       throw new BadRequestException(
-        'Vous ne pouvez pas vous ajouter vous-même.',
+        'You cannot add yourself.',
+        errorCode('friends.cannotAddYourself'),
       );
     }
     const result = await this.writeLock.runExclusive(() =>
@@ -153,17 +155,27 @@ export class FriendsService {
         const target = await manager.findOne(User, {
           where: { id: targetUserId },
         });
-        if (!target) throw new NotFoundException('Utilisateur introuvable.');
+        if (!target)
+          throw new NotFoundException(
+            'User not found.',
+            errorCode('friends.userNotFound'),
+          );
         const sender = await manager.findOneByOrFail(User, { id: userId });
 
         const existing = await manager.findOne(Friendship, {
           where: pairWhere(userId, targetUserId),
         });
         if (existing?.status === 'accepted') {
-          throw new ConflictException('Vous êtes déjà amis.');
+          throw new ConflictException(
+            'You are already friends.',
+            errorCode('friends.alreadyFriends'),
+          );
         }
         if (existing?.requesterId === userId) {
-          throw new ConflictException('Votre demande est déjà envoyée.');
+          throw new ConflictException(
+            'Your request was already sent.',
+            errorCode('friends.alreadyRequested'),
+          );
         }
         if (existing) {
           // They asked first: asking back is accepting.
@@ -178,7 +190,8 @@ export class FriendsService {
         });
         if (pending >= MAX_PENDING_REQUESTS) {
           throw new ConflictException(
-            'Trop de demandes en attente : attendez des réponses avant d’en envoyer d’autres.',
+            'Too many pending requests: wait for answers before sending more.',
+            errorCode('friends.tooManyPending'),
           );
         }
         await manager.save(
@@ -216,7 +229,11 @@ export class FriendsService {
           where: { id: requestId, addresseeId: userId, status: 'pending' },
           relations: { requester: true, addressee: true },
         });
-        if (!request) throw new NotFoundException('Demande introuvable.');
+        if (!request)
+          throw new NotFoundException(
+            'Request not found.',
+            errorCode('friends.requestNotFound'),
+          );
         request.status = 'accepted';
         request.acceptedAt = new Date();
         await manager.save(request);
@@ -249,7 +266,11 @@ export class FriendsService {
             { id: requestId, addresseeId: userId, status: 'pending' },
           ],
         });
-        if (!request) throw new NotFoundException('Demande introuvable.');
+        if (!request)
+          throw new NotFoundException(
+            'Request not found.',
+            errorCode('friends.requestNotFound'),
+          );
         await manager.delete(Friendship, { id: request.id });
         return request.requesterId === userId
           ? request.addresseeId
@@ -271,7 +292,8 @@ export class FriendsService {
         });
         if (!friendship) {
           throw new NotFoundException(
-            'Cette personne ne fait pas partie de vos amis.',
+            'This person is not one of your friends.',
+            errorCode('friends.notFriends'),
           );
         }
         await manager.delete(Friendship, { id: friendship.id });

@@ -17,6 +17,7 @@ import { ObjectiveActivity } from './entities/objective-activity.entity';
 import { ObjectiveComment } from './entities/objective-comment.entity';
 import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveWriterService } from './objective-writer.service';
+import { errorCode } from '../errors/error-code';
 
 /** Lines of history served per objective. */
 export const ACTIVITY_LIMIT = 100;
@@ -112,10 +113,15 @@ export class ObjectiveActivityService {
       const comment = await manager.findOne(ObjectiveComment, {
         where: { id: commentId, objectiveId: id },
       });
-      if (!comment) throw new NotFoundException('Commentaire introuvable.');
+      if (!comment)
+        throw new NotFoundException(
+          'Comment not found.',
+          errorCode('objectives.commentNotFound'),
+        );
       if (role !== 'owner' && comment.authorId !== userId) {
         throw new ForbiddenException(
-          'Vous ne pouvez retirer que vos propres commentaires.',
+          'You can only remove your own comments.',
+          errorCode('objectives.ownCommentsOnly'),
         );
       }
       await manager.delete(ObjectiveComment, { id: comment.id });

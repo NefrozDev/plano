@@ -19,6 +19,7 @@ import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
+import { errorCode } from '../errors/error-code';
 
 /** Who an objective is shared with: only its owner decides, and only among their contacts. */
 @Injectable()
@@ -52,12 +53,14 @@ export class ObjectiveMembersService {
   ): Promise<void> {
     if (details.userId === userId) {
       throw new BadRequestException(
-        'Vous êtes déjà propriétaire de cet objectif.',
+        'You already own this goal.',
+        errorCode('objectives.alreadyOwner'),
       );
     }
     if (!(await this.contacts.areContacts(userId, details.userId))) {
       throw new BadRequestException(
-        'Vous ne pouvez partager un objectif qu’avec vos amis et les membres de vos groupes.',
+        'You can only share a goal with your friends and the members of your groups.',
+        errorCode('objectives.shareWithContactsOnly'),
       );
     }
     const { tree } = await this.access.require(id, userId, 'own', manager);
@@ -72,7 +75,8 @@ export class ObjectiveMembersService {
         .some((membership) => membership.userId === details.userId)
     ) {
       throw new ConflictException(
-        'Cette personne a déjà accès à cet objectif.',
+        'This person already has access to this goal.',
+        errorCode('objectives.alreadyMember'),
       );
     }
     await manager.save(
@@ -135,7 +139,8 @@ export class ObjectiveMembersService {
       async ({ tree, role }, manager) => {
         if (role === 'owner') {
           throw new ForbiddenException(
-            'Le propriétaire ne peut pas quitter son objectif.',
+            'The owner cannot leave their goal.',
+            errorCode('objectives.ownerCannotLeave'),
           );
         }
         await manager.delete(ObjectiveMember, {
@@ -165,7 +170,8 @@ export class ObjectiveMembersService {
     });
     if (!member) {
       throw new NotFoundException(
-        'Cette personne n’a pas été invitée à cet objectif.',
+        'This person was not invited to this goal.',
+        errorCode('objectives.memberNotFound'),
       );
     }
     return member;

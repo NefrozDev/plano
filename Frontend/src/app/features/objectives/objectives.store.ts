@@ -491,7 +491,7 @@ export class ObjectivesStore {
       apply(await firstValueFrom(request));
       return true;
     } catch (error) {
-      this.error.set(httpErrorMessage(error, { fallback: FAILURE_MESSAGE, useServerMessage: true }));
+      this.error.set(httpErrorMessage(error, { fallback: FAILURE_MESSAGE, useServerCode: true }));
       return false;
     }
   }

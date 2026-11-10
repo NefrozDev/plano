@@ -121,5 +121,97 @@
   },
   "splash": {
     "tagline": "Tus ambiciones merecen un plan"
+  },
+  "errors": {
+    "network": "No se puede conectar con Plano. Comprueba tu conexión."
+  },
+  "apiErrors": {
+    "agenda": {
+      "organizerCannotRespond": "Organizas este evento: no hay ninguna invitación que aceptar.",
+      "eventNotFound": "Este evento ya no existe.",
+      "organizerOnly": "Solo el organizador puede modificar o eliminar este evento.",
+      "guestsMustBeContacts": "Solo puedes invitar a tus contactos.",
+      "tooManyEvents": "Tu agenda ya tiene 5000 eventos, el máximo.",
+      "endBeforeStart": "El evento no puede terminar antes de empezar."
+    },
+    "friends": {
+      "cannotAddYourself": "No puedes añadirte a ti mismo.",
+      "userNotFound": "Este usuario ya no existe.",
+      "alreadyFriends": "Ya sois amigos.",
+      "alreadyRequested": "Tu solicitud ya se ha enviado.",
+      "tooManyPending": "Demasiadas solicitudes pendientes: espera respuestas antes de enviar más.",
+      "requestNotFound": "Esta solicitud ya no existe.",
+      "notFriends": "Esta persona no es tu amiga."
+    },
+    "groups": {
+      "notFound": "No se encuentra este grupo.",
+      "invalidInviteCode": "Este código de invitación no es válido.",
+      "alreadyMember": "Ya formas parte de este grupo.",
+      "alreadyOwner": "Ya eres el propietario del grupo.",
+      "memberNotFound": "Este miembro no pertenece al grupo.",
+      "useLeaveAction": "Usa la acción prevista para salir del grupo o eliminarlo.",
+      "ownerCannotBeRemoved": "No se puede quitar al propietario.",
+      "transferBeforeLeaving": "Transfiere la propiedad o elimina el grupo antes de salir.",
+      "tooManyGroups": "Ya formas parte de 20 grupos, el máximo.",
+      "ownerOnly": "Solo el propietario puede hacer esto.",
+      "inviteCodeUnavailable": "No se pudo crear un código de invitación. Inténtalo de nuevo."
+    },
+    "lists": {
+      "notFound": "Esta lista ya no existe o ya no se comparte contigo.",
+      "viewOnly": "Solo puedes ver esta lista.",
+      "ownerOnly": "Solo el propietario de la lista puede hacer esto.",
+      "sectionOrderInvalid": "La lista ha cambiado mientras tanto. Inténtalo de nuevo.",
+      "entryOrderInvalid": "La sección ha cambiado mientras tanto. Inténtalo de nuevo.",
+      "sectionNotFound": "Esta sección ya no existe.",
+      "entryNotFound": "Este elemento ya no existe.",
+      "assigneeNotMember": "Un elemento solo se puede asignar a un miembro de la lista.",
+      "alreadyOwner": "Ya eres el propietario de la lista.",
+      "shareWithContactsOnly": "Solo puedes compartir una lista con tus amigos y los miembros de tus grupos.",
+      "alreadyMember": "Esta persona ya tiene acceso a la lista.",
+      "ownerOnlyRemovesMembers": "Solo el propietario de la lista puede quitar a un miembro.",
+      "memberNotFound": "Esta persona no tiene acceso a la lista."
+    },
+    "notifications": {
+      "notFound": "Esta notificación ya no existe."
+    },
+    "objectives": {
+      "notFound": "Este objetivo ya no existe o ya no se comparte contigo.",
+      "viewOnly": "Solo puedes ver este objetivo.",
+      "ownerOnly": "Solo el propietario del objetivo puede hacer esto.",
+      "commentNotFound": "Este comentario ya no existe.",
+      "ownCommentsOnly": "Solo puedes quitar tus propios comentarios.",
+      "invalidDate": "Esta fecha no es válida.",
+      "listUsedElsewhere": "Esta lista ya cuenta para otro objetivo.",
+      "alreadyOwner": "Ya eres el propietario de este objetivo.",
+      "shareWithContactsOnly": "Solo puedes compartir un objetivo con tus amigos y los miembros de tus grupos.",
+      "alreadyMember": "Esta persona ya tiene acceso a este objetivo.",
+      "ownerCannotLeave": "El propietario no puede abandonar su objetivo.",
+      "memberNotFound": "Esta persona no ha sido invitada a este objetivo.",
+      "topLevelOnlyRestarts": "Solo un objetivo principal puede volver a empezar.",
+      "tooManyTemplates": "No puedes guardar más de 100 plantillas.",
+      "templateNotFound": "Esta plantilla ya no existe.",
+      "wrongTracking": "Esta acción no corresponde al seguimiento de este objetivo.",
+      "futureSessionDone": "Una sesión futura no puede estar ya hecha.",
+      "sessionNotFound": "Esta sesión ya no existe.",
+      "ownSessionsOnly": "Solo puedes quitar tus propias sesiones.",
+      "futureDay": "No se puede marcar un día que aún no ha llegado.",
+      "paused": "Este objetivo está en pausa.",
+      "numericNeedsTarget": "Un objetivo numérico necesita una meta y una unidad.",
+      "habitNeedsDays": "Un hábito necesita un número de días que cumplir.",
+      "dueBeforeStart": "La fecha límite no puede ser anterior a la fecha de inicio.",
+      "timeBarNeedsDue": "Una barra de tiempo necesita una fecha límite.",
+      "topLevelOnlyRepeats": "Solo un objetivo principal puede repetirse.",
+      "assigneeNeedsAccess": "Un objetivo solo se puede asignar a alguien que tenga acceso a él.",
+      "childOrderInvalid": "Los subobjetivos han cambiado mientras tanto. Inténtalo de nuevo.",
+      "completedCannotPause": "Un objetivo terminado no se puede pausar.",
+      "tooDeep": "Un objetivo no puede tener más de 10 niveles.",
+      "tooManyChildren": "Un objetivo no puede agrupar más de 500 subobjetivos."
+    },
+    "users": {
+      "imageRequired": "Elige una imagen.",
+      "imageType": "Elige una imagen JPEG, PNG o WebP.",
+      "noAvatar": "No hay foto de perfil.",
+      "notFound": "Esta cuenta ya no existe."
+    }
   }
 }

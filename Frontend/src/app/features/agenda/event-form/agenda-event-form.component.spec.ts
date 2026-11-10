@@ -347,7 +347,7 @@ describe('AgendaEventFormComponent', () => {
       submit();
       http
         .expectOne((request) => request.method === 'POST')
-        .flush({ message: 'Seuls vos contacts peuvent être invités.' }, { status: 400, statusText: 'Bad Request' });
+        .flush({ errorCode: 'agenda.guestsMustBeContacts' }, { status: 400, statusText: 'Bad Request' });
       await settle();
       harness.detectChanges();
 

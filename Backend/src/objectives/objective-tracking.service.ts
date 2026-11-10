@@ -18,6 +18,7 @@ import { recordActivity } from './objective-activity.record';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
 import { ObjectiveAccessService } from './objective-access.service';
+import { errorCode } from '../errors/error-code';
 
 /**
  * Dates come from the person's device, in their time zone: a day ahead of the
@@ -31,7 +32,8 @@ export function isFutureDate(date: string, now = new Date()): boolean {
 function requireMode(node: Objective, mode: CompletionMode): void {
   if (node.completion !== mode) {
     throw new BadRequestException(
-      'Cette action ne correspond pas au suivi de cet objectif.',
+      'This action does not match how this goal is tracked.',
+      errorCode('objectives.wrongTracking'),
     );
   }
 }
@@ -58,7 +60,8 @@ export class ObjectiveTrackingService {
         requireMode(node, 'metric');
         if (details.status === 'done' && isFutureDate(details.date)) {
           throw new BadRequestException(
-            'Une séance future ne peut pas être déjà réalisée.',
+            'A future session cannot be done already.',
+            errorCode('objectives.futureSessionDone'),
           );
         }
         await manager.save(
@@ -105,10 +108,15 @@ export class ObjectiveTrackingService {
         const session = await manager.findOne(ObjectiveSession, {
           where: { id: sessionId, objectiveId: node.id },
         });
-        if (!session) throw new NotFoundException('Séance introuvable.');
+        if (!session)
+          throw new NotFoundException(
+            'Session not found.',
+            errorCode('objectives.sessionNotFound'),
+          );
         if (role !== 'owner' && session.authorId !== userId) {
           throw new ForbiddenException(
-            'Vous ne pouvez retirer que vos propres séances.',
+            'You can only remove your own sessions.',
+            errorCode('objectives.ownSessionsOnly'),
           );
         }
         await manager.delete(ObjectiveSession, { id: session.id });
@@ -141,7 +149,8 @@ export class ObjectiveTrackingService {
         requireMode(node, 'habit');
         if (checked && isFutureDate(date)) {
           throw new BadRequestException(
-            'Un jour à venir ne peut pas être coché.',
+            'A day still to come cannot be checked.',
+            errorCode('objectives.futureDay'),
           );
         }
         const row = { objectiveId: node.id, userId, date };
@@ -206,7 +215,10 @@ export class ObjectiveTrackingService {
       async ({ node }, manager) => {
         requireMode(node, 'none');
         if (node.status === 'paused') {
-          throw new BadRequestException('Cet objectif est en pause.');
+          throw new BadRequestException(
+            'This goal is paused.',
+            errorCode('objectives.paused'),
+          );
         }
         node.status = completed ? 'completed' : 'active';
         node.completedAt = completed ? new Date() : null;

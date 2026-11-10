@@ -11,6 +11,7 @@ import { recordActivity } from './objective-activity.record';
 import { ObjectiveAccessService } from './objective-access.service';
 import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveWriterService } from './objective-writer.service';
+import { errorCode } from '../errors/error-code';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -106,7 +107,8 @@ export class ObjectiveRecurrenceService {
       async ({ tree, node }, manager) => {
         if (node.parentId) {
           throw new BadRequestException(
-            'Seul un objectif principal peut recommencer.',
+            'Only a top-level goal can start again.',
+            errorCode('objectives.topLevelOnlyRestarts'),
           );
         }
         const { root } = tree;

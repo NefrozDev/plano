@@ -13,6 +13,7 @@ import { ObjectiveMember } from './entities/objective-member.entity';
 import { ObjectiveSession } from './entities/objective-session.entity';
 import { Objective } from './entities/objective.entity';
 import { ObjectiveTree } from './objective-tree';
+import { errorCode } from '../errors/error-code';
 
 /** What a request needs to do with an objective. */
 export type ObjectivePermission = 'read' | 'contribute' | 'own';
@@ -49,16 +50,21 @@ export class ObjectiveAccessService {
     const node = tree?.node(objectiveId);
     const role = node && tree ? tree.roleOf(node.id, userId) : null;
     if (!tree || !node || !role) {
-      throw new NotFoundException('Objectif introuvable.');
+      throw new NotFoundException(
+        'Goal not found.',
+        errorCode('objectives.notFound'),
+      );
     }
     if (permission === 'contribute' && role === 'viewer') {
       throw new ForbiddenException(
-        'Vous pouvez seulement consulter cet objectif.',
+        'You can only view this goal.',
+        errorCode('objectives.viewOnly'),
       );
     }
     if (permission === 'own' && role !== 'owner') {
       throw new ForbiddenException(
-        'Seul le propriétaire de l’objectif peut effectuer cette action.',
+        'Only the goal owner can do this.',
+        errorCode('objectives.ownerOnly'),
       );
     }
     return { tree, node, role };

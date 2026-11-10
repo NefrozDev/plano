@@ -22,6 +22,7 @@ import { ObjectiveAccessService } from './objective-access.service';
 import type { ObjectiveTree } from './objective-tree';
 import { ObjectivesService } from './objectives.service';
 import { ObjectiveWriterService } from './objective-writer.service';
+import { errorCode } from '../errors/error-code';
 
 /** Templates one person can keep. */
 export const MAX_TEMPLATES = 100;
@@ -119,7 +120,8 @@ export class ObjectiveTemplatesService {
         })) >= MAX_TEMPLATES
       ) {
         throw new BadRequestException(
-          `Vous ne pouvez pas garder plus de ${MAX_TEMPLATES} modèles.`,
+          `You cannot keep more than ${MAX_TEMPLATES} templates.`,
+          errorCode('objectives.tooManyTemplates'),
         );
       }
       const template = await manager.save(
@@ -140,7 +142,11 @@ export class ObjectiveTemplatesService {
         ObjectiveTemplate,
         { id: templateId, ownerId: userId },
       );
-      if (!affected) throw new NotFoundException('Modèle introuvable.');
+      if (!affected)
+        throw new NotFoundException(
+          'Template not found.',
+          errorCode('objectives.templateNotFound'),
+        );
     });
   }
 
@@ -153,7 +159,11 @@ export class ObjectiveTemplatesService {
     const template = await this.dataSource.manager.findOne(ObjectiveTemplate, {
       where: { id: templateId, ownerId: userId },
     });
-    if (!template) throw new NotFoundException('Modèle introuvable.');
+    if (!template)
+      throw new NotFoundException(
+        'Template not found.',
+        errorCode('objectives.templateNotFound'),
+      );
 
     const id = await this.writer.inTransaction(async (manager) => {
       const rootId = randomUUID();

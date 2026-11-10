@@ -155,11 +155,11 @@ describe('ObjectiveActivityComponent', () => {
       write('Bravo');
       http
         .expectOne('/api/v1/objectives/obj-1/comments')
-        .flush({ message: 'Trop long' }, { status: 400, statusText: 'Bad Request' });
+        .flush({ errorCode: 'objectives.viewOnly' }, { status: 400, statusText: 'Bad Request' });
       await settleObjectives();
       fixture.detectChanges();
 
-      expect(element.querySelector('.field-error')?.textContent).toBe('Trop long');
+      expect(element.querySelector('.field-error')?.textContent).toBe('Vous pouvez seulement consulter cet objectif.');
       expect((element.querySelector('textarea') as HTMLTextAreaElement).value).toBe('Bravo');
       expect(component.sending()).toBe(false);
     });

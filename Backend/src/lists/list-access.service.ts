@@ -8,6 +8,7 @@ import { DataSource, EntityManager, In } from 'typeorm';
 import { ContactsService } from '../friends/contacts.service';
 import { ListMember } from './entities/list-member.entity';
 import { List } from './entities/list.entity';
+import { errorCode } from '../errors/error-code';
 
 /** What a request needs to do with a list. */
 export type ListPermission = 'read' | 'edit' | 'own';
@@ -41,16 +42,21 @@ export class ListAccessService {
   ): Promise<ListAccess> {
     const access = await this.find(listId, userId, manager);
     if (!access) {
-      throw new NotFoundException('Liste introuvable.');
+      throw new NotFoundException(
+        'List not found.',
+        errorCode('lists.notFound'),
+      );
     }
     if (permission === 'edit' && access.role === 'viewer') {
       throw new ForbiddenException(
-        'Vous pouvez seulement consulter cette liste.',
+        'You can only view this list.',
+        errorCode('lists.viewOnly'),
       );
     }
     if (permission === 'own' && access.role !== 'owner') {
       throw new ForbiddenException(
-        'Seul le propriétaire de la liste peut effectuer cette action.',
+        'Only the list owner can do this.',
+        errorCode('lists.ownerOnly'),
       );
     }
     return access;

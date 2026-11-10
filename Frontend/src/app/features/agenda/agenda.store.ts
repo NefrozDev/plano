@@ -283,7 +283,7 @@ export class AgendaStore {
       await firstValueFrom(this.api.remove(id));
     } catch (error) {
       this.error.set(
-        httpErrorMessage(error, { fallback: 'La suppression a échoué. Réessayez.', useServerMessage: true }),
+        httpErrorMessage(error, { fallback: 'La suppression a échoué. Réessayez.', useServerCode: true }),
       );
       return false;
     }
@@ -452,7 +452,7 @@ export class AgendaStore {
       return view;
     } catch (error) {
       this.error.set(
-        httpErrorMessage(error, { fallback: 'L’enregistrement a échoué. Réessayez.', useServerMessage: true }),
+        httpErrorMessage(error, { fallback: 'L’enregistrement a échoué. Réessayez.', useServerCode: true }),
       );
       return null;
     }

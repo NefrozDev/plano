@@ -86,7 +86,15 @@ describe('Friends and contacts (e2e)', () => {
         .post(`/api/v1/lists/${list.id}/members`)
         .set('Cookie', ada.cookie)
         .send({ userId: bob.user.id, role: 'viewer' });
-    await share().expect(400);
+    await share()
+      .expect(400)
+      .expect((response) => {
+        expect(response.body).toMatchObject({
+          message:
+            'You can only share a list with your friends and the members of your groups.',
+          errorCode: 'lists.shareWithContactsOnly',
+        });
+      });
 
     await http()
       .post(`/api/v1/friends/requests/${requests.incoming[0].id}/accept`)

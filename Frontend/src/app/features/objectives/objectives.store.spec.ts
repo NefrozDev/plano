@@ -50,10 +50,10 @@ describe('ObjectivesStore', () => {
       await load();
 
       const loading = store.load();
-      http.expectOne('/api/v1/objectives').flush({ message: 'Hors service' }, { status: 500, statusText: 'Error' });
+      http.expectOne('/api/v1/objectives').flush({ errorCode: 'objectives.notFound' }, { status: 500, statusText: 'Error' });
       await loading;
 
-      expect(store.error()).toBe('Hors service');
+      expect(store.error()).toBe('Cet objectif n’existe plus ou ne vous est plus partagé.');
       expect(store.objectives()).toHaveLength(1);
       expect(store.loading()).toBe(false);
     });
@@ -80,11 +80,11 @@ describe('ObjectivesStore', () => {
 
     it('answers false for an objective it cannot open', async () => {
       const opening = store.open('hidden');
-      http.expectOne('/api/v1/objectives/hidden').flush({ message: 'Objectif introuvable.' }, { status: 404, statusText: 'Not Found' });
+      http.expectOne('/api/v1/objectives/hidden').flush({ errorCode: 'objectives.notFound' }, { status: 404, statusText: 'Not Found' });
 
       expect(await opening).toBe(false);
       expect(store.detail()).toBeNull();
-      expect(store.error()).toBe('Objectif introuvable.');
+      expect(store.error()).toBe('Cet objectif n’existe plus ou ne vous est plus partagé.');
     });
 
     it('loads the agenda items, and keeps quiet when that fails', async () => {
@@ -463,10 +463,10 @@ describe('ObjectivesStore', () => {
 
       it('answers null and reports a refusal', async () => {
         const creating = store.create(details);
-        http.expectOne('/api/v1/objectives').flush({ message: 'Trop de niveaux' }, { status: 400, statusText: 'Bad Request' });
+        http.expectOne('/api/v1/objectives').flush({ errorCode: 'objectives.tooDeep' }, { status: 400, statusText: 'Bad Request' });
 
         expect(await creating).toBeNull();
-        expect(store.error()).toBe('Trop de niveaux');
+        expect(store.error()).toBe('Un objectif ne peut pas dépasser 10 niveaux.');
         expect(store.objectives()).toEqual([]);
       });
     });
@@ -515,16 +515,16 @@ describe('ObjectivesStore', () => {
 
       it('reports a failed change and keeps the state', async () => {
         const changing = store.update('obj-1', { title: 'X' });
-        http.expectOne('/api/v1/objectives/obj-1').flush({ message: 'Interdit' }, { status: 403, statusText: 'Forbidden' });
+        http.expectOne('/api/v1/objectives/obj-1').flush({ errorCode: 'objectives.ownerOnly' }, { status: 403, statusText: 'Forbidden' });
 
         expect(await changing).toBe(false);
-        expect(store.error()).toBe('Interdit');
+        expect(store.error()).toBe('Seul le propriétaire de l’objectif peut effectuer cette action.');
         expect(store.detail()?.title).toBe('Courir 10 km');
       });
 
       it('clears the previous error on the next request', async () => {
         const failing = store.update('obj-1', { title: 'X' });
-        http.expectOne('/api/v1/objectives/obj-1').flush({ message: 'Interdit' }, { status: 403, statusText: 'Forbidden' });
+        http.expectOne('/api/v1/objectives/obj-1').flush({ errorCode: 'objectives.ownerOnly' }, { status: 403, statusText: 'Forbidden' });
         await failing;
 
         const changing = store.update('obj-1', { title: 'Y' });
@@ -643,10 +643,10 @@ describe('ObjectivesStore', () => {
 
       it('reports what could not be saved', async () => {
         const saving = store.saveTemplate('obj-1', 'Voyage');
-        http.expectOne('/api/v1/objectives/obj-1/template').flush({ message: 'Trop de modèles' }, { status: 400, statusText: 'Bad Request' });
+        http.expectOne('/api/v1/objectives/obj-1/template').flush({ errorCode: 'objectives.tooManyTemplates' }, { status: 400, statusText: 'Bad Request' });
 
         expect(await saving).toBe(false);
-        expect(store.error()).toBe('Trop de modèles');
+        expect(store.error()).toBe('Vous ne pouvez pas garder plus de 100 modèles.');
         expect(store.templates()).toEqual([]);
       });
 

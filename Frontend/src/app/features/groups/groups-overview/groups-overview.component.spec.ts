@@ -147,7 +147,7 @@ describe('GroupsOverviewComponent', () => {
     render([family]);
     const navigate = vi.spyOn(router, 'navigate');
     groups.join.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 409, error: { message: 'Vous faites déjà partie de ce groupe.' } })),
+      throwError(() => new HttpErrorResponse({ status: 409, error: { errorCode: 'groups.alreadyMember' } })),
     );
     component.joinForm.controls.inviteCode.setValue('ABC12345');
     component.join();

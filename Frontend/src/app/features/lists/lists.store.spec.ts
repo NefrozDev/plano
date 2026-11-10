@@ -50,12 +50,12 @@ describe('ListsStore', () => {
     const opening = store.open('list-x');
     http
       .expectOne('/api/v1/lists/list-x')
-      .flush({ message: 'Liste introuvable.' }, { status: 404, statusText: 'Not Found' });
+      .flush({ errorCode: 'lists.notFound' }, { status: 404, statusText: 'Not Found' });
     http.expectOne('/api/v1/settings/lists').flush(listSettings());
 
     expect(await opening).toBe(false);
     expect(store.detail()).toBeNull();
-    expect(store.error()).toBe('Liste introuvable.');
+    expect(store.error()).toBe('Cette liste n’existe plus ou ne vous est plus partagée.');
     store.clearError();
     expect(store.error()).toBe('');
   });
@@ -114,7 +114,7 @@ describe('ListsStore', () => {
     const refuse = (method: string) =>
       http
         .expectOne({ method, url: '/api/v1/lists/list-1/sections/fresh' })
-        .flush({ message: 'Vous pouvez seulement consulter cette liste.' }, { status: 403, statusText: 'Forbidden' });
+        .flush({ errorCode: 'lists.viewOnly' }, { status: 403, statusText: 'Forbidden' });
 
     const renaming = store.renameSection('fresh', 'Frais');
     refuse('PATCH');
@@ -152,13 +152,13 @@ describe('ListsStore', () => {
     const saving = store.saveSectionOrder();
     http
       .expectOne('/api/v1/lists/list-1/sections/order')
-      .flush({ message: 'Ordre invalide.' }, { status: 400, statusText: 'Bad Request' });
+      .flush({ errorCode: 'lists.sectionOrderInvalid' }, { status: 400, statusText: 'Bad Request' });
     await settle();
     http.expectOne('/api/v1/lists/list-1').flush(listDetail());
     await saving;
 
     expect(store.detail()?.sections.map(({ id }) => id)).toEqual(['fresh', 'grocery']);
-    expect(store.error()).toBe('Ordre invalide.');
+    expect(store.error()).toBe('La liste a changé entre-temps. Réessayez.');
   });
 
   it('keeps the list unchanged when the server refuses a change', async () => {
@@ -167,7 +167,7 @@ describe('ListsStore', () => {
     const toggling = store.toggleEntry(store.detail()!.sections[0].entries[0]);
     http
       .expectOne('/api/v1/lists/list-1/entries/milk')
-      .flush({ message: 'Vous pouvez seulement consulter cette liste.' }, { status: 403, statusText: 'Forbidden' });
+      .flush({ errorCode: 'lists.viewOnly' }, { status: 403, statusText: 'Forbidden' });
 
     expect(await toggling).toBe(false);
     expect(store.detail()?.sections[0].entries[0].done).toBe(false);
@@ -257,13 +257,13 @@ describe('ListsStore', () => {
       store.moveList('c', 'a');
 
       const saving = store.saveListOrder();
-      http.expectOne('/api/v1/lists/order').flush({ message: 'Liste introuvable.' }, { status: 404, statusText: 'Not Found' });
+      http.expectOne('/api/v1/lists/order').flush({ errorCode: 'lists.notFound' }, { status: 404, statusText: 'Not Found' });
       await settle();
       http.expectOne('/api/v1/lists').flush([listSummary({ id: 'a' }), listSummary({ id: 'b' }), listSummary({ id: 'c' })]);
       await saving;
 
       expect(order()).toEqual(['a', 'b', 'c']);
-      expect(store.error()).toBe('Liste introuvable.');
+      expect(store.error()).toBe('Cette liste n’existe plus ou ne vous est plus partagée.');
     });
 
     it('pins the open list to the home page and refreshes the home lists', async () => {
@@ -385,10 +385,10 @@ describe('ListsStore', () => {
     const stopping = store.stopSharing();
     http
       .expectOne({ method: 'DELETE', url: '/api/v1/lists/list-1/members' })
-      .flush({ message: 'Action interdite.' }, { status: 403, statusText: 'Forbidden' });
+      .flush({ errorCode: 'lists.ownerOnly' }, { status: 403, statusText: 'Forbidden' });
     expect(await stopping).toBe(false);
     expect(store.detail()?.members).toEqual(members);
-    expect(store.error()).toBe('Action interdite.');
+    expect(store.error()).toBe('Seul le propriétaire de la liste peut effectuer cette action.');
   });
 
   it('sends no request without an open list and ignores late answers for a list left meanwhile', async () => {
@@ -594,7 +594,7 @@ describe('ListsStore', () => {
       await settle();
       http
         .expectOne('/api/v1/lists/list-1')
-        .flush({ message: 'Liste introuvable.' }, { status: 404, statusText: 'Not Found' });
+        .flush({ errorCode: 'lists.notFound' }, { status: 404, statusText: 'Not Found' });
       await settle();
 
       expect(store.detail()).toBeNull();

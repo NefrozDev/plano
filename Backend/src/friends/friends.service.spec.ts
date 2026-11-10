@@ -430,11 +430,11 @@ describe('FriendsService and ContactsService', () => {
       );
       await friends.sendRequest(ada, bob);
       await expect(friends.sendRequest(ada, bob)).rejects.toThrow(
-        'Votre demande est déjà envoyée.',
+        'Your request was already sent.',
       );
       await friends.accept(bob, (await incomingIds(bob))[0]);
       await expect(friends.sendRequest(bob, ada)).rejects.toThrow(
-        'Vous êtes déjà amis.',
+        'You are already friends.',
       );
       expect(await dataSource.getRepository(Friendship).count()).toBe(1);
     });

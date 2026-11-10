@@ -130,11 +130,11 @@ describe('UsersService', () => {
     );
     await expect(
       users.setAvatar(userId, { buffer: Buffer.alloc(0), size: 0 }),
-    ).rejects.toThrow('Choisissez une image.');
+    ).rejects.toThrow('Choose an image.');
     const svg = Buffer.from('<svg/>');
     await expect(
       users.setAvatar(userId, { buffer: svg, size: svg.length }),
-    ).rejects.toThrow('Choisissez une image JPEG, PNG ou WebP.');
+    ).rejects.toThrow('Choose a JPEG, PNG or WebP image.');
 
     expect((await users.findAvatar(userId)).data).toEqual(PNG);
   });

@@ -95,7 +95,7 @@ export class ObjectiveActivityComponent {
     try {
       await action();
     } catch (error) {
-      this.error.set(httpErrorMessage(error, { fallback: FAILURE_MESSAGE, useServerMessage: true }));
+      this.error.set(httpErrorMessage(error, { fallback: FAILURE_MESSAGE, useServerCode: true }));
     }
   }
 }

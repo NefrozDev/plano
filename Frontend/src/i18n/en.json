@@ -121,5 +121,97 @@
   },
   "splash": {
     "tagline": "Your ambitions deserve a plan"
+  },
+  "errors": {
+    "network": "Plano can’t be reached. Check your connection."
+  },
+  "apiErrors": {
+    "agenda": {
+      "organizerCannotRespond": "You’re organizing this event: there’s no invitation to accept.",
+      "eventNotFound": "This event no longer exists.",
+      "organizerOnly": "Only the organizer can change or delete this event.",
+      "guestsMustBeContacts": "Only your contacts can be invited.",
+      "tooManyEvents": "Your calendar already holds 5,000 events, the maximum.",
+      "endBeforeStart": "The event can’t end before it starts."
+    },
+    "friends": {
+      "cannotAddYourself": "You can’t add yourself.",
+      "userNotFound": "This user no longer exists.",
+      "alreadyFriends": "You’re already friends.",
+      "alreadyRequested": "Your request has already been sent.",
+      "tooManyPending": "Too many pending requests: wait for some answers before sending more.",
+      "requestNotFound": "This request no longer exists.",
+      "notFriends": "This person isn’t one of your friends."
+    },
+    "groups": {
+      "notFound": "This group can’t be found.",
+      "invalidInviteCode": "This invite code is invalid.",
+      "alreadyMember": "You’re already in this group.",
+      "alreadyOwner": "You already own this group.",
+      "memberNotFound": "This member isn’t in the group.",
+      "useLeaveAction": "Use the dedicated action to leave or delete the group.",
+      "ownerCannotBeRemoved": "The owner can’t be removed.",
+      "transferBeforeLeaving": "Transfer ownership or delete the group before leaving it.",
+      "tooManyGroups": "You’re already in 20 groups, the maximum.",
+      "ownerOnly": "Only the owner can do this.",
+      "inviteCodeUnavailable": "An invite code couldn’t be created. Please try again."
+    },
+    "lists": {
+      "notFound": "This list no longer exists or is no longer shared with you.",
+      "viewOnly": "You can only view this list.",
+      "ownerOnly": "Only the list’s owner can do this.",
+      "sectionOrderInvalid": "The list changed in the meantime. Please try again.",
+      "entryOrderInvalid": "The section changed in the meantime. Please try again.",
+      "sectionNotFound": "This section no longer exists.",
+      "entryNotFound": "This item no longer exists.",
+      "assigneeNotMember": "An item can only be assigned to a member of the list.",
+      "alreadyOwner": "You already own this list.",
+      "shareWithContactsOnly": "You can only share a list with your friends and the members of your groups.",
+      "alreadyMember": "This person already has access to the list.",
+      "ownerOnlyRemovesMembers": "Only the list’s owner can remove a member.",
+      "memberNotFound": "This person doesn’t have access to the list."
+    },
+    "notifications": {
+      "notFound": "This notification no longer exists."
+    },
+    "objectives": {
+      "notFound": "This goal no longer exists or is no longer shared with you.",
+      "viewOnly": "You can only view this goal.",
+      "ownerOnly": "Only the goal’s owner can do this.",
+      "commentNotFound": "This comment no longer exists.",
+      "ownCommentsOnly": "You can only remove your own comments.",
+      "invalidDate": "This date isn’t valid.",
+      "listUsedElsewhere": "This list already counts towards another goal.",
+      "alreadyOwner": "You already own this goal.",
+      "shareWithContactsOnly": "You can only share a goal with your friends and the members of your groups.",
+      "alreadyMember": "This person already has access to this goal.",
+      "ownerCannotLeave": "The owner can’t leave their own goal.",
+      "memberNotFound": "This person wasn’t invited to this goal.",
+      "topLevelOnlyRestarts": "Only a main goal can start over.",
+      "tooManyTemplates": "You can’t keep more than 100 templates.",
+      "templateNotFound": "This template no longer exists.",
+      "wrongTracking": "This action doesn’t match how this goal is tracked.",
+      "futureSessionDone": "A future session can’t already be done.",
+      "sessionNotFound": "This session no longer exists.",
+      "ownSessionsOnly": "You can only remove your own sessions.",
+      "futureDay": "A day still to come can’t be checked.",
+      "paused": "This goal is paused.",
+      "numericNeedsTarget": "A numeric goal needs a target and a unit.",
+      "habitNeedsDays": "A habit needs a number of days to succeed.",
+      "dueBeforeStart": "The due date can’t be before the start date.",
+      "timeBarNeedsDue": "A time bar needs a due date.",
+      "topLevelOnlyRepeats": "Only a main goal can repeat.",
+      "assigneeNeedsAccess": "A goal can only be assigned to someone who has access to it.",
+      "childOrderInvalid": "The sub-goals changed in the meantime. Please try again.",
+      "completedCannotPause": "A completed goal can’t be paused.",
+      "tooDeep": "A goal can’t go deeper than 10 levels.",
+      "tooManyChildren": "A goal can’t hold more than 500 sub-goals."
+    },
+    "users": {
+      "imageRequired": "Choose an image.",
+      "imageType": "Choose a JPEG, PNG or WebP image.",
+      "noAvatar": "No profile photo.",
+      "notFound": "This account no longer exists."
+    }
   }
 }

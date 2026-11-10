@@ -216,7 +216,7 @@ describe('AgendaStore', () => {
       const saving = store.create(draft({ participantIds: ['user-zoe'] }));
       http
         .expectOne(EVENTS_URL)
-        .flush({ message: 'Seuls vos contacts peuvent être invités.' }, { status: 400, statusText: 'Bad Request' });
+        .flush({ errorCode: 'agenda.guestsMustBeContacts' }, { status: 400, statusText: 'Bad Request' });
 
       await expect(saving).resolves.toBeNull();
       expect(store.error()).toBe('Seuls vos contacts peuvent être invités.');
@@ -326,7 +326,7 @@ describe('AgendaStore', () => {
 
     it('says when an event cannot be opened', async () => {
       const opening = store.open('inconnu');
-      http.expectOne(`${EVENTS_URL}/inconnu`).flush({ message: 'Événement introuvable.' }, { status: 404, statusText: 'Not Found' });
+      http.expectOne(`${EVENTS_URL}/inconnu`).flush({ errorCode: 'agenda.eventNotFound' }, { status: 404, statusText: 'Not Found' });
 
       await expect(opening).resolves.toBe(false);
       expect(store.event('inconnu')).toBeUndefined();

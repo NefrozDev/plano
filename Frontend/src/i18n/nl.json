@@ -121,5 +121,97 @@
   },
   "splash": {
     "tagline": "Je ambities verdienen een plan"
+  },
+  "errors": {
+    "network": "Plano is niet bereikbaar. Controleer je verbinding."
+  },
+  "apiErrors": {
+    "agenda": {
+      "organizerCannotRespond": "Jij organiseert deze afspraak: er is geen uitnodiging om te accepteren.",
+      "eventNotFound": "Deze afspraak bestaat niet meer.",
+      "organizerOnly": "Alleen de organisator kan deze afspraak wijzigen of verwijderen.",
+      "guestsMustBeContacts": "Alleen je contacten kunnen worden uitgenodigd.",
+      "tooManyEvents": "Je agenda bevat al 5.000 afspraken, het maximum.",
+      "endBeforeStart": "De afspraak kan niet eindigen voordat ze begint."
+    },
+    "friends": {
+      "cannotAddYourself": "Je kunt jezelf niet toevoegen.",
+      "userNotFound": "Deze gebruiker bestaat niet meer.",
+      "alreadyFriends": "Jullie zijn al vrienden.",
+      "alreadyRequested": "Je verzoek is al verstuurd.",
+      "tooManyPending": "Te veel openstaande verzoeken: wacht op antwoorden voordat je er meer verstuurt.",
+      "requestNotFound": "Dit verzoek bestaat niet meer.",
+      "notFriends": "Deze persoon is geen vriend van je."
+    },
+    "groups": {
+      "notFound": "Deze groep is niet gevonden.",
+      "invalidInviteCode": "Deze uitnodigingscode is ongeldig.",
+      "alreadyMember": "Je zit al in deze groep.",
+      "alreadyOwner": "Je bent al eigenaar van de groep.",
+      "memberNotFound": "Dit lid zit niet in de groep.",
+      "useLeaveAction": "Gebruik de knop om de groep te verlaten of te verwijderen.",
+      "ownerCannotBeRemoved": "De eigenaar kan niet worden verwijderd.",
+      "transferBeforeLeaving": "Draag het eigenaarschap over of verwijder de groep voordat je die verlaat.",
+      "tooManyGroups": "Je zit al in 20 groepen, het maximum.",
+      "ownerOnly": "Alleen de eigenaar kan dit doen.",
+      "inviteCodeUnavailable": "Er kon geen uitnodigingscode worden gemaakt. Probeer het opnieuw."
+    },
+    "lists": {
+      "notFound": "Deze lijst bestaat niet meer of wordt niet meer met je gedeeld.",
+      "viewOnly": "Je kunt deze lijst alleen bekijken.",
+      "ownerOnly": "Alleen de eigenaar van de lijst kan dit doen.",
+      "sectionOrderInvalid": "De lijst is intussen gewijzigd. Probeer het opnieuw.",
+      "entryOrderInvalid": "De sectie is intussen gewijzigd. Probeer het opnieuw.",
+      "sectionNotFound": "Deze sectie bestaat niet meer.",
+      "entryNotFound": "Dit item bestaat niet meer.",
+      "assigneeNotMember": "Een item kan alleen aan een lid van de lijst worden toegewezen.",
+      "alreadyOwner": "Je bent al eigenaar van de lijst.",
+      "shareWithContactsOnly": "Je kunt een lijst alleen delen met je vrienden en de leden van je groepen.",
+      "alreadyMember": "Deze persoon heeft al toegang tot de lijst.",
+      "ownerOnlyRemovesMembers": "Alleen de eigenaar van de lijst kan een lid verwijderen.",
+      "memberNotFound": "Deze persoon heeft geen toegang tot de lijst."
+    },
+    "notifications": {
+      "notFound": "Deze melding bestaat niet meer."
+    },
+    "objectives": {
+      "notFound": "Dit doel bestaat niet meer of wordt niet meer met je gedeeld.",
+      "viewOnly": "Je kunt dit doel alleen bekijken.",
+      "ownerOnly": "Alleen de eigenaar van het doel kan dit doen.",
+      "commentNotFound": "Deze reactie bestaat niet meer.",
+      "ownCommentsOnly": "Je kunt alleen je eigen reacties verwijderen.",
+      "invalidDate": "Deze datum is niet geldig.",
+      "listUsedElsewhere": "Deze lijst telt al mee voor een ander doel.",
+      "alreadyOwner": "Je bent al eigenaar van dit doel.",
+      "shareWithContactsOnly": "Je kunt een doel alleen delen met je vrienden en de leden van je groepen.",
+      "alreadyMember": "Deze persoon heeft al toegang tot dit doel.",
+      "ownerCannotLeave": "De eigenaar kan zijn eigen doel niet verlaten.",
+      "memberNotFound": "Deze persoon is niet uitgenodigd voor dit doel.",
+      "topLevelOnlyRestarts": "Alleen een hoofddoel kan opnieuw beginnen.",
+      "tooManyTemplates": "Je kunt niet meer dan 100 sjablonen bewaren.",
+      "templateNotFound": "Dit sjabloon bestaat niet meer.",
+      "wrongTracking": "Deze actie past niet bij hoe dit doel wordt gevolgd.",
+      "futureSessionDone": "Een toekomstige sessie kan nog niet gedaan zijn.",
+      "sessionNotFound": "Deze sessie bestaat niet meer.",
+      "ownSessionsOnly": "Je kunt alleen je eigen sessies verwijderen.",
+      "futureDay": "Een dag die nog moet komen, kan niet worden afgevinkt.",
+      "paused": "Dit doel is gepauzeerd.",
+      "numericNeedsTarget": "Een doel in cijfers heeft een streefwaarde en een eenheid nodig.",
+      "habitNeedsDays": "Een gewoonte heeft een aantal geslaagde dagen nodig.",
+      "dueBeforeStart": "De einddatum kan niet voor de begindatum liggen.",
+      "timeBarNeedsDue": "Een tijdbalk heeft een einddatum nodig.",
+      "topLevelOnlyRepeats": "Alleen een hoofddoel kan zich herhalen.",
+      "assigneeNeedsAccess": "Een doel kan alleen worden toegewezen aan iemand die er toegang toe heeft.",
+      "childOrderInvalid": "De subdoelen zijn intussen gewijzigd. Probeer het opnieuw.",
+      "completedCannotPause": "Een voltooid doel kan niet worden gepauzeerd.",
+      "tooDeep": "Een doel kan niet meer dan 10 niveaus diep gaan.",
+      "tooManyChildren": "Een doel kan niet meer dan 500 subdoelen bevatten."
+    },
+    "users": {
+      "imageRequired": "Kies een afbeelding.",
+      "imageType": "Kies een JPEG-, PNG- of WebP-afbeelding.",
+      "noAvatar": "Geen profielfoto.",
+      "notFound": "Dit account bestaat niet meer."
+    }
   }
 }

@@ -18,6 +18,7 @@ import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
 import { ObjectivesService } from './objectives.service';
+import { errorCode } from '../errors/error-code';
 
 /**
  * Lists linked to an objective: their checked items can make its bar. Only the
@@ -61,11 +62,15 @@ export class ObjectiveListsService implements OnModuleDestroy {
         const list = await manager.findOne(List, { where: { id: listId } });
         // Someone else's list is not named: it might as well not exist.
         if (!list || list.ownerId !== userId) {
-          throw new NotFoundException('Liste introuvable.');
+          throw new NotFoundException(
+            'List not found.',
+            errorCode('lists.notFound'),
+          );
         }
         if (list.objectiveId && list.objectiveId !== node.id) {
           throw new ConflictException(
-            'Cette liste compte déjà pour un autre objectif.',
+            'This list already counts towards another goal.',
+            errorCode('objectives.listUsedElsewhere'),
           );
         }
         list.objectiveId = node.id;
@@ -100,7 +105,11 @@ export class ObjectiveListsService implements OnModuleDestroy {
         const list = await manager.findOne(List, {
           where: { id: listId, objectiveId: node.id },
         });
-        if (!list) throw new NotFoundException('Liste introuvable.');
+        if (!list)
+          throw new NotFoundException(
+            'List not found.',
+            errorCode('lists.notFound'),
+          );
         list.objectiveId = null;
         await manager.save(list);
       },

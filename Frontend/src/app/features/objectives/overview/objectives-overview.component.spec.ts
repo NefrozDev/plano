@@ -65,11 +65,11 @@ describe('ObjectivesOverviewComponent', () => {
   it('shows an error from the API, and no empty state while loading', async () => {
     const reloading = store.load();
     fixture.detectChanges();
-    http.expectOne('/api/v1/objectives').flush({ message: 'Hors service' }, { status: 500, statusText: 'Error' });
+    http.expectOne('/api/v1/objectives').flush({ errorCode: 'objectives.notFound' }, { status: 500, statusText: 'Error' });
     await reloading;
     fixture.detectChanges();
 
-    expect(element.querySelector('.field-error')?.textContent).toBe('Hors service');
+    expect(element.querySelector('.field-error')?.textContent).toBe('Cet objectif n’existe plus ou ne vous est plus partagé.');
   });
 
   it('has no bell: notifications live in the home page bell and on the tabs', () => {

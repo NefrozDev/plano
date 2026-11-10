@@ -129,12 +129,12 @@ describe('ObjectiveListsComponent', () => {
     (element.querySelector('.new-list input') as HTMLInputElement).value = 'Valise';
     await click('Créer');
 
-    http.expectOne('/api/v1/objectives/obj-1/lists/new').flush({ message: 'Refusé' }, { status: 403, statusText: 'Forbidden' });
+    http.expectOne('/api/v1/objectives/obj-1/lists/new').flush({ errorCode: 'objectives.viewOnly' }, { status: 403, statusText: 'Forbidden' });
     await settleObjectives();
     fixture.detectChanges();
 
     expect(element.querySelector('.new-list')).not.toBeNull();
-    expect(TestBed.inject(ObjectivesStore).error()).toBe('Refusé');
+    expect(TestBed.inject(ObjectivesStore).error()).toBe('Vous pouvez seulement consulter cet objectif.');
     http.expectNone('/api/v1/lists');
   });
 

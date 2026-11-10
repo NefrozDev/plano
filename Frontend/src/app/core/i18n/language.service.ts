@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import { DOCUMENT, Injectable, effect, inject, signal, untracked } from '@angular/core';
+import { DOCUMENT, Injectable, effect, inject, untracked } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { LOCALES, type Locale, type UpdateProfileRequest } from '@plano/common';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { AuthUser } from '../auth/auth.models';
 import { API_BASE_URL } from '../http/api-base-url';
+import { interfaceLocale, setInterfaceLocale } from './translate';
 
 export const DEFAULT_LOCALE: Locale = 'fr';
 /** This browser's last choice, so the login page already speaks it. */
@@ -27,9 +28,7 @@ export class LanguageService {
   private readonly auth = inject(AuthService);
   private readonly document = inject(DOCUMENT);
   private readonly apiUrl = `${inject(API_BASE_URL)}/users/me`;
-  private readonly activeState = signal<Locale>(DEFAULT_LOCALE);
-
-  readonly active = this.activeState.asReadonly();
+  readonly active = interfaceLocale;
 
   constructor() {
     // Reacts to sign-ins and account updates only: reading the active language
@@ -37,7 +36,7 @@ export class LanguageService {
     effect(() => {
       const locale = this.auth.user()?.locale;
       untracked(() => {
-        if (locale && locale !== this.activeState()) void this.use(locale);
+        if (locale && locale !== this.active()) void this.use(locale);
       });
     });
   }
@@ -51,7 +50,7 @@ export class LanguageService {
   async use(locale: Locale): Promise<void> {
     await firstValueFrom(this.transloco.load(locale));
     this.transloco.setActiveLang(locale);
-    this.activeState.set(locale);
+    setInterfaceLocale(locale);
     this.document.documentElement.lang = locale;
     try {
       localStorage.setItem(STORAGE_KEY, locale);

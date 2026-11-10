@@ -216,12 +216,12 @@ describe('ObjectiveShareComponent', () => {
       await openInvite([contact('c1', 'Cyd')]);
 
       (element.querySelector('.invite .primary-button') as HTMLButtonElement).click();
-      http.expectOne('/api/v1/objectives/obj-1/members').flush({ message: 'Déjà invité' }, { status: 409, statusText: 'Conflict' });
+      http.expectOne('/api/v1/objectives/obj-1/members').flush({ errorCode: 'objectives.alreadyMember' }, { status: 409, statusText: 'Conflict' });
       await settleObjectives();
       fixture.detectChanges();
 
       expect(element.querySelector('.invite')).not.toBeNull();
-      expect(element.querySelector('.field-error')?.textContent).toBe('Déjà invité');
+      expect(element.querySelector('.field-error')?.textContent).toBe('Cette personne a déjà accès à cet objectif.');
     });
 
     it('sends nothing without someone to invite', async () => {

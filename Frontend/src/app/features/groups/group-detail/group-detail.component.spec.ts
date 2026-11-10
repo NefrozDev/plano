@@ -101,13 +101,13 @@ describe('GroupDetailComponent', () => {
         () =>
           new HttpErrorResponse({
             status: 403,
-            error: { message: 'Action interdite.' },
+            error: { errorCode: 'groups.ownerOnly' },
           }),
       ),
     );
     component.renameForm.controls.name.setValue('Encore un nom');
     component.rename();
-    expect(component.submissionError()).toBe('Action interdite.');
+    expect(component.submissionError()).toBe('Seul le propriétaire peut effectuer cette action.');
   });
 
   it('goes back to the groups and maps offline failures', () => {
@@ -123,7 +123,7 @@ describe('GroupDetailComponent', () => {
 
   it('explains when the group is not one of the user’s', () => {
     groups.get.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 404, error: { message: 'Ce groupe est introuvable.' } })),
+      throwError(() => new HttpErrorResponse({ status: 404, error: { errorCode: 'groups.notFound' } })),
     );
     const fixture = TestBed.createComponent(GroupDetailComponent);
     fixture.detectChanges();
@@ -197,7 +197,7 @@ describe('GroupDetailComponent', () => {
           () =>
             new HttpErrorResponse({
               status: 400,
-              error: { message: ['Membre inconnu.', 'Réessayez.'] },
+              error: { message: ['userId must be a UUID'], error: 'Bad Request' },
             }),
         ),
       );
@@ -205,8 +205,8 @@ describe('GroupDetailComponent', () => {
 
       expect(groups.removeMember).toHaveBeenCalledTimes(1);
       expect(groups.removeMember).toHaveBeenCalledWith('group-1', 'user-2');
-      // Validation errors arrive as an array of messages.
-      expect(component.submissionError()).toBe('Membre inconnu. Réessayez.');
+      // Validation errors carry English messages and no code: never shown as such.
+      expect(component.submissionError()).toBe('L’action a échoué. Veuillez réessayer.');
       expect(component.group()?.members.length).toBe(2);
     });
 
@@ -437,7 +437,7 @@ describe('GroupDetailComponent', () => {
     it('keeps the modal open and shows the error inside it when an action fails', () => {
       groups.update.mockReturnValue(
         throwError(
-          () => new HttpErrorResponse({ status: 409, error: { message: 'Nom déjà pris.' } }),
+          () => new HttpErrorResponse({ status: 409, error: { errorCode: 'groups.ownerOnly' } }),
         ),
       );
       const { fixture, element } = renderGroup('owner');
@@ -450,7 +450,7 @@ describe('GroupDetailComponent', () => {
       expect(groups.update).toHaveBeenCalledTimes(1);
       expect(groups.update).toHaveBeenCalledWith('group-1', 'Les Explorateurs');
       expect(component.dialog()).toBe('rename');
-      expect(element.querySelector('dialog .form-error')?.textContent).toContain('Nom déjà pris.');
+      expect(element.querySelector('dialog .form-error')?.textContent).toContain('Seul le propriétaire peut effectuer cette action.');
       // The page-level error stays hidden behind an open modal.
       expect(element.querySelector('.groups-page > .form-error')).toBeNull();
 

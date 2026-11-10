@@ -10,6 +10,7 @@ import {
 } from './objective-access.service';
 import { ObjectiveRecurrenceService } from './objective-recurrence.service';
 import { ObjectiveViewService } from './objective-view.service';
+import { errorCode } from '../errors/error-code';
 
 /** Each person's own arrangement of the objectives they can open. */
 @Injectable()
@@ -84,7 +85,10 @@ export class ObjectivePreferencesService {
       (await this.access.findTops(userId)).map(({ node }) => node.id),
     );
     if (objectiveIds.some((id) => !reachable.has(id))) {
-      throw new NotFoundException('Objectif introuvable.');
+      throw new NotFoundException(
+        'Goal not found.',
+        errorCode('objectives.notFound'),
+      );
     }
     await this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {

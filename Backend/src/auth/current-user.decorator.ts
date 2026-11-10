@@ -19,7 +19,7 @@ export function currentUserFactory(
     .getRequest<AuthenticatedRequest>();
   // Only reachable when a route forgets SessionAuthGuard: fail closed.
   if (!authUser) {
-    throw new UnauthorizedException('Session invalide ou expirée.');
+    throw new UnauthorizedException('Invalid or expired session.');
   }
   return field ? authUser[field] : authUser;
 }

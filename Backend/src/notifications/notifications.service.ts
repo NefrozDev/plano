@@ -14,6 +14,7 @@ import { LiveEventsService } from '../live/live-events.service';
 import { avatarVersion } from '../users/user.mapper';
 import { Notification } from './notification.entity';
 import { NOTIFICATION_AREAS } from './notifications.dto';
+import { errorCode } from '../errors/error-code';
 
 /** The bell shows this many; the unread counts cover them all. */
 export const NOTIFICATION_PAGE = 50;
@@ -190,7 +191,11 @@ export class NotificationsService {
     const notification = await this.dataSource.manager.findOne(Notification, {
       where: { id, userId },
     });
-    if (!notification) throw new NotFoundException('Notification introuvable.');
+    if (!notification)
+      throw new NotFoundException(
+        'Notification not found.',
+        errorCode('notifications.notFound'),
+      );
     if (notification.readAt) return;
     notification.readAt = new Date();
     await this.dataSource.manager.save(notification);

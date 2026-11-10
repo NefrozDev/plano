@@ -16,8 +16,9 @@ import { GroupMembership } from './group-membership.entity';
 import { Group } from './group.entity';
 import { avatarVersion } from '../users/user.mapper';
 import type { GroupDetails, GroupMemberSummary } from './group.types';
+import { errorCode } from '../errors/error-code';
 
-const GROUP_NOT_FOUND = 'Ce groupe est introuvable.';
+const GROUP_NOT_FOUND = 'Group not found.';
 
 /** Keeps a single account from piling up groups (and invite codes). */
 export const MAX_GROUPS_PER_USER = 20;
@@ -60,7 +61,11 @@ export class GroupsService {
       where: { userId, groupId },
       relations: { group: true },
     });
-    if (!membership) throw new NotFoundException(GROUP_NOT_FOUND);
+    if (!membership)
+      throw new NotFoundException(
+        GROUP_NOT_FOUND,
+        errorCode('groups.notFound'),
+      );
 
     const members = await this.memberships.find({
       where: { groupId },
@@ -120,13 +125,19 @@ export class GroupsService {
           where: { inviteCode: details.inviteCode },
         });
         if (!group) {
-          throw new NotFoundException("Ce code d'invitation est invalide.");
+          throw new NotFoundException(
+            'This invite code is invalid.',
+            errorCode('groups.invalidInviteCode'),
+          );
         }
         const existing = await manager.findOne(GroupMembership, {
           where: { userId, groupId: group.id },
         });
         if (existing) {
-          throw new ConflictException('Vous faites déjà partie de ce groupe.');
+          throw new ConflictException(
+            'You are already in this group.',
+            errorCode('groups.alreadyMember'),
+          );
         }
         await this.requireRoomForAnotherGroup(manager, userId);
 
@@ -183,7 +194,10 @@ export class GroupsService {
     targetUserId: string,
   ): Promise<GroupDetails> {
     if (userId === targetUserId) {
-      throw new BadRequestException('Vous êtes déjà propriétaire du groupe.');
+      throw new BadRequestException(
+        'You already own this group.',
+        errorCode('groups.alreadyOwner'),
+      );
     }
 
     await this.writeLock.runExclusive(() =>
@@ -193,7 +207,10 @@ export class GroupsService {
           where: { groupId, userId: targetUserId },
         });
         if (!target) {
-          throw new NotFoundException("Ce membre n'appartient pas au groupe.");
+          throw new NotFoundException(
+            'This member is not in the group.',
+            errorCode('groups.memberNotFound'),
+          );
         }
 
         owner.role = 'member';
@@ -214,7 +231,8 @@ export class GroupsService {
   ): Promise<void> {
     if (userId === targetUserId) {
       throw new BadRequestException(
-        'Utilisez l’action prévue pour quitter ou supprimer le groupe.',
+        'Use the dedicated action to leave or delete the group.',
+        errorCode('groups.useLeaveAction'),
       );
     }
 
@@ -225,11 +243,15 @@ export class GroupsService {
           where: { groupId, userId: targetUserId },
         });
         if (!target) {
-          throw new NotFoundException("Ce membre n'appartient pas au groupe.");
+          throw new NotFoundException(
+            'This member is not in the group.',
+            errorCode('groups.memberNotFound'),
+          );
         }
         if (target.role === 'owner') {
           throw new ForbiddenException(
-            'Le propriétaire ne peut pas être retiré.',
+            'The owner cannot be removed.',
+            errorCode('groups.ownerCannotBeRemoved'),
           );
         }
 
@@ -248,7 +270,8 @@ export class GroupsService {
         );
         if (membership.role === 'owner') {
           throw new ConflictException(
-            'Transférez la propriété ou supprimez le groupe avant de le quitter.',
+            'Transfer ownership or delete the group before leaving it.',
+            errorCode('groups.transferBeforeLeaving'),
           );
         }
         await manager.delete(GroupMembership, { id: membership.id });
@@ -273,7 +296,8 @@ export class GroupsService {
     const count = await manager.count(GroupMembership, { where: { userId } });
     if (count >= MAX_GROUPS_PER_USER) {
       throw new ConflictException(
-        `Vous faites déjà partie de ${MAX_GROUPS_PER_USER} groupes, le maximum.`,
+        `You are already in ${MAX_GROUPS_PER_USER} groups, the maximum.`,
+        errorCode('groups.tooManyGroups'),
       );
     }
   }
@@ -287,7 +311,11 @@ export class GroupsService {
       where: { userId, groupId },
       relations: { group: true },
     });
-    if (!membership) throw new NotFoundException(GROUP_NOT_FOUND);
+    if (!membership)
+      throw new NotFoundException(
+        GROUP_NOT_FOUND,
+        errorCode('groups.notFound'),
+      );
     return membership;
   }
 
@@ -299,7 +327,8 @@ export class GroupsService {
     const membership = await this.requireMembership(manager, userId, groupId);
     if (membership.role !== 'owner') {
       throw new ForbiddenException(
-        'Seul le propriétaire peut effectuer cette action.',
+        'Only the owner can do this.',
+        errorCode('groups.ownerOnly'),
       );
     }
     return membership;
@@ -319,7 +348,8 @@ export class GroupsService {
       if (!existing) return code;
     }
     throw new ConflictException(
-      "Impossible de générer un code d'invitation unique.",
+      'Could not generate a unique invite code.',
+      errorCode('groups.inviteCodeUnavailable'),
     );
   }
 

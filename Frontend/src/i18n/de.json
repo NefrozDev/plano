@@ -121,5 +121,97 @@
   },
   "splash": {
     "tagline": "Deine Ziele verdienen einen Plan"
+  },
+  "errors": {
+    "network": "Plano ist nicht erreichbar. Prüfe deine Verbindung."
+  },
+  "apiErrors": {
+    "agenda": {
+      "organizerCannotRespond": "Du organisierst diesen Termin: Es gibt keine Einladung anzunehmen.",
+      "eventNotFound": "Diesen Termin gibt es nicht mehr.",
+      "organizerOnly": "Nur der Organisator kann diesen Termin ändern oder löschen.",
+      "guestsMustBeContacts": "Nur deine Kontakte können eingeladen werden.",
+      "tooManyEvents": "Dein Kalender enthält bereits 5.000 Termine, das Maximum.",
+      "endBeforeStart": "Der Termin kann nicht enden, bevor er beginnt."
+    },
+    "friends": {
+      "cannotAddYourself": "Du kannst dich nicht selbst hinzufügen.",
+      "userNotFound": "Diesen Nutzer gibt es nicht mehr.",
+      "alreadyFriends": "Ihr seid bereits befreundet.",
+      "alreadyRequested": "Deine Anfrage wurde bereits gesendet.",
+      "tooManyPending": "Zu viele offene Anfragen: Warte auf Antworten, bevor du weitere sendest.",
+      "requestNotFound": "Diese Anfrage gibt es nicht mehr.",
+      "notFriends": "Diese Person gehört nicht zu deinen Freunden."
+    },
+    "groups": {
+      "notFound": "Diese Gruppe wurde nicht gefunden.",
+      "invalidInviteCode": "Dieser Einladungscode ist ungültig.",
+      "alreadyMember": "Du bist bereits in dieser Gruppe.",
+      "alreadyOwner": "Dir gehört diese Gruppe bereits.",
+      "memberNotFound": "Dieses Mitglied ist nicht in der Gruppe.",
+      "useLeaveAction": "Verwende die vorgesehene Aktion, um die Gruppe zu verlassen oder zu löschen.",
+      "ownerCannotBeRemoved": "Der Eigentümer kann nicht entfernt werden.",
+      "transferBeforeLeaving": "Übertrage die Gruppe oder lösche sie, bevor du sie verlässt.",
+      "tooManyGroups": "Du bist bereits in 20 Gruppen, dem Maximum.",
+      "ownerOnly": "Nur der Eigentümer kann das tun.",
+      "inviteCodeUnavailable": "Es konnte kein Einladungscode erstellt werden. Bitte versuche es erneut."
+    },
+    "lists": {
+      "notFound": "Diese Liste gibt es nicht mehr oder sie wird nicht mehr mit dir geteilt.",
+      "viewOnly": "Du kannst diese Liste nur ansehen.",
+      "ownerOnly": "Nur der Eigentümer der Liste kann das tun.",
+      "sectionOrderInvalid": "Die Liste hat sich inzwischen geändert. Bitte versuche es erneut.",
+      "entryOrderInvalid": "Der Abschnitt hat sich inzwischen geändert. Bitte versuche es erneut.",
+      "sectionNotFound": "Diesen Abschnitt gibt es nicht mehr.",
+      "entryNotFound": "Diesen Eintrag gibt es nicht mehr.",
+      "assigneeNotMember": "Ein Eintrag kann nur einem Mitglied der Liste zugewiesen werden.",
+      "alreadyOwner": "Dir gehört diese Liste bereits.",
+      "shareWithContactsOnly": "Du kannst eine Liste nur mit deinen Freunden und den Mitgliedern deiner Gruppen teilen.",
+      "alreadyMember": "Diese Person hat bereits Zugriff auf die Liste.",
+      "ownerOnlyRemovesMembers": "Nur der Eigentümer der Liste kann ein Mitglied entfernen.",
+      "memberNotFound": "Diese Person hat keinen Zugriff auf die Liste."
+    },
+    "notifications": {
+      "notFound": "Diese Benachrichtigung gibt es nicht mehr."
+    },
+    "objectives": {
+      "notFound": "Dieses Ziel gibt es nicht mehr oder es wird nicht mehr mit dir geteilt.",
+      "viewOnly": "Du kannst dieses Ziel nur ansehen.",
+      "ownerOnly": "Nur der Eigentümer des Ziels kann das tun.",
+      "commentNotFound": "Diesen Kommentar gibt es nicht mehr.",
+      "ownCommentsOnly": "Du kannst nur deine eigenen Kommentare entfernen.",
+      "invalidDate": "Dieses Datum ist ungültig.",
+      "listUsedElsewhere": "Diese Liste zählt bereits für ein anderes Ziel.",
+      "alreadyOwner": "Dir gehört dieses Ziel bereits.",
+      "shareWithContactsOnly": "Du kannst ein Ziel nur mit deinen Freunden und den Mitgliedern deiner Gruppen teilen.",
+      "alreadyMember": "Diese Person hat bereits Zugriff auf dieses Ziel.",
+      "ownerCannotLeave": "Der Eigentümer kann sein eigenes Ziel nicht verlassen.",
+      "memberNotFound": "Diese Person wurde nicht zu diesem Ziel eingeladen.",
+      "topLevelOnlyRestarts": "Nur ein Hauptziel kann neu beginnen.",
+      "tooManyTemplates": "Du kannst nicht mehr als 100 Vorlagen behalten.",
+      "templateNotFound": "Diese Vorlage gibt es nicht mehr.",
+      "wrongTracking": "Diese Aktion passt nicht dazu, wie dieses Ziel verfolgt wird.",
+      "futureSessionDone": "Eine zukünftige Einheit kann nicht schon erledigt sein.",
+      "sessionNotFound": "Diese Einheit gibt es nicht mehr.",
+      "ownSessionsOnly": "Du kannst nur deine eigenen Einheiten entfernen.",
+      "futureDay": "Ein kommender Tag kann nicht abgehakt werden.",
+      "paused": "Dieses Ziel ist pausiert.",
+      "numericNeedsTarget": "Ein Zahlenziel braucht einen Zielwert und eine Einheit.",
+      "habitNeedsDays": "Eine Gewohnheit braucht eine Anzahl erfolgreicher Tage.",
+      "dueBeforeStart": "Das Fälligkeitsdatum darf nicht vor dem Startdatum liegen.",
+      "timeBarNeedsDue": "Ein Zeitbalken braucht ein Fälligkeitsdatum.",
+      "topLevelOnlyRepeats": "Nur ein Hauptziel kann sich wiederholen.",
+      "assigneeNeedsAccess": "Ein Ziel kann nur jemandem zugewiesen werden, der Zugriff darauf hat.",
+      "childOrderInvalid": "Die Unterziele haben sich inzwischen geändert. Bitte versuche es erneut.",
+      "completedCannotPause": "Ein abgeschlossenes Ziel kann nicht pausiert werden.",
+      "tooDeep": "Ein Ziel kann nicht mehr als 10 Ebenen tief sein.",
+      "tooManyChildren": "Ein Ziel kann nicht mehr als 500 Unterziele umfassen."
+    },
+    "users": {
+      "imageRequired": "Wähle ein Bild.",
+      "imageType": "Wähle ein JPEG-, PNG- oder WebP-Bild.",
+      "noAvatar": "Kein Profilfoto.",
+      "notFound": "Dieses Konto gibt es nicht mehr."
+    }
   }
 }

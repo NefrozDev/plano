@@ -44,6 +44,6 @@ export class AllowedOriginGuard implements CanActivate {
       return true;
     }
 
-    throw new ForbiddenException('Origine de requête non autorisée.');
+    throw new ForbiddenException('Request origin not allowed.');
   }
 }

@@ -195,7 +195,7 @@ describe('Agenda API (e2e)', () => {
       .get(`/api/v1/agenda/events/${created.id}`)
       .set('Cookie', bob.cookie)
       .expect(404);
-    expect(gone.body).toMatchObject({ message: 'Événement introuvable.' });
+    expect(gone.body).toMatchObject({ message: 'Event not found.' });
     const left = await notifications(bob);
     expect(left.items.filter(({ area }) => area === 'agenda')).toEqual([]);
     expect(left.unread.agenda).toBe(0);

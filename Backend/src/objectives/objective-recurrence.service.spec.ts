@@ -79,11 +79,11 @@ describe('ObjectiveRecurrenceService', () => {
 
       await expect(
         create({ parentId: top.id, recurrence: 'weekly' }),
-      ).rejects.toThrow('Seul un objectif principal');
+      ).rejects.toThrow('Only a top-level goal');
       const child = await create({ parentId: top.id });
       await expect(
         bed.objectives.update(child.id, bed.ada, { recurrence: 'weekly' }),
-      ).rejects.toThrow('Seul un objectif principal');
+      ).rejects.toThrow('Only a top-level goal');
     });
 
     it('starts a new period today when turned on later, without losing anything yet', async () => {
@@ -493,7 +493,7 @@ describe('ObjectiveRecurrenceService', () => {
       });
 
       await expect(bed.recurrence.restartNow(step.id, bed.ada)).rejects.toThrow(
-        'Seul un objectif principal',
+        'Only a top-level goal',
       );
       await expect(
         bed.recurrence.restartNow(top.id, bed.bob),

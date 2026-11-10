@@ -11,6 +11,7 @@ import { detectImageType, type UploadedImage } from './avatar-image';
 import type { UpdateProfileDto } from './dto/update-profile.dto';
 import { User } from './user.entity';
 import { toAuthUser } from './user.mapper';
+import { errorCode } from '../errors/error-code';
 
 export interface StoredAvatar {
   data: Buffer;
@@ -47,11 +48,17 @@ export class UsersService {
     file: UploadedImage | undefined,
   ): Promise<AuthUser> {
     if (!file?.size) {
-      throw new BadRequestException('Choisissez une image.');
+      throw new BadRequestException(
+        'Choose an image.',
+        errorCode('users.imageRequired'),
+      );
     }
     const type = detectImageType(file.buffer);
     if (!type) {
-      throw new BadRequestException('Choisissez une image JPEG, PNG ou WebP.');
+      throw new BadRequestException(
+        'Choose a JPEG, PNG or WebP image.',
+        errorCode('users.imageType'),
+      );
     }
     return this.updateUser(userId, (user) => {
       user.avatar = file.buffer;
@@ -76,7 +83,10 @@ export class UsersService {
       .where('user.id = :userId', { userId })
       .getOne();
     if (!user?.avatar || !user.avatarType) {
-      throw new NotFoundException('Aucune photo de profil.');
+      throw new NotFoundException(
+        'No profile picture.',
+        errorCode('users.noAvatar'),
+      );
     }
     return { data: user.avatar, type: user.avatarType };
   }
@@ -88,7 +98,11 @@ export class UsersService {
     return this.writeLock.runExclusive(() =>
       this.dataSource.transaction(async (manager) => {
         const user = await manager.findOne(User, { where: { id: userId } });
-        if (!user) throw new NotFoundException('Utilisateur introuvable.');
+        if (!user)
+          throw new NotFoundException(
+            'User not found.',
+            errorCode('users.notFound'),
+          );
         await change(user, manager);
         return toAuthUser(await manager.save(user));
       }),

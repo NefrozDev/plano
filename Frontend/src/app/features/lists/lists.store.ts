@@ -435,7 +435,7 @@ export class ListsStore {
       apply(await firstValueFrom(request, { defaultValue: undefined as T }));
       return true;
     } catch (error) {
-      this.error.set(httpErrorMessage(error, { useServerMessage: true, fallback: FAILURE_MESSAGE }));
+      this.error.set(httpErrorMessage(error, { useServerCode: true, fallback: FAILURE_MESSAGE }));
       return false;
     }
   }

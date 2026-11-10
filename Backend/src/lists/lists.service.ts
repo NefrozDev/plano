@@ -31,6 +31,7 @@ import { ListAccess, ListAccessService } from './list-access.service';
 import { ListChangesService } from './list-changes.service';
 import { ListPreferencesService } from './list-preferences.service';
 import { displayName, toSectionResponse } from './list.mapper';
+import { errorCode } from '../errors/error-code';
 
 /** The owner, then the people they shared the list with (`members` oldest first). */
 function toPeople(owner: User, members: ListMember[]): ListMemberResponse[] {
@@ -186,12 +187,14 @@ export class ListsService {
         );
         if (details.userId === userId) {
           throw new BadRequestException(
-            'Vous êtes déjà propriétaire de la liste.',
+            'You already own this list.',
+            errorCode('lists.alreadyOwner'),
           );
         }
         if (!(await this.contacts.areContacts(userId, details.userId))) {
           throw new BadRequestException(
-            'Vous ne pouvez partager une liste qu’avec vos amis et les membres de vos groupes.',
+            'You can only share a list with your friends and the members of your groups.',
+            errorCode('lists.shareWithContactsOnly'),
           );
         }
         if (
@@ -200,7 +203,8 @@ export class ListsService {
           })
         ) {
           throw new ConflictException(
-            'Cette personne a déjà accès à la liste.',
+            'This person already has access to the list.',
+            errorCode('lists.alreadyMember'),
           );
         }
 
@@ -255,7 +259,8 @@ export class ListsService {
         );
         if (role !== 'owner' && memberUserId !== userId) {
           throw new ForbiddenException(
-            'Seul le propriétaire de la liste peut retirer un membre.',
+            'Only the list owner can remove a member.',
+            errorCode('lists.ownerOnlyRemovesMembers'),
           );
         }
         const member = await this.requireMember(manager, listId, memberUserId);
@@ -380,7 +385,10 @@ export class ListsService {
       where: { listId, userId },
     });
     if (!member) {
-      throw new NotFoundException('Cette personne n’a pas accès à la liste.');
+      throw new NotFoundException(
+        'This person has no access to the list.',
+        errorCode('lists.memberNotFound'),
+      );
     }
     return member;
   }
