@@ -53,7 +53,7 @@ type DisplayFilter = keyof Pick<AgendaFilters, 'showEvents' | 'showTasks' | 'sho
     .option b { display: grid; width: 1.3rem; height: 1.3rem; place-items: center; border: 2px solid #c2c8d3; border-radius: .35rem; }
     .option input:checked + b { border-color: var(--color-primary); background: var(--color-primary); }
     .option input:checked + b::after { width: .45rem; height: .25rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.06rem) rotate(-45deg); }
-    .option input:focus-visible + b { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 2px; }
+    .option input:focus-visible + b { outline: 3px solid var(--color-focus); outline-offset: 2px; }
     .actions { padding: .8rem 1.25rem calc(1.2rem + env(safe-area-inset-bottom)); border-top: 1px solid #edf0f5; }
     .actions .primary-button { text-decoration: none; }
   `,

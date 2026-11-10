@@ -6,7 +6,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .objective-list app-objective-icon { width: 2.2rem; height: 2.2rem; }
 .objective-list span { display: grid; gap: .15rem; min-width: 0; }
 .objective-list strong { overflow: hidden; font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
-.objective-list small { color: #7b8292; font-size: .7rem; }
+.objective-list small { color: var(--color-text-muted); font-size: .7rem; }
 .empty { padding: 1.5rem 0; color: var(--color-text-muted); font-size: .8rem; text-align: center; }
 .suggestions button { display: flex; width: 100%; min-height: 2.9rem; align-items: center; justify-content: space-between; padding: 0; border: 0; border-bottom: 1px solid #edf0f5; background: transparent; color: #20263a; cursor: pointer; font-size: .8rem; text-align: left; }
 .suggestions i { color: #9aa3b2; font-size: 1.3rem; font-style: normal; }

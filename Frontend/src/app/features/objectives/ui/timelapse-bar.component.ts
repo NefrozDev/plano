@@ -19,10 +19,10 @@ import type { TimelapseView } from '../objective.utils';
     ><b [style.width.%]="view().percent"></b></i>
   `,
   styles: `
-    :host { --time: #8a93a3; display: grid; gap: .2rem; }
+    :host { --time: var(--color-text-muted); display: grid; gap: .2rem; }
     :host(.overdue) { --time: var(--color-danger); }
     .label { color: var(--time); font-size: .66rem; font-weight: 650; }
-    :host(:not(.overdue)) .label { color: #7b8292; }
+    :host(:not(.overdue)) .label { color: var(--color-text-muted); }
     .bar { display: block; height: .22rem; overflow: hidden; border-radius: 1rem; background: #eef1f6; }
     .bar b { display: block; height: 100%; border-radius: inherit; background: var(--time); transition: width .4s ease; }
   `,

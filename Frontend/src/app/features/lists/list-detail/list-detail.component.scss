@@ -23,6 +23,6 @@
 .section-summary { display: grid; width: 100%; min-height: 4.8rem; grid-template-columns: .65rem 1fr auto 1rem; gap: .8rem; align-items: center; margin-bottom: .7rem; padding: 0 .65rem; border: 1px solid #edf0f5; border-radius: .65rem; color: var(--color-text); cursor: pointer; text-align: left; }
 .section-summary i { width: .58rem; height: .58rem; border-radius: 50%; }
 .section-summary strong { font-size: .88rem; }
-.section-summary span { color: #7b8393; font-size: .78rem; font-weight: 650; }
+.section-summary span { color: var(--color-text-muted); font-size: .78rem; font-weight: 650; }
 .section-summary b { font-size: 1.75rem; }
-.empty-state { margin: 0; padding: 2rem 1.55rem; color: #7b8393; font-size: .85rem; text-align: center; }
+.empty-state { margin: 0; padding: 2rem 1.55rem; color: var(--color-text-muted); font-size: .85rem; text-align: center; }

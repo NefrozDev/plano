@@ -82,8 +82,8 @@ const FIRST_VISIBLE_HOUR = 7;
     :host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
     .head, .all-day { display: grid; grid-template-columns: 2.6rem repeat(7, 1fr); padding: 0 .5rem; }
     .head { border-bottom: 1px solid #edf0f5; }
-    .corner { align-self: center; color: #8a93a3; font-size: .6rem; font-weight: 700; text-align: center; }
-    .head button { display: grid; gap: .15rem; justify-items: center; padding: .2rem 0 .45rem; border: 0; background: transparent; color: #6b7385; cursor: pointer; font-size: .6rem; }
+    .corner { align-self: center; color: var(--color-text-muted); font-size: .6rem; font-weight: 700; text-align: center; }
+    .head button { display: grid; gap: .15rem; justify-items: center; padding: .2rem 0 .45rem; border: 0; background: transparent; color: var(--color-text-muted); cursor: pointer; font-size: .6rem; }
     .head b { display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border-radius: 50%; color: var(--color-text); font-size: .78rem; }
     .head .today b { color: var(--color-primary); }
     .head .selected b { background: var(--color-primary); color: white; }
@@ -93,7 +93,7 @@ const FIRST_VISIBLE_HOUR = 7;
     .scroller { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 .5rem 6.5rem; }
     .grid { position: relative; display: grid; grid-template-columns: 2.6rem repeat(7, 1fr); background: repeating-linear-gradient(to bottom, #edf0f5 0 1px, transparent 1px 44px); }
     .hours { position: relative; }
-    .hours span { position: absolute; right: .35rem; color: #8a93a3; font-size: .58rem; font-variant-numeric: tabular-nums; transform: translateY(-50%); }
+    .hours span { position: absolute; right: .35rem; color: var(--color-text-muted); font-size: .58rem; font-variant-numeric: tabular-nums; transform: translateY(-50%); }
     .hours span:first-child { transform: none; }
     .column { position: relative; border-left: 1px solid #f1f3f7; cursor: copy; }
     .column.today { background: rgb(50 91 226 / 4%); }

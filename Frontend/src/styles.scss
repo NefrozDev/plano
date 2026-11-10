@@ -17,13 +17,14 @@
   --color-success: var(--palette-mint);
   --color-accent: var(--palette-magenta);
   --color-text: #111827;
-  --color-text-muted: #667085;
+  --color-text-muted: #5f6878;
   --color-border: #CCD4E0;
   --color-border-strong: #AAB6C8;
   --color-card: #FFFFFF;
   --color-danger: #B42318;
   --color-danger-surface: #FFF1F0;
-  --color-focus: var(--palette-magenta);
+  /* The brand magenta, darkened to 3:1 against every surface it rings (WCAG 1.4.11). */
+  --color-focus: #b01fb3;
 
   /* Typography, shape, spacing, and elevation */
   --font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -93,7 +94,7 @@ app-list-detail .new-entry-input {
   border: 1px dashed color-mix(in srgb, var(--section-color) 38%, #AEB9CA);
   border-radius: 0.6rem;
   background: color-mix(in srgb, var(--section-color) 5%, white);
-  color: #737E90;
+  color: var(--color-text-muted);
 }
 
 app-list-detail .empty-entry {
@@ -376,7 +377,7 @@ app-lists .lists-content:not(.grid-view) .list-card { padding-right: 2.6rem; }
 app-lists .drag-handle { position: absolute; top: 50%; right: .35rem; display: grid; width: 2rem; height: 2.6rem; place-items: center; padding: 0; border: 0; border-radius: .5rem; background: transparent; color: #9aa3b5; cursor: grab; font-size: 1.05rem; transform: translateY(-50%); touch-action: none; user-select: none; }
 app-lists .drag-handle:hover { background: rgb(255 255 255 / 70%); color: #4b5468; }
 app-lists .drag-handle:active { cursor: grabbing; }
-app-lists .drag-handle:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); }
+app-lists .drag-handle:focus-visible { outline: 3px solid var(--color-focus); }
 app-lists .grid-view .drag-handle { top: .35rem; transform: none; }
 app-lists .list-card { position: relative; z-index: 1; touch-action: pan-y; transition: transform 180ms ease; }
 app-lists .delete-list { position: absolute; top: 0; right: 0; bottom: 0; display: grid; width: 4.5rem; place-items: center; border: 0; border-radius: .9rem; background: #d92d20; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
@@ -613,7 +614,7 @@ app-list-detail .detail-field {
 app-list-detail .detail-field > span,
 app-list-detail .detail-notes > span { font-size: .72rem; font-weight: 700; }
 app-list-detail .detail-field strong { color: #697386; font-size: .78rem; font-weight: 600; }
-app-list-detail .detail-field small { grid-column: 2; color: #8A93A3; font-size: .68rem; }
+app-list-detail .detail-field small { grid-column: 2; color: var(--color-text-muted); font-size: .68rem; }
 app-list-detail .detail-field input { max-width: 10rem; border: 0; outline: 0; background: transparent; color: #697386; font: inherit; font-size: .76rem; text-align: right; }
 app-list-detail .detail-notes { display: grid; gap: .65rem; padding: 1rem 1.25rem; }
 app-list-detail .detail-notes textarea { width: 100%; padding: 0; border: 0; outline: 0; color: var(--color-text); font: inherit; font-size: .8rem; resize: none; }
@@ -634,7 +635,7 @@ app-list-detail .sharing-members, app-list-detail .invitation-link { padding: 1r
 app-list-detail .sharing-panel h3 { margin: 0 0 .75rem; color: #3C4658; font-size: .74rem; }
 app-list-detail .sharing-member { display: grid; min-height: 2.6rem; grid-template-columns: 1.8rem 1fr auto; gap: .6rem; align-items: center; }
 app-list-detail .sharing-member strong { font-size: .79rem; }
-app-list-detail .owner-role { color: #8A93A3; font-size: .71rem; }
+app-list-detail .owner-role { color: var(--color-text-muted); font-size: .71rem; }
 app-list-detail .invite-people { display: flex; gap: .5rem; align-items: center; margin-top: .55rem; padding: .5rem 0; border: 0; background: transparent; color: var(--color-primary); cursor: pointer; font-size: .8rem; font-weight: 650; }
 app-list-detail .invite-people span { font-size: 1.15rem; font-weight: 400; }
 app-list-detail .invite-form { display: grid; grid-template-columns: 1fr auto; gap: .55rem; margin-top: .7rem; }
@@ -644,15 +645,15 @@ app-list-detail .invite-form button { background: var(--color-primary); color: w
 app-list-detail .invite-form button:disabled { cursor: default; opacity: .4; }
 app-list-detail .invite-form select:first-child { grid-column: 1 / -1; width: 100%; min-height: 2.4rem; }
 app-list-detail .sharing-member:has(> button) { grid-template-columns: 1.8rem 1fr auto auto; }
-app-list-detail .sharing-member > button { padding: 0 .25rem; border: 0; background: transparent; color: #8A93A3; cursor: pointer; font-size: 1.05rem; }
-app-list-detail .sharing-hint { margin: .7rem 0 0; color: #8A93A3; font-size: .74rem; line-height: 1.4; }
+app-list-detail .sharing-member > button { padding: 0 .25rem; border: 0; background: transparent; color: var(--color-text-muted); cursor: pointer; font-size: 1.05rem; }
+app-list-detail .sharing-hint { margin: .7rem 0 0; color: var(--color-text-muted); font-size: .74rem; line-height: 1.4; }
 app-list-detail .invitation-link p { margin: 0 0 .8rem; color: #778194; font-size: .72rem; }
 app-list-detail .invitation-link > div { display: grid; min-height: 2.7rem; grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 0 .7rem; border-radius: .6rem; background: #F2F6FF; color: #4B72DF; font-size: .72rem; }
 app-list-detail .invitation-link > div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 app-list-detail .invitation-link > div button { border: 0; background: transparent; color: var(--color-primary); cursor: pointer; font: inherit; font-size: .72rem; font-weight: 750; }
 app-list-detail .invitation-link small { display: block; margin-top: .7rem; color: #8B94A5; font-size: .67rem; }
 app-list-detail .enable-sharing { padding: .65rem .8rem; border: 0; border-radius: .55rem; background: #EEF4FF; color: var(--color-primary); cursor: pointer; font: inherit; font-size: .75rem; font-weight: 700; }
-app-list-detail .stop-sharing { width: 100%; min-height: 3rem; margin-top: 1.25rem; border: 0; border-radius: .65rem; background: #FFF0F1; color: #E5484D; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 750; }
+app-list-detail .stop-sharing { width: 100%; min-height: 3rem; margin-top: 1.25rem; border: 0; border-radius: .65rem; background: #FFF0F1; color: var(--color-danger); cursor: pointer; font: inherit; font-size: .78rem; font-weight: 750; }
 
 app-list-detail .color-options button.selected span {
   visibility: visible;
@@ -749,8 +750,14 @@ input {
 
 button:focus-visible,
 a:focus-visible,
-input:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent);
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+/* A visually hidden input rings the label that shows it. */
+label:has(> input.visually-hidden:focus-visible) {
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
 
@@ -1016,4 +1023,28 @@ select option {
 /* The grip that reorders objectives, on the overview and among sub-objectives. */
 app-objectives-overview .drag-handle, app-objective-summary .drag-handle { display: grid; width: 1.8rem; height: 2.6rem; flex: none; place-items: center; padding: 0; border: 0; border-radius: .5rem; background: transparent; color: #9aa3b5; cursor: grab; font-size: 1.05rem; touch-action: none; user-select: none; }
 app-objectives-overview .drag-handle:hover, app-objective-summary .drag-handle:hover { background: #f2f4f8; color: #4b5468; }
-app-objectives-overview .drag-handle:focus-visible, app-objective-summary .drag-handle:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); }
+app-objectives-overview .drag-handle:focus-visible, app-objective-summary .drag-handle:focus-visible { outline: 3px solid var(--color-focus); }
+
+/*
+ * Keyboard focus never lands out of sight (WCAG 2.4.7, 2.4.11): scrolling to a focused
+ * element keeps it clear of the bottom navigation, and the swipe actions hidden under a
+ * row show while they hold focus.
+ */
+* {
+  scroll-padding-bottom: 5rem;
+}
+
+app-lists .delete-list:focus-visible,
+app-list-entry-row .delete-entry:focus-visible,
+app-list-section-header .delete-section:focus-visible,
+app-objective-swipe-card .delete:focus-visible {
+  z-index: 2;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* The lists' drag handles sit under the cards: above them while focused. */
+app-lists .drag-handle:focus-visible {
+  z-index: 2;
+  background: var(--color-card);
+}

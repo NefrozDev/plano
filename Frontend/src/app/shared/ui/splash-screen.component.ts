@@ -128,7 +128,7 @@ export const SPLASH_EXIT_MS = 320;
     .progress { width: min(11rem, 55%); height: 4px; overflow: hidden; border-radius: 4px; background: rgb(50 91 226 / 14%); }
     .company {
       margin: 0;
-      color: #8a93a3;
+      color: var(--color-text-muted);
       font-size: .7rem;
       font-weight: 700;
       letter-spacing: .16em;

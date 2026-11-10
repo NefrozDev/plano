@@ -11,14 +11,15 @@ export interface Person {
 }
 
 /** Colour of people added by hand, before they pick their own. */
-export const NEW_PERSON_COLOR = '#6387ed';
+export const NEW_PERSON_COLOR = '#5371c5';
 
 /** First letter of each non-empty part, upper-cased: ('Ada', 'Lovelace') → 'AL'. */
 export function initialsOf(...parts: readonly string[]): string {
   return parts.map((part) => part.trim().charAt(0)).join('').toUpperCase();
 }
 
-const PERSON_COLORS = ['#a76142', '#d07863', '#3d6f83', '#6387ed', '#7c5cf0', '#22a95a', '#e65591', '#f08c1a'];
+// Dark enough for white initials (4.5:1 at least).
+const PERSON_COLORS = ['#a76142', '#a66356', '#3d6f83', '#5371c5', '#7a5bec', '#1e854d', '#c04a7e', '#a6661e'];
 
 /** A stable colour for a user id, so someone keeps their colour across screens. */
 export function personColor(id: string): string {

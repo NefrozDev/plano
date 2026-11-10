@@ -53,7 +53,7 @@ const MAX_DOTS = 3;
     :host { display: block; padding-bottom: 7rem; }
     .month { display: grid; grid-template-columns: repeat(7, 1fr); gap: .1rem 0; padding: .2rem .8rem .8rem; border-bottom: 1px solid #edf0f5; }
     .month.with-weeks { grid-template-columns: 1.4rem repeat(7, 1fr); }
-    .weekday { padding: .3rem 0; color: #8a93a3; font-size: .62rem; font-weight: 650; text-align: center; }
+    .weekday { padding: .3rem 0; color: var(--color-text-muted); font-size: .62rem; font-weight: 650; text-align: center; }
     .week-number { align-self: center; color: #a3abb9; font-size: .58rem; font-weight: 700; text-align: center; }
     button { display: grid; gap: .15rem; justify-items: center; padding: .2rem 0; border: 0; background: transparent; color: var(--color-text); cursor: pointer; }
     b { display: grid; width: 1.9rem; height: 1.9rem; place-items: center; border-radius: 50%; font-size: .8rem; font-weight: 650; }

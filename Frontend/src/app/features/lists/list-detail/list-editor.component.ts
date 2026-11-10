@@ -34,7 +34,7 @@ export interface ListEdits {
     :host { display: contents; }
     .sharing-row app-avatar-stack { --avatar-size: 1.85rem; }
     .editor-behaviour { margin-bottom: 1.1rem; }
-    .editor-behaviour p { margin: -.15rem 0 0; color: #7b8292; font-size: .72rem; line-height: 1.35; }
+    .editor-behaviour p { margin: -.15rem 0 0; color: var(--color-text-muted); font-size: .72rem; line-height: 1.35; }
   `,
 })
 export class ListEditorComponent implements OnInit {

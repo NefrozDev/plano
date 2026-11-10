@@ -31,7 +31,7 @@ export function contactName(contact: Contact): string {
     ul { display: grid; gap: .1rem; margin: 0; padding: 0; list-style: none; }
     label { display: flex; min-height: 2.2rem; gap: .55rem; align-items: center; color: #20263a; cursor: pointer; font-size: .8rem; }
     input { width: 1rem; height: 1rem; accent-color: var(--color-primary); }
-    .hint { margin: 0; color: #7b8292; font-size: .72rem; line-height: 1.35; }
+    .hint { margin: 0; color: var(--color-text-muted); font-size: .72rem; line-height: 1.35; }
   `,
 })
 export class PeoplePickerComponent {

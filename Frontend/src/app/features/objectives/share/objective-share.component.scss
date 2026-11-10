@@ -3,22 +3,22 @@
 .empty { margin: 3rem 1.5rem; color: var(--color-text-muted); font-size: .88rem; text-align: center; }
 .summary { display: flex; gap: .7rem; align-items: center; margin-bottom: .9rem; }
 .summary strong { min-width: 0; overflow-wrap: anywhere; font-size: .95rem; }
-.note { margin: .6rem 0; color: #7b8292; font-size: .74rem; line-height: 1.4; }
+.note { margin: .6rem 0; color: var(--color-text-muted); font-size: .74rem; line-height: 1.4; }
 h2 { margin: 1rem 0 .5rem; font-size: .82rem; font-weight: 750; }
 .people { display: grid; gap: .2rem; margin: 0; padding: 0; list-style: none; }
 .people li { display: flex; min-height: 2.8rem; gap: .55rem; align-items: center; }
 .name { display: grid; flex: 1; min-width: 0; gap: .1rem; overflow-wrap: anywhere; font-size: .8rem; font-weight: 650; }
-.name small { color: #8a93a3; font-size: .66rem; font-weight: 500; }
-.role { color: #7b8292; font-size: .72rem; }
-.remove { width: 1.8rem; height: 1.8rem; flex: none; border: 0; border-radius: .5rem; background: #f2f4f8; color: #6b7385; cursor: pointer; font-size: 1rem; }
+.name small { color: var(--color-text-muted); font-size: .66rem; font-weight: 500; }
+.role { color: var(--color-text-muted); font-size: .72rem; }
+.remove { width: 1.8rem; height: 1.8rem; flex: none; border: 0; border-radius: .5rem; background: #f2f4f8; color: var(--color-text-muted); cursor: pointer; font-size: 1rem; }
 .link-button { margin-top: .6rem; }
 .invite { display: grid; gap: .6rem; margin-top: .7rem; }
 .invite-roles { display: grid; gap: .45rem; }
 .invite-roles label { position: relative; display: block; padding: .6rem .8rem; border: 1px solid #e4e8f0; border-radius: .7rem; cursor: pointer; }
 .invite-roles label.selected { border-color: var(--color-primary); background: #f1f5ff; }
 .invite-roles input { position: absolute; opacity: 0; pointer-events: none; }
-.invite-roles label:focus-within { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 2px; }
+.invite-roles label:focus-within { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .invite-roles span { display: grid; gap: .12rem; }
 .invite-roles strong { font-size: .8rem; }
-.invite-roles small { color: #7b8292; font-size: .68rem; }
+.invite-roles small { color: var(--color-text-muted); font-size: .68rem; }
 .leave { margin-top: 1.4rem; padding: .6rem 0; border: 0; background: transparent; color: var(--color-danger); cursor: pointer; font: inherit; font-size: .8rem; font-weight: 700; }

@@ -74,7 +74,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
     .header-shell.revealed .delete-section { opacity: 1; pointer-events: auto; }
     svg { width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
     .section-title { flex: 1; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--color-text); cursor: pointer; font-size: .88rem; font-weight: 700; overflow-wrap: anywhere; text-align: left; }
-    .collapse { display: grid; width: 2rem; height: 2rem; flex: none; padding: .35rem; place-items: center; border: 0; border-radius: .5rem; background: transparent; color: #6b7385; cursor: pointer; }
+    .collapse { display: grid; width: 2rem; height: 2rem; flex: none; padding: .35rem; place-items: center; border: 0; border-radius: .5rem; background: transparent; color: var(--color-text-muted); cursor: pointer; }
     .name-input { flex: 1; min-width: 0; min-height: 2rem; padding: 0 .45rem; border: 1px solid var(--color-primary); border-radius: .45rem; background: white; color: var(--color-text); font: inherit; font-size: .88rem; font-weight: 700; }
   `,
 })

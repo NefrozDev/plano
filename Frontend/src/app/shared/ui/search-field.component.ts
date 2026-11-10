@@ -29,8 +29,10 @@ import {
   styles: `
     :host { display: block; margin: 0 1.25rem .4rem; }
     .search { display: flex; gap: .5rem; align-items: center; padding: 0 .8rem; border: 1px solid var(--color-border); border-radius: .7rem; }
-    .search:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 .2rem rgb(50 91 226 / 12%); }
-    svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: #8a93a3; stroke-linecap: round; stroke-width: 2; }
+    /* The whole field takes the app's focus ring, not the bare input inside it. */
+    .search:focus-within { border-color: var(--color-primary); }
+    .search:has(input:focus-visible) { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+    svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: var(--color-text-muted); stroke-linecap: round; stroke-width: 2; }
     input { width: 100%; min-height: 2.7rem; border: 0; outline: 0; background: transparent; font-size: .84rem; }
   `,
 })

@@ -65,14 +65,14 @@ interface SearchRow {
   `,
   styles: `
     :host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
-    svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: #8a93a3; stroke-linecap: round; stroke-width: 2; }
+    svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: var(--color-text-muted); stroke-linecap: round; stroke-width: 2; }
     .content { flex: 1; min-height: 0; padding: 0 1.25rem 1.5rem; overflow-y: auto; }
     h2 { margin: 1rem 0 .3rem; color: #394254; font-size: .76rem; }
     .result { display: flex; gap: .75rem; align-items: center; padding: .55rem 0; color: var(--color-text); text-decoration: none; }
     .result i { width: .65rem; height: .65rem; flex: none; border-radius: 50%; }
     .result span { display: grid; gap: .15rem; min-width: 0; }
     .result strong { overflow: hidden; font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
-    .result small { color: #7b8292; font-size: .7rem; }
+    .result small { color: var(--color-text-muted); font-size: .7rem; }
     .suggestion { display: flex; width: 100%; min-height: 2.7rem; gap: .65rem; align-items: center; padding: 0; border: 0; border-bottom: 1px solid #edf0f5; background: transparent; color: #20263a; cursor: pointer; font: inherit; font-size: .8rem; text-align: left; text-decoration: none; }
     .empty { padding: 1.5rem 0; color: var(--color-text-muted); font-size: .8rem; text-align: center; }
   `,

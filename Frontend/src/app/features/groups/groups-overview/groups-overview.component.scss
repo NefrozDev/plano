@@ -12,7 +12,7 @@
   text-decoration: none;
 }
 .group-link:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 .group-emblem--small {

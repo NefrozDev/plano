@@ -75,7 +75,7 @@ export interface ObjectiveCardView {
     .copy { display: grid; gap: .3rem; min-width: 0; }
     strong { overflow: hidden; font-size: .88rem; text-overflow: ellipsis; white-space: nowrap; }
     /* Flex so the 'En pause' pill is vertically centred on the caption (and can wrap in tiles). */
-    small { display: flex; flex-wrap: wrap; gap: .25rem .35rem; align-items: center; color: #7b8292; font-size: .7rem; }
+    small { display: flex; flex-wrap: wrap; gap: .25rem .35rem; align-items: center; color: var(--color-text-muted); font-size: .7rem; }
     .sharing { color: var(--tint); font-weight: 650; }
     em { padding: .1rem .45rem; border-radius: 1rem; background: #fff4e5; color: #b45d00; font-style: normal; font-weight: 650; line-height: 1.2; }
     .progress { display: block; height: .3rem; margin-top: .15rem; overflow: hidden; border-radius: 1rem; background: color-mix(in srgb, var(--tint) 14%, #eef1f6); }

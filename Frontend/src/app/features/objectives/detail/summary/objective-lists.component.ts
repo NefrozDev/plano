@@ -88,7 +88,7 @@ import { ObjectivesStore } from '../../objectives.store';
     .dot { width: .7rem; height: .7rem; flex: none; border-radius: 50%; background: var(--list-color); }
     .name { flex: 1; overflow: hidden; font-size: .84rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
     .count { color: var(--color-text-muted); font-size: .75rem; font-weight: 650; }
-    .unlink { width: 2.2rem; height: 2.2rem; border: 0; border-radius: .6rem; background: #f2f4f8; color: #6b7385; cursor: pointer; font-size: 1.05rem; }
+    .unlink { width: 2.2rem; height: 2.2rem; border: 0; border-radius: .6rem; background: #f2f4f8; color: var(--color-text-muted); cursor: pointer; font-size: 1.05rem; }
     .note { margin: 0; color: var(--color-text-muted); font-size: .74rem; line-height: 1.4; }
     .actions { display: flex; flex-wrap: wrap; gap: 1rem; }
     .actions button { padding: .35rem 0; border: 0; background: none; color: var(--color-primary); cursor: pointer; font: inherit; font-size: .78rem; font-weight: 700; }

@@ -89,7 +89,7 @@ interface ContactGroup {
     i { display: grid; width: 1.35rem; height: 1.35rem; place-items: center; border: 2px solid #c2c8d3; border-radius: 50%; }
     input:checked + i { border-color: var(--color-primary); background: var(--color-primary); }
     input:checked + i::after { width: .45rem; height: .25rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.06rem) rotate(-45deg); }
-    input:focus-visible + i { outline: 3px solid color-mix(in srgb, var(--color-focus) 60%, transparent); outline-offset: 2px; }
+    input:focus-visible + i { outline: 3px solid var(--color-focus); outline-offset: 2px; }
     .empty { color: var(--color-text-muted); font-size: .78rem; }
   `,
 })

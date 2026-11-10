@@ -18,7 +18,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   styles: `
     :host { display: block; }
     .switch-row { display: grid; width: 100%; min-height: 2.6rem; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .25rem 0; border: 0; background: transparent; color: #20263a; cursor: pointer; font: inherit; font-size: .8rem; text-align: left; }
-    small { display: block; margin-top: .1rem; color: #8a93a3; font-size: .68rem; }
+    small { display: block; margin-top: .1rem; color: var(--color-text-muted); font-size: .68rem; }
     .switch { position: relative; display: block; width: 2.15rem; height: 1.25rem; border-radius: 1rem; background: #dfe4ed; transition: background-color 180ms ease; }
     .switch b { position: absolute; top: .15rem; left: .15rem; width: .95rem; height: .95rem; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgb(20 30 50 / 22%); transition: transform 180ms ease; }
     .switch.on { background: var(--color-primary); }

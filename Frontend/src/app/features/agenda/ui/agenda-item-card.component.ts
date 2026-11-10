@@ -38,8 +38,8 @@ const MAX_AVATARS = 2;
     .card { display: flex; gap: .6rem; align-items: center; padding: .6rem .7rem; border-left: 3px solid var(--item-color); border-radius: .55rem; background: color-mix(in srgb, var(--item-color) 11%, white); color: var(--color-text); text-decoration: none; }
     .card.task { border-left-style: dashed; background: white; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--item-color) 25%, white); }
     .copy { display: grid; flex: 1; gap: .15rem; min-width: 0; }
-    strong { display: flex; gap: .35rem; align-items: center; overflow: hidden; color: color-mix(in srgb, var(--item-color) 70%, #111827); font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
-    small { overflow: hidden; color: #6b7385; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+    strong { display: flex; gap: .35rem; align-items: center; overflow: hidden; color: color-mix(in srgb, var(--item-color) 55%, #111827); font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+    small { overflow: hidden; color: var(--color-text-muted); font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
     .check { width: .8rem; height: .8rem; flex: none; border: 1.5px solid currentColor; border-radius: .2rem; }
     .done strong { text-decoration: line-through; opacity: .65; }
     .done .check { background: currentColor; }
