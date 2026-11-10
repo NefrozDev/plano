@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, output, signal } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
 import { LIST_COLOR_CHOICES } from './list-options';
 
@@ -10,37 +11,37 @@ export interface NewSection {
 /** Bottom sheet asking for a section name and colour. */
 @Component({
   selector: 'app-list-section-creator',
-  imports: [AutofocusDirective],
+  imports: [AutofocusDirective, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="section-sheet-layer">
-      <button class="sheet-backdrop" type="button" aria-label="Fermer" (click)="closed.emit()"></button>
+      <button class="sheet-backdrop" type="button" [attr.aria-label]="'lists.sectionCreator.close' | transloco" (click)="closed.emit()"></button>
       <section class="section-sheet" aria-labelledby="section-sheet-title">
         <header>
-          <button type="button" aria-label="Annuler" (click)="closed.emit()">×</button>
-          <h2 id="section-sheet-title">Ajouter une section</h2>
-          <button class="save-section" type="button" aria-label="Ajouter la section" [disabled]="!name().trim()" (click)="save()">✓</button>
+          <button type="button" [attr.aria-label]="'common.cancel' | transloco" (click)="closed.emit()">×</button>
+          <h2 id="section-sheet-title">{{ 'lists.sectionCreator.heading' | transloco }}</h2>
+          <button class="save-section" type="button" [attr.aria-label]="'lists.sectionCreator.save' | transloco" [disabled]="!name().trim()" (click)="save()">✓</button>
         </header>
         <label>
-          <span>Nom de la section</span>
+          <span>{{ 'lists.sectionCreator.name' | transloco }}</span>
           <input
             appAutofocus
             type="text"
-            placeholder="Ex. : Produits frais"
+            [placeholder]="'lists.sectionCreator.placeholder' | transloco"
             [value]="name()"
             (input)="name.set($any($event.target).value)"
             (keydown.enter)="$event.preventDefault(); save()"
           />
         </label>
         <fieldset>
-          <legend>Couleur</legend>
+          <legend>{{ 'lists.editor.color' | transloco }}</legend>
           <div>
             @for (choice of colorChoices; track choice) {
               <button
                 type="button"
                 [class.selected]="color() === choice"
                 [style.background]="choice"
-                [attr.aria-label]="'Choisir la couleur ' + choice"
+                [attr.aria-label]="'lists.editor.pickColor' | transloco: { color: choice }"
                 [attr.aria-pressed]="color() === choice"
                 (click)="color.set(choice)"
               ><span aria-hidden="true">✓</span></button>

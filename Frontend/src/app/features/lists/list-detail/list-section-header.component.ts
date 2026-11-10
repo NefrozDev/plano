@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
 import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
 
@@ -8,7 +9,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
  */
 @Component({
   selector: 'app-list-section-header',
-  imports: [AutofocusDirective],
+  imports: [AutofocusDirective, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="header-shell" [class.revealed]="swipe.offset() < 0">
@@ -16,7 +17,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
         <button
           class="delete-section"
           type="button"
-          [attr.aria-label]="'Supprimer la section ' + name()"
+          [attr.aria-label]="'lists.section.delete' | transloco: { name: name() }"
           (click)="remove.emit()"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
@@ -40,7 +41,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
             class="name-input"
             type="text"
             maxlength="80"
-            aria-label="Nom de la section"
+            [attr.aria-label]="'lists.sectionCreator.name' | transloco"
             [value]="draft()"
             (input)="draft.set($any($event.target).value)"
             (keydown.enter)="$event.preventDefault(); commit()"
@@ -48,14 +49,14 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
             (blur)="commit()"
           />
         } @else if (editable()) {
-          <button class="section-title" type="button" [attr.aria-label]="'Renommer la section ' + name()">{{ name() }}</button>
-          <button class="collapse" type="button" [attr.aria-expanded]="true" [attr.aria-label]="'Replier la section ' + name()">
+          <button class="section-title" type="button" [attr.aria-label]="'lists.section.rename' | transloco: { name: name() }">{{ name() }}</button>
+          <button class="collapse" type="button" [attr.aria-expanded]="true" [attr.aria-label]="'lists.section.collapse' | transloco: { name: name() }">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
           </button>
           <button
             class="drag-handle"
             type="button"
-            [attr.aria-label]="'Déplacer la section ' + name()"
+            [attr.aria-label]="'lists.moveSection' | transloco: { name: name() }"
             (click)="$event.preventDefault()"
             (pointerdown)="startDrag($event)"
           >⠿</button>

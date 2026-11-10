@@ -18,13 +18,14 @@ import type {
 import { Observable, firstValueFrom } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { httpErrorMessage } from '../../core/http/http-error-message';
+import { t } from '../../core/i18n/translate';
 import { LiveUpdatesService } from '../../core/live/live-updates.service';
 import { ListsApiService } from './lists-api.service';
 
 export type { ListIcon, ListSettings, ListSummary } from '@plano/common';
 
-const FAILURE_MESSAGE = 'L’action a échoué. Veuillez réessayer.';
-export const REMOVED_MESSAGE = 'Cette liste a été supprimée ou ne vous est plus partagée.';
+/** Translation key of the message shown when the open list goes away. */
+export const REMOVED_MESSAGE = 'lists.removed';
 
 /** Recomputes the counts of a list from its entries. */
 function withCounts(detail: ListDetail): ListDetail {
@@ -397,7 +398,7 @@ export class ListsStore {
     this.listsState.update((lists) => lists.filter((list) => list.id !== listId));
     if (this.detailState()?.id === listId) {
       this.detailState.set(null);
-      this.error.set(REMOVED_MESSAGE);
+      this.error.set(t(REMOVED_MESSAGE));
     }
     this.refreshReminders();
     this.refreshHome();
@@ -435,7 +436,7 @@ export class ListsStore {
       apply(await firstValueFrom(request, { defaultValue: undefined as T }));
       return true;
     } catch (error) {
-      this.error.set(httpErrorMessage(error, { useServerCode: true, fallback: FAILURE_MESSAGE }));
+      this.error.set(httpErrorMessage(error, { useServerCode: true, fallback: t('lists.failed') }));
       return false;
     }
   }

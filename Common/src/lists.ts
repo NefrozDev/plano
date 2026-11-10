@@ -116,8 +116,8 @@ export interface ListEntry {
   name: string;
   done: boolean;
   highlighted: boolean;
-  /** Display name of the person who added it. */
-  addedBy: string;
+  /** Display name of the person who added it; null once their account is deleted. */
+  addedBy: string | null;
   /** ISO 8601 timestamp. */
   addedAt: string;
   /** User id of a list member, or null. */

@@ -5,7 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LIST_ICON_SHAPES } from './ui/list-icons';
 import { Router } from '@angular/router';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
-import { ListsComponent, SHARED_LIST_NOTICE, caption } from './lists.component';
+import { ListsComponent, caption } from './lists.component';
 import { WHEEL_SWIPE_END_MS } from '../../shared/ui/swipe-to-delete';
 import { ListsStore } from './lists.store';
 import { ConfirmService } from '../../shared/ui/confirm.service';
@@ -415,12 +415,12 @@ describe('ListsComponent', () => {
       fixture.detectChanges();
 
       expect(ask).not.toHaveBeenCalled();
-      expect(component.notice()).toBe(SHARED_LIST_NOTICE);
+      expect(component.notice()).toBe('Seule la personne qui a créé cette liste peut la supprimer.');
       expect(element.textContent).toContain('Seule la personne qui a créé cette liste peut la supprimer.');
       // With a finger or the mouse too, and the click ending that swipe opens nothing.
       component.notice.set('');
       swipe(card('cadeaux'), 300, 150);
-      expect(component.notice()).toBe(SHARED_LIST_NOTICE);
+      expect(component.notice()).toBe('Seule la personne qui a créé cette liste peut la supprimer.');
       expect(navigate).not.toHaveBeenCalled();
     });
 

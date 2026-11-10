@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal 
 import { NgTemplateOutlet } from '@angular/common';
 import { Router } from '@angular/router';
 import type { ListSummary } from '@plano/common';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { formatList, t, tCount } from '../../core/i18n/translate';
 import { type Person, toPerson } from '../../core/people/people';
 import { normalizeText } from '../../core/time/dates';
 import { AutofocusDirective } from '../../shared/ui/autofocus.directive';
@@ -19,7 +21,8 @@ type ListFilter = 'all' | 'mine' | 'shared' | 'archived';
 type BooleanSetting = 'showCounts' | 'showCompleted' | 'completedLast' | 'archiveCompleted' | 'confirmDelete';
 type OverviewAction = 'settings';
 
-export const SHARED_LIST_NOTICE = 'Seule la personne qui a créé cette liste peut la supprimer.';
+/** Translation key of the toast a shared list's swipe shows. */
+export const SHARED_LIST_NOTICE = 'lists.overview.sharedNotice';
 
 export interface ListCard {
   list: ListSummary;
@@ -38,13 +41,15 @@ const firstName = (name: string): string => name.trim().split(/\s+/)[0] ?? name;
 /** "Partagée par Ada Lovelace", "Partagée avec Bob, Cyd et Dan", "Privée"… */
 export function caption(list: ListSummary): string {
   const [owner, ...others] = list.members;
-  if (list.ownership === 'shared') return owner ? `Partagée par ${owner.name}` : 'Partagée avec vous';
-  if (!others.length) return 'Privée';
-  if (others.length === 1) return `Partagée avec ${others[0].name}`;
+  if (list.ownership === 'shared') {
+    return owner ? t('lists.caption.sharedBy', { name: owner.name }) : t('lists.caption.sharedWithYou');
+  }
+  if (!others.length) return t('lists.private');
+  if (others.length === 1) return t('lists.caption.sharedWith', { names: others[0].name });
   const names = others.map(({ name }) => firstName(name));
-  if (names.length <= NAMED_PEOPLE) return `Partagée avec ${names.slice(0, -1).join(', ')} et ${names.at(-1)}`;
+  if (names.length <= NAMED_PEOPLE) return t('lists.caption.sharedWith', { names: formatList(names) });
   const shown = NAMED_PEOPLE - 1;
-  return `Partagée avec ${names.slice(0, shown).join(', ')} et ${names.length - shown} autres`;
+  return tCount('lists.caption.sharedWithOthers', names.length - shown, { names: names.slice(0, shown).join(', ') });
 }
 
 /** The sharer of a list shared with the user; else the people the user shared it with. */
@@ -56,6 +61,7 @@ function sharingPeople(list: ListSummary): Person[] {
 @Component({
   selector: 'app-lists',
   imports: [
+    TranslocoPipe,
     ListIconComponent,
     NgTemplateOutlet,
     AutofocusDirective,
@@ -85,24 +91,25 @@ export class ListsComponent {
     if (list) void this.requestDelete(list);
   });
   /** Lists shared with the user do not slide; a swipe says why instead. */
-  readonly sharedSwipe = new SwipeToDelete(() => this.notice.set(SHARED_LIST_NOTICE));
+  readonly sharedSwipe = new SwipeToDelete(() => this.notice.set(t(SHARED_LIST_NOTICE)));
   /** Short explanation shown in a toast, empty when none. */
   readonly notice = signal('');
   /** The list being dragged by its handle. */
   readonly draggedList = signal<string | null>(null);
   private dragMoved = false;
 
+  /** Labels are translation keys. */
   readonly filters: readonly { label: string; value: ListFilter }[] = [
-    { label: 'Toutes', value: 'all' },
-    { label: 'Mes listes', value: 'mine' },
-    { label: 'Partagées', value: 'shared' },
-    { label: 'Archivées', value: 'archived' },
+    { label: 'lists.filters.all', value: 'all' },
+    { label: 'lists.filters.mine', value: 'mine' },
+    { label: 'lists.filters.shared', value: 'shared' },
+    { label: 'lists.filters.archived', value: 'archived' },
   ];
   /**
    * Overview actions: a single one is shown as its own button, several go
    * behind the "more options" menu.
    */
-  readonly actions: readonly { id: OverviewAction; label: string }[] = [{ id: 'settings', label: 'Paramètres' }];
+  readonly actions: readonly { id: OverviewAction; label: string }[] = [{ id: 'settings', label: 'titles.settings' }];
   readonly activeFilter = signal<ListFilter>('all');
   readonly searchOpen = signal(false);
   readonly query = signal('');
@@ -248,9 +255,9 @@ export class ListsComponent {
   /** Always confirmed: every member loses the list and its items. */
   async requestDelete(list: ListSummary): Promise<void> {
     const confirmed = await this.confirm.ask({
-      heading: 'Supprimer la liste ?',
-      message: `« ${list.name} » et tous ses éléments seront supprimés pour tous ses membres.`,
-      confirmLabel: 'Supprimer',
+      heading: t('lists.confirm.deleteListHeading'),
+      message: t('lists.confirm.deleteList', { name: list.name }),
+      confirmLabel: t('lists.confirm.delete'),
       tone: 'danger',
     });
     if (confirmed) await this.listsStore.deleteList(list.id);
@@ -261,7 +268,7 @@ export class ListsComponent {
     if (this.creating()) return;
     this.creating.set(true);
     const list = await this.listsStore.createList({
-      name: 'Nouvelle liste',
+      name: t('lists.overview.new'),
       icon: 'cart',
       color: LIST_COLOR_CHOICES[0],
     });

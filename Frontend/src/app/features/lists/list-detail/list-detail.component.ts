@@ -1,7 +1,9 @@
 
 import { ChangeDetectionStrategy, Component, computed, inject, signal, DOCUMENT } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListEntry, ListSection, UpdateEntryRequest } from '@plano/common';
+import { t, tCount } from '../../../core/i18n/translate';
 import { toPerson } from '../../../core/people/people';
 import { AutoGrowDirective } from '../../../shared/ui/auto-grow.directive';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
@@ -41,6 +43,7 @@ function percent(part: number, whole: number): number {
 @Component({
   selector: 'app-list-detail',
   imports: [
+    TranslocoPipe,
     RouterLink,
     AutofocusDirective,
     AutoGrowDirective,
@@ -212,9 +215,9 @@ export class ListDetailComponent {
 
   async deleteList(): Promise<void> {
     const confirmed = await this.confirm.ask({
-      heading: 'Supprimer la liste ?',
-      message: `« ${this.list()?.name} » et tous ses éléments seront supprimés pour tous ses membres.`,
-      confirmLabel: 'Supprimer',
+      heading: t('lists.confirm.deleteListHeading'),
+      message: t('lists.confirm.deleteList', { name: this.list()?.name ?? '' }),
+      confirmLabel: t('lists.confirm.delete'),
       tone: 'danger',
     });
     if (confirmed && (await this.store.deleteList())) {
@@ -265,11 +268,12 @@ export class ListDetailComponent {
   /** Always confirmed, whatever the settings: every entry of the section goes with it. */
   async requestDeleteSection(section: ListSection): Promise<void> {
     const count = section.entries.length;
-    const contents = count === 0 ? '' : count === 1 ? ' et son élément' : ` et ses ${count} éléments`;
     const confirmed = await this.confirm.ask({
-      heading: 'Supprimer la section ?',
-      message: `« ${section.name} »${contents} seront supprimés pour tous les membres de la liste.`,
-      confirmLabel: 'Supprimer',
+      heading: t('lists.confirm.deleteSectionHeading'),
+      message: count
+        ? tCount('lists.confirm.deleteSectionWithEntries', count, { name: section.name })
+        : t('lists.confirm.deleteEmptySection', { name: section.name }),
+      confirmLabel: t('lists.confirm.delete'),
       tone: 'danger',
     });
     if (confirmed) await this.store.removeSection(section.id);
@@ -278,9 +282,9 @@ export class ListDetailComponent {
   async requestDeleteEntry(entry: ListEntry): Promise<void> {
     if (this.store.settings()?.confirmDelete ?? true) {
       const confirmed = await this.confirm.ask({
-        heading: 'Supprimer l’élément ?',
-        message: `« ${entry.name} » sera supprimé définitivement.`,
-        confirmLabel: 'Supprimer',
+        heading: t('lists.confirm.deleteEntryHeading'),
+        message: t('lists.confirm.deleteEntry', { name: entry.name }),
+        confirmLabel: t('lists.confirm.delete'),
         tone: 'danger',
       });
       if (!confirmed) return;

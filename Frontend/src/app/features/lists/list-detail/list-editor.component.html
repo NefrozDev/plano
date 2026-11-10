@@ -1,13 +1,13 @@
 <section class="list-editor" aria-labelledby="editor-title">
   <header class="editor-header">
-    <button type="button" aria-label="Annuler les modifications" (click)="closed.emit()">×</button>
-    <h2 id="editor-title">Modifier la liste</h2>
-    <button class="save-editor" type="button" aria-label="Enregistrer les modifications" (click)="submit()">✓</button>
+    <button type="button" [attr.aria-label]="'lists.editor.cancel' | transloco" (click)="closed.emit()">×</button>
+    <h2 id="editor-title">{{ 'lists.edit' | transloco }}</h2>
+    <button class="save-editor" type="button" [attr.aria-label]="'lists.editor.save' | transloco" (click)="submit()">✓</button>
   </header>
 
   <div class="editor-content">
     <label class="editor-field">
-      <span>Nom de la liste</span>
+      <span>{{ 'lists.editor.name' | transloco }}</span>
       <input
         #nameInput
         type="text"
@@ -18,19 +18,19 @@
     </label>
 
     <fieldset class="editor-options icon-options">
-      <legend>Icône</legend>
+      <legend>{{ 'lists.editor.icon' | transloco }}</legend>
       <app-list-icon-picker [(value)]="draftIcon" />
     </fieldset>
 
     <fieldset class="editor-options color-options">
-      <legend>Couleur</legend>
+      <legend>{{ 'lists.editor.color' | transloco }}</legend>
       <div>
         @for (color of colorChoices; track color) {
           <button
             type="button"
             [class.selected]="draftColor() === color"
             [style.background]="color"
-            [attr.aria-label]="'Choisir la couleur ' + color"
+            [attr.aria-label]="'lists.editor.pickColor' | transloco: { color }"
             [attr.aria-pressed]="draftColor() === color"
             (click)="draftColor.set(color)"
           ><span aria-hidden="true">✓</span></button>
@@ -38,34 +38,34 @@
       </div>
     </fieldset>
 
-    <section class="editor-behaviour" aria-label="Éléments cochés">
+    <section class="editor-behaviour" [attr.aria-label]="'lists.editor.checked' | transloco">
       <app-switch-row
-        label="Supprimer un élément dès qu’il est coché"
+        [label]="'lists.editor.removeChecked' | transloco"
         [checked]="draftRemoveChecked()"
         (toggled)="draftRemoveChecked.set(!draftRemoveChecked())"
       />
-      <p>Pour tous les membres. Sinon, il reste dans la liste, barré.</p>
+      <p>{{ 'lists.editor.removeCheckedHint' | transloco }}</p>
     </section>
 
     <section class="sharing-editor" aria-labelledby="sharing-title">
-      <h3 id="sharing-title">Partagée avec</h3>
+      <h3 id="sharing-title">{{ 'lists.editor.sharedWith' | transloco }}</h3>
       <div class="sharing-row">
         <app-avatar-stack [people]="people()" [max]="4" />
-        <button type="button" (click)="openSharing()"><span aria-hidden="true">＋</span> Inviter</button>
+        <button type="button" (click)="openSharing()"><span aria-hidden="true">＋</span> {{ 'lists.editor.invite' | transloco }}</button>
       </div>
     </section>
 
     <label class="editor-field description-field">
-      <span>Description</span>
+      <span>{{ 'lists.editor.description' | transloco }}</span>
       <textarea
         rows="3"
         maxlength="500"
-        placeholder="Ajouter une description..."
+        [placeholder]="'lists.editor.descriptionPlaceholder' | transloco"
         [value]="draftDescription()"
         (input)="draftDescription.set($any($event.target).value)"
       ></textarea>
     </label>
 
-    <button class="delete-list" type="button" (click)="delete.emit()">Supprimer la liste</button>
+    <button class="delete-list" type="button" (click)="delete.emit()">{{ 'lists.editor.delete' | transloco }}</button>
   </div>
 </section>

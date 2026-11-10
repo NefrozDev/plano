@@ -49,7 +49,7 @@ describe('ListIconPickerComponent', () => {
 
     expect(dialog().open).toBe(true);
     expect(Array.from(element.querySelectorAll('.catalog h3'), (heading) => heading.textContent)).toEqual(
-      LIST_ICON_GROUPS.map(({ label }) => label),
+      ['Courses et maison', 'Cuisine et repas', 'Voyages et sorties', 'Loisirs et fêtes', 'Travail et études', 'Santé et famille', 'Argent', 'Divers'],
     );
     expect(catalog()).toHaveLength(LIST_ICON_GROUPS.flatMap(({ icons }) => icons).length);
 

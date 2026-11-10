@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListDetail, ListIcon } from '@plano/common';
 import type { Person } from '../../../core/people/people';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
@@ -27,7 +28,7 @@ export interface ListEdits {
 /** Full-screen list editor working on drafts: nothing changes until save. */
 @Component({
   selector: 'app-list-editor',
-  imports: [ListIconPickerComponent, AvatarStackComponent, SwitchRowComponent],
+  imports: [TranslocoPipe, ListIconPickerComponent, AvatarStackComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-editor.component.html',
   styles: `

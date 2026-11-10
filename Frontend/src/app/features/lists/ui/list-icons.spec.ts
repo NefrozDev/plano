@@ -1,3 +1,4 @@
+import { t } from '../../../core/i18n/translate';
 import { FIRST_LINE_SIZE, LIST_ICON_GROUPS, LIST_ICON_SHAPES } from './list-icons';
 
 describe('list icon catalog', () => {
@@ -10,8 +11,10 @@ describe('list icon catalog', () => {
   });
 
   it('names every icon differently and draws it', () => {
-    const labels = Object.values(LIST_ICON_SHAPES).map(({ label }) => label);
+    const labels = Object.values(LIST_ICON_SHAPES).map(({ label }) => t(label));
     expect(new Set(labels).size).toBe(labels.length);
+    expect(labels.filter((label) => label.startsWith('lists.'))).toEqual([]);
+    expect(t(LIST_ICON_SHAPES.cart.label)).toBe('Courses');
     for (const [icon, { paths }] of Object.entries(LIST_ICON_SHAPES)) {
       expect(paths.length, icon).toBeGreaterThan(0);
       expect(paths.every((path) => /^[Mm]/.test(path)), icon).toBe(true);

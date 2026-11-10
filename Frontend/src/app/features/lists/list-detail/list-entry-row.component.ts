@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListEntry } from '@plano/common';
 import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
 
@@ -8,6 +9,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
  */
 @Component({
   selector: 'app-list-entry-row',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="entry-shell" [class.revealed]="offset() < 0">
@@ -15,7 +17,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
         <button
           class="delete-entry"
           type="button"
-          [attr.aria-label]="'Supprimer définitivement ' + entry().name"
+          [attr.aria-label]="'lists.row.delete' | transloco: { name: entry().name }"
           (click)="remove.emit()"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
@@ -41,7 +43,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
         <button
           class="entry-toggle"
           type="button"
-          [attr.aria-label]="'Marquer ' + entry().name + (entry().done ? ' comme non terminé' : ' comme terminé')"
+          [attr.aria-label]="(entry().done ? 'lists.row.markUndone' : 'lists.row.markDone') | transloco: { name: entry().name }"
           [attr.aria-pressed]="entry().done"
           [disabled]="readonly()"
           (click)="$event.stopPropagation(); toggled.emit()"
@@ -52,7 +54,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
           <button
             class="drag-handle"
             type="button"
-            [attr.aria-label]="'Déplacer ' + entry().name"
+            [attr.aria-label]="'lists.row.move' | transloco: { name: entry().name }"
             [attr.aria-grabbed]="dragging()"
             (click)="$event.preventDefault(); $event.stopPropagation()"
             (pointerdown)="startDrag($event)"

@@ -2,7 +2,7 @@
   <button
     class="icon-button menu-button"
     type="button"
-    [attr.aria-label]="gridView() ? 'Afficher les listes en lignes' : 'Afficher les listes en grille'"
+    [attr.aria-label]="(gridView() ? 'lists.overview.asRows' : 'lists.overview.asGrid') | transloco"
     [attr.aria-pressed]="gridView()"
     (click)="toggleView()"
   >
@@ -16,12 +16,12 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
     }
   </button>
-  <h1>Listes</h1>
+  <h1>{{ 'titles.lists' | transloco }}</h1>
   <div class="header-actions">
     <button
       class="icon-button search-button"
       type="button"
-      aria-label="Rechercher une liste"
+      [attr.aria-label]="'lists.overview.search' | transloco"
       aria-controls="lists-search"
       [attr.aria-expanded]="searchOpen()"
       [class.active]="searchOpen()"
@@ -30,14 +30,14 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
     </button>
     @if (actions.length === 1) {
-      <button class="icon-button action-button" type="button" [attr.aria-label]="actions[0].label" (click)="runAction(actions[0].id)">
+      <button class="icon-button action-button" type="button" [attr.aria-label]="actions[0].label | transloco" (click)="runAction(actions[0].id)">
         <ng-container *ngTemplateOutlet="actionIcon; context: { $implicit: actions[0].id }" />
       </button>
     } @else {
       <button
         class="icon-button more-button"
         type="button"
-        aria-label="Plus d’options"
+        [attr.aria-label]="'lists.moreOptions' | transloco"
         [attr.aria-expanded]="menuOpen()"
         (click)="toggleMenu()"
       >
@@ -48,7 +48,7 @@
           @for (action of actions; track action.id) {
             <button type="button" (click)="runAction(action.id)">
               <ng-container *ngTemplateOutlet="actionIcon; context: { $implicit: action.id }" />
-              {{ action.label }}
+              {{ action.label | transloco }}
             </button>
           }
         </div>
@@ -74,8 +74,8 @@
     <input
       appAutofocus
       type="search"
-      placeholder="Rechercher une liste"
-      aria-label="Rechercher une liste"
+      [placeholder]="'lists.overview.search' | transloco"
+      [attr.aria-label]="'lists.overview.search' | transloco"
       [value]="query()"
       (input)="query.set($any($event.target).value)"
       (keydown.escape)="toggleSearch()"
@@ -83,14 +83,14 @@
   </div>
 }
 
-<nav class="list-filters" aria-label="Filtrer les listes">
+<nav class="list-filters" [attr.aria-label]="'lists.overview.filters' | transloco">
   @for (filter of filters; track filter.value) {
     <button
       type="button"
       [class.active]="activeFilter() === filter.value"
       [attr.aria-pressed]="activeFilter() === filter.value"
       (click)="selectFilter(filter.value)"
-    >{{ filter.label }}</button>
+    >{{ filter.label | transloco }}</button>
   }
 </nav>
 
@@ -107,7 +107,7 @@
       [class.revealed]="swipedList()?.id === card.list.id && swipe.offset() < 0"
     >
     @if (card.list.role === 'owner') {
-      <button class="delete-list" type="button" [attr.aria-label]="'Supprimer la liste ' + card.list.name" (click)="requestDelete(card.list)">
+      <button class="delete-list" type="button" [attr.aria-label]="'lists.overview.delete' | transloco: { name: card.list.name }" (click)="requestDelete(card.list)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
       </button>
     }
@@ -147,7 +147,7 @@
     <button
       class="drag-handle"
       type="button"
-      [attr.aria-label]="'Déplacer la liste ' + card.list.name + ' (flèches pour changer sa place)'"
+      [attr.aria-label]="'lists.overview.move' | transloco: { name: card.list.name }"
       (pointerdown)="startDrag(card.list.id, $event)"
       (keydown)="moveWithKeyboard(card.list.id, $event)"
       (click)="$event.preventDefault()"
@@ -155,11 +155,11 @@
     </div>
   } @empty {
     @if (query().trim() && !listsStore.loading()) {
-      <p class="empty-state">Aucune liste ne correspond à « {{ query().trim() }} ».</p>
+      <p class="empty-state">{{ 'lists.overview.none' | transloco: { query: query().trim() } }}</p>
     }
   }
 
-  <button class="new-list-button" type="button" [disabled]="creating()" (click)="createList()"><span aria-hidden="true">＋</span> Nouvelle liste</button>
+  <button class="new-list-button" type="button" [disabled]="creating()" (click)="createList()"><span aria-hidden="true">＋</span> {{ 'lists.overview.new' | transloco }}</button>
 </section>
 
 <app-bottom-nav active="lists" />
@@ -167,51 +167,51 @@
 @if (settingsOpen() && listsStore.settings(); as settings) {
   <section class="settings-panel" aria-labelledby="settings-title">
     <header>
-      <button type="button" aria-label="Retour aux listes" (click)="settingsOpen.set(false)">
+      <button type="button" [attr.aria-label]="'lists.backToLists' | transloco" (click)="settingsOpen.set(false)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
       </button>
-      <h2 id="settings-title">Paramètres</h2>
+      <h2 id="settings-title">{{ 'titles.settings' | transloco }}</h2>
     </header>
 
     <div class="settings-content">
       <section>
-        <h3>Général</h3>
+        <h3>{{ 'agenda.settings.general' | transloco }}</h3>
         <label class="setting-row select-row">
-          <span>Vue par défaut</span>
-          <select class="choice-select" aria-label="Vue par défaut" [value]="settings.defaultView" (change)="setDefaultView($any($event.target).value)">
-            <option value="list">Liste</option>
-            <option value="grid">Grille</option>
+          <span>{{ 'lists.settings.defaultView' | transloco }}</span>
+          <select class="choice-select" [attr.aria-label]="'lists.settings.defaultView' | transloco" [value]="settings.defaultView" (change)="setDefaultView($any($event.target).value)">
+            <option value="list">{{ 'lists.list' | transloco }}</option>
+            <option value="grid">{{ 'lists.settings.grid' | transloco }}</option>
           </select>
         </label>
       </section>
 
       <section>
-        <h3>Comportement</h3>
-        <app-switch-row label="Afficher le nombre d’éléments" [checked]="settings.showCounts" (toggled)="toggleSetting('showCounts')" />
-        <app-switch-row label="Afficher les éléments terminés" [checked]="settings.showCompleted" (toggled)="toggleSetting('showCompleted')" />
-        <app-switch-row label="Placer les terminés en bas" [checked]="settings.completedLast" (toggled)="toggleSetting('completedLast')" />
+        <h3>{{ 'lists.settings.behaviour' | transloco }}</h3>
+        <app-switch-row [label]="'lists.settings.showCounts' | transloco" [checked]="settings.showCounts" (toggled)="toggleSetting('showCounts')" />
+        <app-switch-row [label]="'lists.settings.showCompleted' | transloco" [checked]="settings.showCompleted" (toggled)="toggleSetting('showCompleted')" />
+        <app-switch-row [label]="'lists.settings.completedLast' | transloco" [checked]="settings.completedLast" (toggled)="toggleSetting('completedLast')" />
       </section>
 
       <section>
-        <h3>Rappels</h3>
+        <h3>{{ 'lists.settings.reminders' | transloco }}</h3>
         <label class="setting-row input-row">
-          <span>Rappel par défaut</span>
+          <span>{{ 'agenda.settings.reminder' | transloco }}</span>
           <input type="time" [value]="settings.defaultReminder" (change)="listsStore.updateSettings({ defaultReminder: $any($event.target).value })" />
         </label>
         <label class="setting-row select-row">
-          <span>Me notifier</span>
+          <span>{{ 'lists.settings.notify' | transloco }}</span>
           <select class="choice-select" [value]="settings.notifyScope" (change)="listsStore.updateSettings({ notifyScope: $any($event.target).value })">
-            <option value="mine">Pour mes listes</option>
-            <option value="all">Pour toutes les listes</option>
-            <option value="none">Jamais</option>
+            <option value="mine">{{ 'lists.settings.notifyMine' | transloco }}</option>
+            <option value="all">{{ 'lists.settings.notifyAll' | transloco }}</option>
+            <option value="none">{{ 'lists.settings.notifyNone' | transloco }}</option>
           </select>
         </label>
       </section>
 
       <section>
-        <h3>Actions</h3>
-        <app-switch-row label="Archiver les listes terminées" [checked]="settings.archiveCompleted" (toggled)="toggleSetting('archiveCompleted')" />
-        <app-switch-row label="Confirmer avant suppression" [checked]="settings.confirmDelete" (toggled)="toggleSetting('confirmDelete')" />
+        <h3>{{ 'lists.settings.actions' | transloco }}</h3>
+        <app-switch-row [label]="'lists.settings.archiveCompleted' | transloco" [checked]="settings.archiveCompleted" (toggled)="toggleSetting('archiveCompleted')" />
+        <app-switch-row [label]="'lists.settings.confirmDelete' | transloco" [checked]="settings.confirmDelete" (toggled)="toggleSetting('confirmDelete')" />
       </section>
     </div>
   </section>

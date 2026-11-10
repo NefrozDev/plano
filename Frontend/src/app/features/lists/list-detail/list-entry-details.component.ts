@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListEntry, ListMember, UpdateEntryRequest } from '@plano/common';
-
-const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+import { formatLocale } from '../../../core/i18n/translate';
 
 /**
  * Full-screen editor of one entry. Text fields are saved when they lose focus
@@ -9,14 +9,15 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
  */
 @Component({
   selector: 'app-list-entry-details',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="entry-details" aria-labelledby="entry-details-title">
       <header>
-        <button type="button" aria-label="Retour à la liste" (click)="closed.emit()">
+        <button type="button" [attr.aria-label]="'lists.entry.back' | transloco" (click)="closed.emit()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
         </button>
-        <h2 id="entry-details-title">Détail d’un élément</h2>
+        <h2 id="entry-details-title">{{ 'lists.entry.heading' | transloco }}</h2>
       </header>
 
       <div class="entry-details-content">
@@ -30,7 +31,7 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
             (click)="entryChange.emit({ done: !entry().done })"
           ><i aria-hidden="true"></i></button>
           <input
-            aria-label="Nom de l’élément"
+            [attr.aria-label]="'lists.entry.name' | transloco"
             maxlength="200"
             [value]="entry().name"
             [disabled]="readonly()"
@@ -40,29 +41,29 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
 
         <section class="detail-fields">
           <div class="detail-field">
-            <span>Dans la liste</span>
+            <span>{{ 'lists.entry.inList' | transloco }}</span>
             <strong>{{ listTitle() }}</strong>
           </div>
           <div class="detail-field">
-            <span>Section</span>
+            <span>{{ 'lists.entry.section' | transloco }}</span>
             <strong>{{ sectionName() }}</strong>
           </div>
           <div class="detail-field two-line">
-            <span>Ajouté par</span>
-            <strong>{{ entry().addedBy }}</strong>
+            <span>{{ 'lists.entry.addedBy' | transloco }}</span>
+            <strong>{{ entry().addedBy ?? ('lists.entry.deletedAccount' | transloco) }}</strong>
             <small>{{ addedAt() }}</small>
           </div>
           <label class="detail-field">
-            <span>Assigné à</span>
+            <span>{{ 'lists.entry.assignedTo' | transloco }}</span>
             <select class="choice-select" [disabled]="readonly()" (change)="entryChange.emit({ assignedTo: $any($event.target).value || null })">
-              <option value="" [selected]="!entry().assignedTo">Non assigné</option>
+              <option value="" [selected]="!entry().assignedTo">{{ 'lists.entry.unassigned' | transloco }}</option>
               @for (member of members(); track member.id) {
                 <option [value]="member.id" [selected]="member.id === entry().assignedTo">{{ member.name }}</option>
               }
             </select>
           </label>
           <label class="detail-field">
-            <span>Rappel</span>
+            <span>{{ 'lists.entry.reminder' | transloco }}</span>
             <input
               type="datetime-local"
               [value]="entry().reminder ?? ''"
@@ -71,11 +72,11 @@ const addedAtFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', time
             />
           </label>
           <label class="detail-notes">
-            <span>Notes</span>
+            <span>{{ 'lists.entry.notes' | transloco }}</span>
             <textarea
               rows="5"
               maxlength="2000"
-              placeholder="Ajouter une note…"
+              [placeholder]="'lists.entry.notesPlaceholder' | transloco"
               [value]="entry().notes"
               [disabled]="readonly()"
               (change)="entryChange.emit({ notes: $any($event.target).value })"
@@ -98,7 +99,9 @@ export class ListEntryDetailsComponent {
   readonly entryChange = output<UpdateEntryRequest>();
   readonly closed = output<void>();
 
-  readonly addedAt = computed(() => addedAtFormat.format(new Date(this.entry().addedAt)));
+  readonly addedAt = computed(() =>
+    new Intl.DateTimeFormat(formatLocale(), { dateStyle: 'long', timeStyle: 'short' }).format(new Date(this.entry().addedAt)),
+  );
 
   /** A blank name is refused: the field goes back to the saved one. */
   rename(field: HTMLInputElement): void {

@@ -1,18 +1,18 @@
 <header class="detail-header">
-  <a class="icon-button" routerLink="/lists" aria-label="Retour aux listes">
+  <a class="icon-button" routerLink="/lists" [attr.aria-label]="'lists.backToLists' | transloco">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
   </a>
-  <h1 class="list-title">{{ list()?.name ?? 'Liste' }}</h1>
+  <h1 class="list-title">{{ list()?.name ?? ('lists.list' | transloco) }}</h1>
   @if (list()) {
     <div class="header-actions">
-      <button class="icon-button" type="button" aria-label="Partager la liste" (click)="sharingOpen.set(true)">
+      <button class="icon-button" type="button" [attr.aria-label]="'lists.share' | transloco" (click)="sharingOpen.set(true)">
         <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="10" cy="8" r="3.5" /><path d="M3.5 20v-3c0-3 2.2-5 6.5-5s6.5 2 6.5 5v3Z" /><circle cx="19" cy="9" r="2.5" /><path d="M17 13c3.7-.4 5.5 1.4 5.5 4v3h-4" /></svg>
       </button>
       @if (listActions().length === 1) {
         <button
           class="icon-button home-pin"
           type="button"
-          [attr.aria-label]="list()!.onHome ? 'Retirer de l’accueil' : 'Afficher sur l’accueil'"
+          [attr.aria-label]="(list()!.onHome ? 'lists.unpin' : 'lists.pin') | transloco"
           [attr.aria-pressed]="list()!.onHome"
           [class.active]="list()!.onHome"
           (click)="toggleOnHome()"
@@ -23,7 +23,7 @@
         <button
           class="icon-button more-button"
           type="button"
-          aria-label="Plus d’options"
+          [attr.aria-label]="'lists.moreOptions' | transloco"
           [attr.aria-expanded]="listMenuOpen()"
           (click)="toggleListMenu()"
         >
@@ -34,11 +34,11 @@
         <div class="list-menu">
           @if (isOwner()) {
             <button type="button" (click)="openListEditor()">
-              <span aria-hidden="true">✎</span> Modifier la liste
+              <span aria-hidden="true">✎</span> {{ 'lists.edit' | transloco }}
             </button>
           }
           <button class="home-toggle" type="button" [attr.aria-pressed]="list()!.onHome" (click)="toggleOnHome()">
-            <span aria-hidden="true">⌂</span> {{ list()!.onHome ? 'Retirer de l’accueil' : 'Afficher sur l’accueil' }}
+            <span aria-hidden="true">⌂</span> {{ (list()!.onHome ? 'lists.unpin' : 'lists.pin') | transloco }}
           </button>
         </div>
       }
@@ -47,14 +47,14 @@
 </header>
 
 @if (list(); as list) {
-  <section class="members" aria-label="Membres de la liste">
+  <section class="members" [attr.aria-label]="'lists.members' | transloco">
     <app-avatar-stack [people]="people()" [max]="3" />
     @if (isOwner()) {
-      <button type="button" aria-label="Ajouter un membre" (click)="sharingOpen.set(true)">＋</button>
+      <button type="button" [attr.aria-label]="'lists.addMember' | transloco" (click)="sharingOpen.set(true)">＋</button>
     }
   </section>
 
-  <section class="overall-progress" aria-label="Progression de la liste">
+  <section class="overall-progress" [attr.aria-label]="'lists.progress' | transloco">
     <div><i [style.width.%]="progress()" [style.background]="list.color"></i></div>
     <strong>{{ list.completed }} / {{ list.total }}</strong>
   </section>
@@ -84,7 +84,7 @@
             <button
               class="drag-handle section-handle"
               type="button"
-              [attr.aria-label]="'Déplacer la section ' + view.section.name"
+              [attr.aria-label]="'lists.moveSection' | transloco: { name: view.section.name }"
               (click)="$event.preventDefault()"
               (pointerdown)="startSectionDrag(view.section.id, $event)"
             >⠿</button>
@@ -124,8 +124,8 @@
                   class="new-entry-input"
                   rows="1"
                   maxlength="200"
-                  placeholder="Nouvel élément..."
-                  aria-label="Nouvel élément"
+                  [placeholder]="'lists.newEntryPlaceholder' | transloco"
+                  [attr.aria-label]="'lists.newEntry' | transloco"
                   [value]="newEntryValue()"
                   (input)="newEntryValue.set($any($event.target).value)"
                   (keydown.enter)="$event.preventDefault(); finishAdding(view.section.id)"
@@ -137,7 +137,7 @@
                   class="empty-entry"
                   type="button"
                   (click)="beginAdding(view.section.id)"
-                ><span aria-hidden="true">＋</span> Ajouter un élément</button>
+                ><span aria-hidden="true">＋</span> {{ 'lists.addEntry' | transloco }}</button>
               }
             }
           </section>
@@ -146,20 +146,20 @@
     } @empty {
       @if (canEdit()) {
         <button class="empty-entry" type="button" (click)="openSectionCreator()">
-          <span aria-hidden="true">＋</span> Ajouter une première section
+          <span aria-hidden="true">＋</span> {{ 'lists.addFirstSection' | transloco }}
         </button>
       } @else {
-        <p class="empty-state">Cette liste est vide.</p>
+        <p class="empty-state">{{ 'lists.empty' | transloco }}</p>
       }
     }
     @if (canEdit() && sectionViews().length) {
       <button class="new-section-button" type="button" (click)="openSectionCreator()">
-        <span aria-hidden="true">＋</span> Nouvelle section
+        <span aria-hidden="true">＋</span> {{ 'lists.newSection' | transloco }}
       </button>
     }
   </section>
 } @else if (notFound()) {
-  <p class="empty-state" role="alert">Cette liste n’existe pas ou n’est plus partagée avec vous.</p>
+  <p class="empty-state" role="alert">{{ 'lists.missing' | transloco }}</p>
 }
 
 <app-bottom-nav active="lists" />

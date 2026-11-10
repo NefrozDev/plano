@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { ListIconComponent } from '../ui/list-icon.component';
 import { Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListDetail, ListMemberRole } from '@plano/common';
 import { AuthService } from '../../../core/auth/auth.service';
 import type { Contact } from '@plano/common';
 import { FriendsService } from '../../../core/friends/friends.service';
+import { t } from '../../../core/i18n/translate';
 import { toPerson } from '../../../core/people/people';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
 import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
@@ -17,7 +19,7 @@ import { ROLE_LABELS } from './list-options';
  */
 @Component({
   selector: 'app-list-sharing-panel',
-  imports: [ListIconComponent, UserAvatarComponent],
+  imports: [ListIconComponent, TranslocoPipe, UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-sharing-panel.component.html',
   styles: `:host { display: contents; }`,
@@ -81,9 +83,9 @@ export class ListSharingPanelComponent {
 
   async stopSharing(): Promise<void> {
     const confirmed = await this.confirm.ask({
-      heading: 'Arrêter le partage ?',
-      message: 'Plus personne d’autre que vous n’aura accès à la liste.',
-      confirmLabel: 'Arrêter',
+      heading: t('lists.confirm.stopSharingHeading'),
+      message: t('lists.confirm.stopSharing'),
+      confirmLabel: t('lists.confirm.stop'),
       tone: 'danger',
     });
     if (confirmed) await this.store.stopSharing();
@@ -91,9 +93,9 @@ export class ListSharingPanelComponent {
 
   async leave(): Promise<void> {
     const confirmed = await this.confirm.ask({
-      heading: 'Quitter la liste ?',
-      message: 'Vous n’y aurez plus accès, sauf si elle est partagée à nouveau.',
-      confirmLabel: 'Quitter',
+      heading: t('lists.confirm.leaveHeading'),
+      message: t('lists.confirm.leave'),
+      confirmLabel: t('lists.confirm.leaveShort'),
       tone: 'danger',
     });
     if (confirmed && (await this.store.removeMember(this.auth.user()?.id ?? ''))) {

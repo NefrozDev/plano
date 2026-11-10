@@ -46,9 +46,7 @@ describe('list mapper', () => {
   });
 
   it('keeps entries whose author account was deleted', () => {
-    expect(toEntryResponse(entry({ addedBy: null })).addedBy).toBe(
-      'Compte supprimé',
-    );
+    expect(toEntryResponse(entry({ addedBy: null })).addedBy).toBeNull();
   });
 
   it('maps a section with its entries in the given order', () => {

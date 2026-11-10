@@ -38,6 +38,11 @@ export function t(key: string, params?: TextParams): string {
   return translate(key, params);
 }
 
+/** "Ada, Bob et Cyd", "Ada, Bob and Cyd": names joined as the language does. */
+export function formatList(items: readonly string[]): string {
+  return new Intl.ListFormat(formatLocale(), { style: 'long', type: 'conjunction' }).format(items);
+}
+
 const pluralRules = new Map<Locale, Intl.PluralRules>();
 
 /**

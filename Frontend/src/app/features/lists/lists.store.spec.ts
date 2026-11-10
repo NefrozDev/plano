@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { AuthService } from '../../core/auth/auth.service';
 import { FakeEventSource } from '../../testing/fake-event-source';
-import { ListsStore, REMOVED_MESSAGE } from './lists.store';
+import { ListsStore } from './lists.store';
 import type { HomeList } from '@plano/common';
 import { MEMBER_ID, entry, listDetail, listSettings, listSummary } from './testing/lists-fixtures';
 
@@ -583,7 +583,7 @@ describe('ListsStore', () => {
       await settle();
 
       expect(store.detail()).toBeNull();
-      expect(store.error()).toBe(REMOVED_MESSAGE);
+      expect(store.error()).toBe('Cette liste a été supprimée ou ne vous est plus partagée.');
     });
 
     it('treats a changed list it can no longer read as removed', async () => {
@@ -598,7 +598,7 @@ describe('ListsStore', () => {
       await settle();
 
       expect(store.detail()).toBeNull();
-      expect(store.error()).toBe(REMOVED_MESSAGE);
+      expect(store.error()).toBe('Cette liste a été supprimée ou ne vous est plus partagée.');
     });
   });
 

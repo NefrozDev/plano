@@ -19,7 +19,7 @@ export function toEntryResponse(entry: ListEntry): ListEntryResponse {
     name: entry.name,
     done: entry.done,
     highlighted: entry.highlighted,
-    addedBy: entry.addedBy ? displayName(entry.addedBy) : 'Compte supprimé',
+    addedBy: entry.addedBy ? displayName(entry.addedBy) : null,
     addedAt: entry.createdAt.toISOString(),
     assignedTo: entry.assignedToUserId,
     reminder: entry.reminder,

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, model, signal } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListIcon } from '@plano/common';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { ListIconComponent } from './list-icon.component';
@@ -12,7 +13,7 @@ const FIRST_LINE = LIST_ICON_GROUPS.flatMap(({ icons }) => icons).slice(0, FIRST
  */
 @Component({
   selector: 'app-list-icon-picker',
-  imports: [ListIconComponent, ModalDialogComponent],
+  imports: [ListIconComponent, ModalDialogComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="line">
@@ -21,30 +22,30 @@ const FIRST_LINE = LIST_ICON_GROUPS.flatMap(({ icons }) => icons).slice(0, FIRST
           type="button"
           class="choice"
           [class.selected]="value() === icon"
-          [attr.aria-label]="labels[icon].label"
+          [attr.aria-label]="labels[icon].label | transloco"
           [attr.aria-pressed]="value() === icon"
           (click)="value.set(icon)"
         ><app-list-icon [icon]="icon" /></button>
       }
-      <button class="choice more" type="button" aria-label="Toutes les icônes" aria-haspopup="dialog" (click)="open.set(true)">
+      <button class="choice more" type="button" [attr.aria-label]="'lists.iconPicker.all' | transloco" aria-haspopup="dialog" (click)="open.set(true)">
         <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 8v16M8 16h16" /></svg>
       </button>
     </div>
 
-    <app-modal-dialog heading="Choisir une icône" [open]="open()" (closed)="open.set(false)">
+    <app-modal-dialog [heading]="'lists.iconPicker.heading' | transloco" [open]="open()" (closed)="open.set(false)">
       <div class="catalog">
         @for (group of groups; track group.label) {
-          <section [attr.aria-label]="group.label">
-            <h3>{{ group.label }}</h3>
+          <section [attr.aria-label]="group.label | transloco">
+            <h3>{{ group.label | transloco }}</h3>
             <div class="grid">
               @for (icon of group.icons; track icon) {
                 <button
                   type="button"
                   class="choice"
                   [class.selected]="value() === icon"
-                  [attr.aria-label]="labels[icon].label"
+                  [attr.aria-label]="labels[icon].label | transloco"
                   [attr.aria-pressed]="value() === icon"
-                  [attr.title]="labels[icon].label"
+                  [attr.title]="labels[icon].label | transloco"
                   (click)="choose(icon)"
                 ><app-list-icon [icon]="icon" /></button>
               }
