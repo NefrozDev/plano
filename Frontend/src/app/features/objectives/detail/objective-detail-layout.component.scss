@@ -10,7 +10,9 @@
 .tabs { display: flex; flex-wrap: wrap; gap: .2rem; margin: 0 1.1rem .4rem; padding: .25rem; border-radius: .7rem; background: #f2f4f8; }
 .tabs a { flex: 1 1 0; min-width: max-content; padding: .5rem .3rem; border-radius: .5rem; color: var(--color-text-muted); font-size: .74rem; font-weight: 650; text-align: center; text-decoration: none; }
 .tabs a.active { background: white; box-shadow: 0 1px 3px rgb(20 30 50 / 12%); color: var(--color-primary); }
-.tab-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* Positioned, so absolute children (visually hidden texts) scroll and clip with it rather
+   than spilling out of the phone frame. */
+.tab-content { position: relative; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .not-found { display: grid; gap: .8rem; margin: 3rem 1.5rem; color: var(--color-text-muted); font-size: .88rem; text-align: center; }
 .not-found a { color: var(--color-primary); font-weight: 700; }
 .breadcrumb { display: flex; flex-wrap: wrap; gap: .1rem .3rem; align-items: center; margin: -.3rem 1.25rem .5rem; color: var(--color-text-muted); font-size: .7rem; }
