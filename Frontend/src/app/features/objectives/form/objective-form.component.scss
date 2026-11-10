@@ -11,15 +11,17 @@ legend { margin-bottom: .6rem; padding: 0; color: #394254; font-size: .82rem; fo
 .categories { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .4rem; }
 .choice, .mode { position: relative; cursor: pointer; }
 .choice { display: grid; gap: .4rem; justify-items: center; padding: .7rem .2rem; border: 1px solid #e4e8f0; border-radius: .75rem; color: #5b6476; font-size: .6rem; font-weight: 650; text-align: center; }
-/* Long labels wrap, breaking a word that cannot fit, on two lines at most, then end with "…".
-   No `hyphens: auto`: Chromium lets the added hyphen overflow the chip. */
-/* Whole names, however many lines they need: no clamp that would cut one (WCAG 1.4.12). */
+/* Long labels wrap, breaking a word that cannot fit, on as many lines as they need: a clamp
+   would cut them with wider text spacing (WCAG 1.4.12). No `hyphens: auto`: Chromium lets the
+   added hyphen overflow the chip. */
 .choice span { width: 100%; line-height: 1.25; overflow-wrap: anywhere; }
 .choice.selected, .mode.selected { border-color: var(--color-primary); background: #f1f5ff; color: var(--color-primary); }
 .choice input, .mode input { position: absolute; opacity: 0; pointer-events: none; }
 .choice:focus-within, .mode:focus-within { outline: 3px solid var(--color-focus); outline-offset: 2px; }
-.inline-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+/* Side by side when they fit, one under the other otherwise (WCAG 1.4.10, 1.4.12). */
+.inline-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: .7rem; }
 .inline-fields .field { min-width: 0; }
+.inline-fields .form-control { min-width: 0; }
 .option { padding: .35rem 0 .2rem; border-top: 1px solid #edf0f5; }
 .option-body { display: grid; gap: .6rem; padding: .4rem 0 .9rem; }
 .option-body .field { margin-bottom: 0; }
