@@ -47,7 +47,8 @@
     "logoutFailed": "Abmelden fehlgeschlagen. Bitte versuche es erneut."
   },
   "dashboard": {
-    "openSettings": "Einstellungen öffnen"
+    "openSettings": "Einstellungen öffnen",
+    "eventPlanned": "Ein Termin geplant"
   },
   "notifications": {
     "friendRequested": "{{name}} hat dir eine Freundschaftsanfrage gesendet.",

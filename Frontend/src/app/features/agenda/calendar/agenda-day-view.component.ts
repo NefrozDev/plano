@@ -29,10 +29,11 @@ type TimelineRow =
           [class.selected]="day.date === date()"
           [class.today]="day.isToday"
           [attr.aria-pressed]="day.date === date()"
-          [attr.aria-label]="day.label"
           (click)="selectDate.emit(day.date)"
         >
-          <span>{{ day.weekday }}</span><b>{{ day.day }}</b>
+          <!-- The full date is the name, and contains the visible day (WCAG 2.5.3). -->
+          <span aria-hidden="true">{{ day.weekday }}</span><b aria-hidden="true">{{ day.day }}</b>
+          <span class="visually-hidden">{{ day.label }}</span>
           <i class="dots" aria-hidden="true">
             @for (color of day.colors; track $index) {<em [style.background]="color"></em>}
           </i>

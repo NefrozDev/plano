@@ -47,7 +47,8 @@
     "logoutFailed": "Signing out failed. Please try again."
   },
   "dashboard": {
-    "openSettings": "Open settings"
+    "openSettings": "Open settings",
+    "eventPlanned": "An event planned"
   },
   "notifications": {
     "friendRequested": "{{name}} sent you a friend request.",

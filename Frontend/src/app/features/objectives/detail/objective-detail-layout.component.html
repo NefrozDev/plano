@@ -5,8 +5,9 @@
     backLabel="Retour"
     [showHeading]="showTitle()"
   >
-    <div class="menu-anchor">
+    <div class="menu-anchor" (focusout)="leaveMenu($event)">
       <button
+        #moreButton
         class="more-button"
         type="button"
         aria-label="Actions de l’objectif"

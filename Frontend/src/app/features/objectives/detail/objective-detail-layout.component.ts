@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   ActivatedRoute,
@@ -33,6 +41,7 @@ interface DetailTab {
   ],
   providers: [ObjectiveContext],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(keydown.escape)': 'closeMenu()' },
   templateUrl: './objective-detail-layout.component.html',
   styleUrl: './objective-detail-layout.component.scss',
 })
@@ -71,6 +80,26 @@ export class ObjectiveDetailLayoutComponent {
       link: ['/objectives', objective.id, ...(tab.path ? [tab.path] : [])],
     }));
   });
+
+  /**
+   * Keyboard focus moving to something outside closes the menu, which would otherwise cover
+   * it (WCAG 2.4.11). Only a real move: a click that focuses nothing (Safari's buttons) does not.
+   */
+  leaveMenu(event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null;
+    if (next && !(event.currentTarget as HTMLElement).contains(next)) {
+      this.menuOpen.set(false);
+    }
+  }
+
+  private readonly moreButton = viewChild<ElementRef<HTMLButtonElement>>('moreButton');
+
+  /** Escape closes the menu and gives focus back to the button that opened it. */
+  closeMenu(): void {
+    if (!this.menuOpen()) return;
+    this.menuOpen.set(false);
+    this.moreButton()?.nativeElement.focus();
+  }
 
   constructor() {
     readNotificationsWhileOpen('objectives', this.context.id);

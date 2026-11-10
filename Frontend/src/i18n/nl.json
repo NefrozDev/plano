@@ -47,7 +47,8 @@
     "logoutFailed": "Afmelden is mislukt. Probeer het opnieuw."
   },
   "dashboard": {
-    "openSettings": "Instellingen openen"
+    "openSettings": "Instellingen openen",
+    "eventPlanned": "Een afspraak gepland"
   },
   "notifications": {
     "friendRequested": "{{name}} heeft je een vriendschapsverzoek gestuurd.",

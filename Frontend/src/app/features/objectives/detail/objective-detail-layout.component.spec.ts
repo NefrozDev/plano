@@ -222,6 +222,48 @@ describe('ObjectiveDetailLayoutComponent', () => {
       expect(layout().menuOpen()).toBe(false);
     });
 
+    it('closes on Escape and gives focus back to its button', async () => {
+      await visit('/objectives/obj-1');
+      menu();
+      const button = element().querySelector('.more-button') as HTMLButtonElement;
+      const first = element().querySelector('.menu a') as HTMLAnchorElement;
+      first.focus();
+
+      first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      harness.detectChanges();
+
+      expect(layout().menuOpen()).toBe(false);
+      expect(element().querySelector('.menu')).toBeNull();
+      expect(document.activeElement).toBe(button);
+    });
+
+    it('closes when keyboard focus moves outside, not when it moves within', async () => {
+      await visit('/objectives/obj-1');
+      menu();
+      const items = element().querySelectorAll<HTMLElement>('.menu a, .menu button');
+      const outside = element().querySelector('.tabs a') as HTMLAnchorElement;
+
+      items[0].focus();
+      items[1].focus();
+      harness.detectChanges();
+      expect(layout().menuOpen()).toBe(true);
+
+      outside.focus();
+      harness.detectChanges();
+      expect(layout().menuOpen()).toBe(false);
+    });
+
+    it('stays open when a click focuses nothing, so the click still reaches its item', async () => {
+      await visit('/objectives/obj-1');
+      menu();
+      const anchor = element().querySelector('.menu-anchor') as HTMLElement;
+
+      anchor.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: null }));
+      harness.detectChanges();
+
+      expect(layout().menuOpen()).toBe(true);
+    });
+
     it('hides the pause action on what is complete', async () => {
       await visit('/objectives/obj-1', objectiveDetail({ status: 'completed' }));
       menu();

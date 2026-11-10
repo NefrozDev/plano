@@ -10,6 +10,7 @@ import { AgendaSearchComponent } from './search/agenda-search.component';
 import { AgendaSettingsComponent } from './settings/agenda-settings.component';
 import { AgendaItemCardComponent } from './ui/agenda-item-card.component';
 import { AgendaWeekViewComponent } from './calendar/agenda-week-view.component';
+import { AgendaDayViewComponent } from './calendar/agenda-day-view.component';
 
 /** Specs for the secondary agenda screens (filters, search, settings) and small views. */
 describe('Agenda secondary screens', () => {
@@ -159,6 +160,45 @@ describe('Agenda secondary screens', () => {
       expect(element.querySelector('.card')?.classList).toContain('done');
       expect(element.querySelector('strong')?.textContent).toContain('Tâche : ');
       expect(element.querySelector('.avatars')).toBeNull();
+    });
+  });
+
+  describe('day view', () => {
+    it('names each day of the strip by its full date, which contains the day shown', () => {
+      const fixture = TestBed.createComponent(AgendaDayViewComponent);
+      const days = ['2026-10-12', '2026-10-13'].map((date, index) => ({
+        date,
+        weekday: index ? 'M' : 'L',
+        day: 12 + index,
+        label: index ? 'Mardi 13 octobre' : 'Lundi 12 octobre',
+        isToday: false,
+        colors: [],
+      }));
+      fixture.componentRef.setInput('date', '2026-10-12');
+      fixture.componentRef.setInput('days', days);
+      fixture.componentRef.setInput('items', []);
+      fixture.componentRef.setInput('now', '2026-10-12T10:30');
+      fixture.componentRef.setInput('hourFormat', '24h');
+      fixture.detectChanges();
+      const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll('.strip button');
+      const selected: string[] = [];
+      fixture.componentInstance.selectDate.subscribe((date) => selected.push(date));
+
+      // The name comes from the hidden full date (WCAG 2.5.3), not from an aria-label.
+      expect(Array.from(buttons).map((button) => button.querySelector('.visually-hidden')?.textContent)).toEqual([
+        'Lundi 12 octobre',
+        'Mardi 13 octobre',
+      ]);
+      expect(buttons[0].hasAttribute('aria-label')).toBe(false);
+      expect(Array.from(buttons[0].querySelectorAll('[aria-hidden="true"]')).map((part) => part.textContent)).toEqual([
+        'L',
+        '12',
+        '',
+      ]);
+      expect(buttons[0].getAttribute('aria-pressed')).toBe('true');
+
+      (buttons[1] as HTMLButtonElement).click();
+      expect(selected).toEqual(['2026-10-13']);
     });
   });
 

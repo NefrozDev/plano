@@ -185,7 +185,10 @@ describe('DashboardComponent', () => {
     const link = element.querySelector('.profile-button') as HTMLAnchorElement;
 
     expect(link.getAttribute('href')).toBe('/settings');
-    expect(link.getAttribute('aria-label')).toBe('Ouvrir les paramètres');
+    // Named by hidden text that contains no initials (WCAG 2.5.3): the avatar is only a picture.
+    expect(link.querySelector('.visually-hidden')?.textContent?.trim()).toBe('Ouvrir les paramètres');
+    expect(link.hasAttribute('aria-label')).toBe(false);
+    expect(link.querySelector('app-user-avatar')?.getAttribute('aria-hidden')).toBe('true');
     expect(link.querySelector('app-user-avatar')?.textContent?.trim()).toBe('AL');
     expect(link.querySelector('img')).toBeNull();
 
@@ -202,7 +205,7 @@ describe('DashboardComponent', () => {
 
     expect(element.querySelector('.topbar-actions app-notifications-bell + .profile-button')).toBe(link);
     expect(link.querySelector('.badge')).toBeNull();
-    expect(link.getAttribute('aria-label')).toBe('Ouvrir les paramètres');
+    expect(link.textContent?.trim()).toContain('Ouvrir les paramètres');
   });
 
   it('shows no profile link while nobody is signed in', () => {
@@ -226,7 +229,10 @@ describe('DashboardComponent', () => {
     // No pinned list yet: the objectives are the only section.
     expect(element.querySelectorAll('.dashboard-section')).toHaveLength(1);
     // Thursday 15 October has agenda items, list reminders included.
-    expect(element.querySelector('.week-day.selected i')).not.toBeNull();
+    const dot = element.querySelector('.week-day.selected i');
+    // An image named in the page's language, not a bare <i> with a label (WCAG 4.1.2).
+    expect(dot?.getAttribute('role')).toBe('img');
+    expect(dot?.getAttribute('aria-label')).toBe('Un événement prévu');
   });
 
   it('spaces the home cards and their headings the same way', async () => {

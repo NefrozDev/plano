@@ -47,7 +47,8 @@
     "logoutFailed": "Uscita non riuscita. Riprova."
   },
   "dashboard": {
-    "openSettings": "Apri impostazioni"
+    "openSettings": "Apri impostazioni",
+    "eventPlanned": "Un evento in programma"
   },
   "notifications": {
     "friendRequested": "{{name}} ti ha inviato una richiesta di amicizia.",

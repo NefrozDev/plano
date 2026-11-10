@@ -13,8 +13,10 @@
   @if (user(); as currentUser) {
     <div class="topbar-actions">
       <app-notifications-bell />
-      <a class="profile-button" routerLink="/settings" [attr.aria-label]="'dashboard.openSettings' | transloco">
-        <app-user-avatar [user]="currentUser" [size]="40" />
+      <!-- Named by its hidden text, not aria-label: the initials shown are only a picture. -->
+      <a class="profile-button" routerLink="/settings">
+        <app-user-avatar [user]="currentUser" [size]="40" aria-hidden="true" />
+        <span class="visually-hidden">{{ 'dashboard.openSettings' | transloco }}</span>
       </a>
     </div>
   }
@@ -31,7 +33,7 @@
         <span>{{ day.label }}</span
         ><strong>{{ day.day }}</strong>
         @if (day.hasEvent) {
-          <i aria-label="Un événement prévu"></i>
+          <i role="img" [attr.aria-label]="'dashboard.eventPlanned' | transloco"></i>
         }
       </div>
     }
