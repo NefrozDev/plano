@@ -67,10 +67,11 @@ export function isoWeekNumber(date: IsoDate): number {
   return 1 + Math.round(((thursday.getTime() - firstThursday.getTime()) / 86_400_000 - 3 + ((firstThursday.getDay() + 6) % 7)) / 7);
 }
 
-type DateFormat = 'date' | 'shortDate' | 'day' | 'longDay' | 'month' | 'weekday' | 'shortWeekday';
+type DateFormat = 'date' | 'longDate' | 'shortDate' | 'day' | 'longDay' | 'month' | 'weekday' | 'shortWeekday';
 
 const DATE_FORMATS: Readonly<Record<DateFormat, Intl.DateTimeFormatOptions>> = {
   date: { day: 'numeric', month: 'short', year: 'numeric' },
+  longDate: { day: 'numeric', month: 'long', year: 'numeric' },
   shortDate: { day: 'numeric', month: 'short' },
   day: { weekday: 'short', day: 'numeric', month: 'long' },
   longDay: { weekday: 'long', day: 'numeric', month: 'long' },
@@ -99,6 +100,11 @@ export function capitalize(value: string): string {
 
 export function formatDate(date: IsoDate): string {
   return formatter('date').format(parseIsoDate(date));
+}
+
+/** "8 novembre 2026". */
+export function formatLongDate(date: IsoDate): string {
+  return formatter('longDate').format(parseIsoDate(date));
 }
 
 export function formatShortDate(date: IsoDate): string {

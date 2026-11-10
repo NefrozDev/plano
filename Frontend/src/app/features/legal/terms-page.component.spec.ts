@@ -2,7 +2,6 @@ import { Location } from '@angular/common';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { TERMS_UPDATED_ON } from './terms-content.component';
 import { TermsPageComponent } from './terms-page.component';
 
 @Component({ template: '' })
@@ -37,7 +36,7 @@ describe('TermsPageComponent', () => {
     const element = render();
 
     expect(element.querySelector('h2')?.textContent).toBe('Conditions d’utilisation');
-    expect(element.textContent).toContain(`Dernière mise à jour : ${TERMS_UPDATED_ON}`);
+    expect(element.textContent).toContain('Dernière mise à jour : 8 novembre 2026');
     expect(element.querySelector('#terms-privacy h3')?.textContent).toBe('8. Politique de confidentialité');
     expect(backButton(element).getAttribute('aria-label')).toBe('Retour');
   });

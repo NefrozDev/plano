@@ -360,5 +360,74 @@
       "removeHeading": "Dieses Mitglied entfernen?",
       "removeMessage": "{{name}} hat dann keinen Zugriff mehr auf die Gruppe."
     }
+  },
+  "terms": {
+    "back": "Zurück",
+    "updated": "Zuletzt aktualisiert: {{date}}",
+    "translations": "Weicht eine Übersetzung vom französischen Text ab, ist der französische Text maßgeblich.",
+    "purpose": {
+      "title": "1. Gegenstand",
+      "body": "Plano ist eine Planungs-App (Listen, Kalender, Ziele, Gruppen und Freunde), herausgegeben von Synapse Engineering mit Sitz in Belgien. Diese Bedingungen regeln ihre Nutzung. Bei deinem ersten Besuch wirst du gebeten, sie zu akzeptieren.",
+      "contact": "Kontakt:"
+    },
+    "account": {
+      "title": "2. Dein Konto",
+      "synapse": "Du meldest dich mit deinem Synapse-Konto an, demselben für alle Apps von Synapse Engineering. Es hat eigene Bedingungen, auf auth.synapseengineering.dev.",
+      "age": "Du musst mindestens 13 Jahre alt sein.",
+      "accurate": "Die Angaben deines Kontos (Name, E-Mail-Adresse) müssen zutreffen.",
+      "password": "Dein Passwort ist persönlich: Halte es geheim. Du bist verantwortlich für das, was mit deinem Konto geschieht.",
+      "single": "Ein Konto gehört zu genau einer Person."
+    },
+    "conduct": {
+      "title": "3. Verhaltensregeln",
+      "intro": "Mit der Nutzung von Plano verpflichtest du dich, Folgendes zu unterlassen:",
+      "illegal": "Inhalte zu veröffentlichen oder zu teilen, die rechtswidrig, hasserfüllt, gewalttätig oder belästigend sind oder die Rechte anderer verletzen;",
+      "impersonate": "dich als jemand anderes auszugeben;",
+      "spam": "massenhaft unerwünschte Einladungen oder Freundschaftsanfragen zu senden;",
+      "access": "zu versuchen, auf das Konto oder die Daten einer anderen Person zuzugreifen;",
+      "disrupt": "den Dienst zu stören: seine Grenzen zu umgehen, ihn missbräuchlich zu automatisieren oder Schadcode einzuschleusen."
+    },
+    "content": {
+      "title": "4. Deine Inhalte und das Teilen",
+      "ownership": "Deine Listen, Ziele, Termine, Kommentare und dein Foto gehören dir. Du erlaubst uns nur, sie zu speichern und den Personen zu zeigen, mit denen du sie teilen möchtest, solange der Dienst es erfordert. Du bist für das verantwortlich, was du teilst.",
+      "sharing": "Die Personen, mit denen du teilst (Freunde, Mitglieder deiner Gruppen, Gäste einer Liste oder eines Ziels), sehen deinen Vornamen, deinen Nachnamen, deinen Nutzernamen, dein Foto und das, was du mit ihnen teilst. Deine E-Mail-Adresse wird anderen Nutzern nie gezeigt."
+    },
+    "service": {
+      "title": "5. Der Dienst",
+      "body": "Plano wird kostenlos und so, wie es ist, bereitgestellt. Wir tun unser Bestes, damit es verfügbar bleibt und deine Daten erhalten bleiben, können das aber nicht garantieren: Bewahre eine Kopie dessen auf, was dir wichtig ist. Der Dienst kann sich ändern, für Wartungsarbeiten unterbrochen oder eingestellt werden; im letzteren Fall informieren wir dich im Voraus."
+    },
+    "deletion": {
+      "title": "6. Sperrung und Löschung",
+      "body": "Wir können ein Konto sperren oder löschen, das diese Bedingungen nicht einhält. Du kannst dein Konto jederzeit über die Seite deines Synapse-Kontos löschen: Plano löscht dann alles, was es über dich speichert (deine Listen, Ziele, erstellten Gruppen, deinen Kalender, deine Freunde und Benachrichtigungen; dein Name verschwindet aus dem, was du geteilt hast). Du kannst es auch über die Kontaktadresse verlangen."
+    },
+    "liability": {
+      "title": "7. Haftung",
+      "body": "Soweit gesetzlich zulässig, haftet Synapse Engineering nicht für mittelbare Schäden im Zusammenhang mit der Nutzung von Plano und nicht für Inhalte, die andere Nutzer veröffentlichen. Nichts in diesen Bedingungen schränkt die Rechte ein, die dir das Gesetz als Verbraucher gewährt."
+    },
+    "privacy": {
+      "title": "8. Datenschutzerklärung",
+      "controller": "Synapse Engineering ist Verantwortlicher für die Verarbeitung deiner personenbezogenen Daten gemäß der Datenschutz-Grundverordnung (DSGVO).",
+      "keptTitle": "Was wir speichern",
+      "identity": "Deinen Vornamen, deinen Nachnamen, deinen Nutzernamen und deine E-Mail-Adresse, bei jeder Anmeldung aus deinem Synapse-Konto übernommen, sowie deine Sprache. Dein Passwort speichert nur das Synapse-Konto.",
+      "photo": "Dein Profilfoto, wenn du eines hinzufügst.",
+      "content": "Was du in der App erstellst, und das Datum, an dem du diese Bedingungen akzeptiert hast.",
+      "ip": "Deine IP-Adresse, so lange, wie es nötig ist, um Missbrauch einzudämmen (etwa zu viele Anmeldeversuche).",
+      "whyTitle": "Warum",
+      "why": "Um den Dienst zu betreiben, den du anforderst (Art. 6 Abs. 1 lit. b DSGVO), und um ihn vor Missbrauch zu schützen (berechtigtes Interesse, Art. 6 Abs. 1 lit. f). Wir verkaufen deine Daten nicht, zeigen keine Werbung und die App enthält keine Tracker und keine Dienste Dritter.",
+      "cookiesTitle": "Cookies",
+      "cookies": "Nur unverzichtbare Cookies: das Cookie, das dich angemeldet hält, höchstens 30 Tage lang, und das Cookie, das eine laufende Anmeldung schützt, höchstens 10 Minuten lang. Dein Browser speichert außerdem einige Anzeigeeinstellungen auf deinem Gerät.",
+      "whereTitle": "Wo und wie lange",
+      "where": "Deine Daten liegen auf einem bei OVHcloud (OVH SAS, Frankreich) gemieteten Server. Wir bewahren sie auf, solange dein Konto besteht, und löschen sie danach.",
+      "rightsTitle": "Deine Rechte",
+      "rights": "Du kannst auf deine Daten zugreifen, sie berichtigen, sie in einem wiederverwendbaren Format erhalten, ihre Löschung verlangen, ihre Verarbeitung einschränken oder ihr widersprechen: Schreibe an die Kontaktadresse. Du kannst auch Beschwerde bei der belgischen Datenschutzbehörde einreichen"
+    },
+    "changes": {
+      "title": "9. Änderungen",
+      "body": "Wir können diese Bedingungen ändern. Das Datum oben auf dieser Seite zeigt die neueste Fassung; bei einer wichtigen Änderung informieren wir dich in der App."
+    },
+    "law": {
+      "title": "10. Anwendbares Recht",
+      "body": "Diese Bedingungen unterliegen belgischem Recht. Bei Streitigkeiten sind, mangels gütlicher Einigung, die Gerichte in Brüssel zuständig, unbeschadet der Regeln, nach denen du dich als Verbraucher an die Gerichte deines Wohnorts wenden kannst."
+    }
   }
 }

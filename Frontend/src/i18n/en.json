@@ -360,5 +360,74 @@
       "removeHeading": "Remove this member?",
       "removeMessage": "{{name}} will no longer have access to the group."
     }
+  },
+  "terms": {
+    "back": "Back",
+    "updated": "Last updated: {{date}}",
+    "translations": "If a translation differs from the French text, the French text prevails.",
+    "purpose": {
+      "title": "1. Purpose",
+      "body": "Plano is a planning app (lists, calendar, goals, groups and friends) published by Synapse Engineering, based in Belgium. These terms govern its use. You are asked to accept them on your first visit.",
+      "contact": "Contact:"
+    },
+    "account": {
+      "title": "2. Your account",
+      "synapse": "You sign in with your Synapse account, the same one for every Synapse Engineering app. It has its own terms, at auth.synapseengineering.dev.",
+      "age": "You must be at least 13 years old.",
+      "accurate": "Your account details (name, e-mail address) must be accurate.",
+      "password": "Your password is personal: keep it secret. You are responsible for what is done with your account.",
+      "single": "An account belongs to a single person."
+    },
+    "conduct": {
+      "title": "3. Code of conduct",
+      "intro": "By using Plano, you agree not to:",
+      "illegal": "post or share content that is illegal, hateful, violent or harassing, or that infringes the rights of others;",
+      "impersonate": "pretend to be someone else;",
+      "spam": "send unsolicited invitations or friend requests in bulk;",
+      "access": "try to access another person’s account or data;",
+      "disrupt": "disrupt the service: get around its limits, automate it abusively or introduce malicious code into it."
+    },
+    "content": {
+      "title": "4. Your content and sharing",
+      "ownership": "Your lists, goals, events, comments and photo belong to you. You only allow us to store them and show them to the people you choose to share them with, for as long as the service needs to work. You are responsible for what you share.",
+      "sharing": "The people you share with (friends, members of your groups, guests of a list or goal) see your first name, last name, username, photo and what you share with them. Your e-mail address is never shown to other users."
+    },
+    "service": {
+      "title": "5. The service",
+      "body": "Plano is provided free of charge, as is. We do our best to keep it available and your data safe, but we cannot guarantee it: keep a copy of what matters to you. The service may change, be interrupted for maintenance or stop; in the latter case, we will let you know in advance."
+    },
+    "deletion": {
+      "title": "6. Suspension and deletion",
+      "body": "We may suspend or delete an account that does not comply with these terms. You can delete your account at any time from your Synapse account page: Plano then erases everything it keeps about you (your lists, goals, groups you created, calendar, friends and notifications; your name disappears from what you shared). You can also ask for it at the contact address."
+    },
+    "liability": {
+      "title": "7. Liability",
+      "body": "To the extent permitted by law, Synapse Engineering is not liable for indirect damage related to the use of Plano, nor for content posted by other users. Nothing in these terms limits the rights the law gives you as a consumer."
+    },
+    "privacy": {
+      "title": "8. Privacy policy",
+      "controller": "Synapse Engineering is the controller of your personal data, in accordance with the General Data Protection Regulation (GDPR).",
+      "keptTitle": "What we keep",
+      "identity": "Your first name, last name, username and e-mail address, copied from your Synapse account at each sign-in, and your language. Your password is kept only by the Synapse account.",
+      "photo": "Your profile photo, if you add one.",
+      "content": "What you create in the app and the date you accepted these terms.",
+      "ip": "Your IP address, for as long as it takes to limit abuse (too many sign-in attempts, for example).",
+      "whyTitle": "Why",
+      "why": "To run the service you ask for (article 6.1.b of the GDPR) and to protect it against abuse (legitimate interest, article 6.1.f). We do not sell your data, we show no advertising and the app contains no trackers or third-party services.",
+      "cookiesTitle": "Cookies",
+      "cookies": "Only essential cookies: the one that keeps you signed in, for 30 days at most, and the one that protects a sign-in in progress, for 10 minutes at most. Your browser also keeps a few display preferences on your device.",
+      "whereTitle": "Where and for how long",
+      "where": "Your data is hosted on a server rented from OVHcloud (OVH SAS, France). We keep it as long as your account exists, then delete it.",
+      "rightsTitle": "Your rights",
+      "rights": "You can access your data, correct it, receive it in a reusable format, ask for it to be erased, restrict its use or object to it: write to the contact address. You can also lodge a complaint with the Belgian Data Protection Authority"
+    },
+    "changes": {
+      "title": "9. Changes",
+      "body": "We may change these terms. The date at the top of this page shows the latest version; if there is a significant change, we will tell you in the app."
+    },
+    "law": {
+      "title": "10. Applicable law",
+      "body": "These terms are governed by Belgian law. In the event of a dispute, and failing an amicable agreement, the courts of Brussels have jurisdiction, without prejudice to the rules that allow you, as a consumer, to go to the courts where you live."
+    }
   }
 }

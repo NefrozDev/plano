@@ -360,5 +360,74 @@
       "removeHeading": "¿Quitar a este miembro?",
       "removeMessage": "{{name}} ya no tendrá acceso al grupo."
     }
+  },
+  "terms": {
+    "back": "Volver",
+    "updated": "Última actualización: {{date}}",
+    "translations": "Si una traducción difiere del texto francés, prevalece el texto francés.",
+    "purpose": {
+      "title": "1. Objeto",
+      "body": "Plano es una aplicación de planificación (listas, agenda, objetivos, grupos y amigos) publicada por Synapse Engineering, establecida en Bélgica. Estas condiciones regulan su uso. Se te pide aceptarlas en tu primera visita.",
+      "contact": "Contacto:"
+    },
+    "account": {
+      "title": "2. Tu cuenta",
+      "synapse": "Inicias sesión con tu cuenta Synapse, la misma para todas las aplicaciones de Synapse Engineering. Tiene sus propias condiciones, en auth.synapseengineering.dev.",
+      "age": "Debes tener al menos 13 años.",
+      "accurate": "Los datos de tu cuenta (nombre, dirección de correo electrónico) deben ser exactos.",
+      "password": "Tu contraseña es personal: mantenla en secreto. Eres responsable de lo que se hace con tu cuenta.",
+      "single": "Una cuenta corresponde a una sola persona."
+    },
+    "conduct": {
+      "title": "3. Normas de conducta",
+      "intro": "Al usar Plano, te comprometes a no:",
+      "illegal": "publicar ni compartir contenido ilegal, de odio, violento o acosador, o que vulnere los derechos de otros;",
+      "impersonate": "hacerte pasar por otra persona;",
+      "spam": "enviar invitaciones o solicitudes de amistad no deseadas de forma masiva;",
+      "access": "intentar acceder a la cuenta o a los datos de otra persona;",
+      "disrupt": "perturbar el servicio: eludir sus límites, automatizarlo de forma abusiva o introducir código malicioso."
+    },
+    "content": {
+      "title": "4. Tus contenidos y el uso compartido",
+      "ownership": "Tus listas, objetivos, eventos, comentarios y tu foto te pertenecen. Solo nos autorizas a guardarlos y a mostrarlos a las personas con las que decides compartirlos, durante el tiempo necesario para que funcione el servicio. Eres responsable de lo que compartes.",
+      "sharing": "Las personas con las que compartes (amigos, miembros de tus grupos, invitados de una lista o de un objetivo) ven tu nombre, tus apellidos, tu nombre de usuario, tu foto y lo que compartes con ellas. Tu dirección de correo electrónico nunca se muestra a otros usuarios."
+    },
+    "service": {
+      "title": "5. El servicio",
+      "body": "Plano se ofrece gratis y tal cual. Hacemos todo lo posible para que siga disponible y tus datos se conserven, pero no podemos garantizarlo: guarda una copia de lo que sea importante para ti. El servicio puede cambiar, interrumpirse por mantenimiento o dejar de prestarse; en este último caso, te avisaremos con antelación."
+    },
+    "deletion": {
+      "title": "6. Suspensión y eliminación",
+      "body": "Podemos suspender o eliminar una cuenta que no respete estas condiciones. Puedes eliminar tu cuenta en cualquier momento desde la página de tu cuenta Synapse: Plano borra entonces todo lo que guarda sobre ti (tus listas, objetivos, grupos creados, agenda, amigos y notificaciones; tu nombre desaparece de lo que compartías). También puedes pedirlo en la dirección de contacto."
+    },
+    "liability": {
+      "title": "7. Responsabilidad",
+      "body": "En la medida en que lo permita la ley, Synapse Engineering no es responsable de los daños indirectos relacionados con el uso de Plano, ni de los contenidos publicados por otros usuarios. Nada en estas condiciones limita los derechos que la ley te reconoce como consumidor."
+    },
+    "privacy": {
+      "title": "8. Política de privacidad",
+      "controller": "Synapse Engineering es responsable del tratamiento de tus datos personales, de conformidad con el Reglamento General de Protección de Datos (RGPD).",
+      "keptTitle": "Qué conservamos",
+      "identity": "Tu nombre, tus apellidos, tu nombre de usuario y tu dirección de correo electrónico, copiados de tu cuenta Synapse en cada inicio de sesión, y tu idioma. Tu contraseña solo la guarda la cuenta Synapse.",
+      "photo": "Tu foto de perfil, si añades una.",
+      "content": "Lo que creas en la aplicación y la fecha en la que aceptaste estas condiciones.",
+      "ip": "Tu dirección IP, el tiempo necesario para limitar los abusos (demasiados intentos de inicio de sesión, por ejemplo).",
+      "whyTitle": "Por qué",
+      "why": "Para hacer funcionar el servicio que solicitas (artículo 6.1.b del RGPD) y para protegerlo contra abusos (interés legítimo, artículo 6.1.f). No vendemos tus datos, no mostramos publicidad y la aplicación no contiene rastreadores ni servicios de terceros.",
+      "cookiesTitle": "Cookies",
+      "cookies": "Solo cookies imprescindibles: la que mantiene tu sesión iniciada, durante 30 días como máximo, y la que protege un inicio de sesión en curso, durante 10 minutos como máximo. Tu navegador también guarda algunas preferencias de visualización en tu dispositivo.",
+      "whereTitle": "Dónde y durante cuánto tiempo",
+      "where": "Tus datos se alojan en un servidor alquilado a OVHcloud (OVH SAS, Francia). Los conservamos mientras exista tu cuenta y después los eliminamos.",
+      "rightsTitle": "Tus derechos",
+      "rights": "Puedes acceder a tus datos, corregirlos, recibirlos en un formato reutilizable, pedir que se borren, limitar su uso u oponerte a él: escribe a la dirección de contacto. También puedes presentar una reclamación ante la Autoridad belga de Protección de Datos"
+    },
+    "changes": {
+      "title": "9. Cambios",
+      "body": "Podemos modificar estas condiciones. La fecha que figura al principio de esta página indica la última versión; si hay un cambio importante, te lo comunicaremos en la aplicación."
+    },
+    "law": {
+      "title": "10. Ley aplicable",
+      "body": "Estas condiciones se rigen por el derecho belga. En caso de litigio, y a falta de acuerdo amistoso, son competentes los tribunales de Bruselas, sin perjuicio de las normas que te permiten, como consumidor, acudir a los tribunales de tu domicilio."
+    }
   }
 }

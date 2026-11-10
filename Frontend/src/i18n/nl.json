@@ -360,5 +360,74 @@
       "removeHeading": "Dit lid verwijderen?",
       "removeMessage": "{{name}} heeft dan geen toegang meer tot de groep."
     }
+  },
+  "terms": {
+    "back": "Terug",
+    "updated": "Laatst bijgewerkt: {{date}}",
+    "translations": "Als een vertaling afwijkt van de Franse tekst, heeft de Franse tekst voorrang.",
+    "purpose": {
+      "title": "1. Doel",
+      "body": "Plano is een planningsapp (lijsten, agenda, doelen, groepen en vrienden) uitgegeven door Synapse Engineering, gevestigd in België. Deze voorwaarden regelen het gebruik ervan. Bij je eerste bezoek wordt gevraagd ze te aanvaarden.",
+      "contact": "Contact:"
+    },
+    "account": {
+      "title": "2. Je account",
+      "synapse": "Je meldt je aan met je Synapse-account, hetzelfde voor alle apps van Synapse Engineering. Dat heeft eigen voorwaarden, op auth.synapseengineering.dev.",
+      "age": "Je moet minstens 13 jaar oud zijn.",
+      "accurate": "De gegevens van je account (naam, e-mailadres) moeten juist zijn.",
+      "password": "Je wachtwoord is persoonlijk: houd het geheim. Je bent verantwoordelijk voor wat er met je account gebeurt.",
+      "single": "Een account hoort bij één persoon."
+    },
+    "conduct": {
+      "title": "3. Gedragsregels",
+      "intro": "Door Plano te gebruiken, verbind je je ertoe om niet:",
+      "illegal": "inhoud te publiceren of te delen die illegaal, haatdragend, gewelddadig of intimiderend is, of die de rechten van anderen schendt;",
+      "impersonate": "je voor te doen als iemand anders;",
+      "spam": "massaal ongevraagde uitnodigingen of vriendschapsverzoeken te versturen;",
+      "access": "te proberen toegang te krijgen tot het account of de gegevens van iemand anders;",
+      "disrupt": "de dienst te verstoren: de limieten te omzeilen, de dienst op misbruikende wijze te automatiseren of er kwaadaardige code in te brengen."
+    },
+    "content": {
+      "title": "4. Je inhoud en delen",
+      "ownership": "Je lijsten, doelen, afspraken, reacties en je foto zijn van jou. Je staat ons alleen toe ze te bewaren en te tonen aan de mensen met wie je ze wilt delen, zolang dat nodig is om de dienst te laten werken. Je bent verantwoordelijk voor wat je deelt.",
+      "sharing": "De mensen met wie je deelt (vrienden, leden van je groepen, genodigden van een lijst of doel) zien je voornaam, je achternaam, je gebruikersnaam, je foto en wat je met hen deelt. Je e-mailadres wordt nooit aan andere gebruikers getoond."
+    },
+    "service": {
+      "title": "5. De dienst",
+      "body": "Plano wordt gratis aangeboden, zoals het is. We doen ons best om de dienst beschikbaar te houden en je gegevens te bewaren, maar we kunnen dat niet garanderen: bewaar een kopie van wat belangrijk voor je is. De dienst kan veranderen, voor onderhoud onderbroken worden of stoppen; in dat laatste geval laten we het je vooraf weten."
+    },
+    "deletion": {
+      "title": "6. Opschorting en verwijdering",
+      "body": "We kunnen een account dat deze voorwaarden niet naleeft opschorten of verwijderen. Je kunt je account op elk moment verwijderen via de pagina van je Synapse-account: Plano wist dan alles wat het over jou bewaart (je lijsten, doelen, aangemaakte groepen, agenda, vrienden en meldingen; je naam verdwijnt uit wat je deelde). Je kunt het ook vragen via het contactadres."
+    },
+    "liability": {
+      "title": "7. Aansprakelijkheid",
+      "body": "Binnen de grenzen van de wet is Synapse Engineering niet aansprakelijk voor indirecte schade door het gebruik van Plano, noch voor inhoud die andere gebruikers publiceren. Niets in deze voorwaarden beperkt de rechten die de wet je als consument geeft."
+    },
+    "privacy": {
+      "title": "8. Privacybeleid",
+      "controller": "Synapse Engineering is verwerkingsverantwoordelijke voor je persoonsgegevens, overeenkomstig de Algemene Verordening Gegevensbescherming (AVG).",
+      "keptTitle": "Wat we bewaren",
+      "identity": "Je voornaam, achternaam, gebruikersnaam en e-mailadres, bij elke aanmelding overgenomen van je Synapse-account, en je taal. Je wachtwoord wordt alleen door het Synapse-account bewaard.",
+      "photo": "Je profielfoto, als je er een toevoegt.",
+      "content": "Wat je in de app maakt en de datum waarop je deze voorwaarden aanvaardde.",
+      "ip": "Je IP-adres, zolang nodig om misbruik te beperken (bijvoorbeeld te veel aanmeldpogingen).",
+      "whyTitle": "Waarom",
+      "why": "Om de dienst te laten werken die je vraagt (artikel 6.1.b van de AVG) en om die te beschermen tegen misbruik (gerechtvaardigd belang, artikel 6.1.f). We verkopen je gegevens niet, we tonen geen reclame en de app bevat geen trackers of diensten van derden.",
+      "cookiesTitle": "Cookies",
+      "cookies": "Alleen noodzakelijke cookies: het cookie dat je aangemeld houdt, hooguit 30 dagen, en het cookie dat een lopende aanmelding beschermt, hooguit 10 minuten. Je browser bewaart ook enkele weergavevoorkeuren op je toestel.",
+      "whereTitle": "Waar en hoe lang",
+      "where": "Je gegevens worden gehost op een server gehuurd bij OVHcloud (OVH SAS, Frankrijk). We bewaren ze zolang je account bestaat en verwijderen ze daarna.",
+      "rightsTitle": "Je rechten",
+      "rights": "Je kunt je gegevens inzien, verbeteren, in een herbruikbaar formaat ontvangen, laten wissen, het gebruik ervan beperken of je ertegen verzetten: schrijf naar het contactadres. Je kunt ook een klacht indienen bij de Gegevensbeschermingsautoriteit"
+    },
+    "changes": {
+      "title": "9. Wijzigingen",
+      "body": "We kunnen deze voorwaarden wijzigen. De datum bovenaan deze pagina geeft de laatste versie aan; bij een belangrijke wijziging laten we het je in de app weten."
+    },
+    "law": {
+      "title": "10. Toepasselijk recht",
+      "body": "Deze voorwaarden vallen onder het Belgische recht. Bij een geschil, en bij gebrek aan een minnelijke regeling, zijn de rechtbanken van Brussel bevoegd, onverminderd de regels die je als consument toelaten je te wenden tot de rechtbanken van je woonplaats."
+    }
   }
 }

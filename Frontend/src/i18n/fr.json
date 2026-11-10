@@ -360,5 +360,74 @@
       "removeHeading": "Retirer ce membre ?",
       "removeMessage": "{{name}} n’aura plus accès au groupe."
     }
+  },
+  "terms": {
+    "back": "Retour",
+    "updated": "Dernière mise à jour : {{date}}",
+    "translations": "En cas de différence entre une traduction et le texte français, le texte français fait foi.",
+    "purpose": {
+      "title": "1. Objet",
+      "body": "Plano est une application de planification (listes, agenda, objectifs, groupes et amis) éditée par Synapse Engineering, établie en Belgique. Ces conditions encadrent son utilisation. Les accepter est demandé à votre première visite.",
+      "contact": "Contact :"
+    },
+    "account": {
+      "title": "2. Votre compte",
+      "synapse": "Vous vous connectez avec votre compte Synapse, le même pour toutes les applications de Synapse Engineering. Il a ses propres conditions, sur auth.synapseengineering.dev.",
+      "age": "Vous devez avoir au moins 13 ans.",
+      "accurate": "Les informations de votre compte (nom, adresse e-mail) doivent être exactes.",
+      "password": "Votre mot de passe est personnel : gardez-le secret. Vous êtes responsable de ce qui est fait avec votre compte.",
+      "single": "Un compte correspond à une seule personne."
+    },
+    "conduct": {
+      "title": "3. Règles de conduite",
+      "intro": "En utilisant Plano, vous vous engagez à ne pas :",
+      "illegal": "publier ou partager un contenu illégal, haineux, violent, harcelant ou qui porte atteinte aux droits d’autrui ;",
+      "impersonate": "vous faire passer pour quelqu’un d’autre ;",
+      "spam": "envoyer des invitations ou des demandes d’ami non sollicitées en masse ;",
+      "access": "tenter d’accéder au compte ou aux données d’une autre personne ;",
+      "disrupt": "perturber le service : contourner ses limites, l’automatiser de manière abusive ou y introduire du code malveillant."
+    },
+    "content": {
+      "title": "4. Vos contenus et le partage",
+      "ownership": "Vos listes, objectifs, événements, commentaires et votre photo vous appartiennent. Vous nous autorisez seulement à les conserver et à les afficher aux personnes avec qui vous choisissez de les partager, le temps nécessaire au fonctionnement du service. Vous êtes responsable de ce que vous partagez.",
+      "sharing": "Les personnes avec qui vous partagez (amis, membres de vos groupes, invités d’une liste ou d’un objectif) voient votre prénom, votre nom, votre nom d’utilisateur, votre photo et ce que vous partagez avec elles. Votre adresse e-mail n’est jamais montrée aux autres utilisateurs."
+    },
+    "service": {
+      "title": "5. Le service",
+      "body": "Plano est fourni gratuitement, tel quel. Nous faisons de notre mieux pour qu’il reste disponible et que vos données soient conservées, mais nous ne pouvons pas le garantir : gardez une copie de ce qui est important pour vous. Le service peut évoluer, être interrompu pour maintenance ou s’arrêter ; dans ce dernier cas, nous vous préviendrons à l’avance."
+    },
+    "deletion": {
+      "title": "6. Suspension et suppression",
+      "body": "Nous pouvons suspendre ou supprimer un compte qui ne respecte pas ces conditions. Vous pouvez supprimer votre compte à tout moment depuis la page de votre compte Synapse : Plano efface alors tout ce qu’il garde à votre sujet (vos listes, objectifs, groupes créés, agenda, amis et notifications ; votre nom disparaît de ce que vous partagiez). Vous pouvez aussi l’écrire à l’adresse de contact."
+    },
+    "liability": {
+      "title": "7. Responsabilité",
+      "body": "Dans les limites permises par la loi, Synapse Engineering n’est pas responsable des dommages indirects liés à l’utilisation de Plano, ni des contenus publiés par les autres utilisateurs. Rien dans ces conditions ne limite les droits que la loi vous accorde en tant que consommateur."
+    },
+    "privacy": {
+      "title": "8. Politique de confidentialité",
+      "controller": "Synapse Engineering est responsable du traitement de vos données personnelles, conformément au Règlement général sur la protection des données (RGPD).",
+      "keptTitle": "Ce que nous conservons",
+      "identity": "Votre prénom, votre nom, votre nom d’utilisateur et votre adresse e-mail, recopiés de votre compte Synapse à chaque connexion, et votre langue. Votre mot de passe n’est gardé que par le compte Synapse.",
+      "photo": "Votre photo de profil, si vous en ajoutez une.",
+      "content": "Ce que vous créez dans l’application et la date à laquelle vous avez accepté ces conditions.",
+      "ip": "Votre adresse IP, le temps de limiter les abus (trop de tentatives de connexion par exemple).",
+      "whyTitle": "Pourquoi",
+      "why": "Pour faire fonctionner le service que vous demandez (article 6.1.b du RGPD) et pour le protéger contre les abus (intérêt légitime, article 6.1.f). Nous ne vendons pas vos données, nous n’affichons pas de publicité et l’application ne contient aucun traceur ni service tiers.",
+      "cookiesTitle": "Cookies",
+      "cookies": "Uniquement des cookies indispensables : celui qui vous garde connecté, pendant 30 jours au plus, et celui qui protège une connexion en cours, pendant 10 minutes au plus. Votre navigateur garde aussi quelques préférences d’affichage sur votre appareil.",
+      "whereTitle": "Où et combien de temps",
+      "where": "Vos données sont hébergées sur un serveur loué à OVHcloud (OVH SAS, France). Nous les gardons tant que votre compte existe, puis nous les supprimons.",
+      "rightsTitle": "Vos droits",
+      "rights": "Vous pouvez accéder à vos données, les corriger, les recevoir dans un format réutilisable, demander leur effacement, en limiter l’usage ou vous y opposer : écrivez à l’adresse de contact. Vous pouvez aussi introduire une plainte auprès de l’Autorité de protection des données"
+    },
+    "changes": {
+      "title": "9. Modifications",
+      "body": "Nous pouvons modifier ces conditions. La date en haut de cette page indique la dernière version ; en cas de changement important, nous vous en informerons dans l’application."
+    },
+    "law": {
+      "title": "10. Droit applicable",
+      "body": "Ces conditions sont soumises au droit belge. En cas de litige, et à défaut d’accord amiable, les tribunaux de Bruxelles sont compétents, sans préjudice des règles qui vous permettent, en tant que consommateur, de saisir les tribunaux de votre domicile."
+    }
   }
 }

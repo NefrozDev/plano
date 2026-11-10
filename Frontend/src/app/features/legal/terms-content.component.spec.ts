@@ -1,4 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
+import en from '../../../i18n/en.json';
+import { setInterfaceLocale } from '../../core/i18n/translate';
 import { TermsContentComponent } from './terms-content.component';
 
 describe('TermsContentComponent', () => {
@@ -45,5 +48,21 @@ describe('TermsContentComponent', () => {
     // Passwords and their recovery belong to the Synapse account now.
     expect(text).toContain('compte Synapse');
     expect(text).not.toContain('réinitialisation');
+  });
+
+  it('reads in the interface language, its date too, and says the French text prevails', () => {
+    const transloco = TestBed.inject(TranslocoService);
+    transloco.setTranslation(en, 'en');
+    transloco.setActiveLang('en');
+    setInterfaceLocale('en');
+    const fixture = TestBed.createComponent(TermsContentComponent);
+    fixture.detectChanges();
+    const english = fixture.nativeElement as HTMLElement;
+
+    expect(english.querySelector('#terms-privacy h3')?.textContent).toBe('8. Privacy policy');
+    expect(english.textContent).toContain('Last updated: 8 November 2026');
+    expect(english.textContent).toContain('the French text prevails');
+    expect(english.textContent).toContain('for 30 days at most');
+    expect(english.querySelector('a[href="mailto:contact@synapseengineering.dev"]')).not.toBeNull();
   });
 });
