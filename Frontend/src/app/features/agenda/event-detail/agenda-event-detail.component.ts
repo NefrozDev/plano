@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { AgendaAttendeeStatus } from '@plano/common';
+import { t } from '../../../core/i18n/translate';
 import { readNotificationsWhileOpen } from '../../../core/notifications/notifications.store';
 import { toPerson } from '../../../core/people/people';
 import { formatLongDay, parseIsoDate } from '../../../core/time/dates';
@@ -20,16 +22,17 @@ import {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** Translation key of each guest's answer. */
 const STATUS_LABELS: Readonly<Record<AgendaAttendeeStatus, string>> = {
-  pending: 'En attente',
-  accepted: 'Participe',
-  declined: 'A refusé',
+  pending: 'agenda.status.pending',
+  accepted: 'agenda.status.accepted',
+  declined: 'agenda.status.declined',
 };
 
 /** Screen 4. `?date=` selects which occurrence of a recurring event is shown. */
 @Component({
   selector: 'app-agenda-event-detail',
-  imports: [RouterLink, PageHeaderComponent, ModalDialogComponent, UserAvatarComponent],
+  imports: [RouterLink, TranslocoPipe, PageHeaderComponent, ModalDialogComponent, UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-event-detail.component.html',
   styleUrl: './agenda-event-detail.component.scss',
@@ -69,7 +72,7 @@ export class AgendaEventDetailComponent {
     // The organiser first, then the guests with their answer.
     const people = event.attendees.length
       ? [
-          { person: toPerson(event.owner), status: 'Organisateur', declined: false },
+          { person: toPerson(event.owner), status: 'agenda.status.organiser', declined: false },
           ...event.attendees.map((attendee) => ({
             person: toPerson(attendee),
             status: STATUS_LABELS[attendee.status],
@@ -84,13 +87,13 @@ export class AgendaEventDetailComponent {
       dateLabel:
         start === end
           ? `${formatLongDay(start)} ${parseIsoDate(start).getFullYear()}`
-          : `Du ${formatLongDay(start)} au ${formatLongDay(end)}`,
+          : t('agenda.detail.fromTo', { from: formatLongDay(start), to: formatLongDay(end) }),
       timeLabel: timeRangeLabel({ allDay: event.allDay, ...occurrence }, this.store.settings().hourFormat),
       people,
       organiser: toPerson(event.owner),
       reminder: eventReminderLabel(event.reminderMinutes),
-      recurrence: RECURRENCE_LABELS[event.recurrence],
-      calendarName: calendar?.name ?? 'Sans calendrier',
+      recurrence: t(RECURRENCE_LABELS[event.recurrence]),
+      calendarName: calendar?.name ?? t('agenda.noCalendar'),
       calendarColor: calendar?.color ?? '#94a3b8',
       attachments: event.attachments.map((file) => ({ ...file, sizeLabel: formatFileSize(file.size) })),
     };

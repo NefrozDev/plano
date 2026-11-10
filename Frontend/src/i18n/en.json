@@ -429,5 +429,220 @@
       "title": "10. Applicable law",
       "body": "These terms are governed by Belgian law. In the event of a dispute, and failing an amicable agreement, the courts of Brussels have jurisdiction, without prejudice to the rules that allow you, as a consumer, to go to the courts where you live."
     }
+  },
+  "agenda": {
+    "allDay": "All day",
+    "untitled": "Untitled",
+    "backToAgenda": "Back to the calendar",
+    "noCalendar": "No calendar",
+    "dayAtTime": "{{day}} at {{time}}",
+    "deadline": "Due: {{label}}",
+    "fromList": "List · {{name}}",
+    "fromObjective": "Goal · {{title}}",
+    "taskPrefix": "Task: ",
+    "with": "With {{names}}",
+    "weekShort": "W",
+    "calendars": {
+      "personnel": "Personal",
+      "travail": "Work",
+      "famille": "Family",
+      "anniversaires": "Birthdays",
+      "sport": "Sport"
+    },
+    "views": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "recurrence": {
+      "none": "Never",
+      "daily": "Every day",
+      "weekly": "Every week",
+      "monthly": "Every month",
+      "yearly": "Every year"
+    },
+    "reminder": {
+      "none": "None",
+      "atStart": "At the time of the event",
+      "minutes": {
+        "one": "{{count}} minute before",
+        "other": "{{count}} minutes before"
+      },
+      "hours": {
+        "one": "{{count}} hour before",
+        "other": "{{count}} hours before"
+      },
+      "days": {
+        "one": "{{count}} day before",
+        "other": "{{count}} days before"
+      }
+    },
+    "duration": {
+      "minutes": {
+        "one": "{{count}} minute",
+        "other": "{{count}} minutes"
+      },
+      "hours": {
+        "one": "{{count}} hour",
+        "other": "{{count}} hours"
+      },
+      "hoursMinutes": "{{hours}} h {{minutes}}"
+    },
+    "timeZones": {
+      "brussels": "Brussels",
+      "paris": "Paris",
+      "london": "London",
+      "montreal": "Montreal",
+      "utc": "Coordinated Universal Time"
+    },
+    "fileSize": {
+      "bytes": "{{size}} B",
+      "kilobytes": "{{size}} KB",
+      "megabytes": "{{size}} MB"
+    },
+    "status": {
+      "organiser": "Organizer",
+      "pending": "Pending",
+      "accepted": "Going",
+      "declined": "Declined"
+    },
+    "errors": {
+      "delete": "Deleting failed. Please try again.",
+      "save": "Saving failed. Please try again."
+    },
+    "calendar": {
+      "changeView": "Change view",
+      "filter": "Filter the calendar",
+      "previous": "Previous period",
+      "next": "Next period",
+      "pickDate": "Pick a date",
+      "pickDateFrom": "Pick a date, {{title}}",
+      "today": "Today",
+      "invitations": "Pending invitations ({{count}})",
+      "answer": "Reply",
+      "create": "Create an event",
+      "weekDays": "Days of the week",
+      "allDayShort": "All day",
+      "now": "Current time",
+      "continued": "Cont.",
+      "nothingThatDay": "Nothing planned that day.",
+      "nothing": "Nothing planned.",
+      "add": "Add an event",
+      "dayWithItems": {
+        "one": "{{day}}, {{count}} item",
+        "other": "{{day}}, {{count}} items"
+      },
+      "seeDay": "See {{day}}"
+    },
+    "detail": {
+      "heading": "Event details",
+      "organisedBy": "Organized by {{name}}",
+      "joinCall": "Join the video call",
+      "invites": "{{name}} is inviting you to this event.",
+      "decline": "Decline",
+      "accept": "Accept",
+      "going": "You’re going to this event.",
+      "stopGoing": "No longer going",
+      "declined": "You declined this invitation.",
+      "goAfterAll": "Go after all",
+      "attachments": "Attachments",
+      "notes": "Notes",
+      "reminder": "Reminder",
+      "calendar": "Calendar",
+      "recurrence": "Repeats",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteHeading": "Delete the event",
+      "deleteWarning": "“{{title}}” will be deleted.",
+      "deleteRecurring": "Every occurrence of this repeating event will be deleted.",
+      "deleteForGuests": "It will also disappear from the guests’ calendars.",
+      "missing": "This event doesn’t exist or was deleted.",
+      "fromTo": "From {{from}} to {{to}}"
+    },
+    "form": {
+      "save": "Save the event",
+      "title": "Title",
+      "titlePlaceholder": "E.g. Lunch with Camille",
+      "titleError": "Give the event a title.",
+      "date": "Date",
+      "endDate": "End date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "chronologyError": "The end must be after the start.",
+      "eventCalendar": "Event calendar",
+      "recolor": "Change the color of {{name}}",
+      "colorOf": "Color of {{name}}",
+      "color": "Color {{color}}",
+      "location": "Location",
+      "locationPlaceholder": "Add a location",
+      "invite": "Invite people",
+      "inviteHint": "Each new guest gets an invitation to accept.",
+      "description": "Description",
+      "descriptionPlaceholder": "Add a description",
+      "moreOptions": "More options",
+      "colorLegend": "Color",
+      "calendarColor": "Calendar color",
+      "conference": "Video call",
+      "conferencePlaceholder": "Add a link",
+      "conferenceError": "Enter a web link starting with https://.",
+      "addFile": "Add a file",
+      "removeFile": "Remove {{name}}",
+      "notesPlaceholder": "Add a note",
+      "advanced": "Advanced options",
+      "availability": "Availability",
+      "busy": "Busy",
+      "free": "Free",
+      "visibility": "Visibility",
+      "visibilityDefault": "Default",
+      "private": "Private",
+      "mainInfo": "Main details",
+      "fileTooLarge": "Files over 10 MB are skipped.",
+      "tooManyFiles": "{{max}} attachments at most."
+    },
+    "filters": {
+      "heading": "Filters",
+      "close": "Close the filters",
+      "reset": "Reset",
+      "calendars": "Calendars",
+      "show": "Show",
+      "see": "See the calendar",
+      "events": "Events",
+      "eventsHint": "Events from your calendars",
+      "tasks": "Dated tasks",
+      "tasksHint": "List reminders and goal sessions",
+      "past": "Past events",
+      "pastHint": "Events that are already over"
+    },
+    "search": {
+      "heading": "Search",
+      "close": "Close the search",
+      "label": "Search for an event",
+      "placeholder": "Search for an event, a place…",
+      "results": "Results",
+      "none": "No event matches “{{query}}”.",
+      "recent": "Recent results",
+      "suggestions": "Suggestions",
+      "with": "Events with {{name}}",
+      "thisWeek": "Events this week",
+      "thisMonth": "Events this month"
+    },
+    "settings": {
+      "heading": "Calendar settings",
+      "general": "General",
+      "weekStart": "First day of the week",
+      "monday": "Monday",
+      "sunday": "Sunday",
+      "duration": "Default duration",
+      "timeZone": "Time zone",
+      "notifications": "Notifications",
+      "reminder": "Default reminder",
+      "eventNotifications": "Event notifications",
+      "invitationNotifications": "Invitation notifications",
+      "display": "Display",
+      "weekNumbers": "Show week numbers",
+      "hourFormat": "Time format",
+      "hours24": "24-hour",
+      "hours12": "12-hour (AM/PM)"
+    }
   }
 }

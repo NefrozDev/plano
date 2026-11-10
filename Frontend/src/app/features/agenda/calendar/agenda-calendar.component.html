@@ -3,7 +3,7 @@
     <button
       class="icon-button"
       type="button"
-      aria-label="Changer de vue"
+      [attr.aria-label]="'agenda.calendar.changeView' | transloco"
       [attr.aria-expanded]="viewMenuOpen()"
       (click)="viewMenuOpen.set(!viewMenuOpen())"
     >
@@ -18,23 +18,23 @@
             [attr.aria-checked]="view() === option.value"
             [class.active]="view() === option.value"
             (click)="go({ view: option.value })"
-          >{{ option.label }}</button>
+          >{{ option.label | transloco }}</button>
         }
       </div>
     }
   </div>
-  <h1>Agenda</h1>
+  <h1>{{ 'titles.agenda' | transloco }}</h1>
   <div class="header-actions">
-    <a class="icon-button" routerLink="/agenda/filters" aria-label="Filtrer l’agenda">
+    <a class="icon-button" routerLink="/agenda/filters" [attr.aria-label]="'agenda.calendar.filter' | transloco">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5Z" /></svg>
       @if (store.activeFilterCount()) {
         <i class="badge" aria-hidden="true">{{ store.activeFilterCount() }}</i>
       }
     </a>
-    <a class="icon-button" routerLink="/agenda/search" aria-label="Rechercher dans l’agenda">
+    <a class="icon-button" routerLink="/agenda/search" [attr.aria-label]="'titles.agendaSearch' | transloco">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
     </a>
-    <a class="icon-button" routerLink="/agenda/settings" aria-label="Paramètres de l’agenda">
+    <a class="icon-button" routerLink="/agenda/settings" [attr.aria-label]="'titles.agendaSettings' | transloco">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4A2 2 0 0 0 4 9.9l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z" /><circle cx="12" cy="12" r="3" />
       </svg>
@@ -43,20 +43,20 @@
 </header>
 
 <div class="date-bar">
-  <button class="nav" type="button" aria-label="Période précédente" (click)="shift(-1)">‹</button>
-  <button class="title" type="button" [attr.aria-label]="'Choisir une date, ' + title()" (click)="openDatePicker(picker)">
+  <button class="nav" type="button" [attr.aria-label]="'agenda.calendar.previous' | transloco" (click)="shift(-1)">‹</button>
+  <button class="title" type="button" [attr.aria-label]="'agenda.calendar.pickDateFrom' | transloco: { title: title() }" (click)="openDatePicker(picker)">
     {{ title() }}
   </button>
-  <input #picker class="picker" type="date" tabindex="-1" aria-hidden="true" aria-label="Choisir une date" [value]="date()" (change)="pickDate(picker.value)" />
-  <button class="nav" type="button" aria-label="Période suivante" (click)="shift(1)">›</button>
+  <input #picker class="picker" type="date" tabindex="-1" aria-hidden="true" [attr.aria-label]="'agenda.calendar.pickDate' | transloco" [value]="date()" (change)="pickDate(picker.value)" />
+  <button class="nav" type="button" [attr.aria-label]="'agenda.calendar.next' | transloco" (click)="shift(1)">›</button>
   @if (date() !== today) {
-    <button class="today" type="button" (click)="go({ date: today })">Aujourd’hui</button>
+    <button class="today" type="button" (click)="go({ date: today })">{{ 'agenda.calendar.today' | transloco }}</button>
   }
 </div>
 
 @if (invitations().length) {
   <section class="invitations" aria-labelledby="invitations-heading">
-    <h2 id="invitations-heading">Invitations en attente ({{ invitations().length }})</h2>
+    <h2 id="invitations-heading">{{ 'agenda.calendar.invitations' | transloco: { count: invitations().length } }}</h2>
     <ul>
       @for (invitation of invitations(); track invitation.event.id) {
         <li>
@@ -66,7 +66,7 @@
               <strong>{{ invitation.event.title }}</strong>
               <small>{{ invitation.organiser.name }} · {{ invitation.caption }}</small>
             </span>
-            <em>Répondre</em>
+            <em>{{ 'agenda.calendar.answer' | transloco }}</em>
           </a>
         </li>
       }
@@ -111,7 +111,7 @@
   }
 </div>
 
-<a class="fab" routerLink="/agenda/new" [queryParams]="{ date: date() }" aria-label="Créer un événement">
+<a class="fab" routerLink="/agenda/new" [queryParams]="{ date: date() }" [attr.aria-label]="'agenda.calendar.create' | transloco">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
 </a>
 

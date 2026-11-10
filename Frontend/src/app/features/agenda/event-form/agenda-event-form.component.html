@@ -1,19 +1,19 @@
 <app-page-header
-  [heading]="editingId ? 'Modifier l’événement' : 'Nouvel événement'"
+  [heading]="(editingId ? 'titles.editEvent' : 'titles.newEvent') | transloco"
   [backLink]="cancelLink()"
   [backQueryParams]="cancelParams"
-  backLabel="Annuler"
+  [backLabel]="'common.cancel' | transloco"
   variant="close"
 >
   @if (!missing) {
-    <button class="save" type="submit" form="event-form" aria-label="Enregistrer l’événement" [disabled]="saving()">
+    <button class="save" type="submit" form="event-form" [attr.aria-label]="'agenda.form.save' | transloco" [disabled]="saving()">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
     </button>
   }
 </app-page-header>
 
 @if (missing) {
-  <p class="missing">Cet événement n’existe plus.</p>
+  <p class="missing">{{ 'apiErrors.agenda.eventNotFound' | transloco }}</p>
 } @else {
   <form id="event-form" class="body" [formGroup]="form" (ngSubmit)="save()" novalidate>
     @if (store.error()) {
@@ -21,27 +21,27 @@
     }
     @if (step() === 1) {
       <label class="field">
-        <span>Titre</span>
-        <input class="form-control" formControlName="title" maxlength="120" placeholder="Ex. : Déjeuner avec Camille" [attr.aria-invalid]="showError('title')" />
-        @if (showError('title')) {<span class="field-error">Donnez un titre à l’événement.</span>}
+        <span>{{ 'agenda.form.title' | transloco }}</span>
+        <input class="form-control" formControlName="title" maxlength="120" [placeholder]="'agenda.form.titlePlaceholder' | transloco" [attr.aria-invalid]="showError('title')" />
+        @if (showError('title')) {<span class="field-error">{{ 'agenda.form.titleError' | transloco }}</span>}
       </label>
 
       <label class="row">
-        <span>Toute la journée</span>
+        <span>{{ 'agenda.allDay' | transloco }}</span>
         <input class="toggle" type="checkbox" role="switch" formControlName="allDay" />
       </label>
-      <label class="row"><span>Date</span><input type="date" formControlName="date" /></label>
+      <label class="row"><span>{{ 'agenda.form.date' | transloco }}</span><input type="date" formControlName="date" /></label>
       @if (form.controls.allDay.value) {
-        <label class="row"><span>Date de fin</span><input type="date" formControlName="endDate" [min]="form.controls.date.value" /></label>
+        <label class="row"><span>{{ 'agenda.form.endDate' | transloco }}</span><input type="date" formControlName="endDate" [min]="form.controls.date.value" /></label>
       } @else {
-        <label class="row"><span>Heure de début</span><input type="time" formControlName="startTime" (change)="onStartTimeChange()" /></label>
-        <label class="row"><span>Heure de fin</span><input type="time" formControlName="endTime" /></label>
+        <label class="row"><span>{{ 'agenda.form.startTime' | transloco }}</span><input type="time" formControlName="startTime" (change)="onStartTimeChange()" /></label>
+        <label class="row"><span>{{ 'agenda.form.endTime' | transloco }}</span><input type="time" formControlName="endTime" /></label>
       }
       @if (chronologyError()) {
-        <p class="field-error" role="alert">La fin doit être après le début.</p>
+        <p class="field-error" role="alert">{{ 'agenda.form.chronologyError' | transloco }}</p>
       }
       <button class="row link-row calendar-row" type="button" aria-haspopup="dialog" (click)="calendarPickerOpen.set(true)">
-        <span>Calendrier</span>
+        <span>{{ 'agenda.detail.calendar' | transloco }}</span>
         <span class="value">
           @if (selectedCalendar(); as calendar) {
             <i class="dot" [style.background]="calendar.color" aria-hidden="true"></i>{{ calendar.name }}
@@ -49,9 +49,9 @@
           ›
         </span>
       </button>
-      <app-modal-dialog heading="Calendrier" [open]="calendarPickerOpen()" (closed)="closeCalendarPicker()">
+      <app-modal-dialog [heading]="'agenda.detail.calendar' | transloco" [open]="calendarPickerOpen()" (closed)="closeCalendarPicker()">
         <fieldset class="calendar-options">
-          <legend class="visually-hidden">Calendrier de l’événement</legend>
+          <legend class="visually-hidden">{{ 'agenda.form.eventCalendar' | transloco }}</legend>
           @for (calendar of calendars(); track calendar.id) {
             <div class="calendar-option">
               <label class="calendar-choice">
@@ -62,7 +62,7 @@
               <button
                 class="recolor"
                 type="button"
-                [attr.aria-label]="'Changer la couleur de ' + calendar.name"
+                [attr.aria-label]="'agenda.form.recolor' | transloco: { name: calendar.name }"
                 [attr.aria-expanded]="recoloringId() === calendar.id"
                 (click)="recoloringId.set(recoloringId() === calendar.id ? null : calendar.id)"
               >
@@ -70,13 +70,13 @@
               </button>
             </div>
             @if (recoloringId() === calendar.id) {
-              <div class="calendar-colors" role="group" [attr.aria-label]="'Couleur de ' + calendar.name">
+              <div class="calendar-colors" role="group" [attr.aria-label]="'agenda.form.colorOf' | transloco: { name: calendar.name }">
                 @for (color of colors; track color) {
                   <button
                     class="swatch"
                     type="button"
                     [style.--swatch]="color"
-                    [attr.aria-label]="'Couleur ' + color"
+                    [attr.aria-label]="'agenda.form.color' | transloco: { color }"
                     [attr.aria-pressed]="calendar.color === color"
                     (click)="store.setCalendarColor(calendar.id, color)"
                   ><i aria-hidden="true"></i></button>
@@ -86,83 +86,83 @@
           }
         </fieldset>
       </app-modal-dialog>
-      <label class="row"><span>Lieu</span><input formControlName="location" maxlength="120" placeholder="Ajouter un lieu" /></label>
+      <label class="row"><span>{{ 'agenda.form.location' | transloco }}</span><input formControlName="location" maxlength="120" [placeholder]="'agenda.form.locationPlaceholder' | transloco" /></label>
       <button class="row link-row participants-row" type="button" (click)="pickerOpen.set(true)">
-        <span>Participants</span>
+        <span>{{ 'participants.title' | transloco }}</span>
         @if (people().length) {
           <app-avatar-stack [people]="people()" />
         } @else {
-          <span class="value">Inviter des personnes ›</span>
+          <span class="value">{{ 'agenda.form.invite' | transloco }} ›</span>
         }
       </button>
       @if (newGuests()) {
-        <p class="hint">Chaque nouveau participant reçoit une invitation à accepter.</p>
+        <p class="hint">{{ 'agenda.form.inviteHint' | transloco }}</p>
       }
       <label class="field">
-        <span>Description</span>
-        <textarea class="form-control" rows="3" formControlName="description" maxlength="500" placeholder="Ajouter une description"></textarea>
+        <span>{{ 'agenda.form.description' | transloco }}</span>
+        <textarea class="form-control" rows="3" formControlName="description" maxlength="500" [placeholder]="'agenda.form.descriptionPlaceholder' | transloco"></textarea>
       </label>
-      <button class="step-link" type="button" (click)="step.set(2)">Plus d’options ›</button>
+      <button class="step-link" type="button" (click)="step.set(2)">{{ 'agenda.form.moreOptions' | transloco }} ›</button>
     } @else {
       <label class="row">
-        <span>Récurrence</span>
+        <span>{{ 'agenda.detail.recurrence' | transloco }}</span>
         <select class="choice-select" formControlName="recurrence">
-          @for (option of recurrences; track option[0]) {<option [value]="option[0]">{{ option[1] }}</option>}
+          @for (option of recurrences; track option[0]) {<option [value]="option[0]">{{ option[1] | transloco }}</option>}
         </select>
       </label>
       <label class="row">
-        <span>Rappel</span>
+        <span>{{ 'agenda.detail.reminder' | transloco }}</span>
         <select class="choice-select" formControlName="reminderMinutes">
-          @for (option of reminders; track option.label) {<option [ngValue]="option.value">{{ option.label }}</option>}
+          @for (option of reminders; track option) {<option [ngValue]="option">{{ reminderLabel(option) }}</option>}
         </select>
       </label>
       <fieldset class="colors">
-        <legend>Couleur</legend>
-        <label class="swatch default" title="Couleur du calendrier">
-          <input type="radio" formControlName="color" [value]="null" aria-label="Couleur du calendrier" />
+        <legend>{{ 'agenda.form.colorLegend' | transloco }}</legend>
+        <label class="swatch default" [title]="'agenda.form.calendarColor' | transloco">
+          <input type="radio" formControlName="color" [value]="null" [attr.aria-label]="'agenda.form.calendarColor' | transloco" />
           <i aria-hidden="true"></i>
         </label>
         @for (color of colors; track color) {
           <label class="swatch" [style.--swatch]="color">
-            <input type="radio" formControlName="color" [value]="color" [attr.aria-label]="'Couleur ' + color" />
+            <input type="radio" formControlName="color" [value]="color" [attr.aria-label]="'agenda.form.color' | transloco: { color }" />
             <i aria-hidden="true"></i>
           </label>
         }
       </fieldset>
       <label class="row">
-        <span>Conférence</span>
-        <input type="url" formControlName="conferenceUrl" placeholder="Ajouter un lien" [attr.aria-invalid]="showError('conferenceUrl')" />
+        <span>{{ 'agenda.form.conference' | transloco }}</span>
+        <input type="url" formControlName="conferenceUrl" [placeholder]="'agenda.form.conferencePlaceholder' | transloco" [attr.aria-invalid]="showError('conferenceUrl')" />
       </label>
-      @if (showError('conferenceUrl')) {<p class="field-error">Saisissez un lien web commençant par https://.</p>}
+      @if (showError('conferenceUrl')) {<p class="field-error">{{ 'agenda.form.conferenceError' | transloco }}</p>}
       <div class="row">
-        <span>Pièces jointes</span>
-        <label class="value file-button">Ajouter un fichier<input #files class="visually-hidden" type="file" multiple (change)="addAttachments(files)" /></label>
+        <span>{{ 'agenda.detail.attachments' | transloco }}</span>
+        <label class="value file-button">{{ 'agenda.form.addFile' | transloco }}<input #files class="visually-hidden" type="file" multiple (change)="addAttachments(files)" /></label>
       </div>
       @for (file of attachments(); track file.id) {
         <p class="file">
           <span>{{ file.name }} <small>{{ fileSize(file.size) }}</small></span>
-          <button type="button" [attr.aria-label]="'Retirer ' + file.name" (click)="removeAttachment(file.id)">×</button>
+          <button type="button" [attr.aria-label]="'agenda.form.removeFile' | transloco: { name: file.name }" (click)="removeAttachment(file.id)">×</button>
         </p>
       }
       @if (attachmentError()) {<p class="field-error" role="alert">{{ attachmentError() }}</p>}
       <label class="field">
-        <span>Notes</span>
-        <textarea class="form-control" rows="3" formControlName="notes" maxlength="1000" placeholder="Ajouter une note"></textarea>
+        <span>{{ 'agenda.detail.notes' | transloco }}</span>
+        <textarea class="form-control" rows="3" formControlName="notes" maxlength="1000" [placeholder]="'agenda.form.notesPlaceholder' | transloco"></textarea>
       </label>
       <button class="step-link" type="button" [attr.aria-expanded]="advancedOpen()" (click)="advancedOpen.set(!advancedOpen())">
-        Options avancées {{ advancedOpen() ? '⌃' : '⌄' }}
+        {{ 'agenda.form.advanced' | transloco }} {{ advancedOpen() ? '⌃' : '⌄' }}
       </button>
       @if (advancedOpen()) {
         <label class="row">
-          <span>Disponibilité</span>
-          <select class="choice-select" formControlName="availability"><option value="busy">Occupé</option><option value="free">Disponible</option></select>
+          <span>{{ 'agenda.form.availability' | transloco }}</span>
+          <select class="choice-select" formControlName="availability"><option value="busy">{{ 'agenda.form.busy' | transloco }}</option><option value="free">{{ 'agenda.form.free' | transloco }}</option></select>
         </label>
         <label class="row">
-          <span>Visibilité</span>
-          <select class="choice-select" formControlName="visibility"><option value="default">Par défaut</option><option value="private">Privé</option></select>
+          <span>{{ 'agenda.form.visibility' | transloco }}</span>
+          <select class="choice-select" formControlName="visibility"><option value="default">{{ 'agenda.form.visibilityDefault' | transloco }}</option><option value="private">{{ 'agenda.form.private' | transloco }}</option></select>
         </label>
       }
-      <button class="step-link back" type="button" (click)="step.set(1)">‹ Informations principales</button>
+      <button class="step-link back" type="button" (click)="step.set(1)">‹ {{ 'agenda.form.mainInfo' | transloco }}</button>
     }
   </form>
 

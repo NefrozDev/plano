@@ -1,9 +1,9 @@
 <app-page-header
-  heading="Détail de l’événement"
+  [heading]="'agenda.detail.heading' | transloco"
   [showHeading]="false"
   backLink="/agenda"
   [backQueryParams]="{ date: date() }"
-  backLabel="Retour à l’agenda"
+  [backLabel]="'agenda.backToAgenda' | transloco"
 />
 
 @if (details(); as d) {
@@ -28,13 +28,13 @@
       @if (!d.event.mine) {
         <li class="organiser">
           <app-user-avatar [user]="d.organiser" [size]="22" />
-          Organisé par {{ d.organiser.name }}
+          {{ 'agenda.detail.organisedBy' | transloco: { name: d.organiser.name } }}
         </li>
       }
       @if (d.event.conferenceUrl) {
         <li>
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="12" height="10" rx="2" /><path d="m15 11 6-3v8l-6-3" /></svg>
-          <a [href]="d.event.conferenceUrl" target="_blank" rel="noopener noreferrer">Rejoindre la visioconférence</a>
+          <a [href]="d.event.conferenceUrl" target="_blank" rel="noopener noreferrer">{{ 'agenda.detail.joinCall' | transloco }}</a>
         </li>
       }
     </ul>
@@ -43,19 +43,19 @@
       <section class="answer" [class.pending]="d.event.status === 'pending'" aria-live="polite">
         @switch (d.event.status) {
           @case ('pending') {
-            <p>{{ d.organiser.name }} vous invite à cet événement.</p>
+            <p>{{ 'agenda.detail.invites' | transloco: { name: d.organiser.name } }}</p>
             <div class="answer-actions">
-              <button class="decline" type="button" [disabled]="busy()" (click)="respond('declined')">Refuser</button>
-              <button class="accept" type="button" [disabled]="busy()" (click)="respond('accepted')">Accepter</button>
+              <button class="decline" type="button" [disabled]="busy()" (click)="respond('declined')">{{ 'agenda.detail.decline' | transloco }}</button>
+              <button class="accept" type="button" [disabled]="busy()" (click)="respond('accepted')">{{ 'agenda.detail.accept' | transloco }}</button>
             </div>
           }
           @case ('accepted') {
-            <p>Vous participez à cet événement.</p>
-            <button class="link" type="button" [disabled]="busy()" (click)="respond('declined')">Ne plus participer</button>
+            <p>{{ 'agenda.detail.going' | transloco }}</p>
+            <button class="link" type="button" [disabled]="busy()" (click)="respond('declined')">{{ 'agenda.detail.stopGoing' | transloco }}</button>
           }
           @case ('declined') {
-            <p>Vous avez refusé cette invitation.</p>
-            <button class="link" type="button" [disabled]="busy()" (click)="respond('accepted')">Participer finalement</button>
+            <p>{{ 'agenda.detail.declined' | transloco }}</p>
+            <button class="link" type="button" [disabled]="busy()" (click)="respond('accepted')">{{ 'agenda.detail.goAfterAll' | transloco }}</button>
           }
         }
       </section>
@@ -66,13 +66,13 @@
 
     @if (d.people.length) {
       <section class="block">
-        <h3>Participants</h3>
+        <h3>{{ 'participants.title' | transloco }}</h3>
         <ul class="people">
           @for (entry of d.people; track entry.person.id) {
             <li [class.declined]="entry.declined">
               <app-user-avatar [user]="entry.person" [size]="28" />
               <span>{{ entry.person.name }}</span>
-              <small>{{ entry.status }}</small>
+              <small>{{ entry.status | transloco }}</small>
             </li>
           }
         </ul>
@@ -85,7 +85,7 @@
 
     @if (d.attachments.length) {
       <section class="block">
-        <h3>Pièces jointes</h3>
+        <h3>{{ 'agenda.detail.attachments' | transloco }}</h3>
         @for (file of d.attachments; track file.id) {
           <p class="file"><span>{{ file.name }}</span><small>{{ file.sizeLabel }}</small></p>
         }
@@ -94,7 +94,7 @@
 
     @if (d.event.notes) {
       <section class="block">
-        <h3>Notes</h3>
+        <h3>{{ 'agenda.detail.notes' | transloco }}</h3>
         <p class="text">{{ d.event.notes }}</p>
       </section>
     }
@@ -102,39 +102,39 @@
     <dl class="rows">
       <!-- A guest's own reminder and calendar: set when they accept. -->
       @if (d.event.status === 'accepted') {
-        <div><dt>Rappel</dt><dd>{{ d.reminder }}</dd></div>
-        <div><dt>Calendrier</dt><dd><i [style.background]="d.calendarColor" aria-hidden="true"></i>{{ d.calendarName }}</dd></div>
+        <div><dt>{{ 'agenda.detail.reminder' | transloco }}</dt><dd>{{ d.reminder }}</dd></div>
+        <div><dt>{{ 'agenda.detail.calendar' | transloco }}</dt><dd><i [style.background]="d.calendarColor" aria-hidden="true"></i>{{ d.calendarName }}</dd></div>
       }
-      <div><dt>Récurrence</dt><dd>{{ d.recurrence }}</dd></div>
+      <div><dt>{{ 'agenda.detail.recurrence' | transloco }}</dt><dd>{{ d.recurrence }}</dd></div>
     </dl>
 
     @if (d.event.mine) {
       <div class="actions">
-        <a class="primary-button" [routerLink]="['/agenda/events', d.event.id, 'edit']">Modifier</a>
-        <button class="delete" type="button" (click)="deleteOpen.set(true)">Supprimer</button>
+        <a class="primary-button" [routerLink]="['/agenda/events', d.event.id, 'edit']">{{ 'agenda.detail.edit' | transloco }}</a>
+        <button class="delete" type="button" (click)="deleteOpen.set(true)">{{ 'agenda.detail.delete' | transloco }}</button>
       </div>
     }
   </div>
 
-  <app-modal-dialog heading="Supprimer l’événement" tone="danger" [open]="deleteOpen()" (closed)="deleteOpen.set(false)">
+  <app-modal-dialog [heading]="'agenda.detail.deleteHeading' | transloco" tone="danger" [open]="deleteOpen()" (closed)="deleteOpen.set(false)">
     <svg dialog-icon viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
     <p class="dialog-text">
-      « {{ d.event.title }} » sera supprimé.
+      {{ 'agenda.detail.deleteWarning' | transloco: { title: d.event.title } }}
       @if (d.event.recurrence !== 'none') {
-        Toutes les occurrences de cet événement récurrent seront supprimées.
+        {{ 'agenda.detail.deleteRecurring' | transloco }}
       }
       @if (d.event.attendees.length) {
-        Il disparaîtra aussi de l’agenda des participants.
+        {{ 'agenda.detail.deleteForGuests' | transloco }}
       }
     </p>
     <div class="dialog-actions">
-      <button class="cancel" type="button" (click)="deleteOpen.set(false)">Annuler</button>
-      <button class="confirm" type="button" [disabled]="busy()" (click)="remove()">Supprimer</button>
+      <button class="cancel" type="button" (click)="deleteOpen.set(false)">{{ 'common.cancel' | transloco }}</button>
+      <button class="confirm" type="button" [disabled]="busy()" (click)="remove()">{{ 'agenda.detail.delete' | transloco }}</button>
     </div>
   </app-modal-dialog>
 } @else if (searched()) {
   <p class="missing">
-    Cet événement n’existe pas ou a été supprimé.
-    <a routerLink="/agenda">Retour à l’agenda</a>
+    {{ 'agenda.detail.missing' | transloco }}
+    <a routerLink="/agenda">{{ 'agenda.backToAgenda' | transloco }}</a>
   </p>
 }

@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { AgendaEvent } from '@plano/common';
+import { t } from '../../../core/i18n/translate';
 import { formatDay } from '../../../core/time/dates';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { SearchFieldComponent } from '../../../shared/ui/search-field.component';
@@ -17,27 +19,27 @@ interface SearchRow {
 /** Screen 9. Suggestions turn into a query or into the matching agenda view. */
 @Component({
   selector: 'app-agenda-search',
-  imports: [RouterLink, PageHeaderComponent, SearchFieldComponent],
+  imports: [RouterLink, TranslocoPipe, PageHeaderComponent, SearchFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-page-header heading="Recherche" backLink="/agenda" backLabel="Fermer la recherche" variant="close" />
+    <app-page-header [heading]="'agenda.search.heading' | transloco" backLink="/agenda" [backLabel]="'agenda.search.close' | transloco" variant="close" />
 
-    <app-search-field label="Rechercher un événement" placeholder="Rechercher un événement, un lieu…" [autofocus]="true" [(value)]="query" />
+    <app-search-field [label]="'agenda.search.label' | transloco" [placeholder]="'agenda.search.placeholder' | transloco" [autofocus]="true" [(value)]="query" />
 
     <div class="content" aria-live="polite">
       @if (query().trim()) {
-        <h2>Résultats</h2>
+        <h2>{{ 'agenda.search.results' | transloco }}</h2>
         @for (row of results(); track row.event.id) {
           <a class="result" [routerLink]="['/agenda/events', row.event.id]" [queryParams]="{ date: row.date }">
             <i [style.background]="row.color" aria-hidden="true"></i>
             <span><strong>{{ row.event.title }}</strong><small>{{ row.caption }}</small></span>
           </a>
         } @empty {
-          <p class="empty">Aucun événement ne correspond à « {{ query().trim() }} ».</p>
+          <p class="empty">{{ 'agenda.search.none' | transloco: { query: query().trim() } }}</p>
         }
       } @else {
         @if (recent().length) {
-          <h2>Résultats récents</h2>
+          <h2>{{ 'agenda.search.recent' | transloco }}</h2>
           @for (row of recent(); track row.event.id) {
             <a class="result" [routerLink]="['/agenda/events', row.event.id]" [queryParams]="{ date: row.date }">
               <i [style.background]="row.color" aria-hidden="true"></i>
@@ -45,20 +47,20 @@ interface SearchRow {
             </a>
           }
         }
-        <h2>Suggestions</h2>
+        <h2>{{ 'agenda.search.suggestions' | transloco }}</h2>
         @if (frequentContact(); as contact) {
           <button class="suggestion" type="button" (click)="query.set(contact.name)">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
-            Événements avec {{ contact.name }}
+            {{ 'agenda.search.with' | transloco: { name: contact.name } }}
           </button>
         }
         <a class="suggestion" routerLink="/agenda" [queryParams]="{ view: 'week', date: today }">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
-          Événements cette semaine
+          {{ 'agenda.search.thisWeek' | transloco }}
         </a>
         <a class="suggestion" routerLink="/agenda" [queryParams]="{ view: 'month', date: today }">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
-          Événements du mois
+          {{ 'agenda.search.thisMonth' | transloco }}
         </a>
       }
     </div>
@@ -89,7 +91,10 @@ export class AgendaSearchComponent {
   private toRow(event: AgendaEvent): SearchRow {
     const occurrence = nextOccurrence(event, this.today) ?? { start: event.start, end: event.end };
     const date = occurrence.start.slice(0, 10);
-    const time = event.allDay ? '' : ` à ${formatTime(timePart(occurrence.start), this.store.settings().hourFormat)}`;
-    return { event, color: this.store.colorOf(event), date, caption: `${formatDay(date)}${time}` };
+    const day = formatDay(date);
+    const caption = event.allDay
+      ? day
+      : t('agenda.dayAtTime', { day, time: formatTime(timePart(occurrence.start), this.store.settings().hourFormat) });
+    return { event, color: this.store.colorOf(event), date, caption };
   }
 }

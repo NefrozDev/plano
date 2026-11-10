@@ -7,7 +7,9 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { AgendaAttachment, AgendaCalendar, AgendaContact, EventRecurrence, IsoDate } from '@plano/common';
+import { t } from '../../../core/i18n/translate';
 import { createId, hourTime } from '../../../core/time/dates';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
@@ -19,6 +21,7 @@ import {
   REMINDER_OPTIONS,
   addMinutes,
   datePart,
+  eventReminderLabel,
   formatFileSize,
   isSafeUrl,
   minutesOfDay,
@@ -46,6 +49,7 @@ function webUrl(control: AbstractControl<string>): ValidationErrors | null {
   selector: 'app-agenda-event-form',
   imports: [
     ReactiveFormsModule,
+    TranslocoPipe,
     PageHeaderComponent,
     AvatarStackComponent,
     ModalDialogComponent,
@@ -168,9 +172,9 @@ export class AgendaEventFormComponent {
     const files = Array.from(input.files ?? []);
     input.value = '';
     const accepted = files.filter((file) => file.size <= MAX_ATTACHMENT_BYTES);
-    if (accepted.length < files.length) this.attachmentError.set('Les fichiers de plus de 10 Mo sont ignorés.');
+    if (accepted.length < files.length) this.attachmentError.set(t('agenda.form.fileTooLarge'));
     const room = MAX_ATTACHMENTS - this.attachments().length;
-    if (accepted.length > room) this.attachmentError.set(`${MAX_ATTACHMENTS} pièces jointes maximum.`);
+    if (accepted.length > room) this.attachmentError.set(t('agenda.form.tooManyFiles', { max: MAX_ATTACHMENTS }));
     this.attachments.update((current) => [
       ...current,
       ...accepted.slice(0, Math.max(0, room)).map((file) => ({
@@ -184,6 +188,10 @@ export class AgendaEventFormComponent {
 
   removeAttachment(id: string): void {
     this.attachments.update((files) => files.filter((file) => file.id !== id));
+  }
+
+  reminderLabel(minutes: number | null): string {
+    return eventReminderLabel(minutes);
   }
 
   fileSize(bytes: number): string {

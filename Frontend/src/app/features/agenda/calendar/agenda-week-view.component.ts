@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { AgendaSettings, IsoDate } from '@plano/common';
 import { hourTime } from '../../../core/time/dates';
 import { AgendaItem, formatTime, layoutDay, timeRangeLabel } from '../agenda.utils';
@@ -20,7 +21,7 @@ const FIRST_VISIBLE_HOUR = 7;
 
 @Component({
   selector: 'app-agenda-week-view',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="head">
@@ -30,7 +31,7 @@ const FIRST_VISIBLE_HOUR = 7;
           type="button"
           [class.today]="day.isToday"
           [class.selected]="day.date === selected()"
-          [attr.aria-label]="'Voir le ' + day.label"
+          [attr.aria-label]="'agenda.calendar.seeDay' | transloco: { day: day.label }"
           (click)="openDay.emit(day.date)"
         ><span>{{ day.weekday }}</span><b>{{ day.day }}</b></button>
       }
@@ -38,7 +39,7 @@ const FIRST_VISIBLE_HOUR = 7;
 
     @if (hasAllDay()) {
       <div class="all-day">
-        <span class="corner">Jour</span>
+        <span class="corner">{{ 'agenda.views.day' | transloco }}</span>
         @for (column of columns(); track column.date) {
           <div class="cell">
             @for (item of column.allDay; track item.key) {

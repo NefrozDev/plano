@@ -429,5 +429,220 @@
       "title": "10. Toepasselijk recht",
       "body": "Deze voorwaarden vallen onder het Belgische recht. Bij een geschil, en bij gebrek aan een minnelijke regeling, zijn de rechtbanken van Brussel bevoegd, onverminderd de regels die je als consument toelaten je te wenden tot de rechtbanken van je woonplaats."
     }
+  },
+  "agenda": {
+    "allDay": "Hele dag",
+    "untitled": "Zonder titel",
+    "backToAgenda": "Terug naar de agenda",
+    "noCalendar": "Geen agenda",
+    "dayAtTime": "{{day}} om {{time}}",
+    "deadline": "Deadline: {{label}}",
+    "fromList": "Lijst · {{name}}",
+    "fromObjective": "Doel · {{title}}",
+    "taskPrefix": "Taak: ",
+    "with": "Met {{names}}",
+    "weekShort": "W",
+    "calendars": {
+      "personnel": "Persoonlijk",
+      "travail": "Werk",
+      "famille": "Familie",
+      "anniversaires": "Verjaardagen",
+      "sport": "Sport"
+    },
+    "views": {
+      "day": "Dag",
+      "week": "Week",
+      "month": "Maand"
+    },
+    "recurrence": {
+      "none": "Nooit",
+      "daily": "Elke dag",
+      "weekly": "Elke week",
+      "monthly": "Elke maand",
+      "yearly": "Elk jaar"
+    },
+    "reminder": {
+      "none": "Geen",
+      "atStart": "Bij de start van de afspraak",
+      "minutes": {
+        "one": "{{count}} minuut vooraf",
+        "other": "{{count}} minuten vooraf"
+      },
+      "hours": {
+        "one": "{{count}} uur vooraf",
+        "other": "{{count}} uur vooraf"
+      },
+      "days": {
+        "one": "{{count}} dag vooraf",
+        "other": "{{count}} dagen vooraf"
+      }
+    },
+    "duration": {
+      "minutes": {
+        "one": "{{count}} minuut",
+        "other": "{{count}} minuten"
+      },
+      "hours": {
+        "one": "{{count}} uur",
+        "other": "{{count}} uur"
+      },
+      "hoursMinutes": "{{hours}} u {{minutes}}"
+    },
+    "timeZones": {
+      "brussels": "Brussel",
+      "paris": "Parijs",
+      "london": "Londen",
+      "montreal": "Montreal",
+      "utc": "Gecoördineerde wereldtijd"
+    },
+    "fileSize": {
+      "bytes": "{{size}} B",
+      "kilobytes": "{{size}} kB",
+      "megabytes": "{{size}} MB"
+    },
+    "status": {
+      "organiser": "Organisator",
+      "pending": "In afwachting",
+      "accepted": "Komt",
+      "declined": "Heeft afgezegd"
+    },
+    "errors": {
+      "delete": "Verwijderen is mislukt. Probeer het opnieuw.",
+      "save": "Opslaan is mislukt. Probeer het opnieuw."
+    },
+    "calendar": {
+      "changeView": "Weergave wijzigen",
+      "filter": "De agenda filteren",
+      "previous": "Vorige periode",
+      "next": "Volgende periode",
+      "pickDate": "Een datum kiezen",
+      "pickDateFrom": "Een datum kiezen, {{title}}",
+      "today": "Vandaag",
+      "invitations": "Openstaande uitnodigingen ({{count}})",
+      "answer": "Antwoorden",
+      "create": "Een afspraak maken",
+      "weekDays": "Dagen van de week",
+      "allDayShort": "Hele dag",
+      "now": "Huidige tijd",
+      "continued": "Vervolg",
+      "nothingThatDay": "Niets gepland op die dag.",
+      "nothing": "Niets gepland.",
+      "add": "Een afspraak toevoegen",
+      "dayWithItems": {
+        "one": "{{day}}, {{count}} item",
+        "other": "{{day}}, {{count}} items"
+      },
+      "seeDay": "{{day}} bekijken"
+    },
+    "detail": {
+      "heading": "Details van de afspraak",
+      "organisedBy": "Georganiseerd door {{name}}",
+      "joinCall": "Deelnemen aan de videovergadering",
+      "invites": "{{name}} nodigt je uit voor deze afspraak.",
+      "decline": "Afslaan",
+      "accept": "Accepteren",
+      "going": "Je neemt deel aan deze afspraak.",
+      "stopGoing": "Niet meer deelnemen",
+      "declined": "Je hebt deze uitnodiging afgeslagen.",
+      "goAfterAll": "Toch deelnemen",
+      "attachments": "Bijlagen",
+      "notes": "Notities",
+      "reminder": "Herinnering",
+      "calendar": "Agenda",
+      "recurrence": "Herhaling",
+      "edit": "Bewerken",
+      "delete": "Verwijderen",
+      "deleteHeading": "De afspraak verwijderen",
+      "deleteWarning": "“{{title}}” wordt verwijderd.",
+      "deleteRecurring": "Alle keren van deze terugkerende afspraak worden verwijderd.",
+      "deleteForGuests": "Ze verdwijnt ook uit de agenda van de deelnemers.",
+      "missing": "Deze afspraak bestaat niet of is verwijderd.",
+      "fromTo": "Van {{from}} tot {{to}}"
+    },
+    "form": {
+      "save": "De afspraak opslaan",
+      "title": "Titel",
+      "titlePlaceholder": "Bv. Lunch met Camille",
+      "titleError": "Geef de afspraak een titel.",
+      "date": "Datum",
+      "endDate": "Einddatum",
+      "startTime": "Begintijd",
+      "endTime": "Eindtijd",
+      "chronologyError": "Het einde moet na het begin liggen.",
+      "eventCalendar": "Agenda van de afspraak",
+      "recolor": "De kleur van {{name}} wijzigen",
+      "colorOf": "Kleur van {{name}}",
+      "color": "Kleur {{color}}",
+      "location": "Locatie",
+      "locationPlaceholder": "Een locatie toevoegen",
+      "invite": "Mensen uitnodigen",
+      "inviteHint": "Elke nieuwe deelnemer krijgt een uitnodiging om te accepteren.",
+      "description": "Beschrijving",
+      "descriptionPlaceholder": "Een beschrijving toevoegen",
+      "moreOptions": "Meer opties",
+      "colorLegend": "Kleur",
+      "calendarColor": "Kleur van de agenda",
+      "conference": "Videovergadering",
+      "conferencePlaceholder": "Een link toevoegen",
+      "conferenceError": "Vul een weblink in die begint met https://.",
+      "addFile": "Een bestand toevoegen",
+      "removeFile": "{{name}} verwijderen",
+      "notesPlaceholder": "Een notitie toevoegen",
+      "advanced": "Geavanceerde opties",
+      "availability": "Beschikbaarheid",
+      "busy": "Bezet",
+      "free": "Beschikbaar",
+      "visibility": "Zichtbaarheid",
+      "visibilityDefault": "Standaard",
+      "private": "Privé",
+      "mainInfo": "Belangrijkste gegevens",
+      "fileTooLarge": "Bestanden groter dan 10 MB worden overgeslagen.",
+      "tooManyFiles": "Maximaal {{max}} bijlagen."
+    },
+    "filters": {
+      "heading": "Filters",
+      "close": "De filters sluiten",
+      "reset": "Opnieuw instellen",
+      "calendars": "Agenda’s",
+      "show": "Tonen",
+      "see": "De agenda bekijken",
+      "events": "Afspraken",
+      "eventsHint": "De afspraken uit je agenda’s",
+      "tasks": "Taken met een datum",
+      "tasksHint": "Herinneringen uit lijsten en sessies van doelen",
+      "past": "Voorbije afspraken",
+      "pastHint": "Afspraken die al voorbij zijn"
+    },
+    "search": {
+      "heading": "Zoeken",
+      "close": "Het zoeken sluiten",
+      "label": "Een afspraak zoeken",
+      "placeholder": "Een afspraak of plaats zoeken…",
+      "results": "Resultaten",
+      "none": "Geen afspraak komt overeen met “{{query}}”.",
+      "recent": "Recente resultaten",
+      "suggestions": "Suggesties",
+      "with": "Afspraken met {{name}}",
+      "thisWeek": "Afspraken deze week",
+      "thisMonth": "Afspraken deze maand"
+    },
+    "settings": {
+      "heading": "Agenda-instellingen",
+      "general": "Algemeen",
+      "weekStart": "Eerste dag van de week",
+      "monday": "Maandag",
+      "sunday": "Zondag",
+      "duration": "Standaardduur",
+      "timeZone": "Tijdzone",
+      "notifications": "Meldingen",
+      "reminder": "Standaardherinnering",
+      "eventNotifications": "Meldingen van afspraken",
+      "invitationNotifications": "Meldingen van uitnodigingen",
+      "display": "Weergave",
+      "weekNumbers": "Weeknummers tonen",
+      "hourFormat": "Tijdnotatie",
+      "hours24": "24 uur",
+      "hours12": "12 uur (AM/PM)"
+    }
   }
 }

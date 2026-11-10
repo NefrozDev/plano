@@ -1,20 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { IsoDate } from '@plano/common';
-import { WeekStart, formatDay, formatLongDay, isoWeekNumber, monthGrid } from '../../../core/time/dates';
+import { tCount } from '../../../core/i18n/translate';
+import { WeekStart, addDays, capitalize, formatDay, formatLongDay, formatShortWeekday, isoWeekNumber, monthGrid } from '../../../core/time/dates';
 import { AgendaItem } from '../agenda.utils';
 import { AgendaItemCardComponent } from '../ui/agenda-item-card.component';
 
-const WEEKDAYS_FROM_MONDAY = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+/** A Monday: the week's day names come from the dates that follow it. */
+const A_MONDAY = '2024-01-01';
 const MAX_DOTS = 3;
 
 @Component({
   selector: 'app-agenda-month-view',
-  imports: [RouterLink, AgendaItemCardComponent],
+  imports: [RouterLink, TranslocoPipe, AgendaItemCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="month" [class.with-weeks]="showWeekNumbers()">
-      @if (showWeekNumbers()) {<span class="weekday" aria-hidden="true">S</span>}
+      @if (showWeekNumbers()) {<span class="weekday" aria-hidden="true">{{ 'agenda.weekShort' | transloco }}</span>}
       @for (weekday of weekdays(); track weekday) {
         <span class="weekday" aria-hidden="true">{{ weekday }}</span>
       }
@@ -43,8 +46,8 @@ const MAX_DOTS = 3;
         <app-agenda-item-card [item]="item" />
       } @empty {
         <p class="empty">
-          Rien de prévu.
-          <a routerLink="/agenda/new" [queryParams]="{ date: selected() }">Ajouter un événement</a>
+          {{ 'agenda.calendar.nothing' | transloco }}
+          <a routerLink="/agenda/new" [queryParams]="{ date: selected() }">{{ 'agenda.calendar.add' | transloco }}</a>
         </p>
       }
     </section>
@@ -78,7 +81,7 @@ export class AgendaMonthViewComponent {
   readonly selectDate = output<IsoDate>();
 
   readonly weekdays = computed(() =>
-    this.weekStartsOn() === 1 ? WEEKDAYS_FROM_MONDAY : [WEEKDAYS_FROM_MONDAY[6], ...WEEKDAYS_FROM_MONDAY.slice(0, 6)],
+    Array.from({ length: 7 }, (_, index) => capitalize(formatShortWeekday(addDays(A_MONDAY, index + (this.weekStartsOn() === 1 ? 0 : -1))))),
   );
   readonly weeks = computed(() => {
     const [year, month] = this.selected().split('-').map(Number);
@@ -91,7 +94,7 @@ export class AgendaMonthViewComponent {
         return {
           ...day,
           colors: [...new Set(items.map((item) => item.color))].slice(0, MAX_DOTS),
-          label: count ? `${formatDay(day.date)}, ${count} élément${count > 1 ? 's' : ''}` : formatDay(day.date),
+          label: count ? tCount('agenda.calendar.dayWithItems', count, { day: formatDay(day.date) }) : formatDay(day.date),
         };
       }),
     }));

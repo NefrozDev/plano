@@ -429,5 +429,220 @@
       "title": "10. Ley aplicable",
       "body": "Estas condiciones se rigen por el derecho belga. En caso de litigio, y a falta de acuerdo amistoso, son competentes los tribunales de Bruselas, sin perjuicio de las normas que te permiten, como consumidor, acudir a los tribunales de tu domicilio."
     }
+  },
+  "agenda": {
+    "allDay": "Todo el día",
+    "untitled": "Sin título",
+    "backToAgenda": "Volver a la agenda",
+    "noCalendar": "Sin calendario",
+    "dayAtTime": "{{day}} a las {{time}}",
+    "deadline": "Fecha límite: {{label}}",
+    "fromList": "Lista · {{name}}",
+    "fromObjective": "Objetivo · {{title}}",
+    "taskPrefix": "Tarea: ",
+    "with": "Con {{names}}",
+    "weekShort": "S",
+    "calendars": {
+      "personnel": "Personal",
+      "travail": "Trabajo",
+      "famille": "Familia",
+      "anniversaires": "Cumpleaños",
+      "sport": "Deporte"
+    },
+    "views": {
+      "day": "Día",
+      "week": "Semana",
+      "month": "Mes"
+    },
+    "recurrence": {
+      "none": "Nunca",
+      "daily": "Todos los días",
+      "weekly": "Todas las semanas",
+      "monthly": "Todos los meses",
+      "yearly": "Todos los años"
+    },
+    "reminder": {
+      "none": "Ninguno",
+      "atStart": "A la hora del evento",
+      "minutes": {
+        "one": "{{count}} minuto antes",
+        "other": "{{count}} minutos antes"
+      },
+      "hours": {
+        "one": "{{count}} hora antes",
+        "other": "{{count}} horas antes"
+      },
+      "days": {
+        "one": "{{count}} día antes",
+        "other": "{{count}} días antes"
+      }
+    },
+    "duration": {
+      "minutes": {
+        "one": "{{count}} minuto",
+        "other": "{{count}} minutos"
+      },
+      "hours": {
+        "one": "{{count}} hora",
+        "other": "{{count}} horas"
+      },
+      "hoursMinutes": "{{hours}} h {{minutes}}"
+    },
+    "timeZones": {
+      "brussels": "Bruselas",
+      "paris": "París",
+      "london": "Londres",
+      "montreal": "Montreal",
+      "utc": "Tiempo universal coordinado"
+    },
+    "fileSize": {
+      "bytes": "{{size}} B",
+      "kilobytes": "{{size}} KB",
+      "megabytes": "{{size}} MB"
+    },
+    "status": {
+      "organiser": "Organizador",
+      "pending": "Pendiente",
+      "accepted": "Asiste",
+      "declined": "Ha rechazado"
+    },
+    "errors": {
+      "delete": "No se pudo eliminar. Inténtalo de nuevo.",
+      "save": "No se pudo guardar. Inténtalo de nuevo."
+    },
+    "calendar": {
+      "changeView": "Cambiar de vista",
+      "filter": "Filtrar la agenda",
+      "previous": "Periodo anterior",
+      "next": "Periodo siguiente",
+      "pickDate": "Elegir una fecha",
+      "pickDateFrom": "Elegir una fecha, {{title}}",
+      "today": "Hoy",
+      "invitations": "Invitaciones pendientes ({{count}})",
+      "answer": "Responder",
+      "create": "Crear un evento",
+      "weekDays": "Días de la semana",
+      "allDayShort": "Todo el día",
+      "now": "Hora actual",
+      "continued": "Continúa",
+      "nothingThatDay": "Nada previsto ese día.",
+      "nothing": "Nada previsto.",
+      "add": "Añadir un evento",
+      "dayWithItems": {
+        "one": "{{day}}, {{count}} elemento",
+        "other": "{{day}}, {{count}} elementos"
+      },
+      "seeDay": "Ver el {{day}}"
+    },
+    "detail": {
+      "heading": "Detalle del evento",
+      "organisedBy": "Organizado por {{name}}",
+      "joinCall": "Unirse a la videollamada",
+      "invites": "{{name}} te invita a este evento.",
+      "decline": "Rechazar",
+      "accept": "Aceptar",
+      "going": "Asistes a este evento.",
+      "stopGoing": "Dejar de asistir",
+      "declined": "Has rechazado esta invitación.",
+      "goAfterAll": "Asistir al final",
+      "attachments": "Archivos adjuntos",
+      "notes": "Notas",
+      "reminder": "Recordatorio",
+      "calendar": "Calendario",
+      "recurrence": "Repetición",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "deleteHeading": "Eliminar el evento",
+      "deleteWarning": "Se eliminará «{{title}}».",
+      "deleteRecurring": "Se eliminarán todas las repeticiones de este evento periódico.",
+      "deleteForGuests": "También desaparecerá de la agenda de los participantes.",
+      "missing": "Este evento no existe o se ha eliminado.",
+      "fromTo": "Del {{from}} al {{to}}"
+    },
+    "form": {
+      "save": "Guardar el evento",
+      "title": "Título",
+      "titlePlaceholder": "P. ej., Comida con Camille",
+      "titleError": "Ponle un título al evento.",
+      "date": "Fecha",
+      "endDate": "Fecha de fin",
+      "startTime": "Hora de inicio",
+      "endTime": "Hora de fin",
+      "chronologyError": "El final debe ser posterior al inicio.",
+      "eventCalendar": "Calendario del evento",
+      "recolor": "Cambiar el color de {{name}}",
+      "colorOf": "Color de {{name}}",
+      "color": "Color {{color}}",
+      "location": "Lugar",
+      "locationPlaceholder": "Añadir un lugar",
+      "invite": "Invitar a personas",
+      "inviteHint": "Cada nuevo participante recibe una invitación que debe aceptar.",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Añadir una descripción",
+      "moreOptions": "Más opciones",
+      "colorLegend": "Color",
+      "calendarColor": "Color del calendario",
+      "conference": "Videollamada",
+      "conferencePlaceholder": "Añadir un enlace",
+      "conferenceError": "Escribe un enlace web que empiece por https://.",
+      "addFile": "Añadir un archivo",
+      "removeFile": "Quitar {{name}}",
+      "notesPlaceholder": "Añadir una nota",
+      "advanced": "Opciones avanzadas",
+      "availability": "Disponibilidad",
+      "busy": "Ocupado",
+      "free": "Disponible",
+      "visibility": "Visibilidad",
+      "visibilityDefault": "Predeterminada",
+      "private": "Privado",
+      "mainInfo": "Datos principales",
+      "fileTooLarge": "Se omiten los archivos de más de 10 MB.",
+      "tooManyFiles": "{{max}} archivos adjuntos como máximo."
+    },
+    "filters": {
+      "heading": "Filtros",
+      "close": "Cerrar los filtros",
+      "reset": "Restablecer",
+      "calendars": "Calendarios",
+      "show": "Mostrar",
+      "see": "Ver la agenda",
+      "events": "Eventos",
+      "eventsHint": "Los eventos de tus calendarios",
+      "tasks": "Tareas con fecha",
+      "tasksHint": "Recordatorios de listas y sesiones de objetivos",
+      "past": "Eventos terminados",
+      "pastHint": "Los eventos que ya han pasado"
+    },
+    "search": {
+      "heading": "Búsqueda",
+      "close": "Cerrar la búsqueda",
+      "label": "Buscar un evento",
+      "placeholder": "Buscar un evento, un lugar…",
+      "results": "Resultados",
+      "none": "Ningún evento coincide con «{{query}}».",
+      "recent": "Resultados recientes",
+      "suggestions": "Sugerencias",
+      "with": "Eventos con {{name}}",
+      "thisWeek": "Eventos de esta semana",
+      "thisMonth": "Eventos del mes"
+    },
+    "settings": {
+      "heading": "Ajustes de la agenda",
+      "general": "General",
+      "weekStart": "Primer día de la semana",
+      "monday": "Lunes",
+      "sunday": "Domingo",
+      "duration": "Duración predeterminada",
+      "timeZone": "Zona horaria",
+      "notifications": "Notificaciones",
+      "reminder": "Recordatorio predeterminado",
+      "eventNotifications": "Notificaciones de eventos",
+      "invitationNotifications": "Notificaciones de invitaciones",
+      "display": "Visualización",
+      "weekNumbers": "Mostrar los números de semana",
+      "hourFormat": "Formato de hora",
+      "hours24": "24 horas",
+      "hours12": "12 horas (AM/PM)"
+    }
   }
 }

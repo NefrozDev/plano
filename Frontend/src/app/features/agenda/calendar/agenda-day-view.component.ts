@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { AgendaSettings, IsoDate, LocalDateTime } from '@plano/common';
+import { t } from '../../../core/i18n/translate';
 import { AgendaItem, datePart, formatTime, timePart } from '../agenda.utils';
 import { AgendaItemCardComponent } from '../ui/agenda-item-card.component';
 
@@ -19,10 +21,10 @@ type TimelineRow =
 
 @Component({
   selector: 'app-agenda-day-view',
-  imports: [RouterLink, AgendaItemCardComponent],
+  imports: [RouterLink, TranslocoPipe, AgendaItemCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="strip" role="group" aria-label="Jours de la semaine">
+    <div class="strip" role="group" [attr.aria-label]="'agenda.calendar.weekDays' | transloco">
       @for (day of days(); track day.date) {
         <button
           type="button"
@@ -44,7 +46,7 @@ type TimelineRow =
     <section class="timeline" aria-live="polite">
       @if (allDay().length) {
         <div class="row">
-          <span class="time">Journée</span>
+          <span class="time">{{ 'agenda.calendar.allDayShort' | transloco }}</span>
           <div class="stack">
             @for (item of allDay(); track item.key) {<app-agenda-item-card [item]="item" />}
           </div>
@@ -52,15 +54,15 @@ type TimelineRow =
       }
       @for (row of rows(); track row.key) {
         @if (row.kind === 'now') {
-          <div class="now"><span class="time">{{ row.time }}</span><i aria-hidden="true"></i><span class="visually-hidden">Heure actuelle</span></div>
+          <div class="now"><span class="time">{{ row.time }}</span><i aria-hidden="true"></i><span class="visually-hidden">{{ 'agenda.calendar.now' | transloco }}</span></div>
         } @else {
           <div class="row"><span class="time">{{ row.time }}</span><app-agenda-item-card [item]="row.item" /></div>
         }
       }
       @if (!items().length) {
         <p class="empty">
-          Rien de prévu ce jour-là.
-          <a routerLink="/agenda/new" [queryParams]="{ date: date() }">Ajouter un événement</a>
+          {{ 'agenda.calendar.nothingThatDay' | transloco }}
+          <a routerLink="/agenda/new" [queryParams]="{ date: date() }">{{ 'agenda.calendar.add' | transloco }}</a>
         </p>
       }
     </section>
@@ -103,7 +105,7 @@ export class AgendaDayViewComponent {
         kind: 'item',
         key: item.key,
         // Multi-day events continuing from the previous day have no start today.
-        time: datePart(item.start) < date ? 'Suite' : formatTime(timePart(item.start), this.hourFormat()),
+        time: datePart(item.start) < date ? t('agenda.calendar.continued') : formatTime(timePart(item.start), this.hourFormat()),
         item,
       }));
     const now = this.now();

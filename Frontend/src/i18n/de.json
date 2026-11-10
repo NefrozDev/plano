@@ -429,5 +429,220 @@
       "title": "10. Anwendbares Recht",
       "body": "Diese Bedingungen unterliegen belgischem Recht. Bei Streitigkeiten sind, mangels gütlicher Einigung, die Gerichte in Brüssel zuständig, unbeschadet der Regeln, nach denen du dich als Verbraucher an die Gerichte deines Wohnorts wenden kannst."
     }
+  },
+  "agenda": {
+    "allDay": "Ganztägig",
+    "untitled": "Ohne Titel",
+    "backToAgenda": "Zurück zum Kalender",
+    "noCalendar": "Kein Kalender",
+    "dayAtTime": "{{day}} um {{time}}",
+    "deadline": "Fällig: {{label}}",
+    "fromList": "Liste · {{name}}",
+    "fromObjective": "Ziel · {{title}}",
+    "taskPrefix": "Aufgabe: ",
+    "with": "Mit {{names}}",
+    "weekShort": "KW",
+    "calendars": {
+      "personnel": "Privat",
+      "travail": "Arbeit",
+      "famille": "Familie",
+      "anniversaires": "Geburtstage",
+      "sport": "Sport"
+    },
+    "views": {
+      "day": "Tag",
+      "week": "Woche",
+      "month": "Monat"
+    },
+    "recurrence": {
+      "none": "Nie",
+      "daily": "Täglich",
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich",
+      "yearly": "Jährlich"
+    },
+    "reminder": {
+      "none": "Keine",
+      "atStart": "Zum Beginn des Termins",
+      "minutes": {
+        "one": "{{count}} Minute vorher",
+        "other": "{{count}} Minuten vorher"
+      },
+      "hours": {
+        "one": "{{count}} Stunde vorher",
+        "other": "{{count}} Stunden vorher"
+      },
+      "days": {
+        "one": "{{count}} Tag vorher",
+        "other": "{{count}} Tage vorher"
+      }
+    },
+    "duration": {
+      "minutes": {
+        "one": "{{count}} Minute",
+        "other": "{{count}} Minuten"
+      },
+      "hours": {
+        "one": "{{count}} Stunde",
+        "other": "{{count}} Stunden"
+      },
+      "hoursMinutes": "{{hours}} Std. {{minutes}}"
+    },
+    "timeZones": {
+      "brussels": "Brüssel",
+      "paris": "Paris",
+      "london": "London",
+      "montreal": "Montreal",
+      "utc": "Koordinierte Weltzeit"
+    },
+    "fileSize": {
+      "bytes": "{{size}} B",
+      "kilobytes": "{{size}} KB",
+      "megabytes": "{{size}} MB"
+    },
+    "status": {
+      "organiser": "Organisator",
+      "pending": "Ausstehend",
+      "accepted": "Nimmt teil",
+      "declined": "Hat abgesagt"
+    },
+    "errors": {
+      "delete": "Löschen ist fehlgeschlagen. Bitte versuche es erneut.",
+      "save": "Speichern ist fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "calendar": {
+      "changeView": "Ansicht wechseln",
+      "filter": "Kalender filtern",
+      "previous": "Vorheriger Zeitraum",
+      "next": "Nächster Zeitraum",
+      "pickDate": "Datum wählen",
+      "pickDateFrom": "Datum wählen, {{title}}",
+      "today": "Heute",
+      "invitations": "Offene Einladungen ({{count}})",
+      "answer": "Antworten",
+      "create": "Termin erstellen",
+      "weekDays": "Wochentage",
+      "allDayShort": "Ganztägig",
+      "now": "Aktuelle Uhrzeit",
+      "continued": "Fortsetzung",
+      "nothingThatDay": "Für diesen Tag ist nichts geplant.",
+      "nothing": "Nichts geplant.",
+      "add": "Termin hinzufügen",
+      "dayWithItems": {
+        "one": "{{day}}, {{count}} Eintrag",
+        "other": "{{day}}, {{count}} Einträge"
+      },
+      "seeDay": "{{day}} ansehen"
+    },
+    "detail": {
+      "heading": "Termindetails",
+      "organisedBy": "Organisiert von {{name}}",
+      "joinCall": "An der Videokonferenz teilnehmen",
+      "invites": "{{name}} lädt dich zu diesem Termin ein.",
+      "decline": "Ablehnen",
+      "accept": "Annehmen",
+      "going": "Du nimmst an diesem Termin teil.",
+      "stopGoing": "Nicht mehr teilnehmen",
+      "declined": "Du hast diese Einladung abgelehnt.",
+      "goAfterAll": "Doch teilnehmen",
+      "attachments": "Anhänge",
+      "notes": "Notizen",
+      "reminder": "Erinnerung",
+      "calendar": "Kalender",
+      "recurrence": "Wiederholung",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "deleteHeading": "Termin löschen",
+      "deleteWarning": "„{{title}}“ wird gelöscht.",
+      "deleteRecurring": "Alle Wiederholungen dieses Serientermins werden gelöscht.",
+      "deleteForGuests": "Er verschwindet auch aus den Kalendern der Teilnehmenden.",
+      "missing": "Diesen Termin gibt es nicht oder er wurde gelöscht.",
+      "fromTo": "Vom {{from}} bis {{to}}"
+    },
+    "form": {
+      "save": "Termin speichern",
+      "title": "Titel",
+      "titlePlaceholder": "z. B. Mittagessen mit Camille",
+      "titleError": "Gib dem Termin einen Titel.",
+      "date": "Datum",
+      "endDate": "Enddatum",
+      "startTime": "Beginn",
+      "endTime": "Ende",
+      "chronologyError": "Das Ende muss nach dem Beginn liegen.",
+      "eventCalendar": "Kalender des Termins",
+      "recolor": "Farbe von {{name}} ändern",
+      "colorOf": "Farbe von {{name}}",
+      "color": "Farbe {{color}}",
+      "location": "Ort",
+      "locationPlaceholder": "Ort hinzufügen",
+      "invite": "Personen einladen",
+      "inviteHint": "Jede neue Person erhält eine Einladung zum Annehmen.",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Beschreibung hinzufügen",
+      "moreOptions": "Weitere Optionen",
+      "colorLegend": "Farbe",
+      "calendarColor": "Farbe des Kalenders",
+      "conference": "Videokonferenz",
+      "conferencePlaceholder": "Link hinzufügen",
+      "conferenceError": "Gib einen Weblink ein, der mit https:// beginnt.",
+      "addFile": "Datei hinzufügen",
+      "removeFile": "{{name}} entfernen",
+      "notesPlaceholder": "Notiz hinzufügen",
+      "advanced": "Erweiterte Optionen",
+      "availability": "Verfügbarkeit",
+      "busy": "Beschäftigt",
+      "free": "Verfügbar",
+      "visibility": "Sichtbarkeit",
+      "visibilityDefault": "Standard",
+      "private": "Privat",
+      "mainInfo": "Wichtigste Angaben",
+      "fileTooLarge": "Dateien über 10 MB werden übersprungen.",
+      "tooManyFiles": "Höchstens {{max}} Anhänge."
+    },
+    "filters": {
+      "heading": "Filter",
+      "close": "Filter schließen",
+      "reset": "Zurücksetzen",
+      "calendars": "Kalender",
+      "show": "Anzeigen",
+      "see": "Kalender ansehen",
+      "events": "Termine",
+      "eventsHint": "Die Termine deiner Kalender",
+      "tasks": "Aufgaben mit Datum",
+      "tasksHint": "Erinnerungen aus Listen und Einheiten von Zielen",
+      "past": "Vergangene Termine",
+      "pastHint": "Termine, die schon vorbei sind"
+    },
+    "search": {
+      "heading": "Suche",
+      "close": "Suche schließen",
+      "label": "Einen Termin suchen",
+      "placeholder": "Einen Termin oder Ort suchen…",
+      "results": "Ergebnisse",
+      "none": "Kein Termin passt zu „{{query}}“.",
+      "recent": "Letzte Ergebnisse",
+      "suggestions": "Vorschläge",
+      "with": "Termine mit {{name}}",
+      "thisWeek": "Termine diese Woche",
+      "thisMonth": "Termine diesen Monat"
+    },
+    "settings": {
+      "heading": "Kalendereinstellungen",
+      "general": "Allgemein",
+      "weekStart": "Erster Tag der Woche",
+      "monday": "Montag",
+      "sunday": "Sonntag",
+      "duration": "Standarddauer",
+      "timeZone": "Zeitzone",
+      "notifications": "Benachrichtigungen",
+      "reminder": "Standarderinnerung",
+      "eventNotifications": "Benachrichtigungen zu Terminen",
+      "invitationNotifications": "Benachrichtigungen zu Einladungen",
+      "display": "Anzeige",
+      "weekNumbers": "Kalenderwochen anzeigen",
+      "hourFormat": "Zeitformat",
+      "hours24": "24 Stunden",
+      "hours12": "12 Stunden (AM/PM)"
+    }
   }
 }

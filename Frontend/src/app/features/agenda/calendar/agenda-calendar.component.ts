@@ -1,17 +1,21 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { AgendaView, IsoDate } from '@plano/common';
 import {
   addDays,
+  capitalize,
   formatLongDay,
   formatMonth,
   formatShortDate,
+  formatShortWeekday,
   isoWeekNumber,
   parseIsoDate,
   startOfWeek,
   toIsoDate,
 } from '../../../core/time/dates';
+import { t } from '../../../core/i18n/translate';
 import { toPerson } from '../../../core/people/people';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
@@ -22,13 +26,12 @@ import { AgendaMonthViewComponent } from './agenda-month-view.component';
 import { AgendaWeekViewComponent } from './agenda-week-view.component';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const WEEKDAY_SHORT = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-
 /** Day, week and month views (screens 1–3). View and date live in the URL. */
 @Component({
   selector: 'app-agenda-calendar',
   imports: [
     RouterLink,
+    TranslocoPipe,
     BottomNavComponent,
     UserAvatarComponent,
     AgendaDayViewComponent,
@@ -52,10 +55,11 @@ export class AgendaCalendarComponent {
   private readonly params = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
+  /** `label` is a translation key. */
   readonly views: readonly { value: AgendaView; label: string }[] = [
-    { value: 'day', label: 'Jour' },
-    { value: 'week', label: 'Semaine' },
-    { value: 'month', label: 'Mois' },
+    { value: 'day', label: 'agenda.views.day' },
+    { value: 'week', label: 'agenda.views.week' },
+    { value: 'month', label: 'agenda.views.month' },
   ];
   readonly today = this.store.today();
   readonly viewMenuOpen = signal(false);
@@ -74,8 +78,11 @@ export class AgendaCalendarComponent {
   readonly invitations = computed(() =>
     this.store.invitations().map((event) => {
       const date = datePart(event.start);
-      const time = event.allDay ? '' : ` à ${formatTime(timePart(event.start), this.settings().hourFormat)}`;
-      return { event, date, organiser: toPerson(event.owner), caption: `${formatShortDate(date)}${time}` };
+      const day = formatShortDate(date);
+      const caption = event.allDay
+        ? day
+        : t('agenda.dayAtTime', { day, time: formatTime(timePart(event.start), this.settings().hourFormat) });
+      return { event, date, organiser: toPerson(event.owner), caption };
     }),
   );
 
@@ -85,7 +92,7 @@ export class AgendaCalendarComponent {
       const date = addDays(first, index);
       return {
         date,
-        weekday: WEEKDAY_SHORT[parseIsoDate(date).getDay()],
+        weekday: capitalize(formatShortWeekday(date)),
         day: parseIsoDate(date).getDate(),
         label: formatLongDay(date),
         isToday: date === this.today,

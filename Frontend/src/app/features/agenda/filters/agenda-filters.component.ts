@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { AgendaFilters } from '@plano/common';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { SwitchRowComponent } from '../../../shared/ui/switch-row.component';
@@ -10,16 +11,16 @@ type DisplayFilter = keyof Pick<AgendaFilters, 'showEvents' | 'showTasks' | 'sho
 /** Screen 8. Filters are saved and apply to every agenda view. */
 @Component({
   selector: 'app-agenda-filters',
-  imports: [RouterLink, PageHeaderComponent, SwitchRowComponent],
+  imports: [RouterLink, TranslocoPipe, PageHeaderComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-page-header heading="Filtres" backLink="/agenda" backLabel="Fermer les filtres" variant="close">
-      <button class="reset" type="button" (click)="store.resetFilters()">Réinitialiser</button>
+    <app-page-header [heading]="'agenda.filters.heading' | transloco" backLink="/agenda" [backLabel]="'agenda.filters.close' | transloco" variant="close">
+      <button class="reset" type="button" (click)="store.resetFilters()">{{ 'agenda.filters.reset' | transloco }}</button>
     </app-page-header>
 
     <div class="content">
       <section>
-        <h2>Calendriers</h2>
+        <h2>{{ 'agenda.filters.calendars' | transloco }}</h2>
         @for (calendar of store.calendars(); track calendar.id) {
           <label class="option">
             <i class="dot" [style.background]="calendar.color" aria-hidden="true"></i>
@@ -31,14 +32,14 @@ type DisplayFilter = keyof Pick<AgendaFilters, 'showEvents' | 'showTasks' | 'sho
       </section>
 
       <section>
-        <h2>Afficher</h2>
+        <h2>{{ 'agenda.filters.show' | transloco }}</h2>
         @for (option of display; track option.key) {
-          <app-switch-row [label]="option.label" [hint]="option.hint" [checked]="store.filters()[option.key]" (toggled)="toggle(option.key)" />
+          <app-switch-row [label]="option.label | transloco" [hint]="option.hint | transloco" [checked]="store.filters()[option.key]" (toggled)="toggle(option.key)" />
         }
       </section>
     </div>
 
-    <div class="actions"><a class="primary-button" routerLink="/agenda">Voir l’agenda</a></div>
+    <div class="actions"><a class="primary-button" routerLink="/agenda">{{ 'agenda.filters.see' | transloco }}</a></div>
   `,
   styles: `
     :host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
@@ -61,10 +62,11 @@ type DisplayFilter = keyof Pick<AgendaFilters, 'showEvents' | 'showTasks' | 'sho
 export class AgendaFiltersComponent {
   readonly store = inject(AgendaStore);
 
+  /** `label` and `hint` are translation keys. */
   readonly display: readonly { key: DisplayFilter; label: string; hint: string }[] = [
-    { key: 'showEvents', label: 'Événements', hint: 'Les événements de vos calendriers' },
-    { key: 'showTasks', label: 'Tâches avec date', hint: 'Rappels des listes et séances d’objectifs' },
-    { key: 'showPastEvents', label: 'Événements terminés', hint: 'Les événements déjà passés' },
+    { key: 'showEvents', label: 'agenda.filters.events', hint: 'agenda.filters.eventsHint' },
+    { key: 'showTasks', label: 'agenda.filters.tasks', hint: 'agenda.filters.tasksHint' },
+    { key: 'showPastEvents', label: 'agenda.filters.past', hint: 'agenda.filters.pastHint' },
   ];
 
   toggle(key: DisplayFilter): void {

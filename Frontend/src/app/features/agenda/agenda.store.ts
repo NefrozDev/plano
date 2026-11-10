@@ -27,6 +27,7 @@ import { LiveUpdatesService } from '../../core/live/live-updates.service';
 import { initialsOf, personColor, toPerson } from '../../core/people/people';
 import { APP_CLOCK, normalizeText, toIsoDate, toTimeOfDay } from '../../core/time/dates';
 import { ListsStore } from '../lists/lists.store';
+import { t } from '../../core/i18n/translate';
 import { categoryMeta, importBatches } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaApiService } from './agenda-api.service';
@@ -96,7 +97,12 @@ export class AgendaStore {
   /** The built-in calendars, in the colours the user chose. */
   readonly calendars = computed(() => {
     const colors = this.preferences.settings().calendarColors;
-    return DEFAULT_AGENDA_CALENDARS.map((calendar) => ({ ...calendar, color: colors[calendar.id] ?? calendar.color }));
+    // Built-in calendars: their names come in the interface language.
+    return DEFAULT_AGENDA_CALENDARS.map((calendar) => ({
+      ...calendar,
+      name: t(`agenda.calendars.${calendar.id}`),
+      color: colors[calendar.id] ?? calendar.color,
+    }));
   });
   /** Contacts of the seed data, still shown on the events that mention them. */
   readonly contacts = computed(() => this.data().contacts);
@@ -283,7 +289,7 @@ export class AgendaStore {
       await firstValueFrom(this.api.remove(id));
     } catch (error) {
       this.error.set(
-        httpErrorMessage(error, { fallback: 'La suppression a échoué. Réessayez.', useServerCode: true }),
+        httpErrorMessage(error, { fallback: t('agenda.errors.delete'), useServerCode: true }),
       );
       return false;
     }
@@ -399,7 +405,7 @@ export class AgendaStore {
         kind: 'task',
         eventId: null,
         title: task.name,
-        subtitle: `Liste · ${task.listName}`,
+        subtitle: t('agenda.fromList', { name: task.listName }),
         color: task.listColor,
         allDay: false,
         start: task.reminder,
@@ -417,8 +423,8 @@ export class AgendaStore {
         key: `objective:${item.key}`,
         kind: 'task',
         eventId: null,
-        title: item.kind === 'deadline' ? `Échéance : ${item.label}` : item.label,
-        subtitle: `Objectif · ${item.objectiveTitle}`,
+        title: item.kind === 'deadline' ? t('agenda.deadline', { label: item.label }) : item.label,
+        subtitle: t('agenda.fromObjective', { title: item.objectiveTitle }),
         color: categoryMeta(item.category).color,
         allDay: true,
         start: toLocalDateTime(item.date, '00:00'),
@@ -452,7 +458,7 @@ export class AgendaStore {
       return view;
     } catch (error) {
       this.error.set(
-        httpErrorMessage(error, { fallback: 'L’enregistrement a échoué. Réessayez.', useServerCode: true }),
+        httpErrorMessage(error, { fallback: t('agenda.errors.save'), useServerCode: true }),
       );
       return null;
     }

@@ -7,6 +7,7 @@ import type {
   IsoDate,
   LocalDateTime,
 } from '@plano/common';
+import { formatLocale, t, tCount } from '../../core/i18n/translate';
 import { addDays, daysBetween, pad2, parseIsoDate, toIsoDate, toTimeOfDay } from '../../core/time/dates';
 
 /** Anything the agenda can display: an event occurrence or a dated task from another feature. */
@@ -33,46 +34,45 @@ export interface Occurrence {
   end: LocalDateTime;
 }
 
+/** Translation key of each repetition. */
 export const RECURRENCE_LABELS: Readonly<Record<EventRecurrence, string>> = {
-  none: 'Jamais',
-  daily: 'Tous les jours',
-  weekly: 'Toutes les semaines',
-  monthly: 'Tous les mois',
-  yearly: 'Tous les ans',
+  none: 'agenda.recurrence.none',
+  daily: 'agenda.recurrence.daily',
+  weekly: 'agenda.recurrence.weekly',
+  monthly: 'agenda.recurrence.monthly',
+  yearly: 'agenda.recurrence.yearly',
 };
 
-export const REMINDER_OPTIONS: readonly { value: number | null; label: string }[] = [
-  { value: null, label: 'Aucun' },
-  { value: 0, label: 'À l’heure de l’événement' },
-  { value: 5, label: '5 minutes avant' },
-  { value: 15, label: '15 minutes avant' },
-  { value: 30, label: '30 minutes avant' },
-  { value: 60, label: '1 heure avant' },
-  { value: 1440, label: '1 jour avant' },
+/** Minutes before the start; null for no reminder. */
+export const REMINDER_OPTIONS: readonly (number | null)[] = [null, 0, 5, 15, 30, 60, 1440];
+
+export const DURATION_OPTIONS: readonly number[] = [15, 30, 45, 60, 90, 120];
+
+/** Offsets are the standard-time ones; events are stored as floating local times. `label` is a translation key. */
+export const TIME_ZONES: readonly { value: string; offset: string; label: string }[] = [
+  { value: 'Europe/Brussels', offset: '(UTC+01:00)', label: 'agenda.timeZones.brussels' },
+  { value: 'Europe/Paris', offset: '(UTC+01:00)', label: 'agenda.timeZones.paris' },
+  { value: 'Europe/London', offset: '(UTC+00:00)', label: 'agenda.timeZones.london' },
+  { value: 'America/Montreal', offset: '(UTC−05:00)', label: 'agenda.timeZones.montreal' },
+  { value: 'UTC', offset: '(UTC+00:00)', label: 'agenda.timeZones.utc' },
 ];
 
-export const DURATION_OPTIONS: readonly { value: number; label: string }[] = [
-  { value: 15, label: '15 minutes' },
-  { value: 30, label: '30 minutes' },
-  { value: 45, label: '45 minutes' },
-  { value: 60, label: '1 heure' },
-  { value: 90, label: '1 h 30' },
-  { value: 120, label: '2 heures' },
-];
-
-/** Offsets are the standard-time ones; events are stored as floating local times. */
-export const TIME_ZONES: readonly { value: string; label: string }[] = [
-  { value: 'Europe/Brussels', label: '(UTC+01:00) Bruxelles' },
-  { value: 'Europe/Paris', label: '(UTC+01:00) Paris' },
-  { value: 'Europe/London', label: '(UTC+00:00) Londres' },
-  { value: 'America/Montreal', label: '(UTC−05:00) Montréal' },
-  { value: 'UTC', label: '(UTC+00:00) Temps universel' },
-];
+/** "1 h 30", "2 heures": a duration in the interface language. */
+export function durationLabel(minutes: number): string {
+  if (minutes < 60) return tCount('agenda.duration.minutes', minutes);
+  if (minutes % 60 === 0) return tCount('agenda.duration.hours', minutes / 60);
+  return t('agenda.duration.hoursMinutes', { hours: Math.floor(minutes / 60), minutes: pad2(minutes % 60) });
+}
 
 export const EVENT_COLORS: readonly string[] = ['#3264ed', '#22a95a', '#8b5cf6', '#f59e0b', '#ef4444', '#e65591', '#94a3b8'];
 
+/** "15 minutes avant", "1 jour avant": how long before the start a reminder comes. */
 export function eventReminderLabel(minutes: number | null): string {
-  return REMINDER_OPTIONS.find((option) => option.value === minutes)?.label ?? `${minutes} minutes avant`;
+  if (minutes === null) return t('agenda.reminder.none');
+  if (minutes === 0) return t('agenda.reminder.atStart');
+  if (minutes % 1440 === 0) return tCount('agenda.reminder.days', minutes / 1440);
+  if (minutes % 60 === 0) return tCount('agenda.reminder.hours', minutes / 60);
+  return tCount('agenda.reminder.minutes', minutes);
 }
 
 export function datePart(value: LocalDateTime): IsoDate {
@@ -120,7 +120,7 @@ export function formatTime(time: string, format: AgendaSettings['hourFormat']): 
 }
 
 export function timeRangeLabel(item: Pick<AgendaItem, 'allDay' | 'start' | 'end'>, format: AgendaSettings['hourFormat']): string {
-  if (item.allDay) return 'Toute la journée';
+  if (item.allDay) return t('agenda.allDay');
   const start = formatTime(timePart(item.start), format);
   return item.start === item.end ? start : `${start} – ${formatTime(timePart(item.end), format)}`;
 }
@@ -256,9 +256,10 @@ export function isSafeUrl(value: string): boolean {
 }
 
 export function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
-  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
+  if (bytes < 1024) return t('agenda.fileSize.bytes', { size: bytes });
+  if (bytes < 1024 * 1024) return t('agenda.fileSize.kilobytes', { size: Math.round(bytes / 1024) });
+  const megabytes = new Intl.NumberFormat(formatLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return t('agenda.fileSize.megabytes', { size: megabytes.format(bytes / (1024 * 1024)) });
 }
 
 const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
@@ -278,7 +279,7 @@ export function toImportRequest(event: AgendaEvent): ImportAgendaEventRequest {
   const url = text(event.conferenceUrl, 300);
   return {
     localId: event.id.slice(0, 64),
-    title: text(event.title, 120) || 'Sans titre',
+    title: text(event.title, 120) || t('agenda.untitled'),
     calendarId: text(event.calendarId, 40) || 'personnel',
     allDay: !!event.allDay,
     start,

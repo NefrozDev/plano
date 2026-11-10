@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { AgendaContact } from '@plano/common';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
 import { AgendaStore } from '../agenda.store';
@@ -10,7 +11,7 @@ const MAX_AVATARS = 2;
 /** One agenda entry (event occurrence or dated task) as a tinted, clickable card. */
 @Component({
   selector: 'app-agenda-item-card',
-  imports: [RouterLink, AvatarStackComponent],
+  imports: [RouterLink, TranslocoPipe, AvatarStackComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a
@@ -24,13 +25,13 @@ const MAX_AVATARS = 2;
       <span class="copy">
         <strong>
           @if (item().kind === 'task') {
-            <i class="check" aria-hidden="true"></i><span class="visually-hidden">Tâche : </span>
+            <i class="check" aria-hidden="true"></i><span class="visually-hidden">{{ 'agenda.taskPrefix' | transloco }}</span>
           }
           {{ item().title }}
         </strong>
         <small>{{ caption() }}</small>
       </span>
-      <app-avatar-stack [people]="people()" [max]="maxAvatars" [label]="'Avec ' + peopleNames()" />
+      <app-avatar-stack [people]="people()" [max]="maxAvatars" [label]="'agenda.with' | transloco: { names: peopleNames() }" />
     </a>
   `,
   styles: `
