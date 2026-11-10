@@ -5,6 +5,7 @@ import {
   input,
   output,
 } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /**
  * Transient notification (success, `tone="info"` for news, or an error with `tone="error"`). The parent owns the message and clears it
@@ -13,12 +14,13 @@ import {
  */
 @Component({
   selector: 'app-toast',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div role="status" [attr.aria-live]="tone() === 'error' ? 'assertive' : 'polite'">
       @if (message()) {
         <!-- The whole toast is the dismiss target: click/tap (or Enter) closes it. -->
-        <button class="toast" type="button" title="Toucher pour fermer" (click)="dismissed.emit()">
+        <button class="toast" type="button" [title]="'common.tapToClose' | transloco" (click)="dismissed.emit()">
           <span class="check" [class.error]="tone() === 'error'" [class.info]="tone() === 'info'" aria-hidden="true">
             @if (tone() === 'error') {
               <svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01" /></svg>

@@ -1,13 +1,10 @@
 <app-auth-shell>
   <section class="auth-card" aria-labelledby="login-title">
-    <h2 id="login-title">Connexion</h2>
-    <p class="intro">
-      Plano utilise votre compte Synapse&nbsp;: le même pour toutes les applications de
-      Synapse Engineering. Vous pouvez aussi en créer un.
-    </p>
+    <h2 id="login-title">{{ 'auth.login.heading' | transloco }}</h2>
+    <p class="intro">{{ 'auth.login.intro' | transloco }}</p>
 
     @if (notice()) {
-      <div class="form-error" role="alert">{{ notice() }}</div>
+      <div class="form-error" role="alert">{{ notice() | transloco }}</div>
     }
 
     <button
@@ -19,9 +16,9 @@
     >
       @if (leaving()) {
         <span class="button-spinner" aria-hidden="true"></span>
-        Redirection…
+        {{ 'auth.login.redirecting' | transloco }}
       } @else {
-        Se connecter ou créer un compte
+        {{ 'auth.login.start' | transloco }}
       }
     </button>
   </section>

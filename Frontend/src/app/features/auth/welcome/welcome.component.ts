@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 
@@ -13,7 +14,7 @@ function safeReturnUrl(value: string | undefined): string {
  */
 @Component({
   selector: 'app-welcome',
-  imports: [AuthShellComponent, RouterLink],
+  imports: [AuthShellComponent, RouterLink, TranslocoPipe],
   templateUrl: './welcome.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

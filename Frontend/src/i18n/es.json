@@ -48,7 +48,22 @@
   },
   "dashboard": {
     "openSettings": "Abrir ajustes",
-    "eventPlanned": "Un evento previsto"
+    "eventPlanned": "Un evento previsto",
+    "home": "Inicio de Plano",
+    "greeting": "Hola, {{name}}",
+    "you": "qué tal",
+    "today": "Este es tu día",
+    "week": "Semana del {{from}} al {{to}}",
+    "toDo": {
+      "one": "{{count}} pendiente",
+      "other": "{{count}} pendientes"
+    },
+    "seeList": "ver la lista",
+    "allDone": "Todo hecho ✓",
+    "more": "+ {{count}} más",
+    "listsHint": "Muestra tus listas aquí desde su menú «Mostrar en el inicio».",
+    "goals": "Mis objetivos",
+    "goalsHint": "Muestra tus objetivos aquí desde su página."
   },
   "notifications": {
     "friendRequested": "{{name}} te ha enviado una solicitud de amistad.",
@@ -212,6 +227,57 @@
       "imageType": "Elige una imagen JPEG, PNG o WebP.",
       "noAvatar": "No hay foto de perfil.",
       "notFound": "Esta cuenta ya no existe."
+    }
+  },
+  "titles": {
+    "home": "Plano",
+    "login": "Iniciar sesión",
+    "welcome": "Bienvenida",
+    "terms": "Condiciones de uso",
+    "groups": "Mis grupos",
+    "group": "Grupo",
+    "lists": "Listas",
+    "list": "Lista",
+    "settings": "Ajustes",
+    "agenda": "Agenda",
+    "newEvent": "Nuevo evento",
+    "editEvent": "Editar el evento",
+    "event": "Evento",
+    "agendaFilters": "Filtros de la agenda",
+    "agendaSearch": "Buscar en la agenda",
+    "agendaSettings": "Ajustes de la agenda",
+    "objectives": "Objetivos",
+    "newObjective": "Nuevo objetivo",
+    "objectiveSearch": "Buscar un objetivo",
+    "objectiveFilters": "Filtros de objetivos",
+    "objectiveSettings": "Ajustes de objetivos",
+    "shareObjective": "Compartir un objetivo",
+    "editObjective": "Editar un objetivo",
+    "objective": "Objetivo"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "tapToClose": "Toca para cerrar"
+  },
+  "auth": {
+    "logo": "Logotipo de Plano",
+    "login": {
+      "heading": "Iniciar sesión",
+      "intro": "Plano usa tu cuenta Synapse: la misma para todas las aplicaciones de Synapse Engineering. También puedes crear una.",
+      "redirecting": "Redirigiendo…",
+      "start": "Iniciar sesión o crear una cuenta",
+      "cancelled": "Se ha cancelado el inicio de sesión.",
+      "failed": "No se pudo iniciar sesión. Inténtalo de nuevo."
+    },
+    "welcome": {
+      "heading": "¡Bienvenido!",
+      "headingNamed": "¡Bienvenido, {{name}}!",
+      "termsBefore": "Tu cuenta Synapse te identifica. Para usar Plano, acepta también sus",
+      "termsLink": "condiciones de uso y su política de privacidad",
+      "termsAfter": ".",
+      "failed": "No se pudo guardar. Inténtalo de nuevo.",
+      "accept": "Acepto y continúo"
     }
   }
 }

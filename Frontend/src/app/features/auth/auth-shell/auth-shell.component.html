@@ -17,7 +17,7 @@
         class="auth-brand__mark"
         viewBox="0 0 64 80"
         role="img"
-        aria-label="Logo Plano"
+        [attr.aria-label]="'auth.logo' | transloco"
       >
         <defs>
           <linearGradient id="plano-gradient" x1="12" y1="65" x2="54" y2="7">
@@ -35,7 +35,7 @@
         <circle cx="50.3" cy="12.2" r="3.2" fill="#F6FAFF" />
       </svg>
       <h1 id="plano-title">Plano</h1>
-      <p>Vos ambitions méritent un plan</p>
+      <p>{{ 'splash.tagline' | transloco }}</p>
     </header>
 
     <ng-content />

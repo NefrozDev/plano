@@ -1,14 +1,15 @@
 <app-auth-shell>
   <section class="auth-card" aria-labelledby="welcome-title">
-    <h2 id="welcome-title">Bienvenue{{ user() ? ', ' + user()!.firstName : '' }}&nbsp;!</h2>
+    <h2 id="welcome-title">
+      {{ user() ? ('auth.welcome.headingNamed' | transloco: { name: user()!.firstName }) : ('auth.welcome.heading' | transloco) }}
+    </h2>
     <p>
-      Votre compte Synapse vous connecte. Pour utiliser Plano, acceptez aussi ses
-      <a routerLink="/terms" target="_blank" rel="noopener">conditions d’utilisation et sa politique
-      de confidentialité</a>.
+      {{ 'auth.welcome.termsBefore' | transloco }}
+      <a routerLink="/terms" target="_blank" rel="noopener">{{ 'auth.welcome.termsLink' | transloco }}</a>{{ 'auth.welcome.termsAfter' | transloco }}
     </p>
 
     @if (failed()) {
-      <div class="form-error" role="alert">L’enregistrement a échoué. Veuillez réessayer.</div>
+      <div class="form-error" role="alert">{{ 'auth.welcome.failed' | transloco }}</div>
     }
 
     <button
@@ -18,7 +19,7 @@
       [attr.aria-busy]="accepting()"
       (click)="accept()"
     >
-      J’accepte et je continue
+      {{ 'auth.welcome.accept' | transloco }}
     </button>
   </section>
 </app-auth-shell>

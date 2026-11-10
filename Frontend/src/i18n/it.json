@@ -48,7 +48,22 @@
   },
   "dashboard": {
     "openSettings": "Apri impostazioni",
-    "eventPlanned": "Un evento in programma"
+    "eventPlanned": "Un evento in programma",
+    "home": "Home di Plano",
+    "greeting": "Ciao {{name}}",
+    "you": "a te",
+    "today": "Ecco la tua giornata",
+    "week": "Settimana dal {{from}} al {{to}}",
+    "toDo": {
+      "one": "{{count}} da fare",
+      "other": "{{count}} da fare"
+    },
+    "seeList": "vedi la lista",
+    "allDone": "Tutto fatto ✓",
+    "more": "+ altri {{count}}",
+    "listsHint": "Mostra qui le tue liste dal loro menu «Mostra nella home».",
+    "goals": "I miei obiettivi",
+    "goalsHint": "Mostra qui i tuoi obiettivi dalla loro pagina."
   },
   "notifications": {
     "friendRequested": "{{name}} ti ha inviato una richiesta di amicizia.",
@@ -212,6 +227,57 @@
       "imageType": "Scegli un’immagine JPEG, PNG o WebP.",
       "noAvatar": "Nessuna foto del profilo.",
       "notFound": "Questo account non esiste più."
+    }
+  },
+  "titles": {
+    "home": "Plano",
+    "login": "Accedi",
+    "welcome": "Benvenuto",
+    "terms": "Condizioni d’uso",
+    "groups": "I miei gruppi",
+    "group": "Gruppo",
+    "lists": "Liste",
+    "list": "Lista",
+    "settings": "Impostazioni",
+    "agenda": "Agenda",
+    "newEvent": "Nuovo evento",
+    "editEvent": "Modifica l’evento",
+    "event": "Evento",
+    "agendaFilters": "Filtri dell’agenda",
+    "agendaSearch": "Cerca nell’agenda",
+    "agendaSettings": "Impostazioni dell’agenda",
+    "objectives": "Obiettivi",
+    "newObjective": "Nuovo obiettivo",
+    "objectiveSearch": "Cerca un obiettivo",
+    "objectiveFilters": "Filtri degli obiettivi",
+    "objectiveSettings": "Impostazioni degli obiettivi",
+    "shareObjective": "Condividi un obiettivo",
+    "editObjective": "Modifica un obiettivo",
+    "objective": "Obiettivo"
+  },
+  "common": {
+    "cancel": "Annulla",
+    "confirm": "Conferma",
+    "tapToClose": "Tocca per chiudere"
+  },
+  "auth": {
+    "logo": "Logo di Plano",
+    "login": {
+      "heading": "Accedi",
+      "intro": "Plano usa il tuo account Synapse: lo stesso per tutte le app di Synapse Engineering. Puoi anche crearne uno.",
+      "redirecting": "Reindirizzamento…",
+      "start": "Accedi o crea un account",
+      "cancelled": "L’accesso è stato annullato.",
+      "failed": "Accesso non riuscito. Riprova."
+    },
+    "welcome": {
+      "heading": "Benvenuto!",
+      "headingNamed": "Benvenuto, {{name}}!",
+      "termsBefore": "Il tuo account Synapse ti fa accedere. Per usare Plano, accetta anche le sue",
+      "termsLink": "condizioni d’uso e l’informativa sulla privacy",
+      "termsAfter": ".",
+      "failed": "Salvataggio non riuscito. Riprova.",
+      "accept": "Accetto e continuo"
     }
   }
 }

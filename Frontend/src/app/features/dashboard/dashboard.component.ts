@@ -4,7 +4,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../core/auth/auth.service';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
-import { addDays, parseIsoDate, startOfWeek } from '../../core/time/dates';
+import { CountPipe, t } from '../../core/i18n/translate';
+import { addDays, formatShortWeekday, parseIsoDate, startOfWeek } from '../../core/time/dates';
 import { dueCaption, objectiveTint } from '../objectives/objective.utils';
 import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaStore } from '../agenda/agenda.store';
@@ -12,13 +13,12 @@ import { ListsStore } from '../lists/lists.store';
 import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.component';
 import { NotificationsBellComponent } from './notifications-bell.component';
 
-const WEEKDAY_LABELS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
-
 @Component({
   selector: 'app-dashboard',
   imports: [
     RouterLink,
     TranslocoPipe,
+    CountPipe,
     BottomNavComponent,
     NotificationsBellComponent,
     ObjectiveIconComponent,
@@ -42,7 +42,7 @@ export class DashboardComponent {
       const date = addDays(first, index);
       return {
         date,
-        label: WEEKDAY_LABELS[parseIsoDate(date).getDay()],
+        label: formatShortWeekday(date),
         day: parseIsoDate(date).getDate(),
         selected: date === today,
         hasEvent: this.agendaStore.itemsOn(date).length > 0,
@@ -51,7 +51,7 @@ export class DashboardComponent {
   });
   readonly weekLabel = computed(() => {
     const days = this.weekDays();
-    return `Semaine du ${days[0].day} au ${days[6].day}`;
+    return t('dashboard.week', { from: days[0].day, to: days[6].day });
   });
   /** Lists the user pinned to their home page, in their order; null while loading. */
   readonly homeLists = this.listsStore.home;
@@ -70,7 +70,7 @@ export class DashboardComponent {
     })) ?? null,
   );
   readonly displayName = computed(
-    () => this.auth.user()?.firstName || this.auth.user()?.username || 'vous',
+    () => this.auth.user()?.firstName || this.auth.user()?.username || t('dashboard.you'),
   );
   readonly user = this.auth.user;
 

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../core/auth/auth.service';
 import { BROWSER_LOCATION } from '../../../core/browser/browser-location';
 import { AuthShellComponent } from '../auth-shell/auth-shell.component';
@@ -16,7 +16,7 @@ function safeReturnUrl(value: string | undefined): string {
  */
 @Component({
   selector: 'app-login',
-  imports: [AuthShellComponent],
+  imports: [AuthShellComponent, TranslocoPipe],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,15 +29,15 @@ export class LoginComponent {
   private readonly query = inject(ActivatedRoute).snapshot.queryParamMap;
 
   readonly leaving = signal(false);
-  /** ?signIn=cancelled|failed: how the last sign-in came back. */
+  /** ?signIn=cancelled|failed: how the last sign-in came back, as a translation key. */
   readonly notice = signal(this.explain(this.query.get('signIn')));
 
   private explain(signIn: string | null): string {
     switch (signIn) {
       case 'cancelled':
-        return 'La connexion a été annulée.';
+        return 'auth.login.cancelled';
       case 'failed':
-        return 'La connexion a échoué. Veuillez réessayer.';
+        return 'auth.login.failed';
       default:
         return '';
     }

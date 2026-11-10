@@ -1,11 +1,12 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { TitleStrategy, provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideInputFocusZoomFix } from './core/browser/input-focus-zoom';
 import { apiCredentialsInterceptor } from './core/http/api-credentials.interceptor';
 import { provideI18n } from './core/i18n/i18n.providers';
+import { TranslatedTitleStrategy } from './core/i18n/translated-title.strategy';
 import {
   BrowserStoragePlanoDataAdapter,
   PLANO_DATA_ADAPTER,
@@ -17,6 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection(),
     provideHttpClient(withInterceptors([apiCredentialsInterceptor])),
     provideRouter(routes),
+    { provide: TitleStrategy, useClass: TranslatedTitleStrategy },
     provideI18n(),
     provideInputFocusZoomFix(),
     BrowserStoragePlanoDataAdapter,

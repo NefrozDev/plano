@@ -48,7 +48,22 @@
   },
   "dashboard": {
     "openSettings": "Instellingen openen",
-    "eventPlanned": "Een afspraak gepland"
+    "eventPlanned": "Een afspraak gepland",
+    "home": "Plano-startpagina",
+    "greeting": "Hallo {{name}}",
+    "you": "daar",
+    "today": "Dit is je dag",
+    "week": "Week van {{from}} tot {{to}}",
+    "toDo": {
+      "one": "nog {{count}} te doen",
+      "other": "nog {{count}} te doen"
+    },
+    "seeList": "lijst bekijken",
+    "allDone": "Alles gedaan ✓",
+    "more": "+ nog {{count}}",
+    "listsHint": "Toon je lijsten hier via hun menu “Op de startpagina tonen”.",
+    "goals": "Mijn doelen",
+    "goalsHint": "Toon je doelen hier vanaf hun pagina."
   },
   "notifications": {
     "friendRequested": "{{name}} heeft je een vriendschapsverzoek gestuurd.",
@@ -212,6 +227,57 @@
       "imageType": "Kies een JPEG-, PNG- of WebP-afbeelding.",
       "noAvatar": "Geen profielfoto.",
       "notFound": "Dit account bestaat niet meer."
+    }
+  },
+  "titles": {
+    "home": "Plano",
+    "login": "Aanmelden",
+    "welcome": "Welkom",
+    "terms": "Gebruiksvoorwaarden",
+    "groups": "Mijn groepen",
+    "group": "Groep",
+    "lists": "Lijsten",
+    "list": "Lijst",
+    "settings": "Instellingen",
+    "agenda": "Agenda",
+    "newEvent": "Nieuwe afspraak",
+    "editEvent": "Afspraak bewerken",
+    "event": "Afspraak",
+    "agendaFilters": "Agendafilters",
+    "agendaSearch": "Zoeken in de agenda",
+    "agendaSettings": "Agenda-instellingen",
+    "objectives": "Doelen",
+    "newObjective": "Nieuw doel",
+    "objectiveSearch": "Een doel zoeken",
+    "objectiveFilters": "Doelfilters",
+    "objectiveSettings": "Doelinstellingen",
+    "shareObjective": "Een doel delen",
+    "editObjective": "Een doel bewerken",
+    "objective": "Doel"
+  },
+  "common": {
+    "cancel": "Annuleren",
+    "confirm": "Bevestigen",
+    "tapToClose": "Tik om te sluiten"
+  },
+  "auth": {
+    "logo": "Plano-logo",
+    "login": {
+      "heading": "Aanmelden",
+      "intro": "Plano gebruikt je Synapse-account: hetzelfde voor alle apps van Synapse Engineering. Je kunt er ook een aanmaken.",
+      "redirecting": "Doorsturen…",
+      "start": "Aanmelden of een account aanmaken",
+      "cancelled": "Het aanmelden is geannuleerd.",
+      "failed": "Het aanmelden is mislukt. Probeer het opnieuw."
+    },
+    "welcome": {
+      "heading": "Welkom!",
+      "headingNamed": "Welkom, {{name}}!",
+      "termsBefore": "Je Synapse-account meldt je aan. Om Plano te gebruiken, aanvaard je ook de",
+      "termsLink": "gebruiksvoorwaarden en het privacybeleid",
+      "termsAfter": ".",
+      "failed": "Opslaan is mislukt. Probeer het opnieuw.",
+      "accept": "Ik ga akkoord en ga verder"
     }
   }
 }

@@ -48,7 +48,22 @@
   },
   "dashboard": {
     "openSettings": "Ouvrir les paramètres",
-    "eventPlanned": "Un événement prévu"
+    "eventPlanned": "Un événement prévu",
+    "home": "Accueil Plano",
+    "greeting": "Bonjour {{name}}",
+    "you": "vous",
+    "today": "Voici votre journée",
+    "week": "Semaine du {{from}} au {{to}}",
+    "toDo": {
+      "one": "{{count}} à faire",
+      "other": "{{count}} à faire"
+    },
+    "seeList": "voir la liste",
+    "allDone": "Tout est fait ✓",
+    "more": "+ {{count}} de plus",
+    "listsHint": "Affichez vos listes ici depuis leur menu « Afficher sur l’accueil ».",
+    "goals": "Mes objectifs",
+    "goalsHint": "Affichez vos objectifs ici depuis leur page."
   },
   "notifications": {
     "friendRequested": "{{name}} vous a envoyé une demande d’ami.",
@@ -212,6 +227,57 @@
       "imageType": "Choisissez une image JPEG, PNG ou WebP.",
       "noAvatar": "Aucune photo de profil.",
       "notFound": "Ce compte n’existe plus."
+    }
+  },
+  "titles": {
+    "home": "Plano",
+    "login": "Connexion",
+    "welcome": "Bienvenue",
+    "terms": "Conditions d’utilisation",
+    "groups": "Mes groupes",
+    "group": "Groupe",
+    "lists": "Listes",
+    "list": "Détail de la liste",
+    "settings": "Paramètres",
+    "agenda": "Agenda",
+    "newEvent": "Nouvel événement",
+    "editEvent": "Modifier l’événement",
+    "event": "Événement",
+    "agendaFilters": "Filtres de l’agenda",
+    "agendaSearch": "Rechercher dans l’agenda",
+    "agendaSettings": "Paramètres de l’agenda",
+    "objectives": "Objectifs",
+    "newObjective": "Nouvel objectif",
+    "objectiveSearch": "Rechercher un objectif",
+    "objectiveFilters": "Filtres des objectifs",
+    "objectiveSettings": "Paramètres des objectifs",
+    "shareObjective": "Partager un objectif",
+    "editObjective": "Modifier un objectif",
+    "objective": "Objectif"
+  },
+  "common": {
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "tapToClose": "Toucher pour fermer"
+  },
+  "auth": {
+    "logo": "Logo Plano",
+    "login": {
+      "heading": "Connexion",
+      "intro": "Plano utilise votre compte Synapse : le même pour toutes les applications de Synapse Engineering. Vous pouvez aussi en créer un.",
+      "redirecting": "Redirection…",
+      "start": "Se connecter ou créer un compte",
+      "cancelled": "La connexion a été annulée.",
+      "failed": "La connexion a échoué. Veuillez réessayer."
+    },
+    "welcome": {
+      "heading": "Bienvenue !",
+      "headingNamed": "Bienvenue, {{name}} !",
+      "termsBefore": "Votre compte Synapse vous connecte. Pour utiliser Plano, acceptez aussi ses",
+      "termsLink": "conditions d’utilisation et sa politique de confidentialité",
+      "termsAfter": ".",
+      "failed": "L’enregistrement a échoué. Veuillez réessayer.",
+      "accept": "J’accepte et je continue"
     }
   }
 }

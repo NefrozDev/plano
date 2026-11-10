@@ -48,7 +48,22 @@
   },
   "dashboard": {
     "openSettings": "Einstellungen öffnen",
-    "eventPlanned": "Ein Termin geplant"
+    "eventPlanned": "Ein Termin geplant",
+    "home": "Plano-Startseite",
+    "greeting": "Hallo {{name}}",
+    "you": "du",
+    "today": "Das ist dein Tag",
+    "week": "Woche vom {{from}}. bis {{to}}.",
+    "toDo": {
+      "one": "noch {{count}} offen",
+      "other": "noch {{count}} offen"
+    },
+    "seeList": "Liste ansehen",
+    "allDone": "Alles erledigt ✓",
+    "more": "+ {{count}} weitere",
+    "listsHint": "Zeige deine Listen hier über ihr Menü „Auf der Startseite zeigen“.",
+    "goals": "Meine Ziele",
+    "goalsHint": "Zeige deine Ziele hier über ihre Seite."
   },
   "notifications": {
     "friendRequested": "{{name}} hat dir eine Freundschaftsanfrage gesendet.",
@@ -212,6 +227,57 @@
       "imageType": "Wähle ein JPEG-, PNG- oder WebP-Bild.",
       "noAvatar": "Kein Profilfoto.",
       "notFound": "Dieses Konto gibt es nicht mehr."
+    }
+  },
+  "titles": {
+    "home": "Plano",
+    "login": "Anmelden",
+    "welcome": "Willkommen",
+    "terms": "Nutzungsbedingungen",
+    "groups": "Meine Gruppen",
+    "group": "Gruppe",
+    "lists": "Listen",
+    "list": "Liste",
+    "settings": "Einstellungen",
+    "agenda": "Kalender",
+    "newEvent": "Neuer Termin",
+    "editEvent": "Termin bearbeiten",
+    "event": "Termin",
+    "agendaFilters": "Kalenderfilter",
+    "agendaSearch": "Im Kalender suchen",
+    "agendaSettings": "Kalendereinstellungen",
+    "objectives": "Ziele",
+    "newObjective": "Neues Ziel",
+    "objectiveSearch": "Ein Ziel suchen",
+    "objectiveFilters": "Zielfilter",
+    "objectiveSettings": "Zieleinstellungen",
+    "shareObjective": "Ein Ziel teilen",
+    "editObjective": "Ein Ziel bearbeiten",
+    "objective": "Ziel"
+  },
+  "common": {
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "tapToClose": "Zum Schließen tippen"
+  },
+  "auth": {
+    "logo": "Plano-Logo",
+    "login": {
+      "heading": "Anmelden",
+      "intro": "Plano nutzt dein Synapse-Konto: dasselbe für alle Apps von Synapse Engineering. Du kannst auch eines erstellen.",
+      "redirecting": "Weiterleitung…",
+      "start": "Anmelden oder Konto erstellen",
+      "cancelled": "Die Anmeldung wurde abgebrochen.",
+      "failed": "Die Anmeldung ist fehlgeschlagen. Bitte versuche es erneut."
+    },
+    "welcome": {
+      "heading": "Willkommen!",
+      "headingNamed": "Willkommen, {{name}}!",
+      "termsBefore": "Dein Synapse-Konto meldet dich an. Um Plano zu nutzen, akzeptiere bitte auch die",
+      "termsLink": "Nutzungsbedingungen und die Datenschutzerklärung",
+      "termsAfter": ".",
+      "failed": "Speichern ist fehlgeschlagen. Bitte versuche es erneut.",
+      "accept": "Ich stimme zu und mache weiter"
     }
   }
 }

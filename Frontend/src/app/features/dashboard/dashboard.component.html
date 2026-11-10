@@ -1,5 +1,5 @@
 <header class="topbar">
-  <a class="brand-mark" routerLink="/" aria-label="Accueil Plano">
+  <a class="brand-mark" routerLink="/" [attr.aria-label]="'dashboard.home' | transloco">
     <svg viewBox="0 0 64 80" aria-hidden="true">
       <path
         fill="#325BE2"
@@ -23,8 +23,8 @@
 </header>
 <div class="screen-content">
   <section class="welcome" aria-labelledby="welcome-title">
-    <h1 id="welcome-title">Bonjour {{ displayName() }}</h1>
-    <p>Voici votre journée</p>
+    <h1 id="welcome-title">{{ 'dashboard.greeting' | transloco: { name: displayName() } }}</h1>
+    <p>{{ 'dashboard.today' | transloco }}</p>
   </section>
 
   <section class="week-card" [attr.aria-label]="weekLabel()">
@@ -43,7 +43,7 @@
     <section class="dashboard-section home-list" [attr.aria-labelledby]="'home-list-' + home.id" [style.--list-color]="home.color">
       <div class="section-heading">
         <h2 [id]="'home-list-' + home.id">{{ home.name }}</h2>
-        <a [routerLink]="['/lists', home.id]">{{ home.remaining ? home.remaining + ' à faire' : 'voir la liste' }} →</a>
+        <a [routerLink]="['/lists', home.id]">{{ home.remaining ? ('dashboard.toDo' | count: home.remaining) : ('dashboard.seeList' | transloco) }} →</a>
       </div>
       <div class="list-card">
         @for (entry of home.entries; track entry.id) {
@@ -57,16 +57,16 @@
             <span>{{ entry.name }}</span></label
           >
         } @empty {
-          <a class="card-link" [routerLink]="['/lists', home.id]">Tout est fait ✓</a>
+          <a class="card-link" [routerLink]="['/lists', home.id]">{{ 'dashboard.allDone' | transloco }}</a>
         }
         @if (home.remaining > home.entries.length) {
-          <a class="card-link" [routerLink]="['/lists', home.id]">+ {{ home.remaining - home.entries.length }} de plus</a>
+          <a class="card-link" [routerLink]="['/lists', home.id]">{{ 'dashboard.more' | transloco: { count: home.remaining - home.entries.length } }}</a>
         }
       </div>
     </section>
   } @empty {
     @if (homeLists()) {
-      <a class="home-hint" routerLink="/lists">Affichez vos listes ici depuis leur menu « Afficher sur l’accueil ».</a>
+      <a class="home-hint" routerLink="/lists">{{ 'dashboard.listsHint' | transloco }}</a>
     }
   }
 
@@ -75,7 +75,7 @@
     aria-labelledby="goals-title"
   >
     <div class="section-heading">
-      <h2 id="goals-title">Mes objectifs</h2>
+      <h2 id="goals-title">{{ 'dashboard.goals' | transloco }}</h2>
     </div>
     <div class="goals-card">
       @for (goal of goals(); track goal.id) {
@@ -93,7 +93,7 @@
         </a>
       } @empty {
         @if (goals()) {
-          <a class="card-link" routerLink="/objectives">Affichez vos objectifs ici depuis leur page.</a>
+          <a class="card-link" routerLink="/objectives">{{ 'dashboard.goalsHint' | transloco }}</a>
         }
       }
     </div>

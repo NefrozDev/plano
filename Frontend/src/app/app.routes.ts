@@ -10,7 +10,7 @@ export const routes: Routes = [
       import('./features/auth/login/login.component').then(
         (component) => component.LoginComponent,
       ),
-    title: 'Connexion | Plano',
+    title: 'titles.login',
   },
   {
     // The first screen after a first sign-in: Plano's own terms.
@@ -20,7 +20,7 @@ export const routes: Routes = [
       import('./features/auth/welcome/welcome.component').then(
         (component) => component.WelcomeComponent,
       ),
-    title: 'Bienvenue | Plano',
+    title: 'titles.welcome',
   },
   // Accounts, passwords and their recovery moved to the Synapse account.
   { path: 'register', redirectTo: 'login' },
@@ -32,7 +32,7 @@ export const routes: Routes = [
       import('./features/legal/terms-page.component').then(
         (component) => component.TermsPageComponent,
       ),
-    title: 'Conditions d’utilisation | Plano',
+    title: 'titles.terms',
   },
   // Former single-group page, still reached from older links.
   { path: 'group/setup', redirectTo: 'groups' },
@@ -43,7 +43,7 @@ export const routes: Routes = [
       import('./features/groups/groups-overview/groups-overview.component').then(
         (component) => component.GroupsOverviewComponent,
       ),
-    title: 'Mes groupes | Plano',
+    title: 'titles.groups',
   },
   {
     path: 'groups/:groupId',
@@ -52,7 +52,7 @@ export const routes: Routes = [
       import('./features/groups/group-detail/group-detail.component').then(
         (component) => component.GroupDetailComponent,
       ),
-    title: 'Groupe | Plano',
+    title: 'titles.group',
   },
   {
     path: 'agenda',
@@ -83,7 +83,7 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(
             (component) => component.DashboardComponent,
           ),
-        title: 'Plano',
+        title: 'titles.home',
       },
       {
         path: 'lists',
@@ -91,7 +91,7 @@ export const routes: Routes = [
           import('./features/lists/lists.component').then(
             (component) => component.ListsComponent,
           ),
-        title: 'Listes | Plano',
+        title: 'titles.lists',
       },
       {
         path: 'lists/:listId',
@@ -99,7 +99,7 @@ export const routes: Routes = [
           import('./features/lists/list-detail/list-detail.component').then(
             (component) => component.ListDetailComponent,
           ),
-        title: 'Détail de la liste | Plano',
+        title: 'titles.list',
       },
       {
         path: 'settings',
@@ -107,7 +107,7 @@ export const routes: Routes = [
           import('./features/settings/settings.component').then(
             (component) => component.SettingsComponent,
           ),
-        title: 'Paramètres | Plano',
+        title: 'titles.settings',
       },
     ],
   },

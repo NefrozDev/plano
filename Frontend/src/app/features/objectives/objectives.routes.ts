@@ -10,49 +10,49 @@ export const OBJECTIVES_ROUTES: Routes = [
         path: '',
         loadComponent: () =>
           import('./overview/objectives-overview.component').then((m) => m.ObjectivesOverviewComponent),
-        title: 'Objectifs | Plano',
+        title: 'titles.objectives',
       },
       {
         path: 'new',
         loadComponent: () =>
           import('./form/objective-form.component').then((m) => m.ObjectiveFormComponent),
-        title: 'Nouvel objectif | Plano',
+        title: 'titles.newObjective',
       },
       {
         path: 'search',
         loadComponent: () =>
           import('./search/objectives-search.component').then((m) => m.ObjectivesSearchComponent),
-        title: 'Rechercher un objectif | Plano',
+        title: 'titles.objectiveSearch',
       },
       {
         path: 'filters',
         loadComponent: () =>
           import('./filters/objectives-filters.component').then((m) => m.ObjectivesFiltersComponent),
-        title: 'Filtres des objectifs | Plano',
+        title: 'titles.objectiveFilters',
       },
       {
         path: 'settings',
         loadComponent: () =>
           import('./settings/objectives-settings.component').then((m) => m.ObjectivesSettingsComponent),
-        title: 'Paramètres des objectifs | Plano',
+        title: 'titles.objectiveSettings',
       },
       {
         path: ':id/share',
         loadComponent: () =>
           import('./share/objective-share.component').then((m) => m.ObjectiveShareComponent),
-        title: 'Partager un objectif | Plano',
+        title: 'titles.shareObjective',
       },
       {
         path: ':id/edit',
         loadComponent: () =>
           import('./form/objective-form.component').then((m) => m.ObjectiveFormComponent),
-        title: 'Modifier un objectif | Plano',
+        title: 'titles.editObjective',
       },
       {
         path: ':id',
         loadComponent: () =>
           import('./detail/objective-detail-layout.component').then((m) => m.ObjectiveDetailLayoutComponent),
-        title: 'Objectif | Plano',
+        title: 'titles.objective',
         children: [
           {
             path: '',

@@ -48,7 +48,22 @@
   },
   "dashboard": {
     "openSettings": "Open settings",
-    "eventPlanned": "An event planned"
+    "eventPlanned": "An event planned",
+    "home": "Plano home",
+    "greeting": "Hello {{name}}",
+    "you": "there",
+    "today": "Here’s your day",
+    "week": "Week from {{from}} to {{to}}",
+    "toDo": {
+      "one": "{{count}} to do",
+      "other": "{{count}} to do"
+    },
+    "seeList": "see the list",
+    "allDone": "All done ✓",
+    "more": "+ {{count}} more",
+    "listsHint": "Show your lists here from their “Show on home” menu.",
+    "goals": "My goals",
+    "goalsHint": "Show your goals here from their page."
   },
   "notifications": {
     "friendRequested": "{{name}} sent you a friend request.",
@@ -212,6 +227,57 @@
       "imageType": "Choose a JPEG, PNG or WebP image.",
       "noAvatar": "No profile photo.",
       "notFound": "This account no longer exists."
+    }
+  },
+  "titles": {
+    "home": "Plano",
+    "login": "Sign in",
+    "welcome": "Welcome",
+    "terms": "Terms of use",
+    "groups": "My groups",
+    "group": "Group",
+    "lists": "Lists",
+    "list": "List",
+    "settings": "Settings",
+    "agenda": "Calendar",
+    "newEvent": "New event",
+    "editEvent": "Edit event",
+    "event": "Event",
+    "agendaFilters": "Calendar filters",
+    "agendaSearch": "Search the calendar",
+    "agendaSettings": "Calendar settings",
+    "objectives": "Goals",
+    "newObjective": "New goal",
+    "objectiveSearch": "Search goals",
+    "objectiveFilters": "Goal filters",
+    "objectiveSettings": "Goal settings",
+    "shareObjective": "Share a goal",
+    "editObjective": "Edit a goal",
+    "objective": "Goal"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "tapToClose": "Tap to close"
+  },
+  "auth": {
+    "logo": "Plano logo",
+    "login": {
+      "heading": "Sign in",
+      "intro": "Plano uses your Synapse account: the same one for every Synapse Engineering app. You can also create one.",
+      "redirecting": "Redirecting…",
+      "start": "Sign in or create an account",
+      "cancelled": "Signing in was cancelled.",
+      "failed": "Signing in failed. Please try again."
+    },
+    "welcome": {
+      "heading": "Welcome!",
+      "headingNamed": "Welcome, {{name}}!",
+      "termsBefore": "Your Synapse account signs you in. To use Plano, please also accept its",
+      "termsLink": "terms of use and privacy policy",
+      "termsAfter": ".",
+      "failed": "Saving failed. Please try again.",
+      "accept": "I accept and continue"
     }
   }
 }

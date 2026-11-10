@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-auth-shell',
+  imports: [TranslocoPipe],
   templateUrl: './auth-shell.component.html',
   styleUrl: './auth-shell.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,20 +1,21 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ConfirmService } from './confirm.service';
 import { ModalDialogComponent } from './modal-dialog.component';
 
 /** Renders the pending `ConfirmService` question; mounted once in the root component. */
 @Component({
   selector: 'app-confirm-host',
-  imports: [ModalDialogComponent],
+  imports: [ModalDialogComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (confirm.request(); as request) {
       <app-modal-dialog [heading]="request.heading" [tone]="request.tone ?? 'default'" [open]="true" (closed)="confirm.settle(false)">
         <p class="message">{{ request.message }}</p>
         <div class="dialog-actions">
-          <button class="cancel" type="button" (click)="confirm.settle(false)">{{ request.cancelLabel ?? 'Annuler' }}</button>
+          <button class="cancel" type="button" (click)="confirm.settle(false)">{{ request.cancelLabel ?? ('common.cancel' | transloco) }}</button>
           <button class="confirm" type="button" [class.danger]="request.tone === 'danger'" (click)="confirm.settle(true)">
-            {{ request.confirmLabel ?? 'Confirmer' }}
+            {{ request.confirmLabel ?? ('common.confirm' | transloco) }}
           </button>
         </div>
       </app-modal-dialog>

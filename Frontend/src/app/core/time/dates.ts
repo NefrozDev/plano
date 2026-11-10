@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import type { IsoDate } from '@plano/common';
+import { formatLocale } from '../i18n/translate';
 
 /** Overridable "now" so date-dependent screens stay deterministic in tests. */
 export const APP_CLOCK = new InjectionToken<() => Date>('APP_CLOCK', {
@@ -66,35 +67,60 @@ export function isoWeekNumber(date: IsoDate): number {
   return 1 + Math.round(((thursday.getTime() - firstThursday.getTime()) / 86_400_000 - 3 + ((firstThursday.getDay() + 6) % 7)) / 7);
 }
 
-const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-const shortDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
-const dayFormatter = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'long' });
-const longDayFormatter = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-const monthFormatter = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' });
+type DateFormat = 'date' | 'shortDate' | 'day' | 'longDay' | 'month' | 'weekday' | 'shortWeekday';
+
+const DATE_FORMATS: Readonly<Record<DateFormat, Intl.DateTimeFormatOptions>> = {
+  date: { day: 'numeric', month: 'short', year: 'numeric' },
+  shortDate: { day: 'numeric', month: 'short' },
+  day: { weekday: 'short', day: 'numeric', month: 'long' },
+  longDay: { weekday: 'long', day: 'numeric', month: 'long' },
+  month: { month: 'long', year: 'numeric' },
+  weekday: { weekday: 'long' },
+  shortWeekday: { weekday: 'short' },
+};
+
+const formatters = new Map<string, Intl.DateTimeFormat>();
+
+/** A formatter in the interface language; reading it inside a computed follows a language change. */
+function formatter(format: DateFormat): Intl.DateTimeFormat {
+  const locale = formatLocale();
+  const id = `${locale}:${format}`;
+  let found = formatters.get(id);
+  if (!found) {
+    found = new Intl.DateTimeFormat(locale, DATE_FORMATS[format]);
+    formatters.set(id, found);
+  }
+  return found;
+}
 
 export function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 export function formatDate(date: IsoDate): string {
-  return dateFormatter.format(parseIsoDate(date));
+  return formatter('date').format(parseIsoDate(date));
 }
 
 export function formatShortDate(date: IsoDate): string {
-  return shortDateFormatter.format(parseIsoDate(date));
+  return formatter('shortDate').format(parseIsoDate(date));
 }
 
 export function formatDay(date: IsoDate): string {
-  return capitalize(dayFormatter.format(parseIsoDate(date)).replace('.', ''));
+  return capitalize(formatter('day').format(parseIsoDate(date)).replace('.', ''));
+}
+
+/** "lun", "Mon": a weekday's short name, without the abbreviation dot. */
+export function formatShortWeekday(date: IsoDate): string {
+  return formatter('shortWeekday').format(parseIsoDate(date)).replace('.', '');
 }
 
 /** "Jeudi 15 octobre". */
 export function formatLongDay(date: IsoDate): string {
-  return capitalize(longDayFormatter.format(parseIsoDate(date)));
+  return capitalize(formatter('longDay').format(parseIsoDate(date)));
 }
 
 export function formatMonth(year: number, month: number): string {
-  return capitalize(monthFormatter.format(new Date(year, month, 1)));
+  return capitalize(formatter('month').format(new Date(year, month, 1)));
 }
 
 export interface CalendarDay {
