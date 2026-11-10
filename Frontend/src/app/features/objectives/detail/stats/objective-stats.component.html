@@ -1,6 +1,6 @@
 @if (objective()?.metric) {
-  <h2>Vue d’ensemble</h2>
-  <section class="tiles" aria-label="Chiffres clés">
+  <h2>{{ 'objectives.stats.overview' | transloco }}</h2>
+  <section class="tiles" [attr.aria-label]="'objectives.stats.keyFigures' | transloco">
     @for (tile of tiles(); track tile.label) {
       <div class="tile"><strong>{{ tile.value }}</strong><span>{{ tile.label }}</span></div>
     }
@@ -9,8 +9,8 @@
   <section class="chart-card" [style.--tint]="tint()">
     @if (chart(); as chart) {
       <header>
-        <h2 id="chart-title">Progression ({{ unit() }})</h2>
-        <p><strong>{{ chart.lastLabel }}</strong><span>Actuel</span></p>
+        <h2 id="chart-title">{{ 'objectives.stats.chartTitle' | transloco: { unit: unit() } }}</h2>
+        <p><strong>{{ chart.lastLabel }}</strong><span>{{ 'objectives.stats.current' | transloco }}</span></p>
       </header>
       <!-- A slider over the data points: arrows, Home and End move between them, and
            screen readers announce each point through aria-valuetext. -->
@@ -62,9 +62,9 @@
       <p id="chart-summary" class="visually-hidden">{{ chart.summary }}</p>
 
       <details>
-        <summary>Voir les données</summary>
+        <summary>{{ 'objectives.stats.data' | transloco }}</summary>
         <table>
-          <thead><tr><th scope="col">Date</th><th scope="col">Progression</th></tr></thead>
+          <thead><tr><th scope="col">{{ 'agenda.form.date' | transloco }}</th><th scope="col">{{ 'objectives.filters.progress' | transloco }}</th></tr></thead>
           <tbody>
             @for (point of chart.points; track $index) {
               <tr><td>{{ formatDate(point.date) }}</td><td>{{ formatNumber(point.value) }} {{ unit() }}</td></tr>
@@ -73,9 +73,9 @@
         </table>
       </details>
     } @else {
-      <p class="empty">Ajoutez une séance réalisée dans le calendrier pour voir votre progression.</p>
+      <p class="empty">{{ 'objectives.stats.empty' | transloco }}</p>
     }
   </section>
 } @else {
-  <p class="empty">Les statistiques sont disponibles pour les objectifs chiffrés.</p>
+  <p class="empty">{{ 'objectives.stats.unavailable' | transloco }}</p>
 }

@@ -1,55 +1,55 @@
-<app-page-header heading="Paramètres Objectifs" backLink="/objectives" backLabel="Retour aux objectifs" />
+<app-page-header [heading]="'objectives.settings.heading' | transloco" backLink="/objectives" [backLabel]="'objectives.backToObjectives' | transloco" />
 
 <div class="content">
   <section>
-    <h2>Général</h2>
+    <h2>{{ 'agenda.settings.general' | transloco }}</h2>
     <label class="setting-row">
-      <span>Vue par défaut</span>
+      <span>{{ 'lists.settings.defaultView' | transloco }}</span>
       <select class="choice-select" (change)="update({ defaultView: $any($event.target).value })">
-        <option value="list" [selected]="settings().defaultView === 'list'">Liste</option>
-        <option value="grid" [selected]="settings().defaultView === 'grid'">Grille</option>
+        <option value="list" [selected]="settings().defaultView === 'list'">{{ 'lists.list' | transloco }}</option>
+        <option value="grid" [selected]="settings().defaultView === 'grid'">{{ 'lists.settings.grid' | transloco }}</option>
       </select>
     </label>
-    <app-switch-row label="Afficher les objectifs archivés dans « Tous »" [checked]="settings().showArchived" (toggled)="toggle('showArchived')" />
+    <app-switch-row [label]="'objectives.settings.showArchived' | transloco" [checked]="settings().showArchived" (toggled)="toggle('showArchived')" />
   </section>
 
   <section>
-    <h2>Rappels</h2>
+    <h2>{{ 'lists.settings.reminders' | transloco }}</h2>
     <label class="setting-row">
-      <span>Rappel d’échéance par défaut</span>
+      <span>{{ 'objectives.settings.dueReminder' | transloco }}</span>
       <select class="choice-select" (change)="update({ defaultDueReminder: $any($event.target).value })">
         @for (option of dueReminders; track option[0]) {
-          <option [value]="option[0]" [selected]="settings().defaultDueReminder === option[0]">{{ option[1] }}</option>
+          <option [value]="option[0]" [selected]="settings().defaultDueReminder === option[0]">{{ option[1] | transloco }}</option>
         }
       </select>
     </label>
-    <app-switch-row label="Notifications d’objectifs" [checked]="settings().notifications" (toggled)="toggle('notifications')" />
+    <app-switch-row [label]="'objectives.settings.notifications' | transloco" [checked]="settings().notifications" (toggled)="toggle('notifications')" />
     <label class="setting-row">
-      <span>Rappels d’habitudes</span>
+      <span>{{ 'objectives.settings.habitReminders' | transloco }}</span>
       <select class="choice-select" (change)="update({ habitReminders: $any($event.target).value })">
-        <option value="scheduled" [selected]="settings().habitReminders === 'scheduled'">À l’heure définie</option>
-        <option value="none" [selected]="settings().habitReminders === 'none'">Désactivés</option>
+        <option value="scheduled" [selected]="settings().habitReminders === 'scheduled'">{{ 'objectives.settings.scheduled' | transloco }}</option>
+        <option value="none" [selected]="settings().habitReminders === 'none'">{{ 'objectives.settings.off' | transloco }}</option>
       </select>
     </label>
   </section>
 
   <section>
-    <h2>Modèles</h2>
+    <h2>{{ 'objectives.settings.templates' | transloco }}</h2>
     <ul class="templates">
       @for (template of templates(); track template.id) {
         <li>
-          <span>{{ template.name }} <small>{{ template.nodeCount }} objectif(s)</small></span>
-          <button type="button" [attr.aria-label]="'Supprimer le modèle ' + template.name" (click)="removeTemplate(template.id)">×</button>
+          <span>{{ template.name }} <small>{{ 'objectives.settings.nodeCount' | count: template.nodeCount }}</small></span>
+          <button type="button" [attr.aria-label]="'objectives.settings.deleteTemplate' | transloco: { name: template.name }" (click)="removeTemplate(template.id)">×</button>
         </li>
       } @empty {
-        <li class="hint">Enregistrez un objectif comme modèle depuis son menu pour le réutiliser ici.</li>
+        <li class="hint">{{ 'objectives.settings.noTemplates' | transloco }}</li>
       }
     </ul>
   </section>
 
   <section>
-    <h2>Affichage</h2>
-    <app-switch-row label="Afficher la progression en pourcentage" [checked]="settings().showPercentage" (toggled)="toggle('showPercentage')" />
-    <app-switch-row label="Couleur par catégorie" [checked]="settings().categoryColors" (toggled)="toggle('categoryColors')" />
+    <h2>{{ 'agenda.settings.display' | transloco }}</h2>
+    <app-switch-row [label]="'objectives.settings.showPercentage' | transloco" [checked]="settings().showPercentage" (toggled)="toggle('showPercentage')" />
+    <app-switch-row [label]="'objectives.settings.categoryColors' | transloco" [checked]="settings().categoryColors" (toggled)="toggle('categoryColors')" />
   </section>
 </div>

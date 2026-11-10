@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ObjectiveDetail } from '@plano/common';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
@@ -14,36 +15,36 @@ const CONFETTI_COLORS = ['#325BE2', '#6B2DEB', '#32E2A5', '#DF32E2', '#f4a51c'];
  */
 @Component({
   selector: 'app-objective-celebration',
-  imports: [AutofocusDirective, ModalDialogComponent],
+  imports: [AutofocusDirective, ModalDialogComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.celebration(); as objective) {
-      <app-modal-dialog heading="Objectif atteint !" [open]="true" (closed)="store.dismissCelebration()">
+      <app-modal-dialog [heading]="'objectives.celebration.heading' | transloco" [open]="true" (closed)="store.dismissCelebration()">
         <svg dialog-icon viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0Z" /><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4" /></svg>
         <div class="confetti" aria-hidden="true">
           @for (piece of confetti; track $index) {
             <i [style.left.%]="piece.left" [style.--delay]="piece.delay" [style.--drift]="piece.drift" [style.background]="piece.color"></i>
           }
         </div>
-        <p class="message">Bravo, « {{ objective.title }} » est terminé !</p>
+        <p class="message">{{ 'objectives.celebration.message' | transloco: { title: objective.title } }}</p>
         @if (isOwner()) {
-          <div class="choices" role="group" aria-label="Et maintenant ?">
+          <div class="choices" role="group" [attr.aria-label]="'objectives.celebration.next' | transloco">
             @if (!objective.parentId) {
               <button class="choice" type="button" (click)="restart(objective)">
-                <strong>Recommencer</strong><small>Repartir de zéro aujourd’hui ; ce résultat reste dans son historique.</small>
+                <strong>{{ 'objectives.celebration.restart' | transloco }}</strong><small>{{ 'objectives.celebration.restartHint' | transloco }}</small>
               </button>
             }
             <button class="choice" type="button" (click)="archive(objective)">
-              <strong>Archiver</strong><small>Le ranger avec vos objectifs archivés.</small>
+              <strong>{{ 'objectives.detail.archive' | transloco }}</strong><small>{{ 'objectives.celebration.archiveHint' | transloco }}</small>
             </button>
             <button class="choice danger" type="button" (click)="remove(objective)">
-              <strong>Supprimer</strong><small>L’effacer définitivement.</small>
+              <strong>{{ 'objectives.removal.delete' | transloco }}</strong><small>{{ 'objectives.celebration.deleteHint' | transloco }}</small>
             </button>
           </div>
           <!-- The safe choice has the focus: nothing is lost by pressing Enter. -->
-          <button class="later" type="button" appAutofocus (click)="store.dismissCelebration()">Le garder tel quel</button>
+          <button class="later" type="button" appAutofocus (click)="store.dismissCelebration()">{{ 'objectives.celebration.keep' | transloco }}</button>
         } @else {
-          <button class="later solid" type="button" appAutofocus (click)="store.dismissCelebration()">Bravo !</button>
+          <button class="later solid" type="button" appAutofocus (click)="store.dismissCelebration()">{{ 'objectives.celebration.bravo' | transloco }}</button>
         }
       </app-modal-dialog>
     }

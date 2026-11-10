@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { Contact, ObjectiveMemberRole, ObjectiveRole } from '@plano/common';
+import { t } from '../../../core/i18n/translate';
 import { firstValueFrom } from 'rxjs';
 import { FriendsService } from '../../../core/friends/friends.service';
 import { toPerson } from '../../../core/people/people';
@@ -12,10 +14,11 @@ import { ObjectivesStore } from '../objectives.store';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 import { contactName } from '../ui/people-picker.component';
 
+/** Translation key of each role. */
 export const OBJECTIVE_ROLE_LABELS: Readonly<Record<ObjectiveRole, string>> = {
-  owner: 'Propriétaire',
-  contributor: 'Peut contribuer',
-  viewer: 'Peut consulter',
+  owner: 'lists.roles.owner',
+  contributor: 'objectives.share.contributor',
+  viewer: 'lists.roles.viewer',
 };
 
 /**
@@ -24,7 +27,7 @@ export const OBJECTIVE_ROLE_LABELS: Readonly<Record<ObjectiveRole, string>> = {
  */
 @Component({
   selector: 'app-objective-share',
-  imports: [PageHeaderComponent, ObjectiveIconComponent, UserAvatarComponent],
+  imports: [TranslocoPipe, PageHeaderComponent, ObjectiveIconComponent, UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-share.component.html',
   styleUrl: './objective-share.component.scss',
@@ -96,9 +99,9 @@ export class ObjectiveShareComponent implements OnInit {
 
   async leave(): Promise<void> {
     const confirmed = await this.confirm.ask({
-      heading: 'Quitter l’objectif ?',
-      message: 'Vous n’y aurez plus accès, sauf si on vous y invite à nouveau.',
-      confirmLabel: 'Quitter',
+      heading: t('objectives.share.leaveHeading'),
+      message: t('objectives.share.leaveMessage'),
+      confirmLabel: t('lists.confirm.leaveShort'),
       tone: 'danger',
     });
     if (confirmed && (await this.store.leave(this.id))) void this.router.navigate(['/objectives']);

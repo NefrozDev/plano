@@ -23,6 +23,7 @@ import {
   timelapseView,
   toImportRequest,
 } from './objective.utils';
+import { t } from '../../core/i18n/translate';
 import { objectiveSummary } from './testing/objectives-fixtures';
 
 function seeded(id: string): Objective {
@@ -65,7 +66,7 @@ describe('objective utils', () => {
 
   describe('labels', () => {
     it('falls back to the last category for an unknown one', () => {
-      expect(categoryMeta('finance').label).toBe('Finances');
+      expect(t(categoryMeta('finance').label)).toBe('Finances');
       expect(categoryMeta('nope' as never).value).toBe('other');
     });
 

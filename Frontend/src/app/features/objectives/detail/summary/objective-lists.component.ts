@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ObjectiveDetail, ObjectiveLinkedList } from '@plano/common';
+import { t } from '../../../../core/i18n/translate';
 import { ConfirmService } from '../../../../shared/ui/confirm.service';
 import { AutofocusDirective } from '../../../../shared/ui/autofocus.directive';
 import { LIST_COLOR_CHOICES } from '../../../lists/list-detail/list-options';
@@ -13,16 +15,16 @@ import { ObjectivesStore } from '../../objectives.store';
  */
 @Component({
   selector: 'app-objective-lists',
-  imports: [AutofocusDirective, RouterLink],
+  imports: [AutofocusDirective, RouterLink, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (objective(); as objective) {
       @if (objective.lists.length || owner()) {
         <section class="lists" aria-labelledby="lists-title">
           <div class="heading">
-            <h3 id="lists-title">Listes</h3>
+            <h3 id="lists-title">{{ 'titles.lists' | transloco }}</h3>
             @if (objective.completion === 'list' && objective.amount; as amount) {
-              <span>{{ amount.current }} / {{ amount.target }} cochés</span>
+              <span>{{ 'objectives.lists.checked' | transloco: { current: amount.current, target: amount.target } }}</span>
             }
           </div>
 
@@ -34,42 +36,42 @@ import { ObjectivesStore } from '../../objectives.store';
                 <span class="count">{{ list.done }} / {{ list.total }}</span>
               </a>
               @if (owner()) {
-                <button class="unlink" type="button" [attr.aria-label]="'Retirer « ' + list.name + ' » de l’objectif'" (click)="unlink(list)">×</button>
+                <button class="unlink" type="button" [attr.aria-label]="'objectives.lists.unlink' | transloco: { name: list.name }" (click)="unlink(list)">×</button>
               }
             </div>
             @if (list.removeChecked && objective.completion === 'list') {
-              <p class="note">Ses éléments cochés sont supprimés : elle ne compte pas dans la barre.</p>
+              <p class="note">{{ 'objectives.lists.removeChecked' | transloco }}</p>
             }
           }
           @if (!objective.lists.length && objective.completion === 'list') {
-            <p class="note">Ajoutez une liste : ses éléments cochés feront avancer la barre.</p>
+            <p class="note">{{ 'objectives.lists.addHint' | transloco }}</p>
           }
 
           @if (owner()) {
             @switch (mode()) {
               @case ('new') {
                 <form class="new-list" (submit)="$event.preventDefault(); create(name.value)">
-                  <input #name class="form-control" appAutofocus maxlength="80" aria-label="Nom de la nouvelle liste" placeholder="Nom de la liste" />
-                  <button class="primary" type="submit" [disabled]="busy()">Créer</button>
-                  <button class="secondary" type="button" (click)="mode.set('idle')">Annuler</button>
+                  <input #name class="form-control" appAutofocus maxlength="80" [attr.aria-label]="'objectives.lists.newName' | transloco" [placeholder]="'lists.editor.name' | transloco" />
+                  <button class="primary" type="submit" [disabled]="busy()">{{ 'objectives.lists.create' | transloco }}</button>
+                  <button class="secondary" type="button" (click)="mode.set('idle')">{{ 'common.cancel' | transloco }}</button>
                 </form>
               }
               @case ('link') {
-                <div class="picker" role="group" aria-label="Choisir une liste à lier">
+                <div class="picker" role="group" [attr.aria-label]="'objectives.lists.pick' | transloco">
                   @for (list of available(); track list.id) {
                     <button type="button" [style.--list-color]="list.color" [disabled]="busy()" (click)="link(list.id)">
                       <i class="dot" aria-hidden="true"></i>{{ list.name }}
                     </button>
                   } @empty {
-                    <p class="note">Aucune autre de vos listes ne peut être liée : chacune compte pour un objectif au plus.</p>
+                    <p class="note">{{ 'objectives.lists.noneLeft' | transloco }}</p>
                   }
-                  <button class="secondary" type="button" (click)="mode.set('idle')">Annuler</button>
+                  <button class="secondary" type="button" (click)="mode.set('idle')">{{ 'common.cancel' | transloco }}</button>
                 </div>
               }
               @default {
                 <div class="actions">
-                  <button type="button" (click)="mode.set('new')">＋ Nouvelle liste</button>
-                  <button type="button" (click)="openPicker()">Lier une liste</button>
+                  <button type="button" (click)="mode.set('new')">＋ {{ 'lists.overview.new' | transloco }}</button>
+                  <button type="button" (click)="openPicker()">{{ 'objectives.lists.link' | transloco }}</button>
                 </div>
               }
             }
@@ -139,9 +141,9 @@ export class ObjectiveListsComponent {
 
   async unlink(list: ObjectiveLinkedList): Promise<void> {
     const confirmed = await this.confirm.ask({
-      heading: 'Retirer la liste',
-      message: `« ${list.name} » ne comptera plus pour cet objectif. Elle reste dans vos listes.`,
-      confirmLabel: 'Retirer',
+      heading: t('objectives.lists.unlinkHeading'),
+      message: t('objectives.lists.unlinkMessage', { name: list.name }),
+      confirmLabel: t('objectives.lists.unlinkConfirm'),
     });
     if (confirmed) await this.store.unlinkList(this.objective().id, list.id);
   }

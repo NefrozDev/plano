@@ -31,7 +31,7 @@ describe('ObjectivesFiltersComponent', () => {
   it('starts unfiltered and previews the number of results', () => {
     expect(checkboxes(0)[0].checked).toBe(true);
     expect(checkboxes(1)[0].checked).toBe(true);
-    expect(element.querySelector('.actions a')?.textContent?.trim()).toBe('Afficher 3 objectif(s)');
+    expect(element.querySelector('.actions a')?.textContent?.trim()).toBe('Afficher 3 objectifs');
   });
 
   it('toggles statuses and categories', () => {

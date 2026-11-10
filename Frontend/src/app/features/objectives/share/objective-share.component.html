@@ -1,7 +1,7 @@
 <app-page-header
-  heading="Partager l’objectif"
+  [heading]="'objectives.share.heading' | transloco"
   [backLink]="['/objectives', id]"
-  backLabel="Fermer le partage"
+  [backLabel]="'objectives.share.close' | transloco"
   variant="close"
 />
 
@@ -13,11 +13,11 @@
     </div>
 
     @if (objective.descendantCount) {
-      <p class="note">Les personnes invitées ont aussi accès aux sous-objectifs, mais à rien au-dessus.</p>
+      <p class="note">{{ 'objectives.share.childrenNote' | transloco }}</p>
     }
 
     <section>
-      <h2>Personnes ({{ members().length }})</h2>
+      <h2>{{ 'objectives.share.people' | transloco: { count: members().length } }}</h2>
       <ul class="people">
         @for (member of members(); track member.id) {
           <li>
@@ -25,21 +25,21 @@
             <span class="name">
               {{ member.name }}
               @if (member.inheritedFrom; as from) {
-                <small>Invité·e sur « {{ from.title }} »</small>
+                <small>{{ 'objectives.share.invitedOn' | transloco: { title: from.title } }}</small>
               }
             </span>
             @if (isOwner() && member.role !== 'owner' && !member.inheritedFrom) {
               <select
                 class="choice-select"
-                [attr.aria-label]="'Droits de ' + member.name"
+                [attr.aria-label]="'lists.sharing.rightsOf' | transloco: { name: member.name }"
                 (change)="updateRole(member.id, $any($event.target).value)"
               >
-                <option value="contributor" [selected]="member.role === 'contributor'">{{ roleLabels.contributor }}</option>
-                <option value="viewer" [selected]="member.role === 'viewer'">{{ roleLabels.viewer }}</option>
+                <option value="contributor" [selected]="member.role === 'contributor'">{{ roleLabels.contributor | transloco }}</option>
+                <option value="viewer" [selected]="member.role === 'viewer'">{{ roleLabels.viewer | transloco }}</option>
               </select>
-              <button class="remove" type="button" [attr.aria-label]="'Retirer ' + member.name" (click)="removeMember(member.id)">×</button>
+              <button class="remove" type="button" [attr.aria-label]="'lists.sharing.remove' | transloco: { name: member.name }" (click)="removeMember(member.id)">×</button>
             } @else {
-              <span class="role">{{ roleLabels[member.role] }}</span>
+              <span class="role">{{ roleLabels[member.role] | transloco }}</span>
             }
           </li>
         }
@@ -47,30 +47,30 @@
 
       @if (isOwner()) {
         @if (!inviteOpen()) {
-          <button class="link-button" type="button" (click)="openInvite()">＋ Inviter des amis ou membres de groupe</button>
+          <button class="link-button" type="button" (click)="openInvite()">＋ {{ 'lists.sharing.invite' | transloco }}</button>
         } @else if (contacts() === null) {
-          <p class="note">Chargement de vos contacts…</p>
+          <p class="note">{{ 'participants.loading' | transloco }}</p>
         } @else if (candidates().length) {
           <div class="invite">
-            <select class="form-control" aria-label="Personne à inviter" (change)="inviteUserId.set($any($event.target).value)">
+            <select class="form-control" [attr.aria-label]="'lists.sharing.person' | transloco" (change)="inviteUserId.set($any($event.target).value)">
               @for (candidate of candidates(); track candidate.id) {
                 <option [value]="candidate.id" [selected]="candidate.id === inviteUserId()">{{ contactName(candidate) }}</option>
               }
             </select>
-            <div class="invite-roles" role="radiogroup" aria-label="Ce que la personne pourra faire">
+            <div class="invite-roles" role="radiogroup" [attr.aria-label]="'objectives.share.what' | transloco">
               <label [class.selected]="inviteRole() === 'viewer'">
                 <input type="radio" name="invite-role" [checked]="inviteRole() === 'viewer'" (change)="inviteRole.set('viewer')" />
-                <span><strong>Partager</strong><small>Elle peut suivre l’objectif, sans le modifier</small></span>
+                <span><strong>{{ 'objectives.detail.share' | transloco }}</strong><small>{{ 'objectives.share.viewerHint' | transloco }}</small></span>
               </label>
               <label [class.selected]="inviteRole() === 'contributor'">
                 <input type="radio" name="invite-role" [checked]="inviteRole() === 'contributor'" (change)="inviteRole.set('contributor')" />
-                <span><strong>Objectif commun</strong><small>Elle contribue à sa progression</small></span>
+                <span><strong>{{ 'objectives.share.common' | transloco }}</strong><small>{{ 'objectives.share.contributorHint' | transloco }}</small></span>
               </label>
             </div>
-            <button class="primary-button" type="button" (click)="invite()">Inviter</button>
+            <button class="primary-button" type="button" (click)="invite()">{{ 'lists.editor.invite' | transloco }}</button>
           </div>
         } @else {
-          <p class="note">Tous vos contacts ont déjà accès. Ajoutez des amis dans les paramètres pour partager avec d’autres personnes.</p>
+          <p class="note">{{ 'objectives.share.everyone' | transloco }}</p>
         }
       }
     </section>
@@ -80,9 +80,9 @@
     }
 
     @if (!isOwner()) {
-      <button class="leave" type="button" (click)="leave()">Quitter l’objectif</button>
+      <button class="leave" type="button" (click)="leave()">{{ 'objectives.share.leave' | transloco }}</button>
     }
   </div>
 } @else if (missing()) {
-  <p class="empty">Cet objectif n’existe pas ou a été supprimé.</p>
+  <p class="empty">{{ 'objectives.detail.missing' | transloco }}</p>
 }

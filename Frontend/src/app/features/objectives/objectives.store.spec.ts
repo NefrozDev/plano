@@ -6,7 +6,7 @@ import { PlanoDataStore } from '../../core/data/plano-data.store';
 import { ObjectiveSettingsStore } from '../../core/settings/objective-settings.store';
 import { FakeEventSource } from '../../testing/fake-event-source';
 import { settle } from '../../testing/plano-testing';
-import { ObjectivesStore, REMOVED_MESSAGE } from './objectives.store';
+import { ObjectivesStore } from './objectives.store';
 import { provideObjectivesTesting, provideSignedIn } from './objectives.testing';
 import { ME, metricDetail, objectiveDetail, objectiveSummary, treeDetail } from './testing/objectives-fixtures';
 
@@ -218,7 +218,7 @@ describe('ObjectivesStore', () => {
         await settle();
 
         expect(store.detail()).toBeNull();
-        expect(store.error()).toBe(REMOVED_MESSAGE);
+        expect(store.error()).toBe('Cet objectif a été supprimé ou ne vous est plus partagé.');
       });
 
       it('ignores an answer for what is no longer open', async () => {
@@ -244,7 +244,7 @@ describe('ObjectivesStore', () => {
 
         expect(store.objectives()).toEqual([]);
         expect(store.detail()).toBeNull();
-        expect(store.error()).toBe(REMOVED_MESSAGE);
+        expect(store.error()).toBe('Cet objectif a été supprimé ou ne vous est plus partagé.');
       });
 
       it('leaves what is open alone when something else is removed', async () => {

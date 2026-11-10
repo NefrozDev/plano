@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { IsoDate, ObjectiveDetail } from '@plano/common';
+import { t } from '../../../../core/i18n/translate';
 import { daysBetween, formatDate, formatShortDate } from '../../../../core/time/dates';
 import {
   formatDuration,
@@ -34,6 +36,7 @@ export function niceStep(max: number, intervals = 4): number {
 
 @Component({
   selector: 'app-objective-stats',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-stats.component.html',
   styleUrl: './objective-stats.component.scss',
@@ -108,10 +111,16 @@ export class ObjectiveStatsComponent {
       xLabels,
       baseline,
       targetY: yOf(metric.target),
-      targetLabel: `Objectif : ${formatNumber(metric.target)} ${metric.unit}`,
+      targetLabel: t('objectives.stats.target', { value: `${formatNumber(metric.target)} ${metric.unit}` }),
       last,
       lastLabel: `${formatNumber(last.value)} ${metric.unit}`,
-      summary: `Progression de ${formatNumber(first.value)} à ${formatNumber(last.value)} ${metric.unit} entre le ${formatDate(first.date)} et le ${formatDate(last.date)}, pour un objectif de ${formatNumber(metric.target)} ${metric.unit}.`,
+      summary: t('objectives.stats.summary', {
+        from: formatNumber(first.value),
+        to: `${formatNumber(last.value)} ${metric.unit}`,
+        start: formatDate(first.date),
+        end: formatDate(last.date),
+        target: `${formatNumber(metric.target)} ${metric.unit}`,
+      }),
     };
   });
 
@@ -134,7 +143,7 @@ export class ObjectiveStatsComponent {
   readonly sliderIndex = computed(() => this.activeIndex() ?? (this.chart()?.points.length ?? 1) - 1);
   readonly sliderText = computed(() => {
     const point = this.chart()?.points[this.sliderIndex()];
-    return point ? `${formatNumber(point.value)} ${this.unit()}, le ${formatDate(point.date)}` : '';
+    return point ? t('objectives.stats.point', { value: `${formatNumber(point.value)} ${this.unit()}`, date: formatDate(point.date) }) : '';
   });
 
   trackPointer(event: PointerEvent, svg: Element): void {
@@ -179,13 +188,13 @@ export class ObjectiveStatsComponent {
     return [
       {
         value: `${formatNumber(objective.amount?.current ?? 0)} ${unit}`,
-        label: objective.metric?.aggregation === 'max' ? 'Meilleure valeur' : 'Total cumulé',
+        label: t(objective.metric?.aggregation === 'max' ? 'objectives.stats.best' : 'objectives.stats.total'),
       },
       minutes
-        ? { value: formatDuration(minutes), label: 'Temps total' }
-        : { value: `${done.length}`, label: 'Séances réalisées' },
-      { value: `${formatNumber(average)} ${unit}`, label: 'Moyenne par séance' },
-      { value: `${attendance} %`, label: 'Assiduité' },
+        ? { value: formatDuration(minutes), label: t('objectives.stats.time') }
+        : { value: formatNumber(done.length), label: t('objectives.stats.sessions') },
+      { value: `${formatNumber(average)} ${unit}`, label: t('objectives.stats.average') },
+      { value: t('objectives.percent', { percent: attendance }), label: t('objectives.stats.attendance') },
     ];
   }
 }

@@ -70,10 +70,11 @@ export interface ObjectivePerson {
   avatarVersion: number | null;
 }
 
-/** Progress in the objective's own unit; only for metrics and habits. */
+/** Progress in the objective's own unit; only for metrics, habits (days) and lists (items). */
 export interface ObjectiveAmount {
   current: number;
   target: number;
+  /** The metric's unit; empty for days and items, which the app names in its language. */
   unit: string;
 }
 

@@ -59,7 +59,7 @@ describe('ObjectivesSettingsComponent', () => {
     it('lists them, and deletes one', async () => {
       await answer([{ id: 't1', name: 'Voyage', nodeCount: 3 }]);
       expect(element.querySelector('.templates li')?.textContent).toContain('Voyage');
-      expect(element.querySelector('.templates li')?.textContent).toContain('3 objectif(s)');
+      expect(element.querySelector('.templates li')?.textContent).toContain('3 objectifs');
 
       (element.querySelector('.templates button') as HTMLButtonElement).click();
       const request = TestBed.inject(HttpTestingController).expectOne('/api/v1/objectives/templates/t1');

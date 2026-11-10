@@ -263,7 +263,7 @@ describe('ObjectiveTree', () => {
         expect(tree.amount('root')).toEqual({
           current: 3,
           target: 4,
-          unit: 'jours',
+          unit: '',
         });
       });
 

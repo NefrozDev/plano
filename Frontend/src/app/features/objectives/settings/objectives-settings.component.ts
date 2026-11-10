@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { DueReminder, ObjectiveSettings } from '@plano/common';
+import { CountPipe } from '../../../core/i18n/translate';
 import { DUE_REMINDER_LABELS } from '../objective.utils';
 import { ObjectivesStore } from '../objectives.store';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
@@ -9,7 +11,7 @@ type ToggleSetting = 'showArchived' | 'notifications' | 'showPercentage' | 'cate
 
 @Component({
   selector: 'app-objectives-settings',
-  imports: [PageHeaderComponent, SwitchRowComponent],
+  imports: [TranslocoPipe, CountPipe, PageHeaderComponent, SwitchRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-settings.component.html',
   styleUrl: './objectives-settings.component.scss',

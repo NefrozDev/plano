@@ -1,16 +1,16 @@
 @if (objective(); as objective) {
   @if (objective.completion === 'habit') {
     <div class="heading">
-      <h2>Suivi de l’habitude</h2>
+      <h2>{{ 'objectives.habit.heading' | transloco }}</h2>
       <div class="month-nav">
-        <button type="button" aria-label="Mois précédent" (click)="shiftMonth(-1)">‹</button>
+        <button type="button" [attr.aria-label]="'objectives.calendar.previous' | transloco" (click)="shiftMonth(-1)">‹</button>
         <span aria-live="polite">{{ monthLabel() }}</span>
-        <button type="button" aria-label="Mois suivant" (click)="shiftMonth(1)">›</button>
+        <button type="button" [attr.aria-label]="'objectives.calendar.next' | transloco" (click)="shiftMonth(1)">›</button>
       </div>
     </div>
 
-    <div class="calendar" role="group" [attr.aria-label]="'Jours réussis en ' + monthLabel()">
-      @for (weekday of weekdays; track $index) {
+    <div class="calendar" role="group" [attr.aria-label]="'objectives.habit.daysIn' | transloco: { month: monthLabel() }">
+      @for (weekday of weekdays(); track $index) {
         <span class="weekday" aria-hidden="true">{{ weekday }}</span>
       }
       @for (week of weeks(); track week[0].date) {
@@ -31,42 +31,42 @@
     </div>
     <p class="hint">
       @if (!canContribute()) {
-        Vous consultez cette habitude sans y participer.
+        {{ 'objectives.habit.viewer' | transloco }}
       } @else {
-        {{ objective.status === 'paused' ? 'Reprenez l’objectif pour cocher des jours.' : 'Touchez un jour pour le marquer comme réussi.' }}
+        {{ (objective.status === 'paused' ? 'objectives.habit.paused' : 'objectives.habit.hint') | transloco }}
       }
     </p>
 
-    <section class="stats" aria-label="Statistiques du mois">
+    <section class="stats" [attr.aria-label]="'objectives.habit.stats' | transloco">
       @if (period(); as period) {
-        <div><strong>{{ period.done }} / {{ period.target }}</strong><span>{{ period.current }}</span></div>
-        <div><strong>{{ period.reachedCount }} / {{ period.pastCount }}</strong><span>{{ period.reached }}</span></div>
-        <div><strong>{{ stats().successes }}</strong><span>Jours réussis</span></div>
+        <div><strong>{{ period.done }} / {{ period.target }}</strong><span>{{ period.current | transloco }}</span></div>
+        <div><strong>{{ period.reachedCount }} / {{ period.pastCount }}</strong><span>{{ period.reached | transloco }}</span></div>
+        <div><strong>{{ stats().successes }}</strong><span>{{ 'objectives.habit.successes' | transloco }}</span></div>
       } @else {
-        <div><strong>{{ stats().successes }}</strong><span>Jours réussis</span></div>
-        <div><strong>{{ stats().rate }} %</strong><span>Taux de réussite</span></div>
-        <div><strong>{{ stats().bestStreak }}</strong><span>Meilleure série</span></div>
+        <div><strong>{{ stats().successes }}</strong><span>{{ 'objectives.habit.successes' | transloco }}</span></div>
+        <div><strong>{{ 'objectives.percent' | transloco: { percent: stats().rate } }}</strong><span>{{ 'objectives.habit.rate' | transloco }}</span></div>
+        <div><strong>{{ stats().bestStreak }}</strong><span>{{ 'objectives.habit.bestStreak' | transloco }}</span></div>
       }
     </section>
 
     <section class="reminder">
-      <h3>Mon rappel</h3>
+      <h3>{{ 'objectives.habit.reminder' | transloco }}</h3>
       <label>
-        <span>Fréquence</span>
+        <span>{{ 'objectives.habit.frequency' | transloco }}</span>
         <select (change)="updateReminder({ frequency: $any($event.target).value })">
-          <option value="none" [selected]="objective.reminder.frequency === 'none'">Aucun rappel</option>
-          <option value="daily" [selected]="objective.reminder.frequency === 'daily'">Chaque jour</option>
-          <option value="weekly" [selected]="objective.reminder.frequency === 'weekly'">Chaque semaine</option>
+          <option value="none" [selected]="objective.reminder.frequency === 'none'">{{ 'objectives.reminders.none' | transloco }}</option>
+          <option value="daily" [selected]="objective.reminder.frequency === 'daily'">{{ 'objectives.habit.daily' | transloco }}</option>
+          <option value="weekly" [selected]="objective.reminder.frequency === 'weekly'">{{ 'objectives.habit.weekly' | transloco }}</option>
         </select>
       </label>
       @if (objective.reminder.frequency !== 'none') {
         <label>
-          <span>Heure</span>
+          <span>{{ 'objectives.habit.time' | transloco }}</span>
           <input type="time" [value]="objective.reminder.time" (change)="updateReminder({ time: $any($event.target).value })" />
         </label>
       }
     </section>
   } @else {
-    <p class="empty">Cet objectif n’est pas suivi comme une habitude.</p>
+    <p class="empty">{{ 'objectives.habit.notHabit' | transloco }}</p>
   }
 }

@@ -858,5 +858,471 @@
       "money": "Geld",
       "misc": "Overig"
     }
+  },
+  "objectives": {
+    "backToObjectives": "Terug naar de doelen",
+    "deletedAccount": "Verwijderd account",
+    "untitled": "Doel",
+    "failed": "Dat is mislukt. Probeer het opnieuw.",
+    "removed": "Dit doel is verwijderd of wordt niet meer met je gedeeld.",
+    "notOwnerNotice": "Alleen wie dit doel heeft gemaakt, kan het verwijderen.",
+    "percent": "{{percent}}%",
+    "categories": {
+      "health": "Gezondheid",
+      "learning": "Leren",
+      "finance": "Financiën",
+      "development": "Persoonlijke groei",
+      "other": "Overig"
+    },
+    "statuses": {
+      "active": "Bezig",
+      "completed": "Voltooid",
+      "paused": "Gepauzeerd"
+    },
+    "completion": {
+      "children": "Subdoelen",
+      "childrenHint": "Het gemiddelde van hun voortgang",
+      "metric": "Doel in cijfers",
+      "metricHint": "Tel of tel op: uitstappen, km, euro…",
+      "habit": "Gewoonte",
+      "habitHint": "Vink de geslaagde dagen af in een kalender",
+      "manual": "Handmatig percentage",
+      "manualHint": "Je verschuift de balk zelf",
+      "list": "Lijst",
+      "listHint": "De afgevinkte items van zijn lijsten"
+    },
+    "rhythm": {
+      "none": "In totaal",
+      "weekly": "Per week",
+      "monthly": "Per maand",
+      "yearly": "Per jaar"
+    },
+    "periods": {
+      "weekly": {
+        "per": "per week",
+        "every": "elke week",
+        "current": "Deze week",
+        "reached": "Geslaagde weken"
+      },
+      "monthly": {
+        "per": "per maand",
+        "every": "elke maand",
+        "current": "Deze maand",
+        "reached": "Geslaagde maanden"
+      },
+      "yearly": {
+        "per": "per jaar",
+        "every": "elk jaar",
+        "current": "Dit jaar",
+        "reached": "Geslaagde jaren"
+      }
+    },
+    "dueReminders": {
+      "none": "Geen",
+      "sameDay": "Op de dag zelf",
+      "dayBefore": "1 dag vooraf",
+      "weekBefore": "1 week vooraf"
+    },
+    "duration": {
+      "hours": "{{hours}} u {{minutes}}",
+      "minutes": "{{minutes}} min"
+    },
+    "units": {
+      "days": {
+        "one": "dag",
+        "other": "dagen"
+      },
+      "items": {
+        "one": "item",
+        "other": "items"
+      },
+      "dayCount": {
+        "one": "{{count}} dag",
+        "other": "{{count}} dagen"
+      }
+    },
+    "sharing": {
+      "by": "Van {{name}}",
+      "common": "Gezamenlijk",
+      "shared": "Gedeeld",
+      "for": "Voor {{name}}"
+    },
+    "due": {
+      "completed": "Voltooid op {{date}}",
+      "completedBy": "Voltooid op {{date}} door {{name}}",
+      "on": "Einddatum: {{date}}",
+      "none": "Geen einddatum"
+    },
+    "timelapse": {
+      "late": {
+        "one": "{{count}} dag te laat",
+        "other": "{{count}} dagen te laat"
+      },
+      "left": {
+        "one": "nog {{count}} dag",
+        "other": "nog {{count}} dagen"
+      },
+      "done": "Voltooid",
+      "lastDay": "Laatste dag"
+    },
+    "reminders": {
+      "none": "Geen herinnering",
+      "daily": "Elke dag om {{time}}",
+      "weekly": "Elke {{day}} om {{time}}"
+    },
+    "activity": {
+      "comments": "Reacties",
+      "deleteComment": "De reactie verwijderen",
+      "noComments": "Nog geen reacties.",
+      "yourComment": "Je reactie",
+      "writeComment": "Schrijf een reactie…",
+      "send": "Versturen",
+      "history": "Geschiedenis",
+      "nothing": "Nog niets.",
+      "created": "heeft het doel gemaakt",
+      "createdWith": "heeft het doel gemaakt op basis van {{detail}}",
+      "edited": "heeft de instellingen gewijzigd",
+      "paused": "heeft gepauzeerd",
+      "resumed": "heeft hervat",
+      "archived": "heeft gearchiveerd",
+      "unarchived": "heeft uit het archief gehaald",
+      "session": "heeft een sessie toegevoegd",
+      "sessionWith": "heeft een sessie toegevoegd: {{detail}}",
+      "session_removed": "heeft een sessie verwijderd",
+      "session_removedWith": "heeft een sessie verwijderd: {{detail}}",
+      "check_in": "heeft een dag afgevinkt",
+      "check_inOn": "heeft {{detail}} afgevinkt",
+      "check_out": "heeft een dag niet meer afgevinkt",
+      "check_outOn": "heeft {{detail}} niet meer afgevinkt",
+      "progress": "heeft het doel vooruitgezet",
+      "progressTo": "heeft het op {{detail}}% gezet",
+      "completed": "heeft voltooid",
+      "reopened": "heeft heropend",
+      "member_added": "heeft iemand uitgenodigd",
+      "member_addedWith": "heeft {{detail}} uitgenodigd",
+      "member_removed": "heeft iemand verwijderd",
+      "member_removedWith": "heeft {{detail}} verwijderd",
+      "member_left": "heeft het doel verlaten",
+      "assigned": "heeft het doel toegewezen",
+      "assignedWith": "heeft het toegewezen aan {{detail}}",
+      "unassigned": "heeft de toewijzing verwijderd",
+      "restarted": "heeft een nieuwe periode gestart"
+    },
+    "removal": {
+      "heading": "Het doel verwijderen?",
+      "delete": "Verwijderen",
+      "alone": "“{{title}}” wordt definitief verwijderd.",
+      "withChildren": {
+        "one": "“{{title}}” en zijn subdoel worden definitief verwijderd.",
+        "other": "“{{title}}” en zijn {{count}} subdoelen worden definitief verwijderd."
+      },
+      "everything": "“{{title}}” en alles wat erin zit, worden definitief verwijderd.",
+      "everythingForEveryone": "“{{title}}” en alles wat erin zit, worden voor iedereen definitief verwijderd.",
+      "listsHeading": {
+        "one": "Ook zijn lijst verwijderen?",
+        "other": "Ook zijn lijsten verwijderen?"
+      },
+      "lists": {
+        "one": "Er is een lijst gekoppeld aan “{{title}}”. Anders blijft ze bij je lijsten.",
+        "other": "Er zijn {{count}} lijsten gekoppeld aan “{{title}}”. Anders blijven ze bij je lijsten."
+      },
+      "deleteLists": {
+        "one": "De lijst verwijderen",
+        "other": "De lijsten verwijderen"
+      },
+      "keepLists": {
+        "one": "De lijst houden",
+        "other": "De lijsten houden"
+      }
+    },
+    "card": {
+      "progress": "Voortgang: ",
+      "archived": "Gearchiveerd",
+      "delete": "Het doel {{title}} verwijderen",
+      "time": "Tijd van het doel"
+    },
+    "tabs": {
+      "all": "Alle",
+      "mine": "Mijn doelen",
+      "shared": "Gedeeld",
+      "archived": "Gearchiveerd",
+      "summary": "Overzicht",
+      "calendar": "Kalender",
+      "stats": "Statistieken",
+      "activity": "Activiteit"
+    },
+    "overview": {
+      "asList": "Doelen als lijst tonen",
+      "asGrid": "Doelen als raster tonen",
+      "filterAndSort": "Doelen filteren en sorteren",
+      "tabs": "Doelen filteren",
+      "activeFilters": {
+        "one": "{{count}} actieve filter",
+        "other": "{{count}} actieve filters"
+      },
+      "move": "Het doel {{title}} verplaatsen (pijltjestoetsen wijzigen de plaats)",
+      "completed": "Voltooid",
+      "less": "Minder tonen",
+      "all": "Alles bekijken ({{count}})",
+      "none": "Geen doel past bij deze weergave.",
+      "create": "Een doel maken"
+    },
+    "search": {
+      "placeholder": "Een doel zoeken…",
+      "none": "Geen doel komt overeen met “{{query}}”.",
+      "recent": "Recent",
+      "health": "Gezondheidsdoelen",
+      "learning": "Leerdoelen",
+      "finance": "Financiële doelen",
+      "development": "Persoonlijke groei"
+    },
+    "filters": {
+      "status": "Status",
+      "categories": "Categorieën",
+      "allCategories": "Alle",
+      "sort": "Sorteren",
+      "sortBy": "Sorteren op",
+      "manual": "Aangepast",
+      "dueDate": "Einddatum",
+      "progress": "Voortgang",
+      "title": "Naam",
+      "order": "Sorteervolgorde",
+      "asc": "Oplopend",
+      "desc": "Aflopend",
+      "show": {
+        "one": "{{count}} doel tonen",
+        "other": "{{count}} doelen tonen"
+      }
+    },
+    "settings": {
+      "heading": "Doelinstellingen",
+      "showArchived": "Gearchiveerde doelen tonen bij “Alle”",
+      "dueReminder": "Standaardherinnering voor de einddatum",
+      "notifications": "Meldingen van doelen",
+      "habitReminders": "Herinneringen voor gewoontes",
+      "scheduled": "Op het ingestelde uur",
+      "off": "Uit",
+      "templates": "Sjablonen",
+      "nodeCount": {
+        "one": "{{count}} doel",
+        "other": "{{count}} doelen"
+      },
+      "deleteTemplate": "Het sjabloon {{name}} verwijderen",
+      "noTemplates": "Bewaar een doel als sjabloon via zijn menu om het hier te hergebruiken.",
+      "showPercentage": "Voortgang als percentage tonen",
+      "categoryColors": "Kleur per categorie"
+    },
+    "detail": {
+      "actions": "Acties van het doel",
+      "share": "Delen",
+      "people": "Personen",
+      "saveAsTemplate": "Als sjabloon bewaren",
+      "resume": "Hervatten",
+      "pause": "Pauzeren",
+      "unarchive": "Uit het archief halen",
+      "archive": "Archiveren",
+      "parents": "Bovenliggende doelen",
+      "views": "Weergaven van het doel",
+      "templateHint": "Het sjabloon bewaart de instellingen en subdoelen, zonder de voortgang of de personen. Alleen jij ziet het.",
+      "templateName": "Naam van het sjabloon",
+      "templateSaved": "Sjabloon bewaard.",
+      "missing": "Dit doel bestaat niet of is verwijderd."
+    },
+    "celebration": {
+      "heading": "Doel bereikt!",
+      "message": "Goed gedaan, “{{title}}” is voltooid!",
+      "next": "En nu?",
+      "restart": "Opnieuw beginnen",
+      "restartHint": "Vandaag van nul herbeginnen; dit resultaat blijft in de geschiedenis.",
+      "archiveHint": "Opbergen bij je gearchiveerde doelen.",
+      "deleteHint": "Definitief verwijderen.",
+      "keep": "Zo laten",
+      "bravo": "Goed gedaan!"
+    },
+    "sessions": {
+      "done": "Gedaan",
+      "planned": "Gepland",
+      "rest": "Rust",
+      "missed": "Gemist"
+    },
+    "calendar": {
+      "previous": "Vorige maand",
+      "next": "Volgende maand",
+      "label": "Kalender {{month}}",
+      "legend": "Legende",
+      "delete": "{{label}} verwijderen",
+      "none": "Geen sessie op die dag.",
+      "sessionLabel": "Naam van de sessie",
+      "sessionPlaceholder": "Bv. 5 km lopen",
+      "value": "Waarde",
+      "duration": "Duur in minuten (optioneel)",
+      "minutes": "min",
+      "status": "Status van de sessie",
+      "add": "Toevoegen",
+      "addSession": "Een sessie toevoegen",
+      "unavailable": "De kalender is beschikbaar voor doelen in cijfers.",
+      "today": "Vandaag – {{day}}",
+      "dayStatus": "{{day}}: {{status}}",
+      "valueError": "Vul een waarde groter dan 0 in."
+    },
+    "habit": {
+      "heading": "Gewoonte opvolgen",
+      "daysIn": "Geslaagde dagen in {{month}}",
+      "viewer": "Je bekijkt deze gewoonte zonder eraan deel te nemen.",
+      "paused": "Hervat het doel om dagen af te vinken.",
+      "hint": "Tik op een dag om hem als geslaagd te markeren.",
+      "stats": "Statistieken van de maand",
+      "successes": "Geslaagde dagen",
+      "rate": "Slagingspercentage",
+      "bestStreak": "Beste reeks",
+      "reminder": "Mijn herinnering",
+      "frequency": "Frequentie",
+      "daily": "Elke dag",
+      "weekly": "Elke week",
+      "time": "Uur",
+      "notHabit": "Dit doel wordt niet als gewoonte gevolgd.",
+      "dayDone": "{{day}}: geslaagd",
+      "dayNotDone": "{{day}}: niet gedaan"
+    },
+    "stats": {
+      "overview": "Overzicht",
+      "keyFigures": "Kerncijfers",
+      "chartTitle": "Voortgang ({{unit}})",
+      "current": "Huidig",
+      "data": "De gegevens bekijken",
+      "empty": "Voeg een voltooide sessie toe in de kalender om je voortgang te zien.",
+      "unavailable": "Statistieken zijn beschikbaar voor doelen in cijfers.",
+      "target": "Streefwaarde: {{value}}",
+      "summary": "Voortgang van {{from}} naar {{to}} tussen {{start}} en {{end}}, voor een streefwaarde van {{target}}.",
+      "point": "{{value}}, op {{date}}",
+      "best": "Beste waarde",
+      "total": "Totaal",
+      "time": "Totale tijd",
+      "sessions": "Voltooide sessies",
+      "average": "Gemiddelde per sessie",
+      "attendance": "Trouw"
+    },
+    "lists": {
+      "checked": "{{current}} / {{target}} afgevinkt",
+      "unlink": "“{{name}}” van het doel loskoppelen",
+      "removeChecked": "Afgevinkte items worden verwijderd: deze lijst telt niet mee in de balk.",
+      "addHint": "Voeg een lijst toe: de afgevinkte items doen de balk vooruitgaan.",
+      "newName": "Naam van de nieuwe lijst",
+      "create": "Maken",
+      "pick": "Een lijst kiezen om te koppelen",
+      "noneLeft": "Geen andere lijst van jou kan worden gekoppeld: elke lijst telt voor hooguit één doel.",
+      "link": "Een lijst koppelen",
+      "unlinkHeading": "De lijst loskoppelen",
+      "unlinkMessage": "“{{name}}” telt niet meer mee voor dit doel. Ze blijft bij je lijsten.",
+      "unlinkConfirm": "Loskoppelen"
+    },
+    "summary": {
+      "title": "Titel van het doel",
+      "rename": "Het doel hernoemen",
+      "progress": "Voortgang van het doel",
+      "manual": "Vordering",
+      "reopen": "Heropenen",
+      "markDone": "Als voltooid markeren",
+      "contributions": "Bijdragen",
+      "reopenChild": "{{title}} heropenen",
+      "completeChild": "{{title}} voltooien",
+      "addChild": "Een subdoel toevoegen",
+      "periods": "Voorbije periodes",
+      "plan": "Plan",
+      "setPlan": "Een plan bepalen",
+      "planPlaceholder": "Bv. 3 trainingen per week",
+      "sharedWith": "Gedeeld met",
+      "nobodyYet": "Nog niemand",
+      "nobody": "Niemand",
+      "reminders": "Mijn herinneringen",
+      "remindersValue": "{{reminder}} · Einddatum: {{due}}",
+      "day": "Dag",
+      "beforeDue": "Voor de einddatum",
+      "forYouOnly": "Alleen voor jou",
+      "repeatsWeekly": "Herhaalt elke week",
+      "repeatsMonthly": "Herhaalt elke maand",
+      "repeatsYearly": "Herhaalt elk jaar",
+      "notDone": "Niet voltooid",
+      "daysShort": "d",
+      "completedUnit": "voltooid",
+      "cumulated": "Totaal",
+      "sessions": "Sessies",
+      "toDo": "Te doen",
+      "checked": "Afgevinkt",
+      "lists": {
+        "one": "Lijst",
+        "other": "Lijsten"
+      },
+      "left": "Resterend",
+      "late": "Te laat"
+    },
+    "share": {
+      "heading": "Het doel delen",
+      "close": "Het delen sluiten",
+      "childrenNote": "Uitgenodigde personen zien ook de subdoelen, maar niets daarboven.",
+      "people": "Personen ({{count}})",
+      "invitedOn": "Uitgenodigd voor “{{title}}”",
+      "what": "Wat deze persoon kan doen",
+      "viewerHint": "Kan het doel volgen zonder het te wijzigen",
+      "common": "Gezamenlijk doel",
+      "contributorHint": "Draagt bij aan de voortgang",
+      "everyone": "Al je contacten hebben al toegang. Voeg vrienden toe in de instellingen om met andere mensen te delen.",
+      "leave": "Het doel verlaten",
+      "leaveHeading": "Het doel verlaten?",
+      "leaveMessage": "Je hebt er dan geen toegang meer toe, tenzij je opnieuw wordt uitgenodigd.",
+      "contributor": "Kan bijdragen",
+      "noContacts": "Voeg vrienden toe in de instellingen of word lid van een groep om met hen te delen."
+    },
+    "form": {
+      "fromTemplate": "Vertrekken van een sjabloon",
+      "useTemplate": "Maken op basis van dit sjabloon",
+      "question": "Wat is je doel?",
+      "titlePlaceholder": "Bv. Twee keer per week lopen, 12 boeken lezen…",
+      "titleError": "Geef je doel een naam.",
+      "category": "Categorie",
+      "start": "Start",
+      "due": "Einddatum",
+      "optional": "(optioneel)",
+      "dueInPast": "De einddatum kan niet in het verleden liggen.",
+      "dueBeforeStart": "De einddatum kan niet voor de start liggen.",
+      "tracking": "Opvolging en voortgang",
+      "trackingHint": "Vink dagen af, tel, of volg subdoelen",
+      "barModes": "Wat de balk doet vooruitgaan",
+      "target": "Streefwaarde {{period}}",
+      "unit": "Eenheid",
+      "unitPlaceholder": "km, €, boeken…",
+      "targetError": "Vul een positieve streefwaarde en een eenheid in.",
+      "aggregation": "Berekening van de voortgang",
+      "sum": "Totaal (bv. gespaard bedrag)",
+      "max": "Beste waarde (bv. gelopen afstand)",
+      "habitDays": "Aantal dagen om te slagen",
+      "habitDaysPer": "Dagen om te slagen {{period}}",
+      "habitDaysError": "Kies tussen 1 en {{max}} dagen.",
+      "rhythm": "Ritme",
+      "rhythmHint": "Begint {{period}} opnieuw van nul; vorige resultaten blijven bewaard.",
+      "timelapse": "Tijdbalk",
+      "timelapseHint": "De tijd zien verstrijken tot de einddatum",
+      "timelapseDirection": "Richting van de tijdbalk",
+      "elapsed": "Verstreken tijd",
+      "elapsedHint": "Vult zich naarmate de tijd verstrijkt",
+      "remaining": "Resterende tijd",
+      "remainingHint": "Begint vol en loopt leeg tot de einddatum",
+      "repeat": "Herhalen",
+      "repeatHint": "Begint elke periode opnieuw van nul; het resultaat blijft bewaard",
+      "childrenHint": "Het doel opdelen; elk deel heeft eigen instellingen",
+      "child": "Subdoel {{number}}",
+      "childPlaceholder": "Bv. De tickets boeken",
+      "removeChild": "Subdoel {{number}} verwijderen",
+      "shareHint": "Deze personen kunnen het doel volgen",
+      "commonHint": "Deze personen dragen bij aan de voortgang",
+      "weight": "Gewicht in het bovenliggende doel",
+      "weightError": "Kies een gewicht tussen 1 en 100.",
+      "descriptionPlaceholder": "Beschrijf je doel…",
+      "create": "Het doel maken",
+      "editHeading": "Het doel bewerken",
+      "newChild": "Nieuw subdoel",
+      "monthly": "Elke maand",
+      "yearly": "Elk jaar"
+    }
   }
 }

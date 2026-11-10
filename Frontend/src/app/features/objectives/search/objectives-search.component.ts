@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ObjectiveCategory, ObjectiveSummary } from '@plano/common';
 import { SearchFieldComponent } from '../../../shared/ui/search-field.component';
 import { dueCaption, objectiveTint } from '../objective.utils';
@@ -9,7 +10,7 @@ import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 
 @Component({
   selector: 'app-objectives-search',
-  imports: [RouterLink, PageHeaderComponent, SearchFieldComponent, ObjectiveIconComponent],
+  imports: [RouterLink, TranslocoPipe, PageHeaderComponent, SearchFieldComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-search.component.html',
   styleUrl: './objectives-search.component.scss',
@@ -22,10 +23,10 @@ export class ObjectivesSearchComponent {
   readonly results = computed(() => this.store.search(this.query()));
   readonly recent = this.store.recent;
   readonly suggestions: readonly { category: ObjectiveCategory; label: string }[] = [
-    { category: 'health', label: 'Objectifs santé' },
-    { category: 'learning', label: 'Objectifs d’apprentissage' },
-    { category: 'finance', label: 'Objectifs financiers' },
-    { category: 'development', label: 'Développement personnel' },
+    { category: 'health', label: 'objectives.search.health' },
+    { category: 'learning', label: 'objectives.search.learning' },
+    { category: 'finance', label: 'objectives.search.finance' },
+    { category: 'development', label: 'objectives.search.development' },
   ];
 
   tint(objective: ObjectiveSummary): string {

@@ -4,31 +4,31 @@
   }
 
   <section aria-labelledby="comments-title">
-    <h2 id="comments-title">Commentaires</h2>
+    <h2 id="comments-title">{{ 'objectives.activity.comments' | transloco }}</h2>
     <ul class="comments">
       @for (comment of comments(); track comment.id) {
         <li>
           <p class="meta">
-            <b>{{ comment.author?.name ?? 'Compte supprimé' }}</b>
+            <b>{{ comment.author?.name ?? ('objectives.deletedAccount' | transloco) }}</b>
             <small>{{ when(comment.createdAt) }}</small>
             @if (canRemove(comment)) {
-              <button type="button" aria-label="Supprimer le commentaire" (click)="remove(comment.id)">×</button>
+              <button type="button" [attr.aria-label]="'objectives.activity.deleteComment' | transloco" (click)="remove(comment.id)">×</button>
             }
           </p>
           <p class="body">{{ comment.body }}</p>
         </li>
       } @empty {
-        <li class="empty">Aucun commentaire pour l’instant.</li>
+        <li class="empty">{{ 'objectives.activity.noComments' | transloco }}</li>
       }
     </ul>
     <form class="new-comment" (submit)="$event.preventDefault(); send(message)">
-      <textarea #message class="form-control" rows="2" maxlength="1000" aria-label="Votre commentaire" placeholder="Écrire un commentaire…"></textarea>
-      <button class="primary-button" type="submit" [disabled]="sending()">Envoyer</button>
+      <textarea #message class="form-control" rows="2" maxlength="1000" [attr.aria-label]="'objectives.activity.yourComment' | transloco" [placeholder]="'objectives.activity.writeComment' | transloco"></textarea>
+      <button class="primary-button" type="submit" [disabled]="sending()">{{ 'objectives.activity.send' | transloco }}</button>
     </form>
   </section>
 
   <section aria-labelledby="history-title">
-    <h2 id="history-title">Historique</h2>
+    <h2 id="history-title">{{ 'objectives.activity.history' | transloco }}</h2>
     <ol class="history">
       @for (line of lines(); track line.id) {
         <li>
@@ -36,7 +36,7 @@
           <small>{{ line.when }}</small>
         </li>
       } @empty {
-        <li class="empty">Rien pour l’instant.</li>
+        <li class="empty">{{ 'objectives.activity.nothing' | transloco }}</li>
       }
     </ol>
   </section>

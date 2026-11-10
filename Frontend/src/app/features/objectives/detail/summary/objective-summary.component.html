@@ -11,7 +11,7 @@
         <input
           #titleInput
           class="title-input"
-          aria-label="Titre de l’objectif"
+          [attr.aria-label]="'objectives.summary.title' | transloco"
           maxlength="80"
           [value]="objective.title"
           (keydown.enter)="saveTitle(titleInput.value)"
@@ -22,7 +22,7 @@
         <h2>
           {{ objective.title }}
           @if (isOwner()) {
-            <button type="button" aria-label="Renommer l’objectif" (click)="editingTitle.set(true)">
+            <button type="button" [attr.aria-label]="'objectives.summary.rename' | transloco" (click)="editingTitle.set(true)">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16Z" /><path d="m13.5 6.5 4 4" /></svg>
             </button>
           }
@@ -33,16 +33,16 @@
         <p class="due">{{ view.recurrence }}</p>
       }
       @if (objective.status === 'paused' || objective.archived) {
-        <p class="pill">{{ objective.archived ? 'Archivé' : 'En pause' }}</p>
+        <p class="pill">{{ (objective.archived ? 'objectives.card.archived' : 'objectives.statuses.paused') | transloco }}</p>
       }
 
       @if (objective.percent !== null) {
         <strong class="percent">{{ view.progressText }}</strong>
-        <span class="caption">Progression</span>
+        <span class="caption">{{ 'objectives.filters.progress' | transloco }}</span>
         <div
           class="progress"
           role="progressbar"
-          aria-label="Progression de l’objectif"
+          [attr.aria-label]="'objectives.summary.progress' | transloco"
           aria-valuemin="0"
           aria-valuemax="100"
           [attr.aria-valuenow]="objective.percent"
@@ -55,7 +55,7 @@
 
       @if (objective.completion === 'manual' && canContribute()) {
         <label class="manual">
-          <span>Avancement</span>
+          <span>{{ 'objectives.summary.manual' | transloco }}</span>
           <input
             type="range"
             min="0"
@@ -74,12 +74,12 @@
           type="button"
           [class.done]="objective.status === 'completed'"
           (click)="toggleCompleted()"
-        >{{ objective.status === 'completed' ? 'Rouvrir' : 'Marquer comme terminé' }}</button>
+        >{{ (objective.status === 'completed' ? 'objectives.summary.reopen' : 'objectives.summary.markDone') | transloco }}</button>
       }
     </section>
 
     @if (view.tiles.length > 1) {
-      <section class="tiles" aria-label="Chiffres clés">
+      <section class="tiles" [attr.aria-label]="'objectives.stats.keyFigures' | transloco">
         @for (tile of view.tiles; track tile.label) {
           <div class="tile"><strong>{{ tile.value }}</strong><span>{{ tile.label }}</span></div>
         }
@@ -88,7 +88,7 @@
 
     @if (view.contributions.length) {
       <section class="contributions" aria-labelledby="contributions-title">
-        <div class="heading"><h3 id="contributions-title">Contributions</h3></div>
+        <div class="heading"><h3 id="contributions-title">{{ 'objectives.summary.contributions' | transloco }}</h3></div>
         <ul>
           @for (contribution of view.contributions; track contribution.name) {
             <li>
@@ -104,7 +104,7 @@
     @if (objective.children.length || isOwner()) {
       <section class="children" aria-labelledby="children-title">
         <div class="heading">
-          <h3 id="children-title">Sous-objectifs</h3>
+          <h3 id="children-title">{{ 'objectives.completion.children' | transloco }}</h3>
           @if (objective.childCount) {
             <span>{{ objective.completedChildCount }} / {{ objective.childCount }}</span>
           }
@@ -122,7 +122,7 @@
                 [class.done]="card.objective.status === 'completed'"
                 [disabled]="card.objective.status === 'paused' || toggling() === card.objective.id"
                 [attr.aria-pressed]="card.objective.status === 'completed'"
-                [attr.aria-label]="(card.objective.status === 'completed' ? 'Rouvrir ' : 'Terminer ') + card.objective.title"
+                [attr.aria-label]="(card.objective.status === 'completed' ? 'objectives.summary.reopenChild' : 'objectives.summary.completeChild') | transloco: { title: card.objective.title }"
                 (click)="toggleChild(card.objective)"
               ><i aria-hidden="true"></i></button>
             }
@@ -131,7 +131,7 @@
               <button
                 class="drag-handle"
                 type="button"
-                [attr.aria-label]="'Déplacer ' + card.objective.title + ' (flèches pour changer sa place)'"
+                [attr.aria-label]="'objectives.overview.move' | transloco: { title: card.objective.title }"
                 (pointerdown)="drag.start(card.objective.id, $event)"
                 (keydown)="moveChildWithKeyboard(card.objective.id, $event)"
                 (click)="$event.preventDefault()"
@@ -140,7 +140,7 @@
           </div>
         }
         @if (isOwner()) {
-          <a class="add-child" routerLink="/objectives/new" [queryParams]="{ parent: objective.id }">＋ Ajouter un sous-objectif</a>
+          <a class="add-child" routerLink="/objectives/new" [queryParams]="{ parent: objective.id }">＋ {{ 'objectives.summary.addChild' | transloco }}</a>
         }
       </section>
     }
@@ -149,7 +149,7 @@
 
     @if (view.periods.length) {
       <section class="periods" aria-labelledby="periods-title">
-        <div class="heading"><h3 id="periods-title">Périodes passées</h3></div>
+        <div class="heading"><h3 id="periods-title">{{ 'objectives.summary.periods' | transloco }}</h3></div>
         <ul>
           @for (period of view.periods; track period.startDate) {
             <li [class.done]="period.completed"><span>{{ period.label }}</span><b>{{ period.result }}</b></li>
@@ -162,7 +162,7 @@
       @if (objective.description || isOwner()) {
         <div class="row-block">
           <button class="row" type="button" [disabled]="!isOwner()" [attr.aria-expanded]="openRow() === 'description'" (click)="toggleRow('description')">
-            <span><b>Description</b><small>{{ objective.description || 'Ajouter une description' }}</small></span>
+            <span><b>{{ 'agenda.form.description' | transloco }}</b><small>{{ objective.description || ('agenda.form.descriptionPlaceholder' | transloco) }}</small></span>
             @if (isOwner()) {
               <i aria-hidden="true">›</i>
             }
@@ -172,7 +172,7 @@
               class="editor"
               rows="3"
               maxlength="500"
-              aria-label="Description"
+              [attr.aria-label]="'agenda.form.description' | transloco"
               [value]="objective.description"
               (change)="updateText('description', $any($event.target).value)"
             ></textarea>
@@ -183,7 +183,7 @@
       @if (objective.plan || isOwner()) {
         <div class="row-block">
           <button class="row" type="button" [disabled]="!isOwner()" [attr.aria-expanded]="openRow() === 'plan'" (click)="toggleRow('plan')">
-            <span><b>Plan</b><small>{{ objective.plan || 'Définir un plan' }}</small></span>
+            <span><b>{{ 'objectives.summary.plan' | transloco }}</b><small>{{ objective.plan || ('objectives.summary.setPlan' | transloco) }}</small></span>
             @if (isOwner()) {
               <i aria-hidden="true">›</i>
             }
@@ -192,8 +192,8 @@
             <input
               class="editor"
               maxlength="120"
-              aria-label="Plan"
-              placeholder="Ex. : 3 entraînements par semaine"
+              [attr.aria-label]="'objectives.summary.plan' | transloco"
+              [placeholder]="'objectives.summary.planPlaceholder' | transloco"
               [value]="objective.plan"
               (change)="updateText('plan', $any($event.target).value)"
             />
@@ -203,11 +203,11 @@
 
       <a class="row" [routerLink]="['/objectives', objective.id, 'share']">
         <span>
-          <b>{{ objective.people.length > 1 ? 'Partagé avec' : 'Partager' }}</b>
+          <b>{{ (objective.people.length > 1 ? 'objectives.summary.sharedWith' : 'objectives.detail.share') | transloco }}</b>
           @if (objective.people.length > 1) {
             <app-avatar-stack [people]="view.people" />
           } @else {
-            <small>Personne pour l’instant</small>
+            <small>{{ 'objectives.summary.nobodyYet' | transloco }}</small>
           }
         </span>
         <i aria-hidden="true">›</i>
@@ -216,9 +216,9 @@
       @if (objective.parentId && objective.people.length > 1) {
         @if (isOwner()) {
           <label class="row assign">
-            <span><b>Assigné à</b></span>
+            <span><b>{{ 'lists.entry.assignedTo' | transloco }}</b></span>
             <select class="choice-select" (change)="assign($any($event.target).value)">
-              <option value="" [selected]="!objective.assignee">Personne</option>
+              <option value="" [selected]="!objective.assignee">{{ 'objectives.summary.nobody' | transloco }}</option>
               @for (person of objective.people; track person.id) {
                 <option [value]="person.id" [selected]="person.id === objective.assignee?.id">{{ person.name }}</option>
               }
@@ -226,44 +226,44 @@
           </label>
         } @else {
           <div class="row assign">
-            <span><b>Assigné à</b></span>
-            <small>{{ objective.assignee?.name ?? 'Personne' }}</small>
+            <span><b>{{ 'lists.entry.assignedTo' | transloco }}</b></span>
+            <small>{{ objective.assignee?.name ?? ('objectives.summary.nobody' | transloco) }}</small>
           </div>
         }
       }
 
       <div class="row-block">
         <button class="row" type="button" [attr.aria-expanded]="openRow() === 'reminder'" (click)="toggleRow('reminder')">
-          <span><b>Mes rappels</b><small>{{ view.reminder }} · Échéance : {{ view.dueReminder }}</small></span>
+          <span><b>{{ 'objectives.summary.reminders' | transloco }}</b><small>{{ 'objectives.summary.remindersValue' | transloco: { reminder: view.reminder, due: view.dueReminder } }}</small></span>
           <i aria-hidden="true">›</i>
         </button>
         @if (openRow() === 'reminder') {
           <div class="reminder-editor">
-            <label>Fréquence
+            <label>{{ 'objectives.habit.frequency' | transloco }}
               <select [value]="objective.reminder.frequency" (change)="updateReminder({ frequency: $any($event.target).value })">
-                <option value="none">Aucun rappel</option>
-                <option value="daily">Chaque jour</option>
-                <option value="weekly">Chaque semaine</option>
+                <option value="none">{{ 'objectives.reminders.none' | transloco }}</option>
+                <option value="daily">{{ 'objectives.habit.daily' | transloco }}</option>
+                <option value="weekly">{{ 'objectives.habit.weekly' | transloco }}</option>
               </select>
             </label>
             @if (objective.reminder.frequency === 'weekly') {
-              <label>Jour
+              <label>{{ 'objectives.summary.day' | transloco }}
                 <select (change)="updateReminder({ weekday: +$any($event.target).value })">
-                  @for (day of weekdays; track day; let index = $index) {
+                  @for (day of weekdays(); track day; let index = $index) {
                     <option [value]="index" [selected]="index === objective.reminder.weekday">{{ day }}</option>
                   }
                 </select>
               </label>
             }
             @if (objective.reminder.frequency !== 'none') {
-              <label>Heure
+              <label>{{ 'objectives.habit.time' | transloco }}
                 <input type="time" [value]="objective.reminder.time" (change)="updateReminder({ time: $any($event.target).value })" />
               </label>
             }
-            <label>Avant l’échéance
+            <label>{{ 'objectives.summary.beforeDue' | transloco }}
               <select (change)="updateDueReminder($any($event.target).value)">
                 @for (option of dueReminders; track option[0]) {
-                  <option [value]="option[0]" [selected]="option[0] === objective.dueReminder">{{ option[1] }}</option>
+                  <option [value]="option[0]" [selected]="option[0] === objective.dueReminder">{{ option[1] | transloco }}</option>
                 }
               </select>
             </label>
@@ -272,7 +272,7 @@
       </div>
 
       <div class="row-block home-pin">
-        <app-switch-row label="Afficher sur l’accueil" hint="Pour vous seulement" [checked]="objective.onHome" (toggled)="toggleHome()" />
+        <app-switch-row [label]="'lists.pin' | transloco" [hint]="'objectives.summary.forYouOnly' | transloco" [checked]="objective.onHome" (toggled)="toggleHome()" />
       </div>
     </section>
   }

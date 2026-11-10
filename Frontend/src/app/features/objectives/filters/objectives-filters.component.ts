@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { CountPipe } from '../../../core/i18n/translate';
 import type { ObjectiveCategory, ObjectiveStatus } from '@plano/common';
 import { OBJECTIVE_CATEGORIES, STATUS_LABELS } from '../objective.utils';
 import { ObjectiveFilters, ObjectivesStore } from '../objectives.store';
@@ -8,7 +10,7 @@ import { ObjectiveIconComponent } from '../ui/objective-icon.component';
 
 @Component({
   selector: 'app-objectives-filters',
-  imports: [RouterLink, PageHeaderComponent, ObjectiveIconComponent],
+  imports: [RouterLink, TranslocoPipe, CountPipe, PageHeaderComponent, ObjectiveIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-filters.component.html',
   styleUrl: './objectives-filters.component.scss',

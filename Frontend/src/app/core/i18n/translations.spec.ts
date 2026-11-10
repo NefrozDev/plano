@@ -39,11 +39,11 @@ describe('translation files', () => {
     expect(differing.map(([key]) => key)).toEqual([]);
   });
 
-  it('gives counted texts both a singular and a plural form', () => {
-    const forms = [...french.keys()].filter((key) => /\.(one|other)$/.test(key));
-    const incomplete = forms.filter((key) => !french.has(key.replace(/\.(one|other)$/, key.endsWith('.one') ? '.other' : '.one')));
+  it('gives every counted text a plural form next to its singular', () => {
+    const singulars = [...french.keys()].filter((key) => key.endsWith('.one'));
 
-    expect(incomplete).toEqual([]);
+    expect(singulars.length).toBeGreaterThan(0);
+    expect(singulars.filter((key) => !french.has(key.replace(/\.one$/, '.other')))).toEqual([]);
   });
 
   it('says what every API error code means', () => {

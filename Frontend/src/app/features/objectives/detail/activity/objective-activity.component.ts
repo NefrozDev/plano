@@ -1,18 +1,20 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ObjectiveActivityEntry, ObjectiveCommentEntry } from '@plano/common';
 import { firstValueFrom } from 'rxjs';
 import { httpErrorMessage } from '../../../../core/http/http-error-message';
+import { t } from '../../../../core/i18n/translate';
 import { formatDate, toIsoDate, toTimeOfDay } from '../../../../core/time/dates';
 import { activityLabel } from '../../objective.utils';
 import { ObjectivesApiService } from '../../objectives-api.service';
 import { ObjectivesStore } from '../../objectives.store';
 import { ObjectiveContext } from '../objective-context';
 
-const FAILURE_MESSAGE = 'L’action a échoué. Veuillez réessayer.';
 
 /** What people say about an objective, and what happened on it. */
 @Component({
   selector: 'app-objective-activity',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-activity.component.html',
   styleUrl: './objective-activity.component.scss',
@@ -47,7 +49,7 @@ export class ObjectiveActivityComponent {
 
   when(timestamp: string): string {
     const date = new Date(timestamp);
-    return `${formatDate(toIsoDate(date))} à ${toTimeOfDay(date)}`;
+    return t('agenda.dayAtTime', { day: formatDate(toIsoDate(date)), time: toTimeOfDay(date) });
   }
 
   /** People take back what they said; the owner can remove anything. */
@@ -95,7 +97,7 @@ export class ObjectiveActivityComponent {
     try {
       await action();
     } catch (error) {
-      this.error.set(httpErrorMessage(error, { fallback: FAILURE_MESSAGE, useServerCode: true }));
+      this.error.set(httpErrorMessage(error, { fallback: t('objectives.failed'), useServerCode: true }));
     }
   }
 }

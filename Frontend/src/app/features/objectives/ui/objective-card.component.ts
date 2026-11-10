@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { ObjectiveSummary } from '@plano/common';
 import type { TimelapseView } from '../objective.utils';
 import { ObjectiveIconComponent } from './objective-icon.component';
@@ -18,7 +19,7 @@ export interface ObjectiveCardView {
 
 @Component({
   selector: 'app-objective-card',
-  imports: [RouterLink, ObjectiveIconComponent, TimelapseBarComponent],
+  imports: [RouterLink, TranslocoPipe, ObjectiveIconComponent, TimelapseBarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.tile]': 'tile()' },
   template: `
@@ -37,7 +38,7 @@ export interface ObjectiveCardView {
         <!-- Thin progress line that thickens into a ring around the bubble holding the value. -->
         <span class="meter" [style.--objective-progress]="card().objective.percent + '%'">
           <span class="meter-track" aria-hidden="true"><span class="meter-fill"></span></span>
-          <span class="meter-bubble"><span class="visually-hidden">Progression : </span>{{ card().progressText }}</span>
+          <span class="meter-bubble"><span class="visually-hidden">{{ 'objectives.card.progress' | transloco }}</span>{{ card().progressText }}</span>
         </span>
       }
       <span class="copy">
@@ -45,10 +46,10 @@ export interface ObjectiveCardView {
         <small>
           {{ card().caption }}
           @if (card().objective.status === 'paused') {
-            <em>En pause</em>
+            <em>{{ 'objectives.statuses.paused' | transloco }}</em>
           }
           @if (card().objective.archived) {
-            <em>Archivé</em>
+            <em>{{ 'objectives.card.archived' | transloco }}</em>
           }
         </small>
         @if (card().sharing; as sharing) {
@@ -63,7 +64,7 @@ export interface ObjectiveCardView {
       </span>
       @if (!tile() && card().objective.percent !== null) {
         <span class="value">
-          <span class="visually-hidden">Progression : </span>{{ card().progressText }}
+          <span class="visually-hidden">{{ 'objectives.card.progress' | transloco }}</span>{{ card().progressText }}
         </span>
       }
     </a>

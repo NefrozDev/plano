@@ -34,7 +34,8 @@ function toPerson(user: User): ObjectivePerson {
   };
 }
 
-const DELETED_ACCOUNT = 'Compte supprimé';
+/** A deleted account has no name: the app names it in its own language. */
+const DELETED_ACCOUNT = '';
 
 /**
  * Invitations someone can see on a node. The owner sees them all; anyone else

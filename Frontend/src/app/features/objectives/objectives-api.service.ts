@@ -20,13 +20,41 @@ import type {
   UpdateObjectivePreferencesRequest,
   UpdateObjectiveRequest,
 } from '@plano/common';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { API_BASE_URL } from '../../core/http/api-base-url';
+import { t } from '../../core/i18n/translate';
+
+/**
+ * The API names a deleted account with an empty name: this names it in the
+ * interface language, wherever a person (`id`, `name`, `avatarVersion`) appears.
+ */
+export function nameDeletedPeople<T>(value: T): T {
+  if (Array.isArray(value)) return value.map((item: unknown) => nameDeletedPeople(item)) as T;
+  if (!value || typeof value !== 'object') return value;
+  const copy: Record<string, unknown> = {};
+  for (const [key, field] of Object.entries(value)) copy[key] = nameDeletedPeople(field);
+  if ('avatarVersion' in copy && copy['name'] === '') copy['name'] = t('objectives.deletedAccount');
+  return copy as T;
+}
+
+type RequestOptions = { params?: Record<string, string> };
+
+/** HttpClient's verbs, each response going through `nameDeletedPeople`. */
+function namingPeople(client: HttpClient) {
+  const named = <T>(request: Observable<T>): Observable<T> => request.pipe(map((body) => nameDeletedPeople(body)));
+  return {
+    get: <T>(url: string, options: RequestOptions = {}) => named(client.get<T>(url, options)),
+    post: <T>(url: string, body: unknown, options: RequestOptions = {}) => named(client.post<T>(url, body, options)),
+    put: <T>(url: string, body: unknown, options: RequestOptions = {}) => named(client.put<T>(url, body, options)),
+    patch: <T>(url: string, body: unknown, options: RequestOptions = {}) => named(client.patch<T>(url, body, options)),
+    delete: <T>(url: string, options: RequestOptions = {}) => named(client.delete<T>(url, options)),
+  };
+}
 
 /** Thin HTTP client of the objectives API; state lives in ObjectivesStore. */
 @Injectable({ providedIn: 'root' })
 export class ObjectivesApiService {
-  private readonly http = inject(HttpClient);
+  private readonly http = namingPeople(inject(HttpClient));
   private readonly objectives = `${inject(API_BASE_URL)}/objectives`;
 
   findAll(): Observable<ObjectiveSummary[]> {

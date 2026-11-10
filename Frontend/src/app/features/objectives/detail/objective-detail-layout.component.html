@@ -2,7 +2,7 @@
   <app-page-header
     [heading]="objective.title"
     [backLink]="backLink()"
-    backLabel="Retour"
+    [backLabel]="'terms.back' | transloco"
     [showHeading]="showTitle()"
   >
     <div class="menu-anchor" (focusout)="leaveMenu($event)">
@@ -10,7 +10,7 @@
         #moreButton
         class="more-button"
         type="button"
-        aria-label="Actions de l’objectif"
+        [attr.aria-label]="'objectives.detail.actions' | transloco"
         [attr.aria-expanded]="menuOpen()"
         (click)="menuOpen.set(!menuOpen())"
       >
@@ -18,19 +18,19 @@
       </button>
       @if (menuOpen()) {
         <div class="menu">
-          <a [routerLink]="['/objectives', objective.id, 'share']">{{ isOwner() ? 'Partager' : 'Personnes' }}</a>
-          <button type="button" (click)="openTemplate()">Enregistrer comme modèle</button>
+          <a [routerLink]="['/objectives', objective.id, 'share']">{{ (isOwner() ? 'objectives.detail.share' : 'objectives.detail.people') | transloco }}</a>
+          <button type="button" (click)="openTemplate()">{{ 'objectives.detail.saveAsTemplate' | transloco }}</button>
           @if (isOwner()) {
-            <a [routerLink]="['/objectives', objective.id, 'edit']">Modifier</a>
+            <a [routerLink]="['/objectives', objective.id, 'edit']">{{ 'agenda.detail.edit' | transloco }}</a>
             @if (objective.status !== 'completed') {
               <button type="button" (click)="togglePause()">
-                {{ objective.status === 'paused' ? 'Reprendre' : 'Mettre en pause' }}
+                {{ (objective.status === 'paused' ? 'objectives.detail.resume' : 'objectives.detail.pause') | transloco }}
               </button>
             }
             <button type="button" (click)="toggleArchive()">
-              {{ objective.archived ? 'Désarchiver' : 'Archiver' }}
+              {{ (objective.archived ? 'objectives.detail.unarchive' : 'objectives.detail.archive') | transloco }}
             </button>
-            <button class="danger" type="button" (click)="remove()">Supprimer</button>
+            <button class="danger" type="button" (click)="remove()">{{ 'objectives.removal.delete' | transloco }}</button>
           }
         </div>
       }
@@ -38,7 +38,7 @@
   </app-page-header>
 
   @if (objective.breadcrumb.length) {
-    <nav class="breadcrumb" aria-label="Objectifs parents">
+    <nav class="breadcrumb" [attr.aria-label]="'objectives.detail.parents' | transloco">
       @for (crumb of objective.breadcrumb; track $index) {
         @if (crumb.id; as id) {
           <a [routerLink]="['/objectives', id]">{{ crumb.title }}</a>
@@ -51,14 +51,14 @@
   }
 
   @if (tabs().length) {
-    <nav class="tabs" aria-label="Vues de l’objectif">
+    <nav class="tabs" [attr.aria-label]="'objectives.detail.views' | transloco">
       @for (tab of tabs(); track tab.path) {
         <a
           [routerLink]="tab.link"
           routerLinkActive="active"
           ariaCurrentWhenActive="page"
           [routerLinkActiveOptions]="{ exact: true }"
-        >{{ tab.label }}</a>
+        >{{ tab.label | transloco }}</a>
       }
     </nav>
   }
@@ -71,27 +71,27 @@
     <router-outlet (activate)="onActivate($event)" />
   </div>
 
-  <app-modal-dialog heading="Enregistrer comme modèle" [open]="templateOpen()" (closed)="templateOpen.set(false)">
+  <app-modal-dialog [heading]="'objectives.detail.saveAsTemplate' | transloco" [open]="templateOpen()" (closed)="templateOpen.set(false)">
     <form class="template-form" (submit)="$event.preventDefault(); saveTemplate(templateName)">
-      <p>Le modèle garde les réglages et les sous-objectifs, sans la progression ni les personnes. Lui seul vous est visible.</p>
-      <input #templateName class="form-control" maxlength="80" aria-label="Nom du modèle" placeholder="Nom du modèle" />
+      <p>{{ 'objectives.detail.templateHint' | transloco }}</p>
+      <input #templateName class="form-control" maxlength="80" [attr.aria-label]="'objectives.detail.templateName' | transloco" [placeholder]="'objectives.detail.templateName' | transloco" />
       @if (templateSaved()) {
-        <p class="saved" role="status">Modèle enregistré.</p>
+        <p class="saved" role="status">{{ 'objectives.detail.templateSaved' | transloco }}</p>
       }
       <div class="dialog-actions">
-        <button class="secondary" type="button" (click)="templateOpen.set(false)">Fermer</button>
-        <button class="primary-button" type="submit">Enregistrer</button>
+        <button class="secondary" type="button" (click)="templateOpen.set(false)">{{ 'lists.sectionCreator.close' | transloco }}</button>
+        <button class="primary-button" type="submit">{{ 'groups.save' | transloco }}</button>
       </div>
     </form>
   </app-modal-dialog>
 } @else if (loaded()) {
-  <app-page-header heading="Objectif" backLink="/objectives" backLabel="Retour aux objectifs" />
+  <app-page-header [heading]="'titles.objective' | transloco" backLink="/objectives" [backLabel]="'objectives.backToObjectives' | transloco" />
   <p class="not-found">
-    Cet objectif n’existe pas ou a été supprimé.
-    <a routerLink="/objectives">Retour aux objectifs</a>
+    {{ 'objectives.detail.missing' | transloco }}
+    <a routerLink="/objectives">{{ 'objectives.backToObjectives' | transloco }}</a>
   </p>
 } @else {
-  <app-page-header heading="Objectif" backLink="/objectives" backLabel="Retour aux objectifs" />
+  <app-page-header [heading]="'titles.objective' | transloco" backLink="/objectives" [backLabel]="'objectives.backToObjectives' | transloco" />
 }
 
 <app-objective-celebration />

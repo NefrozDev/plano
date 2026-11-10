@@ -233,12 +233,13 @@ export class ObjectiveTree {
             ? (counts?.get(viewerId) ?? 0)
             : Math.max(0, ...people.map((user) => counts?.get(user) ?? 0)),
         target: node.habitTargetDays ?? 0,
-        unit: 'jours',
+        // Days and items are named by the app, in its language.
+        unit: '',
       };
     }
     if (node?.completion === 'list') {
       const { done, total } = this.listCounts.get(id) ?? { done: 0, total: 0 };
-      return { current: done, target: total, unit: 'éléments' };
+      return { current: done, target: total, unit: '' };
     }
     return null;
   }

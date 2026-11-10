@@ -10,6 +10,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t, tCount } from '../../../../core/i18n/translate';
 import { toPerson } from '../../../../core/people/people';
 import { AvatarStackComponent } from '../../../../shared/ui/avatar-stack.component';
 import { SwitchRowComponent } from '../../../../shared/ui/switch-row.component';
@@ -24,7 +26,6 @@ import type {
 import { daysBetween, formatShortDate, toIsoDate } from '../../../../core/time/dates';
 import {
   DUE_REMINDER_LABELS,
-  WEEKDAY_LABELS,
   dueCaption,
   formatNumber,
   longestStreak,
@@ -33,6 +34,7 @@ import {
   progressText,
   sharingLabel,
   timelapseView,
+  weekdayNames,
 } from '../../objective.utils';
 import { ObjectivesStore } from '../../objectives.store';
 import { DragReorder } from '../../ui/drag-reorder';
@@ -45,9 +47,9 @@ import { ObjectiveContext } from '../objective-context';
 
 const RECURRENCE_LABELS: Readonly<Record<ObjectiveRecurrence, string>> = {
   none: '',
-  weekly: 'Se répète chaque semaine',
-  monthly: 'Se répète chaque mois',
-  yearly: 'Se répète chaque année',
+  weekly: 'objectives.summary.repeatsWeekly',
+  monthly: 'objectives.summary.repeatsMonthly',
+  yearly: 'objectives.summary.repeatsYearly',
 };
 
 type EditableRow = 'description' | 'plan' | 'reminder';
@@ -61,6 +63,7 @@ interface StatTile {
   selector: 'app-objective-summary',
   imports: [
     RouterLink,
+    TranslocoPipe,
     AvatarStackComponent,
     ObjectiveIconComponent,
     ObjectiveListsComponent,
@@ -87,7 +90,7 @@ export class ObjectiveSummaryComponent {
   readonly editingTitle = signal(false);
   private readonly titleInput = viewChild<ElementRef<HTMLInputElement>>('titleInput');
   readonly openRow = signal<EditableRow | null>(null);
-  readonly weekdays = WEEKDAY_LABELS;
+  readonly weekdays = computed(weekdayNames);
   readonly dueReminders = Object.entries(DUE_REMINDER_LABELS) as [DueReminder, string][];
   readonly drag = new DragReorder(
     inject(DOCUMENT),
@@ -118,15 +121,18 @@ export class ObjectiveSummaryComponent {
       timelapse: timelapseView(objective, this.store.today()),
       tiles: [...this.trackingTiles(objective), this.deadlineTile(objective)],
       reminder: objectiveReminderLabel(objective.reminder),
-      dueReminder: DUE_REMINDER_LABELS[objective.dueReminder],
+      dueReminder: t(DUE_REMINDER_LABELS[objective.dueReminder]),
       children: objective.children.map((child) => this.toCard(child)),
       people: objective.people.map(toPerson),
       contributions: this.contributions(objective),
-      recurrence: RECURRENCE_LABELS[objective.recurrence],
+      recurrence: objective.recurrence === 'none' ? '' : t(RECURRENCE_LABELS[objective.recurrence]),
       periods: objective.periods.map((period) => ({
         ...period,
         label: `${formatShortDate(period.startDate)} – ${formatShortDate(period.endDate)}`,
-        result: period.percent === null ? (period.completed ? 'Terminé' : 'Non terminé') : `${period.percent} %`,
+        result:
+          period.percent === null
+            ? t(period.completed ? 'objectives.timelapse.done' : 'objectives.summary.notDone')
+            : t('objectives.percent', { percent: period.percent }),
       })),
     };
   });
@@ -222,7 +228,7 @@ export class ObjectiveSummaryComponent {
 
   private contributionUnit(objective: ObjectiveDetail): string {
     if (objective.completion === 'metric') return objective.metric?.unit ?? '';
-    return objective.completion === 'habit' ? 'j' : 'terminé(s)';
+    return t(objective.completion === 'habit' ? 'objectives.summary.daysShort' : 'objectives.summary.completedUnit');
   }
 
   private trackingTiles(objective: ObjectiveDetail): StatTile[] {
@@ -233,9 +239,9 @@ export class ObjectiveSummaryComponent {
         return [
           {
             value: `${formatNumber(objective.amount?.current ?? 0)} ${metric?.unit ?? ''}`,
-            label: metric?.aggregation === 'max' ? 'Meilleure valeur' : 'Cumulé',
+            label: t(metric?.aggregation === 'max' ? 'objectives.stats.best' : 'objectives.summary.cumulated'),
           },
-          { value: `${done}`, label: 'Séances' },
+          { value: formatNumber(done), label: t('objectives.summary.sessions') },
         ];
       }
       case 'habit': {
@@ -243,19 +249,19 @@ export class ObjectiveSummaryComponent {
           .filter(({ userId }) => userId === this.store.currentUserId())
           .map(({ date }) => date);
         return [
-          { value: `${mine.length}`, label: 'Jours réussis' },
-          { value: `${longestStreak(mine)} j`, label: 'Meilleure série' },
+          { value: formatNumber(mine.length), label: t('objectives.habit.successes') },
+          { value: `${formatNumber(longestStreak(mine))} ${t('objectives.summary.daysShort')}`, label: t('objectives.habit.bestStreak') },
         ];
       }
       case 'children':
         return [
-          { value: `${objective.completedChildCount} / ${objective.childCount}`, label: 'Terminés' },
-          { value: `${objective.childCount - objective.completedChildCount}`, label: 'À faire' },
+          { value: `${objective.completedChildCount} / ${objective.childCount}`, label: t('objectives.statuses.completed') },
+          { value: formatNumber(objective.childCount - objective.completedChildCount), label: t('objectives.summary.toDo') },
         ];
       case 'list':
         return [
-          { value: `${objective.amount?.current ?? 0} / ${objective.amount?.target ?? 0}`, label: 'Cochés' },
-          { value: `${objective.lists.length}`, label: objective.lists.length > 1 ? 'Listes' : 'Liste' },
+          { value: `${objective.amount?.current ?? 0} / ${objective.amount?.target ?? 0}`, label: t('objectives.summary.checked') },
+          { value: formatNumber(objective.lists.length), label: tCount('objectives.summary.lists', objective.lists.length) },
         ];
       case 'manual':
       case 'none':
@@ -265,13 +271,12 @@ export class ObjectiveSummaryComponent {
 
   private deadlineTile(objective: ObjectiveDetail): StatTile {
     if (objective.status === 'completed' && objective.completedAt) {
-      return { value: 'Terminé', label: formatShortDate(toIsoDate(new Date(objective.completedAt))) };
+      return { value: t('objectives.timelapse.done'), label: formatShortDate(toIsoDate(new Date(objective.completedAt))) };
     }
-    if (!objective.dueDate) return { value: '—', label: 'Sans échéance' };
+    if (!objective.dueDate) return { value: '—', label: t('objectives.due.none') };
     const days = daysBetween(this.store.today(), objective.dueDate);
-    const unit = Math.abs(days) > 1 ? 'jours' : 'jour';
     return days >= 0
-      ? { value: `${days} ${unit}`, label: 'Restants' }
-      : { value: `${-days} ${unit}`, label: 'De retard' };
+      ? { value: tCount('objectives.units.dayCount', days), label: t('objectives.summary.left') }
+      : { value: tCount('objectives.units.dayCount', -days), label: t('objectives.summary.late') };
   }
 }

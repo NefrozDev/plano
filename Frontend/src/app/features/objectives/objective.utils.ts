@@ -1,4 +1,5 @@
-import { daysBetween, formatDate, normalizeText, pad2, toIsoDate } from '../../core/time/dates';
+import { formatLocale, t, tCount } from '../../core/i18n/translate';
+import { addDays, daysBetween, formatDate, formatNarrowWeekday, formatWeekday, normalizeText, pad2, toIsoDate } from '../../core/time/dates';
 import type {
   CompletionMode,
   DueReminder,
@@ -16,56 +17,84 @@ import type {
 
 export interface CategoryMeta {
   value: ObjectiveCategory;
+  /** Translation key. */
   label: string;
   color: string;
 }
 
 export const OBJECTIVE_CATEGORIES: readonly CategoryMeta[] = [
-  { value: 'health', label: 'Santé', color: '#3264ed' },
-  { value: 'learning', label: 'Apprentissage', color: '#22a95a' },
-  { value: 'finance', label: 'Finances', color: '#e65591' },
-  { value: 'development', label: 'Développement', color: '#f08c1a' },
-  { value: 'other', label: 'Autre', color: '#7c5cf0' },
+  { value: 'health', label: 'objectives.categories.health', color: '#3264ed' },
+  { value: 'learning', label: 'objectives.categories.learning', color: '#22a95a' },
+  { value: 'finance', label: 'objectives.categories.finance', color: '#e65591' },
+  { value: 'development', label: 'objectives.categories.development', color: '#f08c1a' },
+  { value: 'other', label: 'objectives.categories.other', color: '#7c5cf0' },
 ];
 
+/** Translation keys, here and in the maps below. */
 export const STATUS_LABELS: Readonly<Record<ObjectiveStatus, string>> = {
-  active: 'En cours',
-  completed: 'Terminés',
-  paused: 'En pause',
+  active: 'objectives.statuses.active',
+  completed: 'objectives.statuses.completed',
+  paused: 'objectives.statuses.paused',
 };
 
 export const COMPLETION_LABELS: Readonly<Record<Exclude<CompletionMode, 'none'>, { label: string; hint: string }>> = {
-  children: { label: 'Sous-objectifs', hint: 'Moyenne de leur progression' },
-  metric: { label: 'Objectif chiffré', hint: 'Comptez ou additionnez : sorties, km, euros…' },
-  habit: { label: 'Habitude', hint: 'Cochez les jours réussis dans un calendrier' },
-  manual: { label: 'Pourcentage manuel', hint: 'Vous déplacez la barre vous-même' },
-  list: { label: 'Liste', hint: 'Les éléments cochés de ses listes' },
+  children: { label: 'objectives.completion.children', hint: 'objectives.completion.childrenHint' },
+  metric: { label: 'objectives.completion.metric', hint: 'objectives.completion.metricHint' },
+  habit: { label: 'objectives.completion.habit', hint: 'objectives.completion.habitHint' },
+  manual: { label: 'objectives.completion.manual', hint: 'objectives.completion.manualHint' },
+  list: { label: 'objectives.completion.list', hint: 'objectives.completion.listHint' },
 };
 
 /** How often a count or a habit starts again, offered next to its target. */
 export const RHYTHM_OPTIONS: readonly { value: ObjectiveRecurrence; label: string }[] = [
-  { value: 'none', label: 'En tout' },
-  { value: 'weekly', label: 'Par semaine' },
-  { value: 'monthly', label: 'Par mois' },
-  { value: 'yearly', label: 'Par an' },
+  { value: 'none', label: 'objectives.rhythm.none' },
+  { value: 'weekly', label: 'objectives.rhythm.weekly' },
+  { value: 'monthly', label: 'objectives.rhythm.monthly' },
+  { value: 'yearly', label: 'objectives.rhythm.yearly' },
 ];
 
 export const PERIOD_LABELS: Readonly<
   Record<Exclude<ObjectiveRecurrence, 'none'>, { per: string; every: string; current: string; reached: string }>
 > = {
-  weekly: { per: 'par semaine', every: 'chaque semaine', current: 'Cette semaine', reached: 'Semaines réussies' },
-  monthly: { per: 'par mois', every: 'chaque mois', current: 'Ce mois-ci', reached: 'Mois réussis' },
-  yearly: { per: 'par an', every: 'chaque année', current: 'Cette année', reached: 'Années réussies' },
+  weekly: {
+    per: 'objectives.periods.weekly.per',
+    every: 'objectives.periods.weekly.every',
+    current: 'objectives.periods.weekly.current',
+    reached: 'objectives.periods.weekly.reached',
+  },
+  monthly: {
+    per: 'objectives.periods.monthly.per',
+    every: 'objectives.periods.monthly.every',
+    current: 'objectives.periods.monthly.current',
+    reached: 'objectives.periods.monthly.reached',
+  },
+  yearly: {
+    per: 'objectives.periods.yearly.per',
+    every: 'objectives.periods.yearly.every',
+    current: 'objectives.periods.yearly.current',
+    reached: 'objectives.periods.yearly.reached',
+  },
 };
 
 export const DUE_REMINDER_LABELS: Readonly<Record<DueReminder, string>> = {
-  none: 'Aucun',
-  'same-day': 'Le jour même',
-  'day-before': '1 jour avant',
-  'week-before': '1 semaine avant',
+  none: 'objectives.dueReminders.none',
+  'same-day': 'objectives.dueReminders.sameDay',
+  'day-before': 'objectives.dueReminders.dayBefore',
+  'week-before': 'objectives.dueReminders.weekBefore',
 };
 
-export const WEEKDAY_LABELS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const;
+/** A Monday: reminders number weekdays from 0 for Monday. */
+const A_MONDAY = '2024-01-01';
+
+/** "L" to "D", Monday first: the headers of a month calendar. */
+export function weekdayInitials(): string[] {
+  return Array.from({ length: 7 }, (_, index) => formatNarrowWeekday(addDays(A_MONDAY, index)));
+}
+
+/** "lundi" to "dimanche" in the interface language, Monday first. */
+export function weekdayNames(): string[] {
+  return Array.from({ length: 7 }, (_, index) => formatWeekday(addDays(A_MONDAY, index)));
+}
 
 export function categoryMeta(category: ObjectiveCategory): CategoryMeta {
   return OBJECTIVE_CATEGORIES.find((meta) => meta.value === category) ?? OBJECTIVE_CATEGORIES[4];
@@ -76,16 +105,22 @@ export function objectiveTint(category: ObjectiveCategory, categoryColors: boole
   return categoryColors ? categoryMeta(category).color : '#3264ed';
 }
 
-const numberFormatter = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
-
 export function formatNumber(value: number): string {
-  return numberFormatter.format(value);
+  return new Intl.NumberFormat(formatLocale(), { maximumFractionDigits: 1 }).format(value);
 }
 
 export function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const rest = Math.round(minutes % 60);
-  return hours ? `${hours} h ${pad2(rest)}` : `${rest} min`;
+  return hours ? t('objectives.duration.hours', { hours, minutes: pad2(rest) }) : t('objectives.duration.minutes', { minutes: rest });
+}
+
+/** The unit of an amount: the metric's own, or days and items, named in the interface language. */
+export function amountUnit(objective: Pick<ObjectiveSummary, 'completion' | 'amount'>): string {
+  const target = objective.amount?.target ?? 0;
+  if (objective.completion === 'habit') return tCount('objectives.units.days', target);
+  if (objective.completion === 'list') return tCount('objectives.units.items', target);
+  return objective.amount?.unit ?? '';
 }
 
 /** "3 / 10 km", or the percentage; empty for an objective without a completion bar. */
@@ -93,17 +128,17 @@ export function progressText(objective: ObjectiveSummary, showPercentage: boolea
   if (objective.percent === null) return '';
   const { amount } = objective;
   return showPercentage || !amount
-    ? `${objective.percent} %`
-    : `${formatNumber(amount.current)} / ${formatNumber(amount.target)} ${amount.unit}`;
+    ? t('objectives.percent', { percent: objective.percent })
+    : `${formatNumber(amount.current)} / ${formatNumber(amount.target)} ${amountUnit(objective)}`;
 }
 
 /** What sharing adds to a card: whose it is, or that it is shared; empty when private. */
 export function sharingLabel(objective: Pick<ObjectiveSummary, 'role' | 'owner' | 'sharing' | 'assignee'>): string {
   const parts: string[] = [];
-  if (objective.role !== 'owner') parts.push(`Par ${objective.owner.name}`);
-  else if (objective.sharing === 'common') parts.push('Commun');
-  else if (objective.sharing === 'shared') parts.push('Partagé');
-  if (objective.assignee) parts.push(`Pour ${objective.assignee.name}`);
+  if (objective.role !== 'owner') parts.push(t('objectives.sharing.by', { name: objective.owner.name }));
+  else if (objective.sharing === 'common') parts.push(t('objectives.sharing.common'));
+  else if (objective.sharing === 'shared') parts.push(t('objectives.sharing.shared'));
+  if (objective.assignee) parts.push(t('objectives.sharing.for', { name: objective.assignee.name }));
   return parts.join(' · ');
 }
 
@@ -111,10 +146,12 @@ export function dueCaption(
   objective: Pick<ObjectiveSummary, 'dueDate' | 'status' | 'completedAt'> & Partial<Pick<ObjectiveSummary, 'completedBy'>>,
 ): string {
   if (objective.status === 'completed' && objective.completedAt) {
-    const by = objective.completedBy ? ` par ${objective.completedBy.name}` : '';
-    return `Terminé le ${formatDate(toIsoDate(new Date(objective.completedAt)))}${by}`;
+    const date = formatDate(toIsoDate(new Date(objective.completedAt)));
+    return objective.completedBy
+      ? t('objectives.due.completedBy', { date, name: objective.completedBy.name })
+      : t('objectives.due.completed', { date });
   }
-  return objective.dueDate ? `Échéance : ${formatDate(objective.dueDate)}` : 'Sans échéance';
+  return objective.dueDate ? t('objectives.due.on', { date: formatDate(objective.dueDate) }) : t('objectives.due.none');
 }
 
 export interface TimelapseView {
@@ -123,10 +160,6 @@ export interface TimelapseView {
   label: string;
   /** Past the deadline and not complete: the bar is full and red. */
   overdue: boolean;
-}
-
-function days(count: number): string {
-  return `${count} ${count > 1 ? 'jours' : 'jour'}`;
 }
 
 /** The timelapse bar of an objective; null when it has none. */
@@ -138,14 +171,14 @@ export function timelapseView(
   if (timelapse === 'off' || !dueDate) return null;
   const left = daysBetween(today, dueDate);
   if (left < 0 && status !== 'completed') {
-    return { percent: 100, label: `${days(-left)} de retard`, overdue: true };
+    return { percent: 100, label: tCount('objectives.timelapse.late', -left), overdue: true };
   }
   const total = Math.max(1, daysBetween(startDate, dueDate));
   const elapsed = Math.min(total, Math.max(0, daysBetween(startDate, today)));
   const fill = (elapsed / total) * 100;
-  let label = `${days(left)} restant${left > 1 ? 's' : ''}`;
-  if (status === 'completed') label = 'Terminé';
-  else if (left === 0) label = 'Dernier jour';
+  let label = tCount('objectives.timelapse.left', left);
+  if (status === 'completed') label = t('objectives.timelapse.done');
+  else if (left === 0) label = t('objectives.timelapse.lastDay');
   return {
     percent: Math.round(timelapse === 'elapsed' ? fill : 100 - fill),
     label,
@@ -153,54 +186,39 @@ export function timelapseView(
   };
 }
 
-const ACTIVITY_LABELS: Readonly<Record<ObjectiveActivityKind, string>> = {
-  created: 'a créé l’objectif',
-  edited: 'a modifié les réglages',
-  paused: 'a mis en pause',
-  resumed: 'a repris',
-  archived: 'a archivé',
-  unarchived: 'a désarchivé',
-  session: 'a ajouté une séance',
-  session_removed: 'a retiré une séance',
-  check_in: 'a réussi le',
-  check_out: 'a décoché le',
-  progress: 'a avancé à',
-  completed: 'a terminé',
-  reopened: 'a rouvert',
-  member_added: 'a invité',
-  member_removed: 'a retiré',
-  member_left: 'a quitté l’objectif',
-  assigned: 'a assigné à',
-  unassigned: 'a retiré l’assignation',
-  restarted: 'a relancé une nouvelle période',
-};
+/** Kinds whose history line names what they are about (a person, a session, a template). */
+const WITH_DETAIL: ReadonlySet<ObjectiveActivityKind> = new Set<ObjectiveActivityKind>([
+  'created',
+  'session',
+  'session_removed',
+  'member_added',
+  'member_removed',
+  'assigned',
+]);
 
-/** What a line of history says after the person's name. */
+/** What a line of history says after the person's name, in the interface language. */
 export function activityLabel({ kind, detail }: Pick<ObjectiveActivityEntry, 'kind' | 'detail'>): string {
-  const label = ACTIVITY_LABELS[kind];
-  if (!detail) return label;
+  const key = `objectives.activity.${kind}`;
+  if (!detail) return t(key);
   switch (kind) {
     case 'check_in':
     case 'check_out':
-      return `${label} ${formatDate(detail)}`;
+      return t(`${key}On`, { detail: formatDate(detail) });
     case 'progress':
-      return `${label} ${detail} %`;
-    case 'session':
-    case 'session_removed':
-      return `${label} : ${detail}`;
+      return t(`${key}To`, { detail });
     default:
-      return `${label} ${detail}`;
+      return WITH_DETAIL.has(kind) ? t(`${key}With`, { detail }) : `${t(key)} ${detail}`;
   }
 }
 
 export function objectiveReminderLabel(reminder: ObjectiveReminder): string {
   switch (reminder.frequency) {
     case 'none':
-      return 'Aucun rappel';
+      return t('objectives.reminders.none');
     case 'daily':
-      return `Chaque jour à ${reminder.time}`;
+      return t('objectives.reminders.daily', { time: reminder.time });
     case 'weekly':
-      return `Chaque ${WEEKDAY_LABELS[reminder.weekday] ?? WEEKDAY_LABELS[0]} à ${reminder.time}`;
+      return t('objectives.reminders.weekly', { day: weekdayNames()[reminder.weekday] ?? weekdayNames()[0], time: reminder.time });
   }
 }
 
@@ -260,7 +278,7 @@ export function toImportRequest(objective: Objective, today: IsoDate): ImportObj
   const reminder = objective.reminder;
   return {
     localId: objective.id.slice(0, 200) || slugify(objective.title),
-    title: objective.title.trim().slice(0, 80) || 'Objectif',
+    title: objective.title.trim().slice(0, 80) || t('objectives.untitled'),
     category: objective.category,
     tracking: objective.tracking,
     status: objective.status,

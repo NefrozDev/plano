@@ -26,6 +26,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { PlanoDataStore } from '../../core/data/plano-data.store';
 import { ObjectiveSettingsStore } from '../../core/settings/objective-settings.store';
 import { httpErrorMessage } from '../../core/http/http-error-message';
+import { formatLocale, t } from '../../core/i18n/translate';
 import { LiveUpdatesService } from '../../core/live/live-updates.service';
 import { APP_CLOCK, compareDueDates, normalizeText, toIsoDate } from '../../core/time/dates';
 import { ObjectivesApiService } from './objectives-api.service';
@@ -49,9 +50,10 @@ export const DEFAULT_OBJECTIVE_FILTERS: ObjectiveFilters = {
   direction: 'asc',
 };
 
-const FAILURE_MESSAGE = 'L’action a échoué. Veuillez réessayer.';
+
 const MAX_RECENT = 5;
-export const REMOVED_MESSAGE = 'Cet objectif a été supprimé ou ne vous est plus partagé.';
+/** Translation key of the message shown when the open objective goes away. */
+export const REMOVED_MESSAGE = 'objectives.removed';
 
 /**
  * Client state of the objectives feature, backed by the objectives API: every
@@ -175,7 +177,7 @@ export class ObjectivesStore {
     const compare = (first: ObjectiveSummary, second: ObjectiveSummary): number => {
       if (sort === 'manual') return 0;
       if (sort === 'progress') return (first.percent ?? -1) - (second.percent ?? -1);
-      if (sort === 'title') return first.title.localeCompare(second.title, 'fr');
+      if (sort === 'title') return first.title.localeCompare(second.title, formatLocale());
       // Objectives without a due date always sort last.
       return compareDueDates(first.dueDate, second.dueDate);
     };
@@ -192,7 +194,7 @@ export class ObjectivesStore {
     const needle = normalizeText(query);
     if (!needle) return [];
     return this.objectives().filter((objective) =>
-      [objective.title, categoryMeta(objective.category).label].some((text) =>
+      [objective.title, t(categoryMeta(objective.category).label)].some((text) =>
         normalizeText(text).includes(needle),
       ),
     );
@@ -402,7 +404,7 @@ export class ObjectivesStore {
     if (event.type === 'objective.removed') {
       if (this.detailState()?.id === event.objectiveId) {
         this.detailState.set(null);
-        this.error.set(REMOVED_MESSAGE);
+        this.error.set(t(REMOVED_MESSAGE));
       }
       this.objectivesState.update((items) => items.filter(({ id }) => id !== event.objectiveId));
     } else if (event.type !== 'objective.changed') {
@@ -435,7 +437,7 @@ export class ObjectivesStore {
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.status === 404 && this.detailState()?.id === id) {
         this.detailState.set(null);
-        this.error.set(REMOVED_MESSAGE);
+        this.error.set(t(REMOVED_MESSAGE));
       }
     }
   }
@@ -491,7 +493,7 @@ export class ObjectivesStore {
       apply(await firstValueFrom(request));
       return true;
     } catch (error) {
-      this.error.set(httpErrorMessage(error, { fallback: FAILURE_MESSAGE, useServerCode: true }));
+      this.error.set(httpErrorMessage(error, { fallback: t('objectives.failed'), useServerCode: true }));
       return false;
     }
   }

@@ -15,6 +15,7 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ObjectivesStore } from '../objectives.store';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
@@ -24,6 +25,7 @@ import { ObjectiveContext } from './objective-context';
 import { readNotificationsWhileOpen } from '../../../core/notifications/notifications.store';
 
 interface DetailTab {
+  /** Translation key. */
   label: string;
   path: string;
   link: string[];
@@ -32,6 +34,7 @@ interface DetailTab {
 @Component({
   selector: 'app-objective-detail-layout',
   imports: [
+    TranslocoPipe,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
@@ -71,11 +74,11 @@ export class ObjectiveDetailLayoutComponent {
     if (!objective) return [];
     const extra: Omit<DetailTab, 'link'>[] = [];
     if (objective.completion === 'metric') {
-      extra.push({ label: 'Calendrier', path: 'calendar' }, { label: 'Statistiques', path: 'stats' });
+      extra.push({ label: 'objectives.tabs.calendar', path: 'calendar' }, { label: 'objectives.tabs.stats', path: 'stats' });
     } else if (objective.completion === 'habit') {
-      extra.push({ label: 'Habitude', path: 'habit' });
+      extra.push({ label: 'objectives.completion.habit', path: 'habit' });
     }
-    return [{ label: 'Aperçu', path: '' }, ...extra, { label: 'Activité', path: 'activity' }].map((tab) => ({
+    return [{ label: 'objectives.tabs.summary', path: '' }, ...extra, { label: 'objectives.tabs.activity', path: 'activity' }].map((tab) => ({
       ...tab,
       link: ['/objectives', objective.id, ...(tab.path ? [tab.path] : [])],
     }));

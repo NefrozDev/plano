@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { IsoDate, ObjectiveReminder } from '@plano/common';
+import { t } from '../../../../core/i18n/translate';
 import {
   daysBetween,
   formatDay,
@@ -8,12 +10,13 @@ import {
   parseIsoDate,
   toIsoDate,
 } from '../../../../core/time/dates';
-import { PERIOD_LABELS, longestStreak } from '../../objective.utils';
+import { PERIOD_LABELS, longestStreak, weekdayInitials } from '../../objective.utils';
 import { ObjectivesStore } from '../../objectives.store';
 import { ObjectiveContext } from '../objective-context';
 
 @Component({
   selector: 'app-objective-habit',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-habit.component.html',
   styleUrl: './objective-habit.component.scss',
@@ -23,7 +26,7 @@ export class ObjectiveHabitComponent {
 
   readonly objective = inject(ObjectiveContext).objective;
   readonly today = this.store.today();
-  readonly weekdays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'] as const;
+  readonly weekdays = computed(weekdayInitials);
 
   /** The signed-in person's own days: everyone checks in for themselves. */
   private readonly checkIns = computed(() => {
@@ -82,7 +85,7 @@ export class ObjectiveHabitComponent {
   }
 
   dayLabel(date: IsoDate): string {
-    return `${formatDay(date)} : ${this.isChecked(date) ? 'réussi' : 'non fait'}`;
+    return t(this.isChecked(date) ? 'objectives.habit.dayDone' : 'objectives.habit.dayNotDone', { day: formatDay(date) });
   }
 
   shiftMonth(offset: number): void {

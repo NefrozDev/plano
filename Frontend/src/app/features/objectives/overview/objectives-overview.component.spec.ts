@@ -5,7 +5,6 @@ import { ObjectivesStore } from '../objectives.store';
 import { flushObjectives, provideObjectivesTesting, settleObjectives } from '../objectives.testing';
 import { objectiveSummary } from '../testing/objectives-fixtures';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
-import { NOT_OWNER_NOTICE } from '../ui/objective-swipe-card.component';
 import { ObjectivesOverviewComponent } from './objectives-overview.component';
 
 const OBJECTIVES = [
@@ -203,7 +202,7 @@ describe('ObjectivesOverviewComponent', () => {
 
       expect(confirm).not.toHaveBeenCalled();
       const toast = element.querySelector('.toast') as HTMLButtonElement;
-      expect(toast.textContent).toContain(NOT_OWNER_NOTICE);
+      expect(toast.textContent).toContain('Seule la personne qui a créé cet objectif peut le supprimer.');
       // Stacked above the bottom navigation, which otherwise hides it.
       const stack = (selector: string) => Number(getComputedStyle(element.querySelector(selector) as Element).zIndex);
       expect(stack('app-toast')).toBeGreaterThan(stack('app-bottom-nav'));

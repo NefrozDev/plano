@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import type { ObjectiveDetail, ObjectiveSummary } from '@plano/common';
+import { t, tCount } from '../../core/i18n/translate';
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { ObjectivesStore } from './objectives.store';
 
@@ -15,16 +16,16 @@ export class ObjectiveRemovalService {
 
   /** What goes with an open objective: its sub-objectives too. */
   messageFor({ title, descendantCount: below }: Pick<ObjectiveDetail, 'title' | 'descendantCount'>): string {
-    if (!below) return `« ${title} » sera supprimé définitivement.`;
-    return `« ${title} » et ${below > 1 ? `ses ${below} sous-objectifs seront supprimés` : 'son sous-objectif seront supprimés'} définitivement.`;
+    if (!below) return t('objectives.removal.alone', { title });
+    return tCount('objectives.removal.withChildren', below, { title });
   }
 
   /** `message` says what goes; resolves true once deleted. */
   async remove(objective: Pick<ObjectiveSummary, 'id' | 'title' | 'linkedListCount'>, message: string): Promise<boolean> {
     const confirmed = await this.confirm.ask({
-      heading: 'Supprimer l’objectif ?',
+      heading: t('objectives.removal.heading'),
       message,
-      confirmLabel: 'Supprimer',
+      confirmLabel: t('objectives.removal.delete'),
       tone: 'danger',
     });
     if (!confirmed) return false;
@@ -32,13 +33,10 @@ export class ObjectiveRemovalService {
     const deleteLists =
       count > 0 &&
       (await this.confirm.ask({
-        heading: count > 1 ? 'Supprimer aussi ses listes ?' : 'Supprimer aussi sa liste ?',
-        message:
-          count > 1
-            ? `${count} listes sont liées à « ${objective.title} ». Sinon, elles restent dans vos listes.`
-            : `Une liste est liée à « ${objective.title} ». Sinon, elle reste dans vos listes.`,
-        confirmLabel: count > 1 ? 'Supprimer les listes' : 'Supprimer la liste',
-        cancelLabel: count > 1 ? 'Garder les listes' : 'Garder la liste',
+        heading: tCount('objectives.removal.listsHeading', count),
+        message: tCount('objectives.removal.lists', count, { title: objective.title }),
+        confirmLabel: tCount('objectives.removal.deleteLists', count),
+        cancelLabel: tCount('objectives.removal.keepLists', count),
         tone: 'danger',
       }));
     return this.store.remove(objective.id, deleteLists);

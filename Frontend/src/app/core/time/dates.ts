@@ -67,7 +67,7 @@ export function isoWeekNumber(date: IsoDate): number {
   return 1 + Math.round(((thursday.getTime() - firstThursday.getTime()) / 86_400_000 - 3 + ((firstThursday.getDay() + 6) % 7)) / 7);
 }
 
-type DateFormat = 'date' | 'longDate' | 'shortDate' | 'day' | 'longDay' | 'month' | 'weekday' | 'shortWeekday';
+type DateFormat = 'date' | 'longDate' | 'shortDate' | 'day' | 'longDay' | 'month' | 'weekday' | 'shortWeekday' | 'narrowWeekday';
 
 const DATE_FORMATS: Readonly<Record<DateFormat, Intl.DateTimeFormatOptions>> = {
   date: { day: 'numeric', month: 'short', year: 'numeric' },
@@ -78,6 +78,7 @@ const DATE_FORMATS: Readonly<Record<DateFormat, Intl.DateTimeFormatOptions>> = {
   month: { month: 'long', year: 'numeric' },
   weekday: { weekday: 'long' },
   shortWeekday: { weekday: 'short' },
+  narrowWeekday: { weekday: 'narrow' },
 };
 
 const formatters = new Map<string, Intl.DateTimeFormat>();
@@ -113,6 +114,16 @@ export function formatShortDate(date: IsoDate): string {
 
 export function formatDay(date: IsoDate): string {
   return capitalize(formatter('day').format(parseIsoDate(date)).replace('.', ''));
+}
+
+/** "L", "M": a weekday's initial, for narrow calendar headers. */
+export function formatNarrowWeekday(date: IsoDate): string {
+  return formatter('narrowWeekday').format(parseIsoDate(date));
+}
+
+/** "lundi", "Monday". */
+export function formatWeekday(date: IsoDate): string {
+  return formatter('weekday').format(parseIsoDate(date));
 }
 
 /** "lun", "Mon": a weekday's short name, without the abbreviation dot. */

@@ -200,7 +200,7 @@ describe('ObjectiveListsService', () => {
 
       await eventually(objective.id, {
         percent: 25,
-        amount: { current: 1, target: 4, unit: 'éléments' },
+        amount: { current: 1, target: 4, unit: '' },
         status: 'active',
       });
       expect(

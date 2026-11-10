@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -7,6 +7,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../../core/i18n/translate';
 import type {
   CompletionMode,
   Contact,
@@ -30,7 +32,7 @@ import {
   OBJECTIVE_CATEGORIES,
   PERIOD_LABELS,
   RHYTHM_OPTIONS,
-  WEEKDAY_LABELS,
+  weekdayNames,
 } from '../objective.utils';
 import { ObjectivesStore } from '../objectives.store';
 import { ObjectiveIconComponent } from '../ui/objective-icon.component';
@@ -57,6 +59,7 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
 @Component({
   selector: 'app-objective-form',
   imports: [
+    TranslocoPipe,
     ReactiveFormsModule,
     AutofocusDirective,
     PageHeaderComponent,
@@ -80,7 +83,7 @@ export class ObjectiveFormComponent implements OnInit {
   /** Set when creating a sub-objective. */
   readonly parentId = this.route.snapshot.queryParamMap.get('parent');
   readonly categories = OBJECTIVE_CATEGORIES;
-  readonly weekdays = WEEKDAY_LABELS;
+  readonly weekdays = computed(weekdayNames);
   readonly today = this.store.today();
   readonly barModes = Object.entries(COMPLETION_LABELS) as [BarMode, { label: string; hint: string }][];
   readonly backLink = this.objectiveId
@@ -97,9 +100,9 @@ export class ObjectiveFormComponent implements OnInit {
   readonly recurrenceOn = signal(false);
   readonly recurrence = signal<Exclude<ObjectiveRecurrence, 'none'>>('monthly');
   readonly recurrenceOptions: readonly { value: Exclude<ObjectiveRecurrence, 'none'>; label: string }[] = [
-    { value: 'weekly', label: 'Chaque semaine' },
-    { value: 'monthly', label: 'Chaque mois' },
-    { value: 'yearly', label: 'Chaque année' },
+    { value: 'weekly', label: 'objectives.habit.weekly' },
+    { value: 'monthly', label: 'objectives.form.monthly' },
+    { value: 'yearly', label: 'objectives.form.yearly' },
   ];
   readonly rhythmOptions = RHYTHM_OPTIONS;
   /** The template picked to start from. */
@@ -147,8 +150,8 @@ export class ObjectiveFormComponent implements OnInit {
   }
 
   get heading(): string {
-    if (this.objectiveId) return 'Modifier l’objectif';
-    return this.parentId ? 'Nouveau sous-objectif' : 'Nouvel objectif';
+    if (this.objectiveId) return t('objectives.form.editHeading');
+    return t(this.parentId ? 'objectives.form.newChild' : 'titles.newObjective');
   }
 
   /** Only a top-level objective repeats, and starts from a template. */
@@ -186,12 +189,12 @@ export class ObjectiveFormComponent implements OnInit {
   /** "par semaine" after a target, empty when it is reached once. */
   perPeriod(): string {
     const rhythm = this.rhythm();
-    return rhythm === 'none' ? '' : PERIOD_LABELS[rhythm].per;
+    return rhythm === 'none' ? '' : t(PERIOD_LABELS[rhythm].per);
   }
 
   everyPeriod(): string {
     const rhythm = this.rhythm();
-    return rhythm === 'none' ? '' : PERIOD_LABELS[rhythm].every;
+    return rhythm === 'none' ? '' : t(PERIOD_LABELS[rhythm].every);
   }
 
   habitMaxDays(): number {

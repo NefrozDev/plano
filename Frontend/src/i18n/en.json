@@ -858,5 +858,471 @@
       "money": "Money",
       "misc": "Other"
     }
+  },
+  "objectives": {
+    "backToObjectives": "Back to goals",
+    "deletedAccount": "Deleted account",
+    "untitled": "Goal",
+    "failed": "That didn’t work. Please try again.",
+    "removed": "This goal was deleted or is no longer shared with you.",
+    "notOwnerNotice": "Only the person who created this goal can delete it.",
+    "percent": "{{percent}}%",
+    "categories": {
+      "health": "Health",
+      "learning": "Learning",
+      "finance": "Finance",
+      "development": "Personal growth",
+      "other": "Other"
+    },
+    "statuses": {
+      "active": "In progress",
+      "completed": "Completed",
+      "paused": "Paused"
+    },
+    "completion": {
+      "children": "Sub-goals",
+      "childrenHint": "The average of their progress",
+      "metric": "Numeric goal",
+      "metricHint": "Count or add up: outings, km, euros…",
+      "habit": "Habit",
+      "habitHint": "Check off the days you succeed in a calendar",
+      "manual": "Manual percentage",
+      "manualHint": "You move the bar yourself",
+      "list": "List",
+      "listHint": "The checked items of its lists"
+    },
+    "rhythm": {
+      "none": "In total",
+      "weekly": "Per week",
+      "monthly": "Per month",
+      "yearly": "Per year"
+    },
+    "periods": {
+      "weekly": {
+        "per": "per week",
+        "every": "every week",
+        "current": "This week",
+        "reached": "Weeks achieved"
+      },
+      "monthly": {
+        "per": "per month",
+        "every": "every month",
+        "current": "This month",
+        "reached": "Months achieved"
+      },
+      "yearly": {
+        "per": "per year",
+        "every": "every year",
+        "current": "This year",
+        "reached": "Years achieved"
+      }
+    },
+    "dueReminders": {
+      "none": "None",
+      "sameDay": "On the day",
+      "dayBefore": "1 day before",
+      "weekBefore": "1 week before"
+    },
+    "duration": {
+      "hours": "{{hours}} h {{minutes}}",
+      "minutes": "{{minutes}} min"
+    },
+    "units": {
+      "days": {
+        "one": "day",
+        "other": "days"
+      },
+      "items": {
+        "one": "item",
+        "other": "items"
+      },
+      "dayCount": {
+        "one": "{{count}} day",
+        "other": "{{count}} days"
+      }
+    },
+    "sharing": {
+      "by": "By {{name}}",
+      "common": "Joint",
+      "shared": "Shared",
+      "for": "For {{name}}"
+    },
+    "due": {
+      "completed": "Completed on {{date}}",
+      "completedBy": "Completed on {{date}} by {{name}}",
+      "on": "Due: {{date}}",
+      "none": "No due date"
+    },
+    "timelapse": {
+      "late": {
+        "one": "{{count}} day late",
+        "other": "{{count}} days late"
+      },
+      "left": {
+        "one": "{{count}} day left",
+        "other": "{{count}} days left"
+      },
+      "done": "Completed",
+      "lastDay": "Last day"
+    },
+    "reminders": {
+      "none": "No reminder",
+      "daily": "Every day at {{time}}",
+      "weekly": "Every {{day}} at {{time}}"
+    },
+    "activity": {
+      "comments": "Comments",
+      "deleteComment": "Delete the comment",
+      "noComments": "No comments yet.",
+      "yourComment": "Your comment",
+      "writeComment": "Write a comment…",
+      "send": "Send",
+      "history": "History",
+      "nothing": "Nothing yet.",
+      "created": "created the goal",
+      "createdWith": "created the goal from {{detail}}",
+      "edited": "changed the settings",
+      "paused": "paused it",
+      "resumed": "resumed it",
+      "archived": "archived it",
+      "unarchived": "unarchived it",
+      "session": "added a session",
+      "sessionWith": "added a session: {{detail}}",
+      "session_removed": "removed a session",
+      "session_removedWith": "removed a session: {{detail}}",
+      "check_in": "checked off a day",
+      "check_inOn": "checked off {{detail}}",
+      "check_out": "unchecked a day",
+      "check_outOn": "unchecked {{detail}}",
+      "progress": "moved the goal forward",
+      "progressTo": "moved it to {{detail}}%",
+      "completed": "completed it",
+      "reopened": "reopened it",
+      "member_added": "invited someone",
+      "member_addedWith": "invited {{detail}}",
+      "member_removed": "removed someone",
+      "member_removedWith": "removed {{detail}}",
+      "member_left": "left the goal",
+      "assigned": "assigned the goal",
+      "assignedWith": "assigned it to {{detail}}",
+      "unassigned": "removed the assignment",
+      "restarted": "started a new period"
+    },
+    "removal": {
+      "heading": "Delete the goal?",
+      "delete": "Delete",
+      "alone": "“{{title}}” will be deleted for good.",
+      "withChildren": {
+        "one": "“{{title}}” and its sub-goal will be deleted for good.",
+        "other": "“{{title}}” and its {{count}} sub-goals will be deleted for good."
+      },
+      "everything": "“{{title}}” and everything in it will be deleted for good.",
+      "everythingForEveryone": "“{{title}}” and everything in it will be deleted for good, for everyone.",
+      "listsHeading": {
+        "one": "Delete its list too?",
+        "other": "Delete its lists too?"
+      },
+      "lists": {
+        "one": "A list is linked to “{{title}}”. Otherwise, it stays in your lists.",
+        "other": "{{count}} lists are linked to “{{title}}”. Otherwise, they stay in your lists."
+      },
+      "deleteLists": {
+        "one": "Delete the list",
+        "other": "Delete the lists"
+      },
+      "keepLists": {
+        "one": "Keep the list",
+        "other": "Keep the lists"
+      }
+    },
+    "card": {
+      "progress": "Progress: ",
+      "archived": "Archived",
+      "delete": "Delete the goal {{title}}",
+      "time": "Goal time"
+    },
+    "tabs": {
+      "all": "All",
+      "mine": "My goals",
+      "shared": "Shared",
+      "archived": "Archived",
+      "summary": "Overview",
+      "calendar": "Calendar",
+      "stats": "Statistics",
+      "activity": "Activity"
+    },
+    "overview": {
+      "asList": "Show goals as a list",
+      "asGrid": "Show goals as a grid",
+      "filterAndSort": "Filter and sort goals",
+      "tabs": "Filter goals",
+      "activeFilters": {
+        "one": "{{count}} active filter",
+        "other": "{{count}} active filters"
+      },
+      "move": "Move the goal {{title}} (arrow keys change its place)",
+      "completed": "Completed",
+      "less": "Show less",
+      "all": "See all ({{count}})",
+      "none": "No goal matches this view.",
+      "create": "Create a goal"
+    },
+    "search": {
+      "placeholder": "Search for a goal…",
+      "none": "No goal matches “{{query}}”.",
+      "recent": "Recent",
+      "health": "Health goals",
+      "learning": "Learning goals",
+      "finance": "Financial goals",
+      "development": "Personal growth"
+    },
+    "filters": {
+      "status": "Status",
+      "categories": "Categories",
+      "allCategories": "All",
+      "sort": "Sort",
+      "sortBy": "Sort by",
+      "manual": "Custom",
+      "dueDate": "Due date",
+      "progress": "Progress",
+      "title": "Name",
+      "order": "Sort order",
+      "asc": "Ascending",
+      "desc": "Descending",
+      "show": {
+        "one": "Show {{count}} goal",
+        "other": "Show {{count}} goals"
+      }
+    },
+    "settings": {
+      "heading": "Goal settings",
+      "showArchived": "Show archived goals under “All”",
+      "dueReminder": "Default due-date reminder",
+      "notifications": "Goal notifications",
+      "habitReminders": "Habit reminders",
+      "scheduled": "At the set time",
+      "off": "Off",
+      "templates": "Templates",
+      "nodeCount": {
+        "one": "{{count}} goal",
+        "other": "{{count}} goals"
+      },
+      "deleteTemplate": "Delete the template {{name}}",
+      "noTemplates": "Save a goal as a template from its menu to reuse it here.",
+      "showPercentage": "Show progress as a percentage",
+      "categoryColors": "Color by category"
+    },
+    "detail": {
+      "actions": "Goal actions",
+      "share": "Share",
+      "people": "People",
+      "saveAsTemplate": "Save as a template",
+      "resume": "Resume",
+      "pause": "Pause",
+      "unarchive": "Unarchive",
+      "archive": "Archive",
+      "parents": "Parent goals",
+      "views": "Goal views",
+      "templateHint": "The template keeps the settings and sub-goals, without the progress or the people. Only you can see it.",
+      "templateName": "Template name",
+      "templateSaved": "Template saved.",
+      "missing": "This goal doesn’t exist or was deleted."
+    },
+    "celebration": {
+      "heading": "Goal reached!",
+      "message": "Well done, “{{title}}” is complete!",
+      "next": "What now?",
+      "restart": "Start over",
+      "restartHint": "Start from zero today; this result stays in its history.",
+      "archiveHint": "Put it away with your archived goals.",
+      "deleteHint": "Delete it for good.",
+      "keep": "Keep it as it is",
+      "bravo": "Well done!"
+    },
+    "sessions": {
+      "done": "Done",
+      "planned": "Planned",
+      "rest": "Rest",
+      "missed": "Missed"
+    },
+    "calendar": {
+      "previous": "Previous month",
+      "next": "Next month",
+      "label": "Calendar {{month}}",
+      "legend": "Legend",
+      "delete": "Delete {{label}}",
+      "none": "No session that day.",
+      "sessionLabel": "Session name",
+      "sessionPlaceholder": "E.g. 5 km run",
+      "value": "Value",
+      "duration": "Duration in minutes (optional)",
+      "minutes": "min",
+      "status": "Session status",
+      "add": "Add",
+      "addSession": "Add a session",
+      "unavailable": "The calendar is available for numeric goals.",
+      "today": "Today – {{day}}",
+      "dayStatus": "{{day}}: {{status}}",
+      "valueError": "Enter a value above 0."
+    },
+    "habit": {
+      "heading": "Habit tracking",
+      "daysIn": "Days achieved in {{month}}",
+      "viewer": "You’re viewing this habit without taking part.",
+      "paused": "Resume the goal to check off days.",
+      "hint": "Tap a day to mark it as achieved.",
+      "stats": "This month’s statistics",
+      "successes": "Days achieved",
+      "rate": "Success rate",
+      "bestStreak": "Best streak",
+      "reminder": "My reminder",
+      "frequency": "Frequency",
+      "daily": "Every day",
+      "weekly": "Every week",
+      "time": "Time",
+      "notHabit": "This goal isn’t tracked as a habit.",
+      "dayDone": "{{day}}: achieved",
+      "dayNotDone": "{{day}}: not done"
+    },
+    "stats": {
+      "overview": "Overview",
+      "keyFigures": "Key figures",
+      "chartTitle": "Progress ({{unit}})",
+      "current": "Current",
+      "data": "See the data",
+      "empty": "Add a completed session in the calendar to see your progress.",
+      "unavailable": "Statistics are available for numeric goals.",
+      "target": "Target: {{value}}",
+      "summary": "Progress from {{from}} to {{to}} between {{start}} and {{end}}, for a target of {{target}}.",
+      "point": "{{value}}, on {{date}}",
+      "best": "Best value",
+      "total": "Running total",
+      "time": "Total time",
+      "sessions": "Sessions done",
+      "average": "Average per session",
+      "attendance": "Attendance"
+    },
+    "lists": {
+      "checked": "{{current}} / {{target}} checked",
+      "unlink": "Remove “{{name}}” from the goal",
+      "removeChecked": "Its checked items are deleted: it doesn’t count towards the bar.",
+      "addHint": "Add a list: its checked items will move the bar forward.",
+      "newName": "Name of the new list",
+      "create": "Create",
+      "pick": "Choose a list to link",
+      "noneLeft": "None of your other lists can be linked: each counts towards one goal at most.",
+      "link": "Link a list",
+      "unlinkHeading": "Remove the list",
+      "unlinkMessage": "“{{name}}” will no longer count towards this goal. It stays in your lists.",
+      "unlinkConfirm": "Remove"
+    },
+    "summary": {
+      "title": "Goal title",
+      "rename": "Rename the goal",
+      "progress": "Goal progress",
+      "manual": "Progress",
+      "reopen": "Reopen",
+      "markDone": "Mark as completed",
+      "contributions": "Contributions",
+      "reopenChild": "Reopen {{title}}",
+      "completeChild": "Complete {{title}}",
+      "addChild": "Add a sub-goal",
+      "periods": "Past periods",
+      "plan": "Plan",
+      "setPlan": "Set a plan",
+      "planPlaceholder": "E.g. 3 workouts a week",
+      "sharedWith": "Shared with",
+      "nobodyYet": "Nobody yet",
+      "nobody": "Nobody",
+      "reminders": "My reminders",
+      "remindersValue": "{{reminder}} · Due date: {{due}}",
+      "day": "Day",
+      "beforeDue": "Before the due date",
+      "forYouOnly": "Just for you",
+      "repeatsWeekly": "Repeats every week",
+      "repeatsMonthly": "Repeats every month",
+      "repeatsYearly": "Repeats every year",
+      "notDone": "Not completed",
+      "daysShort": "d",
+      "completedUnit": "completed",
+      "cumulated": "Total",
+      "sessions": "Sessions",
+      "toDo": "To do",
+      "checked": "Checked",
+      "lists": {
+        "one": "List",
+        "other": "Lists"
+      },
+      "left": "Left",
+      "late": "Late"
+    },
+    "share": {
+      "heading": "Share the goal",
+      "close": "Close sharing",
+      "childrenNote": "Invited people also see the sub-goals, but nothing above.",
+      "people": "People ({{count}})",
+      "invitedOn": "Invited to “{{title}}”",
+      "what": "What this person can do",
+      "viewerHint": "They can follow the goal without changing it",
+      "common": "Joint goal",
+      "contributorHint": "They contribute to its progress",
+      "everyone": "All your contacts already have access. Add friends in Settings to share with other people.",
+      "leave": "Leave the goal",
+      "leaveHeading": "Leave the goal?",
+      "leaveMessage": "You’ll lose access to it, unless you’re invited again.",
+      "contributor": "Can contribute",
+      "noContacts": "Add friends in Settings, or join a group, to share with them."
+    },
+    "form": {
+      "fromTemplate": "Start from a template",
+      "useTemplate": "Create from this template",
+      "question": "What is your goal?",
+      "titlePlaceholder": "E.g. Run twice a week, Read 12 books…",
+      "titleError": "Give your goal a name.",
+      "category": "Category",
+      "start": "Start",
+      "due": "Due date",
+      "optional": "(optional)",
+      "dueInPast": "The due date can’t be in the past.",
+      "dueBeforeStart": "The due date can’t be before the start.",
+      "tracking": "Tracking and progress",
+      "trackingHint": "Check off days, count, or follow sub-goals",
+      "barModes": "What moves the bar forward",
+      "target": "Target {{period}}",
+      "unit": "Unit",
+      "unitPlaceholder": "km, €, books…",
+      "targetError": "Enter a positive target and a unit.",
+      "aggregation": "How progress adds up",
+      "sum": "Running total (e.g. money saved)",
+      "max": "Best value (e.g. distance run)",
+      "habitDays": "Number of days to achieve",
+      "habitDaysPer": "Days to achieve {{period}}",
+      "habitDaysError": "Choose between 1 and {{max}} days.",
+      "rhythm": "Rhythm",
+      "rhythmHint": "Starts from zero {{period}}; past results are kept.",
+      "timelapse": "Time bar",
+      "timelapseHint": "See time passing until the due date",
+      "timelapseDirection": "Direction of the time bar",
+      "elapsed": "Time elapsed",
+      "elapsedHint": "Fills up as time goes by",
+      "remaining": "Time left",
+      "remainingHint": "Starts full and empties until the due date",
+      "repeat": "Repeat",
+      "repeatHint": "Starts from zero each period; the result is kept",
+      "childrenHint": "Break the goal down; each part has its own settings",
+      "child": "Sub-goal {{number}}",
+      "childPlaceholder": "E.g. Book the tickets",
+      "removeChild": "Remove sub-goal {{number}}",
+      "shareHint": "These people can follow the goal",
+      "commonHint": "These people contribute to its progress",
+      "weight": "Weight in the parent goal",
+      "weightError": "Choose a weight between 1 and 100.",
+      "descriptionPlaceholder": "Describe your goal…",
+      "create": "Create the goal",
+      "editHeading": "Edit the goal",
+      "newChild": "New sub-goal",
+      "monthly": "Every month",
+      "yearly": "Every year"
+    }
   }
 }

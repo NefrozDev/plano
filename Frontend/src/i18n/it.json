@@ -858,5 +858,471 @@
       "money": "Denaro",
       "misc": "Varie"
     }
+  },
+  "objectives": {
+    "backToObjectives": "Torna agli obiettivi",
+    "deletedAccount": "Account eliminato",
+    "untitled": "Obiettivo",
+    "failed": "Operazione non riuscita. Riprova.",
+    "removed": "Questo obiettivo è stato eliminato o non è più condiviso con te.",
+    "notOwnerNotice": "Solo chi ha creato questo obiettivo può eliminarlo.",
+    "percent": "{{percent}}%",
+    "categories": {
+      "health": "Salute",
+      "learning": "Apprendimento",
+      "finance": "Finanze",
+      "development": "Crescita personale",
+      "other": "Altro"
+    },
+    "statuses": {
+      "active": "In corso",
+      "completed": "Completati",
+      "paused": "In pausa"
+    },
+    "completion": {
+      "children": "Sotto-obiettivi",
+      "childrenHint": "La media del loro avanzamento",
+      "metric": "Obiettivo numerico",
+      "metricHint": "Conta o somma: uscite, km, euro…",
+      "habit": "Abitudine",
+      "habitHint": "Spunta i giorni riusciti in un calendario",
+      "manual": "Percentuale manuale",
+      "manualHint": "Sposti tu la barra",
+      "list": "Lista",
+      "listHint": "Gli elementi spuntati delle sue liste"
+    },
+    "rhythm": {
+      "none": "In totale",
+      "weekly": "A settimana",
+      "monthly": "Al mese",
+      "yearly": "All’anno"
+    },
+    "periods": {
+      "weekly": {
+        "per": "a settimana",
+        "every": "ogni settimana",
+        "current": "Questa settimana",
+        "reached": "Settimane riuscite"
+      },
+      "monthly": {
+        "per": "al mese",
+        "every": "ogni mese",
+        "current": "Questo mese",
+        "reached": "Mesi riusciti"
+      },
+      "yearly": {
+        "per": "all’anno",
+        "every": "ogni anno",
+        "current": "Quest’anno",
+        "reached": "Anni riusciti"
+      }
+    },
+    "dueReminders": {
+      "none": "Nessuno",
+      "sameDay": "Il giorno stesso",
+      "dayBefore": "1 giorno prima",
+      "weekBefore": "1 settimana prima"
+    },
+    "duration": {
+      "hours": "{{hours}} h {{minutes}}",
+      "minutes": "{{minutes}} min"
+    },
+    "units": {
+      "days": {
+        "one": "giorno",
+        "other": "giorni"
+      },
+      "items": {
+        "one": "elemento",
+        "other": "elementi"
+      },
+      "dayCount": {
+        "one": "{{count}} giorno",
+        "other": "{{count}} giorni"
+      }
+    },
+    "sharing": {
+      "by": "Di {{name}}",
+      "common": "Comune",
+      "shared": "Condiviso",
+      "for": "Per {{name}}"
+    },
+    "due": {
+      "completed": "Completato il {{date}}",
+      "completedBy": "Completato il {{date}} da {{name}}",
+      "on": "Scadenza: {{date}}",
+      "none": "Senza scadenza"
+    },
+    "timelapse": {
+      "late": {
+        "one": "{{count}} giorno di ritardo",
+        "other": "{{count}} giorni di ritardo"
+      },
+      "left": {
+        "one": "Manca {{count}} giorno",
+        "other": "Mancano {{count}} giorni"
+      },
+      "done": "Completato",
+      "lastDay": "Ultimo giorno"
+    },
+    "reminders": {
+      "none": "Nessun promemoria",
+      "daily": "Ogni giorno alle {{time}}",
+      "weekly": "Ogni {{day}} alle {{time}}"
+    },
+    "activity": {
+      "comments": "Commenti",
+      "deleteComment": "Elimina il commento",
+      "noComments": "Ancora nessun commento.",
+      "yourComment": "Il tuo commento",
+      "writeComment": "Scrivi un commento…",
+      "send": "Invia",
+      "history": "Cronologia",
+      "nothing": "Ancora niente.",
+      "created": "ha creato l’obiettivo",
+      "createdWith": "ha creato l’obiettivo da {{detail}}",
+      "edited": "ha modificato le impostazioni",
+      "paused": "l’ha messo in pausa",
+      "resumed": "l’ha ripreso",
+      "archived": "l’ha archiviato",
+      "unarchived": "l’ha tolto dall’archivio",
+      "session": "ha aggiunto una sessione",
+      "sessionWith": "ha aggiunto una sessione: {{detail}}",
+      "session_removed": "ha rimosso una sessione",
+      "session_removedWith": "ha rimosso una sessione: {{detail}}",
+      "check_in": "ha spuntato un giorno",
+      "check_inOn": "ha spuntato il {{detail}}",
+      "check_out": "ha tolto la spunta a un giorno",
+      "check_outOn": "ha tolto la spunta al {{detail}}",
+      "progress": "ha fatto avanzare l’obiettivo",
+      "progressTo": "l’ha portato al {{detail}}%",
+      "completed": "l’ha completato",
+      "reopened": "l’ha riaperto",
+      "member_added": "ha invitato qualcuno",
+      "member_addedWith": "ha invitato {{detail}}",
+      "member_removed": "ha rimosso qualcuno",
+      "member_removedWith": "ha rimosso {{detail}}",
+      "member_left": "ha lasciato l’obiettivo",
+      "assigned": "ha assegnato l’obiettivo",
+      "assignedWith": "l’ha assegnato a {{detail}}",
+      "unassigned": "ha tolto l’assegnazione",
+      "restarted": "ha avviato un nuovo periodo"
+    },
+    "removal": {
+      "heading": "Eliminare l’obiettivo?",
+      "delete": "Elimina",
+      "alone": "«{{title}}» sarà eliminato definitivamente.",
+      "withChildren": {
+        "one": "«{{title}}» e il suo sotto-obiettivo saranno eliminati definitivamente.",
+        "other": "«{{title}}» e i suoi {{count}} sotto-obiettivi saranno eliminati definitivamente."
+      },
+      "everything": "«{{title}}» e tutto ciò che contiene saranno eliminati definitivamente.",
+      "everythingForEveryone": "«{{title}}» e tutto ciò che contiene saranno eliminati definitivamente, per tutti.",
+      "listsHeading": {
+        "one": "Eliminare anche la sua lista?",
+        "other": "Eliminare anche le sue liste?"
+      },
+      "lists": {
+        "one": "Una lista è collegata a «{{title}}». Altrimenti resta tra le tue liste.",
+        "other": "{{count}} liste sono collegate a «{{title}}». Altrimenti restano tra le tue liste."
+      },
+      "deleteLists": {
+        "one": "Elimina la lista",
+        "other": "Elimina le liste"
+      },
+      "keepLists": {
+        "one": "Tieni la lista",
+        "other": "Tieni le liste"
+      }
+    },
+    "card": {
+      "progress": "Avanzamento: ",
+      "archived": "Archiviato",
+      "delete": "Elimina l’obiettivo {{title}}",
+      "time": "Tempo dell’obiettivo"
+    },
+    "tabs": {
+      "all": "Tutti",
+      "mine": "I miei obiettivi",
+      "shared": "Condivisi",
+      "archived": "Archiviati",
+      "summary": "Panoramica",
+      "calendar": "Calendario",
+      "stats": "Statistiche",
+      "activity": "Attività"
+    },
+    "overview": {
+      "asList": "Mostra gli obiettivi in lista",
+      "asGrid": "Mostra gli obiettivi in griglia",
+      "filterAndSort": "Filtra e ordina gli obiettivi",
+      "tabs": "Filtra gli obiettivi",
+      "activeFilters": {
+        "one": "{{count}} filtro attivo",
+        "other": "{{count}} filtri attivi"
+      },
+      "move": "Sposta l’obiettivo {{title}} (le frecce ne cambiano il posto)",
+      "completed": "Completati",
+      "less": "Mostra meno",
+      "all": "Vedi tutto ({{count}})",
+      "none": "Nessun obiettivo corrisponde a questa vista.",
+      "create": "Crea un obiettivo"
+    },
+    "search": {
+      "placeholder": "Cerca un obiettivo…",
+      "none": "Nessun obiettivo corrisponde a «{{query}}».",
+      "recent": "Recenti",
+      "health": "Obiettivi di salute",
+      "learning": "Obiettivi di apprendimento",
+      "finance": "Obiettivi finanziari",
+      "development": "Crescita personale"
+    },
+    "filters": {
+      "status": "Stato",
+      "categories": "Categorie",
+      "allCategories": "Tutte",
+      "sort": "Ordinamento",
+      "sortBy": "Ordina per",
+      "manual": "Personalizzato",
+      "dueDate": "Data di scadenza",
+      "progress": "Avanzamento",
+      "title": "Nome",
+      "order": "Ordine",
+      "asc": "Crescente",
+      "desc": "Decrescente",
+      "show": {
+        "one": "Mostra {{count}} obiettivo",
+        "other": "Mostra {{count}} obiettivi"
+      }
+    },
+    "settings": {
+      "heading": "Impostazioni degli obiettivi",
+      "showArchived": "Mostra gli obiettivi archiviati in «Tutti»",
+      "dueReminder": "Promemoria di scadenza predefinito",
+      "notifications": "Notifiche degli obiettivi",
+      "habitReminders": "Promemoria delle abitudini",
+      "scheduled": "All’ora stabilita",
+      "off": "Disattivati",
+      "templates": "Modelli",
+      "nodeCount": {
+        "one": "{{count}} obiettivo",
+        "other": "{{count}} obiettivi"
+      },
+      "deleteTemplate": "Elimina il modello {{name}}",
+      "noTemplates": "Salva un obiettivo come modello dal suo menu per riutilizzarlo qui.",
+      "showPercentage": "Mostra l’avanzamento in percentuale",
+      "categoryColors": "Colore per categoria"
+    },
+    "detail": {
+      "actions": "Azioni dell’obiettivo",
+      "share": "Condividi",
+      "people": "Persone",
+      "saveAsTemplate": "Salva come modello",
+      "resume": "Riprendi",
+      "pause": "Metti in pausa",
+      "unarchive": "Togli dall’archivio",
+      "archive": "Archivia",
+      "parents": "Obiettivi superiori",
+      "views": "Viste dell’obiettivo",
+      "templateHint": "Il modello conserva le impostazioni e i sotto-obiettivi, senza l’avanzamento né le persone. Lo vedi solo tu.",
+      "templateName": "Nome del modello",
+      "templateSaved": "Modello salvato.",
+      "missing": "Questo obiettivo non esiste o è stato eliminato."
+    },
+    "celebration": {
+      "heading": "Obiettivo raggiunto!",
+      "message": "Bravo, «{{title}}» è completato!",
+      "next": "E adesso?",
+      "restart": "Ricomincia",
+      "restartHint": "Ripartire da zero oggi; questo risultato resta nella cronologia.",
+      "archiveHint": "Metterlo tra i tuoi obiettivi archiviati.",
+      "deleteHint": "Eliminarlo definitivamente.",
+      "keep": "Lascialo così",
+      "bravo": "Bravo!"
+    },
+    "sessions": {
+      "done": "Svolta",
+      "planned": "Pianificata",
+      "rest": "Riposo",
+      "missed": "Saltata"
+    },
+    "calendar": {
+      "previous": "Mese precedente",
+      "next": "Mese successivo",
+      "label": "Calendario {{month}}",
+      "legend": "Legenda",
+      "delete": "Elimina {{label}}",
+      "none": "Nessuna sessione quel giorno.",
+      "sessionLabel": "Titolo della sessione",
+      "sessionPlaceholder": "Es. Corsa di 5 km",
+      "value": "Valore",
+      "duration": "Durata in minuti (facoltativa)",
+      "minutes": "min",
+      "status": "Stato della sessione",
+      "add": "Aggiungi",
+      "addSession": "Aggiungi una sessione",
+      "unavailable": "Il calendario è disponibile per gli obiettivi numerici.",
+      "today": "Oggi – {{day}}",
+      "dayStatus": "{{day}}: {{status}}",
+      "valueError": "Inserisci un valore maggiore di 0."
+    },
+    "habit": {
+      "heading": "Monitoraggio dell’abitudine",
+      "daysIn": "Giorni riusciti a {{month}}",
+      "viewer": "Consulti questa abitudine senza partecipare.",
+      "paused": "Riprendi l’obiettivo per spuntare dei giorni.",
+      "hint": "Tocca un giorno per segnarlo come riuscito.",
+      "stats": "Statistiche del mese",
+      "successes": "Giorni riusciti",
+      "rate": "Tasso di riuscita",
+      "bestStreak": "Serie migliore",
+      "reminder": "Il mio promemoria",
+      "frequency": "Frequenza",
+      "daily": "Ogni giorno",
+      "weekly": "Ogni settimana",
+      "time": "Ora",
+      "notHabit": "Questo obiettivo non è seguito come un’abitudine.",
+      "dayDone": "{{day}}: riuscito",
+      "dayNotDone": "{{day}}: non fatto"
+    },
+    "stats": {
+      "overview": "Panoramica",
+      "keyFigures": "Cifre chiave",
+      "chartTitle": "Avanzamento ({{unit}})",
+      "current": "Attuale",
+      "data": "Vedi i dati",
+      "empty": "Aggiungi una sessione svolta nel calendario per vedere il tuo avanzamento.",
+      "unavailable": "Le statistiche sono disponibili per gli obiettivi numerici.",
+      "target": "Traguardo: {{value}}",
+      "summary": "Avanzamento da {{from}} a {{to}} tra il {{start}} e il {{end}}, per un traguardo di {{target}}.",
+      "point": "{{value}}, il {{date}}",
+      "best": "Valore migliore",
+      "total": "Totale cumulato",
+      "time": "Tempo totale",
+      "sessions": "Sessioni svolte",
+      "average": "Media per sessione",
+      "attendance": "Costanza"
+    },
+    "lists": {
+      "checked": "{{current}} / {{target}} spuntati",
+      "unlink": "Togli «{{name}}» dall’obiettivo",
+      "removeChecked": "I suoi elementi spuntati vengono eliminati: non conta nella barra.",
+      "addHint": "Aggiungi una lista: i suoi elementi spuntati faranno avanzare la barra.",
+      "newName": "Nome della nuova lista",
+      "create": "Crea",
+      "pick": "Scegli una lista da collegare",
+      "noneLeft": "Nessun’altra tua lista può essere collegata: ognuna conta per un solo obiettivo.",
+      "link": "Collega una lista",
+      "unlinkHeading": "Togli la lista",
+      "unlinkMessage": "«{{name}}» non conterà più per questo obiettivo. Resta tra le tue liste.",
+      "unlinkConfirm": "Togli"
+    },
+    "summary": {
+      "title": "Titolo dell’obiettivo",
+      "rename": "Rinomina l’obiettivo",
+      "progress": "Avanzamento dell’obiettivo",
+      "manual": "Avanzamento",
+      "reopen": "Riapri",
+      "markDone": "Segna come completato",
+      "contributions": "Contributi",
+      "reopenChild": "Riapri {{title}}",
+      "completeChild": "Completa {{title}}",
+      "addChild": "Aggiungi un sotto-obiettivo",
+      "periods": "Periodi passati",
+      "plan": "Piano",
+      "setPlan": "Definisci un piano",
+      "planPlaceholder": "Es. 3 allenamenti a settimana",
+      "sharedWith": "Condiviso con",
+      "nobodyYet": "Nessuno per ora",
+      "nobody": "Nessuno",
+      "reminders": "I miei promemoria",
+      "remindersValue": "{{reminder}} · Scadenza: {{due}}",
+      "day": "Giorno",
+      "beforeDue": "Prima della scadenza",
+      "forYouOnly": "Solo per te",
+      "repeatsWeekly": "Si ripete ogni settimana",
+      "repeatsMonthly": "Si ripete ogni mese",
+      "repeatsYearly": "Si ripete ogni anno",
+      "notDone": "Non completato",
+      "daysShort": "g",
+      "completedUnit": "completati",
+      "cumulated": "Cumulato",
+      "sessions": "Sessioni",
+      "toDo": "Da fare",
+      "checked": "Spuntati",
+      "lists": {
+        "one": "Lista",
+        "other": "Liste"
+      },
+      "left": "Rimanenti",
+      "late": "Di ritardo"
+    },
+    "share": {
+      "heading": "Condividi l’obiettivo",
+      "close": "Chiudi la condivisione",
+      "childrenNote": "Le persone invitate vedono anche i sotto-obiettivi, ma niente al di sopra.",
+      "people": "Persone ({{count}})",
+      "invitedOn": "Invitato a «{{title}}»",
+      "what": "Cosa potrà fare questa persona",
+      "viewerHint": "Può seguire l’obiettivo senza modificarlo",
+      "common": "Obiettivo comune",
+      "contributorHint": "Contribuisce al suo avanzamento",
+      "everyone": "Tutti i tuoi contatti hanno già accesso. Aggiungi amici nelle impostazioni per condividere con altre persone.",
+      "leave": "Lascia l’obiettivo",
+      "leaveHeading": "Lasciare l’obiettivo?",
+      "leaveMessage": "Non vi avrai più accesso, a meno che non ti invitino di nuovo.",
+      "contributor": "Può contribuire",
+      "noContacts": "Aggiungi amici nelle impostazioni, o unisciti a un gruppo, per condividere con loro."
+    },
+    "form": {
+      "fromTemplate": "Parti da un modello",
+      "useTemplate": "Crea da questo modello",
+      "question": "Qual è il tuo obiettivo?",
+      "titlePlaceholder": "Es. Correre 2 volte a settimana, Leggere 12 libri…",
+      "titleError": "Dai un nome al tuo obiettivo.",
+      "category": "Categoria",
+      "start": "Inizio",
+      "due": "Scadenza",
+      "optional": "(facoltativa)",
+      "dueInPast": "La scadenza non può essere nel passato.",
+      "dueBeforeStart": "La scadenza non può precedere l’inizio.",
+      "tracking": "Monitoraggio e avanzamento",
+      "trackingHint": "Spunta dei giorni, conta o segui dei sotto-obiettivi",
+      "barModes": "Cosa fa avanzare la barra",
+      "target": "Traguardo {{period}}",
+      "unit": "Unità",
+      "unitPlaceholder": "km, €, libri…",
+      "targetError": "Indica un traguardo positivo e un’unità.",
+      "aggregation": "Calcolo dell’avanzamento",
+      "sum": "Cumulo (es. importo risparmiato)",
+      "max": "Valore migliore (es. distanza percorsa)",
+      "habitDays": "Numero di giorni da completare",
+      "habitDaysPer": "Giorni da completare {{period}}",
+      "habitDaysError": "Scegli tra 1 e {{max}} giorni.",
+      "rhythm": "Ritmo",
+      "rhythmHint": "Riparte da zero {{period}}; i risultati passati vengono conservati.",
+      "timelapse": "Barra del tempo",
+      "timelapseHint": "Vedere il tempo che passa fino alla scadenza",
+      "timelapseDirection": "Senso della barra del tempo",
+      "elapsed": "Tempo trascorso",
+      "elapsedHint": "Si riempie man mano che il tempo passa",
+      "remaining": "Tempo rimanente",
+      "remainingHint": "Parte piena e si svuota fino alla scadenza",
+      "repeat": "Ripeti",
+      "repeatHint": "Riparte da zero a ogni periodo; il risultato viene conservato",
+      "childrenHint": "Suddividi l’obiettivo; ogni parte avrà le sue impostazioni",
+      "child": "Sotto-obiettivo {{number}}",
+      "childPlaceholder": "Es. Prenotare i biglietti",
+      "removeChild": "Rimuovi il sotto-obiettivo {{number}}",
+      "shareHint": "Queste persone possono seguire l’obiettivo",
+      "commonHint": "Queste persone contribuiscono al suo avanzamento",
+      "weight": "Peso nell’obiettivo superiore",
+      "weightError": "Scegli un peso tra 1 e 100.",
+      "descriptionPlaceholder": "Descrivi il tuo obiettivo…",
+      "create": "Crea l’obiettivo",
+      "editHeading": "Modifica l’obiettivo",
+      "newChild": "Nuovo sotto-obiettivo",
+      "monthly": "Ogni mese",
+      "yearly": "Ogni anno"
+    }
   }
 }

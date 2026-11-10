@@ -9,7 +9,7 @@ import { WHEEL_SWIPE_END_MS } from '../../../shared/ui/swipe-to-delete';
 import { provideObjectivesTesting, settleObjectives } from '../objectives.testing';
 import { ObjectivesStore } from '../objectives.store';
 import { objectiveSummary } from '../testing/objectives-fixtures';
-import { NOT_OWNER_NOTICE, ObjectiveSwipeCardComponent } from './objective-swipe-card.component';
+import { ObjectiveSwipeCardComponent } from './objective-swipe-card.component';
 import type { ObjectiveCardView } from './objective-card.component';
 
 @Component({
@@ -191,7 +191,7 @@ describe('ObjectiveSwipeCardComponent', () => {
     expect(slide().style.transform).toBe('');
     expect(element.querySelector('app-objective-swipe-card')?.classList).not.toContain('revealed');
     release();
-    expect(fixture.componentInstance.refusals).toEqual([NOT_OWNER_NOTICE]);
+    expect(fixture.componentInstance.refusals).toEqual(['Seule la personne qui a créé cet objectif peut le supprimer.']);
 
     link().dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
     expect(confirm).not.toHaveBeenCalled();
@@ -206,7 +206,7 @@ describe('ObjectiveSwipeCardComponent', () => {
     slideTo(100);
     release();
 
-    expect(fixture.componentInstance.refusals).toEqual([NOT_OWNER_NOTICE]);
+    expect(fixture.componentInstance.refusals).toEqual(['Seule la personne qui a créé cet objectif peut le supprimer.']);
     expect(element.querySelector('app-objective-swipe-card')?.classList).toContain('tile');
     expect(element.querySelector('app-objective-card')?.classList).toContain('tile');
   });

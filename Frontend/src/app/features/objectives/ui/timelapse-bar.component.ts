@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { TimelapseView } from '../objective.utils';
 
 /** How much time has passed or is left; full and red once past the deadline. */
 @Component({
   selector: 'app-timelapse-bar',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.overdue]': 'view().overdue' },
   template: `
@@ -11,7 +13,7 @@ import type { TimelapseView } from '../objective.utils';
     <i
       class="bar"
       role="progressbar"
-      aria-label="Temps de l’objectif"
+      [attr.aria-label]="'objectives.card.time' | transloco"
       aria-valuemin="0"
       aria-valuemax="100"
       [attr.aria-valuenow]="view().percent"

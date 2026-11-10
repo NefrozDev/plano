@@ -1,20 +1,22 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { IsoDate, ObjectiveSessionEntry, ObjectiveSessionStatus } from '@plano/common';
+import { t } from '../../../../core/i18n/translate';
 import {
   formatDay,
   formatMonth,
   monthGrid,
   parseIsoDate,
 } from '../../../../core/time/dates';
-import { formatNumber } from '../../objective.utils';
+import { formatNumber, weekdayInitials } from '../../objective.utils';
 import { ObjectivesStore } from '../../objectives.store';
 import { ObjectiveContext } from '../objective-context';
 
 export const SESSION_STATUS_LABELS: Readonly<Record<ObjectiveSessionStatus, string>> = {
-  done: 'Réalisé',
-  planned: 'Planifié',
-  rest: 'Repos',
-  missed: 'Manqué',
+  done: 'objectives.sessions.done',
+  planned: 'objectives.sessions.planned',
+  rest: 'objectives.sessions.rest',
+  missed: 'objectives.sessions.missed',
 };
 
 /** When a day has several sessions, the most meaningful one drives its marker. */
@@ -22,6 +24,7 @@ const STATUS_PRIORITY: readonly ObjectiveSessionStatus[] = ['done', 'missed', 'p
 
 @Component({
   selector: 'app-objective-calendar',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-calendar.component.html',
   styleUrl: './objective-calendar.component.scss',
@@ -31,7 +34,7 @@ export class ObjectiveCalendarComponent {
 
   readonly objective = inject(ObjectiveContext).objective;
   readonly today = this.store.today();
-  readonly weekdays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'] as const;
+  readonly weekdays = computed(weekdayInitials);
   readonly statuses = Object.entries(SESSION_STATUS_LABELS) as [ObjectiveSessionStatus, string][];
   readonly statusLabels = SESSION_STATUS_LABELS;
   readonly month = signal(this.monthOf(this.today));
@@ -55,7 +58,7 @@ export class ObjectiveCalendarComponent {
   readonly selectedSessions = computed(() => this.sessionsByDate().get(this.selected()) ?? []);
   readonly selectedLabel = computed(() =>
     this.selected() === this.today
-      ? `Aujourd’hui – ${formatDay(this.selected())}`
+      ? t('objectives.calendar.today', { day: formatDay(this.selected()) })
       : formatDay(this.selected()),
   );
 
@@ -67,7 +70,7 @@ export class ObjectiveCalendarComponent {
 
   dayLabel(date: IsoDate): string {
     const status = this.dayStatus(date);
-    return status ? `${formatDay(date)} : ${SESSION_STATUS_LABELS[status]}` : formatDay(date);
+    return status ? t('objectives.calendar.dayStatus', { day: formatDay(date), status: t(SESSION_STATUS_LABELS[status]) }) : formatDay(date);
   }
 
   shiftMonth(offset: number): void {
@@ -106,17 +109,17 @@ export class ObjectiveCalendarComponent {
     if (!objective) return;
     const counts = status === 'done' || status === 'planned';
     if (counts && !(value > 0)) {
-      this.formError.set('Indiquez une valeur supérieure à 0.');
+      this.formError.set(t('objectives.calendar.valueError'));
       return;
     }
     if (status === 'done' && this.selected() > this.today) {
-      this.formError.set('Une séance future ne peut pas être déjà réalisée.');
+      this.formError.set(t('apiErrors.objectives.futureSessionDone'));
       return;
     }
     const added = await this.store.addSession(objective.id, {
       date: this.selected(),
       status,
-      label: label.trim() || SESSION_STATUS_LABELS[status],
+      label: label.trim() || t(SESSION_STATUS_LABELS[status]),
       value: counts ? value : 0,
       ...(duration > 0 ? { durationMinutes: Math.round(duration) } : {}),
     });

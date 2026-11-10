@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../../core/i18n/translate';
 import { ObjectiveRemovalService } from '../objective-removal.service';
 import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
 import { ObjectiveCardComponent, ObjectiveCardView } from './objective-card.component';
 
-export const NOT_OWNER_NOTICE = 'Seule la personne qui a créé cet objectif peut le supprimer.';
+/** Translation key of what a swipe tells someone who cannot delete the objective. */
+export const NOT_OWNER_NOTICE = 'objectives.notOwnerNotice';
 
 /**
  * An objective's card that swipes left to delete, like list cards: its owner gets
@@ -11,7 +14,7 @@ export const NOT_OWNER_NOTICE = 'Seule la personne qui a créé cet objectif peu
  */
 @Component({
   selector: 'app-objective-swipe-card',
-  imports: [ObjectiveCardComponent],
+  imports: [ObjectiveCardComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.revealed]': 'offset() < 0',
@@ -20,7 +23,7 @@ export const NOT_OWNER_NOTICE = 'Seule la personne qui a créé cet objectif peu
   },
   template: `
     @if (deletable()) {
-      <button class="delete" type="button" [attr.aria-label]="'Supprimer l’objectif ' + card().objective.title" (click)="askToDelete()">
+      <button class="delete" type="button" [attr.aria-label]="'objectives.card.delete' | transloco: { title: card().objective.title }" (click)="askToDelete()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
       </button>
     }
@@ -58,7 +61,7 @@ export class ObjectiveSwipeCardComponent {
   readonly deletable = computed(() => this.card().objective.role === 'owner');
   readonly swipe = new SwipeToDelete(() => {
     if (this.deletable()) void this.askToDelete();
-    else this.refused.emit(NOT_OWNER_NOTICE);
+    else this.refused.emit(t(NOT_OWNER_NOTICE));
   });
   readonly offset = computed(() => (this.deletable() ? this.swipe.offset() : 0));
 
@@ -76,7 +79,9 @@ export class ObjectiveSwipeCardComponent {
     const objective = this.card().objective;
     await this.removal.remove(
       objective,
-      `« ${objective.title} » et tout ce qu’il contient seront supprimés définitivement${objective.sharing === 'private' ? '' : ', pour tout le monde'}.`,
+      t(objective.sharing === 'private' ? 'objectives.removal.everything' : 'objectives.removal.everythingForEveryone', {
+        title: objective.title,
+      }),
     );
   }
 }

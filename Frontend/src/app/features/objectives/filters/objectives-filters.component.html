@@ -1,18 +1,18 @@
-<app-page-header heading="Filtres" backLink="/objectives" backLabel="Retour aux objectifs">
-  <button class="reset" type="button" (click)="store.resetFilters()">Réinitialiser</button>
+<app-page-header [heading]="'agenda.filters.heading' | transloco" backLink="/objectives" [backLabel]="'objectives.backToObjectives' | transloco">
+  <button class="reset" type="button" (click)="store.resetFilters()">{{ 'agenda.filters.reset' | transloco }}</button>
 </app-page-header>
 
 <div class="content">
   <fieldset>
-    <legend>Statut</legend>
+    <legend>{{ 'objectives.filters.status' | transloco }}</legend>
     <label class="option">
-      <span>Tous</span>
+      <span>{{ 'objectives.tabs.all' | transloco }}</span>
       <input type="checkbox" [checked]="!filters().statuses.length" (change)="clear('statuses', $event)" />
       <i aria-hidden="true"></i>
     </label>
     @for (status of statuses; track status[0]) {
       <label class="option">
-        <span>{{ status[1] }}</span>
+        <span>{{ status[1] | transloco }}</span>
         <input type="checkbox" [checked]="filters().statuses.includes(status[0])" (change)="toggleStatus(status[0])" />
         <i aria-hidden="true"></i>
       </label>
@@ -20,9 +20,9 @@
   </fieldset>
 
   <fieldset>
-    <legend>Catégories</legend>
+    <legend>{{ 'objectives.filters.categories' | transloco }}</legend>
     <label class="option">
-      <span>Toutes</span>
+      <span>{{ 'objectives.filters.allCategories' | transloco }}</span>
       <input type="checkbox" [checked]="!filters().categories.length" (change)="clear('categories', $event)" />
       <i aria-hidden="true"></i>
     </label>
@@ -30,7 +30,7 @@
       <label class="option">
         <span class="category">
           <app-objective-icon [category]="category.value" [color]="category.color" />
-          {{ category.label }}
+          {{ category.label | transloco }}
         </span>
         <input type="checkbox" [checked]="filters().categories.includes(category.value)" (change)="toggleCategory(category.value)" />
         <i aria-hidden="true"></i>
@@ -39,22 +39,22 @@
   </fieldset>
 
   <fieldset>
-    <legend>Tri</legend>
+    <legend>{{ 'objectives.filters.sort' | transloco }}</legend>
     <div class="sort">
-      <select aria-label="Trier par" (change)="setSort({ sort: $any($event.target).value })">
-        <option value="manual" [selected]="filters().sort === 'manual'">Personnalisé</option>
-        <option value="dueDate" [selected]="filters().sort === 'dueDate'">Date d’échéance</option>
-        <option value="progress" [selected]="filters().sort === 'progress'">Progression</option>
-        <option value="title" [selected]="filters().sort === 'title'">Nom</option>
+      <select [attr.aria-label]="'objectives.filters.sortBy' | transloco" (change)="setSort({ sort: $any($event.target).value })">
+        <option value="manual" [selected]="filters().sort === 'manual'">{{ 'objectives.filters.manual' | transloco }}</option>
+        <option value="dueDate" [selected]="filters().sort === 'dueDate'">{{ 'objectives.filters.dueDate' | transloco }}</option>
+        <option value="progress" [selected]="filters().sort === 'progress'">{{ 'objectives.filters.progress' | transloco }}</option>
+        <option value="title" [selected]="filters().sort === 'title'">{{ 'objectives.filters.title' | transloco }}</option>
       </select>
-      <select aria-label="Ordre du tri" (change)="setSort({ direction: $any($event.target).value })">
-        <option value="asc" [selected]="filters().direction === 'asc'">Croissant</option>
-        <option value="desc" [selected]="filters().direction === 'desc'">Décroissant</option>
+      <select [attr.aria-label]="'objectives.filters.order' | transloco" (change)="setSort({ direction: $any($event.target).value })">
+        <option value="asc" [selected]="filters().direction === 'asc'">{{ 'objectives.filters.asc' | transloco }}</option>
+        <option value="desc" [selected]="filters().direction === 'desc'">{{ 'objectives.filters.desc' | transloco }}</option>
       </select>
     </div>
   </fieldset>
 </div>
 
 <div class="actions">
-  <a class="primary-button" routerLink="/objectives">Afficher {{ resultCount() }} objectif(s)</a>
+  <a class="primary-button" routerLink="/objectives">{{ 'objectives.filters.show' | count: resultCount() }}</a>
 </div>

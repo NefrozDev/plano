@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import type { Contact } from '@plano/common';
 
 export function contactName(contact: Contact): string {
@@ -8,10 +9,11 @@ export function contactName(contact: Contact): string {
 /** Ticks people among the signed-in user's contacts. */
 @Component({
   selector: 'app-people-picker',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (contacts() === null) {
-      <p class="hint">Chargement de vos contacts…</p>
+      <p class="hint">{{ 'participants.loading' | transloco }}</p>
     } @else {
       <ul>
         @for (contact of contacts(); track contact.id) {
@@ -22,7 +24,7 @@ export function contactName(contact: Contact): string {
             </label>
           </li>
         } @empty {
-          <li class="hint">Ajoutez des amis dans les paramètres, ou rejoignez un groupe, pour partager avec eux.</li>
+          <li class="hint">{{ 'objectives.share.noContacts' | transloco }}</li>
         }
       </ul>
     }

@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { CountPipe } from '../../../core/i18n/translate';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { ToastComponent } from '../../../shared/ui/toast.component';
 import type { ObjectiveSummary } from '@plano/common';
@@ -11,7 +13,7 @@ import { ObjectiveSwipeCardComponent } from '../ui/objective-swipe-card.componen
 
 @Component({
   selector: 'app-objectives-overview',
-  imports: [RouterLink, ObjectiveSwipeCardComponent, BottomNavComponent, ToastComponent],
+  imports: [TranslocoPipe, CountPipe, RouterLink, ObjectiveSwipeCardComponent, BottomNavComponent, ToastComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-overview.component.html',
   styleUrl: './objectives-overview.component.scss',
@@ -32,11 +34,12 @@ export class ObjectivesOverviewComponent {
     () => void this.store.saveOrder(),
   );
 
+  /** Labels are translation keys. */
   readonly tabs: readonly { label: string; value: ObjectiveTab }[] = [
-    { label: 'Tous', value: 'all' },
-    { label: 'Mes objectifs', value: 'mine' },
-    { label: 'Partagés', value: 'shared' },
-    { label: 'Archivés', value: 'archived' },
+    { label: 'objectives.tabs.all', value: 'all' },
+    { label: 'objectives.tabs.mine', value: 'mine' },
+    { label: 'objectives.tabs.shared', value: 'shared' },
+    { label: 'objectives.tabs.archived', value: 'archived' },
   ];
   readonly activeTab = signal<ObjectiveTab>('all');
   /** Why a card did not slide; empty when there is nothing to say. */

@@ -2,7 +2,7 @@
   <button
     class="icon-button"
     type="button"
-    [attr.aria-label]="gridView() ? 'Afficher les objectifs en liste' : 'Afficher les objectifs en grille'"
+    [attr.aria-label]="(gridView() ? 'objectives.overview.asList' : 'objectives.overview.asGrid') | transloco"
     [attr.aria-pressed]="gridView()"
     (click)="toggleView()"
   >
@@ -18,18 +18,18 @@
       </svg>
     }
   </button>
-  <h1>Objectifs</h1>
+  <h1>{{ 'titles.objectives' | transloco }}</h1>
   <div class="header-actions">
-    <a class="icon-button" routerLink="/objectives/filters" aria-label="Filtrer et trier les objectifs">
+    <a class="icon-button" routerLink="/objectives/filters" [attr.aria-label]="'objectives.overview.filterAndSort' | transloco">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5Z" /></svg>
       @if (store.activeFilterCount()) {
         <i class="badge" aria-hidden="true">{{ store.activeFilterCount() }}</i>
       }
     </a>
-    <a class="icon-button" routerLink="/objectives/search" aria-label="Rechercher un objectif">
+    <a class="icon-button" routerLink="/objectives/search" [attr.aria-label]="'titles.objectiveSearch' | transloco">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
     </a>
-    <a class="icon-button" routerLink="/objectives/settings" aria-label="Paramètres des objectifs">
+    <a class="icon-button" routerLink="/objectives/settings" [attr.aria-label]="'titles.objectiveSettings' | transloco">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4A2 2 0 0 0 4 9.9l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z" /><circle cx="12" cy="12" r="3" />
       </svg>
@@ -37,14 +37,14 @@
   </div>
 </header>
 
-<nav class="tabs" aria-label="Filtrer les objectifs">
+<nav class="tabs" [attr.aria-label]="'objectives.overview.tabs' | transloco">
   @for (tab of tabs; track tab.value) {
     <button
       type="button"
       [class.active]="activeTab() === tab.value"
       [attr.aria-pressed]="activeTab() === tab.value"
       (click)="selectTab(tab.value)"
-    >{{ tab.label }}</button>
+    >{{ tab.label | transloco }}</button>
   }
 </nav>
 
@@ -55,13 +55,13 @@
 
   @if (store.activeFilterCount()) {
     <p class="filter-note">
-      {{ store.activeFilterCount() }} filtre(s) actif(s)
-      <button type="button" (click)="store.resetFilters()">Réinitialiser</button>
+      {{ 'objectives.overview.activeFilters' | count: store.activeFilterCount() }}
+      <button type="button" (click)="store.resetFilters()">{{ 'agenda.filters.reset' | transloco }}</button>
     </p>
   }
 
   @if (inProgress().length) {
-    <h2>{{ activeTab() === 'archived' ? 'Archivés' : 'En cours' }}</h2>
+    <h2>{{ (activeTab() === 'archived' ? 'objectives.tabs.archived' : 'objectives.statuses.active') | transloco }}</h2>
     <div class="cards">
       @for (card of inProgress(); track card.objective.id) {
         <div class="objective-item" [attr.data-objective-id]="card.objective.id" [class.dragging]="drag.dragged() === card.objective.id">
@@ -70,7 +70,7 @@
             <button
               class="drag-handle"
               type="button"
-              [attr.aria-label]="'Déplacer l’objectif ' + card.objective.title + ' (flèches pour changer sa place)'"
+              [attr.aria-label]="'objectives.overview.move' | transloco: { title: card.objective.title }"
               (pointerdown)="drag.start(card.objective.id, $event)"
               (keydown)="moveWithKeyboard(card.objective.id, $event)"
               (click)="$event.preventDefault()"
@@ -83,10 +83,10 @@
 
   @if (completed().length) {
     <div class="section-heading">
-      <h2>Terminé</h2>
+      <h2>{{ 'objectives.overview.completed' | transloco }}</h2>
       @if (completed().length > 1) {
         <button type="button" (click)="showAllCompleted.set(!showAllCompleted())">
-          {{ showAllCompleted() ? 'Réduire' : 'Voir tout (' + completed().length + ')' }}
+          {{ showAllCompleted() ? ('objectives.overview.less' | transloco) : ('objectives.overview.all' | transloco: { count: completed().length }) }}
         </button>
       }
     </div>
@@ -98,7 +98,7 @@
             <button
               class="drag-handle"
               type="button"
-              [attr.aria-label]="'Déplacer l’objectif ' + card.objective.title + ' (flèches pour changer sa place)'"
+              [attr.aria-label]="'objectives.overview.move' | transloco: { title: card.objective.title }"
               (pointerdown)="drag.start(card.objective.id, $event)"
               (keydown)="moveWithKeyboard(card.objective.id, $event)"
               (click)="$event.preventDefault()"
@@ -110,11 +110,11 @@
   }
 
   @if (!inProgress().length && !completed().length && !store.loading()) {
-    <p class="empty-state">Aucun objectif ne correspond à cette vue.</p>
+    <p class="empty-state">{{ 'objectives.overview.none' | transloco }}</p>
   }
 </section>
 
-<a class="fab" routerLink="/objectives/new" aria-label="Créer un objectif">
+<a class="fab" routerLink="/objectives/new" [attr.aria-label]="'objectives.overview.create' | transloco">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
 </a>
 

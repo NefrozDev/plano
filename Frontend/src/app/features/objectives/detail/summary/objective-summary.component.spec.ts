@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { MockInstance } from 'vitest';
 import type { ObjectiveDetail } from '@plano/common';
 import { ConfirmService } from '../../../../shared/ui/confirm.service';
-import { NOT_OWNER_NOTICE } from '../../ui/objective-swipe-card.component';
 import { ObjectivesStore } from '../../objectives.store';
 import {
   openObjective,
@@ -126,7 +125,7 @@ describe('ObjectiveSummaryComponent', () => {
       swipeLeft('a');
 
       expect(confirm).not.toHaveBeenCalled();
-      expect(element.querySelector('.toast')?.textContent).toContain(NOT_OWNER_NOTICE);
+      expect(element.querySelector('.toast')?.textContent).toContain('Seule la personne qui a créé cet objectif peut le supprimer.');
     });
   });
 

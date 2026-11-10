@@ -1,50 +1,50 @@
-<app-page-header [heading]="heading" [backLink]="backLink" backLabel="Annuler" variant="close" />
+<app-page-header [heading]="heading" [backLink]="backLink" [backLabel]="'common.cancel' | transloco" variant="close" />
 
 @if (missing()) {
-  <p class="empty">Cet objectif n’existe pas ou a été supprimé.</p>
+  <p class="empty">{{ 'objectives.detail.missing' | transloco }}</p>
 } @else {
   <form class="objective-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="body">
       @if (!objectiveId && !parentId && store.templates().length) {
         <div class="from-template">
           <label class="field">
-            <span>Partir d’un modèle</span>
+            <span>{{ 'objectives.form.fromTemplate' | transloco }}</span>
             <select class="form-control" (change)="templateId.set($any($event.target).value)">
-              <option value="">Aucun</option>
+              <option value="">{{ 'objectives.dueReminders.none' | transloco }}</option>
               @for (template of store.templates(); track template.id) {
                 <option [value]="template.id">{{ template.name }}</option>
               }
             </select>
           </label>
           @if (templateId()) {
-            <button class="primary-button" type="button" [disabled]="saving()" (click)="startFromTemplate()">Créer depuis ce modèle</button>
+            <button class="primary-button" type="button" [disabled]="saving()" (click)="startFromTemplate()">{{ 'objectives.form.useTemplate' | transloco }}</button>
           }
         </div>
       }
 
       <label class="field">
-        <span class="question">Quel est votre objectif ?</span>
+        <span class="question">{{ 'objectives.form.question' | transloco }}</span>
         <input
           class="form-control"
           appAutofocus
           formControlName="title"
           maxlength="80"
-          placeholder="Ex. : Courir 2 fois par semaine, Lire 12 livres…"
+          [placeholder]="'objectives.form.titlePlaceholder' | transloco"
           [attr.aria-invalid]="showError('title')"
         />
         @if (showError('title')) {
-          <span class="field-error">Donnez un nom à votre objectif.</span>
+          <span class="field-error">{{ 'objectives.form.titleError' | transloco }}</span>
         }
       </label>
 
       <fieldset>
-        <legend>Catégorie</legend>
+        <legend>{{ 'objectives.form.category' | transloco }}</legend>
         <div class="categories">
           @for (category of categories; track category.value) {
             <label class="choice" [class.selected]="form.controls.category.value === category.value">
               <input type="radio" formControlName="category" [value]="category.value" />
               <app-objective-icon [category]="category.value" [color]="category.color" />
-              <span [attr.title]="category.label">{{ category.label }}</span>
+              <span [attr.title]="category.label | transloco">{{ category.label | transloco }}</span>
             </label>
           }
         </div>
@@ -52,11 +52,11 @@
 
       <div class="inline-fields">
         <label class="field">
-          <span>Début</span>
+          <span>{{ 'objectives.form.start' | transloco }}</span>
           <input class="form-control" type="date" formControlName="startDate" />
         </label>
         <label class="field">
-          <span>Échéance <small>(optionnel)</small></span>
+          <span>{{ 'objectives.form.due' | transloco }} <small>{{ 'objectives.form.optional' | transloco }}</small></span>
           <input
             class="form-control"
             type="date"
@@ -66,23 +66,23 @@
         </label>
       </div>
       @if (dueDateInPast()) {
-        <p class="field-error">L’échéance ne peut pas être dans le passé.</p>
+        <p class="field-error">{{ 'objectives.form.dueInPast' | transloco }}</p>
       } @else if (dueDateTooEarly()) {
-        <p class="field-error">L’échéance ne peut pas précéder le début.</p>
+        <p class="field-error">{{ 'objectives.form.dueBeforeStart' | transloco }}</p>
       } @else if (dueDateMissing()) {
-        <p class="field-error">Une barre de temps a besoin d’une échéance.</p>
+        <p class="field-error">{{ 'apiErrors.objectives.timeBarNeedsDue' | transloco }}</p>
       }
 
       <section class="option">
         <app-switch-row
-          label="Suivi et progression"
-          hint="Cochez des jours, comptez ou suivez des sous-objectifs"
+          [label]="'objectives.form.tracking' | transloco"
+          [hint]="'objectives.form.trackingHint' | transloco"
           [checked]="barOn()"
           (toggled)="toggleBar()"
         />
         @if (barOn()) {
           <div class="option-body">
-            <div class="modes" role="radiogroup" aria-label="Ce qui fait avancer la barre">
+            <div class="modes" role="radiogroup" [attr.aria-label]="'objectives.form.barModes' | transloco">
               @for (mode of barModes; track mode[0]) {
                 <label class="mode" [class.selected]="form.controls.completion.value === mode[0]">
                   <input
@@ -91,7 +91,7 @@
                     [checked]="form.controls.completion.value === mode[0]"
                     (change)="selectBarMode(mode[0])"
                   />
-                  <span><strong>{{ mode[1].label }}</strong><small>{{ mode[1].hint }}</small></span>
+                  <span><strong>{{ mode[1].label | transloco }}</strong><small>{{ mode[1].hint | transloco }}</small></span>
                 </label>
               }
             </div>
@@ -100,31 +100,31 @@
               @case ('metric') {
                 <div class="inline-fields">
                   <label class="field">
-                    <span>Cible {{ perPeriod() }}</span>
+                    <span>{{ 'objectives.form.target' | transloco: { period: perPeriod() } }}</span>
                     <input class="form-control" type="number" min="0.1" step="0.1" formControlName="target" [attr.aria-invalid]="showError('target')" />
                   </label>
                   <label class="field">
-                    <span>Unité</span>
-                    <input class="form-control" formControlName="unit" maxlength="12" placeholder="km, €, livres…" [attr.aria-invalid]="showError('unit')" />
+                    <span>{{ 'objectives.form.unit' | transloco }}</span>
+                    <input class="form-control" formControlName="unit" maxlength="12" [placeholder]="'objectives.form.unitPlaceholder' | transloco" [attr.aria-invalid]="showError('unit')" />
                   </label>
                 </div>
                 @if (showError('target') || showError('unit')) {
-                  <p class="field-error">Indiquez une cible positive et une unité.</p>
+                  <p class="field-error">{{ 'objectives.form.targetError' | transloco }}</p>
                 }
                 <label class="field">
-                  <span>Calcul de la progression</span>
+                  <span>{{ 'objectives.form.aggregation' | transloco }}</span>
                   <select class="form-control" formControlName="aggregation">
-                    <option value="sum">Cumul (ex. : montant épargné)</option>
-                    <option value="max">Meilleure valeur (ex. : distance courue)</option>
+                    <option value="sum">{{ 'objectives.form.sum' | transloco }}</option>
+                    <option value="max">{{ 'objectives.form.max' | transloco }}</option>
                   </select>
                 </label>
               }
               @case ('habit') {
                 <label class="field">
-                  <span>{{ rhythm() === 'none' ? 'Nombre de jours à réussir' : 'Jours à réussir ' + perPeriod() }}</span>
+                  <span>{{ rhythm() === 'none' ? ('objectives.form.habitDays' | transloco) : ('objectives.form.habitDaysPer' | transloco: { period: perPeriod() }) }}</span>
                   <input class="form-control" type="number" min="1" [max]="habitMaxDays()" formControlName="habitTargetDays" [attr.aria-invalid]="showError('habitTargetDays')" />
                   @if (showError('habitTargetDays')) {
-                    <span class="field-error">Choisissez entre 1 et {{ habitMaxDays() }} jours.</span>
+                    <span class="field-error">{{ 'objectives.form.habitDaysError' | transloco: { max: habitMaxDays() } }}</span>
                   }
                 </label>
               }
@@ -132,14 +132,14 @@
 
             @if (showRhythm()) {
               <label class="field">
-                <span>Rythme</span>
+                <span>{{ 'objectives.form.rhythm' | transloco }}</span>
                 <select class="form-control rhythm" (change)="setRhythm($any($event.target).value)">
                   @for (option of rhythmOptions; track option.value) {
-                    <option [value]="option.value" [selected]="rhythm() === option.value">{{ option.label }}</option>
+                    <option [value]="option.value" [selected]="rhythm() === option.value">{{ option.label | transloco }}</option>
                   }
                 </select>
                 @if (everyPeriod()) {
-                  <small class="hint">Repart à zéro {{ everyPeriod() }}, les résultats passés sont gardés.</small>
+                  <small class="hint">{{ 'objectives.form.rhythmHint' | transloco: { period: everyPeriod() } }}</small>
                 }
               </label>
             }
@@ -149,20 +149,20 @@
 
       <section class="option">
         <app-switch-row
-          label="Barre de temps"
-          hint="Voir le temps qui passe jusqu’à l’échéance"
+          [label]="'objectives.form.timelapse' | transloco"
+          [hint]="'objectives.form.timelapseHint' | transloco"
           [checked]="timelapseOn()"
           (toggled)="timelapseOn.set(!timelapseOn())"
         />
         @if (timelapseOn()) {
-          <div class="option-body modes" role="radiogroup" aria-label="Sens de la barre de temps">
+          <div class="option-body modes" role="radiogroup" [attr.aria-label]="'objectives.form.timelapseDirection' | transloco">
             <label class="mode" [class.selected]="form.controls.timelapse.value === 'elapsed'">
               <input type="radio" formControlName="timelapse" value="elapsed" />
-              <span><strong>Temps écoulé</strong><small>Se remplit à mesure que le temps passe</small></span>
+              <span><strong>{{ 'objectives.form.elapsed' | transloco }}</strong><small>{{ 'objectives.form.elapsedHint' | transloco }}</small></span>
             </label>
             <label class="mode" [class.selected]="form.controls.timelapse.value === 'remaining'">
               <input type="radio" formControlName="timelapse" value="remaining" />
-              <span><strong>Temps restant</strong><small>Part pleine et se vide jusqu’à l’échéance</small></span>
+              <span><strong>{{ 'objectives.form.remaining' | transloco }}</strong><small>{{ 'objectives.form.remainingHint' | transloco }}</small></span>
             </label>
           </div>
         }
@@ -171,17 +171,17 @@
       @if (isTopLevel() && !showRhythm()) {
         <section class="option">
           <app-switch-row
-            label="Répéter"
-            hint="Repart à zéro à chaque période, le résultat est gardé"
+            [label]="'objectives.form.repeat' | transloco"
+            [hint]="'objectives.form.repeatHint' | transloco"
             [checked]="recurrenceOn()"
             (toggled)="recurrenceOn.set(!recurrenceOn())"
           />
           @if (recurrenceOn()) {
-            <div class="option-body modes" role="radiogroup" aria-label="Fréquence">
+            <div class="option-body modes" role="radiogroup" [attr.aria-label]="'objectives.habit.frequency' | transloco">
               @for (option of recurrenceOptions; track option.value) {
                 <label class="mode" [class.selected]="recurrence() === option.value">
                   <input type="radio" name="recurrence" [checked]="recurrence() === option.value" (change)="recurrence.set(option.value)" />
-                  <span><strong>{{ option.label }}</strong></span>
+                  <span><strong>{{ option.label | transloco }}</strong></span>
                 </label>
               }
             </div>
@@ -192,8 +192,8 @@
       @if (!objectiveId) {
         <section class="option">
           <app-switch-row
-            label="Sous-objectifs"
-            hint="Découper l’objectif ; chacun aura ses propres réglages"
+            [label]="'objectives.completion.children' | transloco"
+            [hint]="'objectives.form.childrenHint' | transloco"
             [checked]="childrenOn()"
             (toggled)="childrenOn.set(!childrenOn())"
           />
@@ -201,19 +201,19 @@
             <div class="option-body" formArrayName="children">
               @for (control of form.controls.children.controls; track control; let index = $index) {
                 <div class="child-field">
-                  <input class="form-control" [formControlName]="index" maxlength="80" [attr.aria-label]="'Sous-objectif ' + (index + 1)" placeholder="Ex. : Réserver les billets" />
-                  <button type="button" [attr.aria-label]="'Retirer le sous-objectif ' + (index + 1)" [disabled]="form.controls.children.length === 1" (click)="removeChildField(index)">×</button>
+                  <input class="form-control" [formControlName]="index" maxlength="80" [attr.aria-label]="'objectives.form.child' | transloco: { number: index + 1 }" [placeholder]="'objectives.form.childPlaceholder' | transloco" />
+                  <button type="button" [attr.aria-label]="'objectives.form.removeChild' | transloco: { number: index + 1 }" [disabled]="form.controls.children.length === 1" (click)="removeChildField(index)">×</button>
                 </div>
               }
-              <button class="link-button" type="button" (click)="addChildField()">＋ Ajouter un sous-objectif</button>
+              <button class="link-button" type="button" (click)="addChildField()">＋ {{ 'objectives.summary.addChild' | transloco }}</button>
             </div>
           }
         </section>
 
         <section class="option">
           <app-switch-row
-            label="Partager"
-            hint="Ces personnes peuvent suivre l’objectif"
+            [label]="'objectives.detail.share' | transloco"
+            [hint]="'objectives.form.shareHint' | transloco"
             [checked]="sharedOn()"
             (toggled)="toggleSharing('viewer')"
           />
@@ -226,8 +226,8 @@
 
         <section class="option">
           <app-switch-row
-            label="Objectif commun"
-            hint="Ces personnes contribuent à sa progression"
+            [label]="'objectives.share.common' | transloco"
+            [hint]="'objectives.form.commonHint' | transloco"
             [checked]="commonOn()"
             (toggled)="toggleSharing('contributor')"
           />
@@ -241,25 +241,25 @@
         <section class="option">
           <div class="inline-fields">
             <label class="field">
-              <span>Rappel</span>
+              <span>{{ 'agenda.detail.reminder' | transloco }}</span>
               <select class="form-control" formControlName="reminderFrequency">
-                <option value="none">Aucun</option>
-                <option value="daily">Chaque jour</option>
-                <option value="weekly">Chaque semaine</option>
+                <option value="none">{{ 'objectives.dueReminders.none' | transloco }}</option>
+                <option value="daily">{{ 'objectives.habit.daily' | transloco }}</option>
+                <option value="weekly">{{ 'objectives.habit.weekly' | transloco }}</option>
               </select>
             </label>
             @if (form.controls.reminderFrequency.value !== 'none') {
               <label class="field">
-                <span>Heure</span>
+                <span>{{ 'objectives.habit.time' | transloco }}</span>
                 <input class="form-control" type="time" formControlName="reminderTime" />
               </label>
             }
           </div>
           @if (form.controls.reminderFrequency.value === 'weekly') {
             <label class="field">
-              <span>Jour</span>
+              <span>{{ 'objectives.summary.day' | transloco }}</span>
               <select class="form-control" formControlName="reminderWeekday">
-                @for (day of weekdays; track day; let index = $index) {
+                @for (day of weekdays(); track day; let index = $index) {
                   <option [ngValue]="index">{{ day }}</option>
                 }
               </select>
@@ -270,21 +270,21 @@
 
       @if (showWeight()) {
         <label class="field weight">
-          <span>Poids dans l’objectif parent</span>
+          <span>{{ 'objectives.form.weight' | transloco }}</span>
           <input class="form-control" type="number" min="1" max="100" formControlName="weight" [attr.aria-invalid]="showError('weight')" />
           @if (showError('weight')) {
-            <span class="field-error">Choisissez un poids entre 1 et 100.</span>
+            <span class="field-error">{{ 'objectives.form.weightError' | transloco }}</span>
           }
         </label>
       }
 
       <label class="field">
-        <span>Description <small>(optionnel)</small></span>
-        <textarea class="form-control" rows="3" formControlName="description" maxlength="500" placeholder="Décrivez votre objectif…"></textarea>
+        <span>{{ 'agenda.form.description' | transloco }} <small>{{ 'objectives.form.optional' | transloco }}</small></span>
+        <textarea class="form-control" rows="3" formControlName="description" maxlength="500" [placeholder]="'objectives.form.descriptionPlaceholder' | transloco"></textarea>
       </label>
       <label class="field">
-        <span>Plan <small>(optionnel)</small></span>
-        <input class="form-control" formControlName="plan" maxlength="120" placeholder="Ex. : 3 entraînements par semaine" />
+        <span>{{ 'objectives.summary.plan' | transloco }} <small>{{ 'objectives.form.optional' | transloco }}</small></span>
+        <input class="form-control" formControlName="plan" maxlength="120" [placeholder]="'objectives.summary.planPlaceholder' | transloco" />
       </label>
 
       @if (store.error(); as error) {
@@ -294,7 +294,7 @@
 
     <div class="actions">
       <button class="primary-button" type="submit" [disabled]="saving()">
-        {{ objectiveId ? 'Enregistrer' : 'Créer l’objectif' }}
+        {{ (objectiveId ? 'groups.save' : 'objectives.form.create') | transloco }}
       </button>
     </div>
   </form>
