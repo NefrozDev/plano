@@ -86,12 +86,12 @@ export class ListsStore {
     this.loading.set(false);
   }
 
-  /** Loads a list for the detail screen; false when it is missing or hidden. */
+  /** Loads a list for the detail screen; false when it is missing or hidden, which that screen says itself. */
   async open(listId: string): Promise<boolean> {
     this.loading.set(true);
     if (this.detailState()?.id !== listId) this.detailState.set(null);
     const [found] = await Promise.all([
-      this.run(this.api.findOne(listId), (detail) => this.detailState.set(detail)),
+      this.run(this.api.findOne(listId), (detail) => this.detailState.set(detail), { quietNotFound: true }),
       this.ensureSettings(),
     ]);
     this.loading.set(false);
@@ -431,11 +431,16 @@ export class ListsStore {
     });
   }
 
-  private async run<T>(request: Observable<T>, apply: (value: T) => void): Promise<boolean> {
+  private async run<T>(
+    request: Observable<T>,
+    apply: (value: T) => void,
+    { quietNotFound = false } = {},
+  ): Promise<boolean> {
     try {
       apply(await firstValueFrom(request, { defaultValue: undefined as T }));
       return true;
     } catch (error) {
+      if (quietNotFound && error instanceof HttpErrorResponse && error.status === 404) return false;
       this.error.set(httpErrorMessage(error, { useServerCode: true, fallback: t('lists.failed') }));
       return false;
     }

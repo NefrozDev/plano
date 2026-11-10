@@ -566,7 +566,8 @@ describe('ListDetailComponent', () => {
     await create({ detail: null });
 
     expect(element.querySelector('[role="alert"]')?.textContent).toContain('n’existe pas');
-    expect(element.querySelector('app-toast')?.textContent).toContain('Cette liste n’existe plus ou ne vous est plus partagée.');
+    // The page says it once: no toast repeats it over the tab bar.
+    expect(element.querySelector('app-toast')?.textContent?.trim()).toBe('');
   });
 
   describe('owner actions', () => {

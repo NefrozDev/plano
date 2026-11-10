@@ -46,7 +46,7 @@ describe('ListsStore', () => {
     await reloading;
   });
 
-  it('reports a list it cannot open, with the API message', async () => {
+  it('answers false for a list it cannot open, leaving the explanation to the screen', async () => {
     const opening = store.open('list-x');
     http
       .expectOne('/api/v1/lists/list-x')
@@ -55,7 +55,18 @@ describe('ListsStore', () => {
 
     expect(await opening).toBe(false);
     expect(store.detail()).toBeNull();
-    expect(store.error()).toBe('Cette liste n’existe plus ou ne vous est plus partagée.');
+    expect(store.error()).toBe('');
+  });
+
+  it('reports a list that fails to open for another reason', async () => {
+    const opening = store.open('list-x');
+    http
+      .expectOne('/api/v1/lists/list-x')
+      .flush({ errorCode: 'lists.viewOnly' }, { status: 403, statusText: 'Forbidden' });
+    http.expectOne('/api/v1/settings/lists').flush(listSettings());
+
+    expect(await opening).toBe(false);
+    expect(store.error()).toBe('Vous pouvez seulement consulter cette liste.');
     store.clearError();
     expect(store.error()).toBe('');
   });
