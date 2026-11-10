@@ -9,7 +9,8 @@
     "test": "ng test",
     "test:cov": "ng test --watch=false --coverage",
     "lint": "ng lint",
-    "test:browser-install": "playwright install chromium"
+    "test:browser-install": "playwright install chromium",
+    "e2e": "playwright test"
   },
   "private": true,
   "dependencies": {
@@ -30,7 +31,9 @@
     "@angular/build": "^22.2.3",
     "@angular/cli": "^22.2.3",
     "@angular/compiler-cli": "^22.2.3",
+    "@axe-core/playwright": "4.14.0",
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "1.64.1",
     "@types/node": "^24.19.2",
     "@vitest/browser-playwright": "^5.0.5",
     "@vitest/coverage-v8": "^5.0.5",

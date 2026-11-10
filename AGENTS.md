@@ -25,6 +25,7 @@ These instructions are also intended to be reusable when starting another Angula
 - Lint NestJS: `npm run backend:lint`
 - Run NestJS unit tests: `npm run backend:test`
 - Run NestJS end-to-end tests: `npm run backend:test:e2e`
+- Check the frontend's accessibility in Chromium: `npm run frontend:test:e2e`
 
 Keep these root commands working when package scripts change.
 
@@ -155,6 +156,8 @@ After creating or moving a `tsconfig`, VS Code may retain its previous in-memory
 - Rate limiting (`@nestjs/throttler`, global guard, a stricter `@Throttle` on `/auth/login`) keys on `req.ip`. That only works because `configureApp()` trusts private proxy hops and `deploy/Caddyfile` sets `trusted_proxies`; keep both, or every user shares one bucket. The store is in memory, which is fine only while the API runs as a single instance.
 
 ## Testing expectations
+
+- The frontend meets WCAG 2.2 AA. `Frontend/e2e` (Playwright, in CI) opens every screen and state of `support/screens.ts` against the production build with a mocked API (`support/mock-api.ts`, built from the unit-test fixtures and `createMockPlanoData()`), past the splash, on 15 October 2026. It checks the automated axe rules (desktop and phone), the keyboard (each focus stop has an indicator at 3:1 and is not hidden, by the bottom bar included), and reflow and text spacing at 320px. A new screen or state goes into `screens.ts`; an axe exception names its reason there. Text colours go through `--color-text-muted` and the darkened palettes (`people.ts`, the `color-mix` of list and calendar colours), never a lighter grey. Screen readers, reading order and the wording of texts still need a manual check.
 
 - Unit tests should exercise controllers/services without opening a network port.
 - End-to-end tests should create the real `AppModule`, call `configureApp(app)`, and exercise versioned HTTP routes through Supertest. `createTestApp(overrides)` replaces providers that reach outside, e.g. `MailService` to capture e-mails.

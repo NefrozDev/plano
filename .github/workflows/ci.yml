@@ -57,6 +57,14 @@ jobs:
       # Failures also become annotations, readable without opening the log.
       - run: npm run test:cov -- --reporters=default --reporters=github-actions
       - run: npm run build
+      # Accessibility (WCAG 2.2 AA) in a real browser, against the build just made.
+      - run: npm run e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: Frontend/dist/.playwright/results
+          retention-days: 7
 
   images:
     needs: [backend, frontend]

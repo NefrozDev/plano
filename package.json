@@ -18,6 +18,7 @@
     "frontend:lint": "npm --prefix Frontend run lint",
     "frontend:test": "npm --prefix Frontend test",
     "frontend:test:cov": "npm --prefix Frontend run test:cov",
+    "frontend:test:e2e": "npm --prefix Frontend run build && npm --prefix Frontend run e2e",
     "test:coverage": "npm run backend:test:cov && npm run frontend:test:cov"
   }
 }

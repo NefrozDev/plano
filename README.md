@@ -43,6 +43,7 @@ Other root commands:
 npm run frontend:build
 npm run frontend:test
 npm run test:coverage
+npm run frontend:test:e2e   # accessibility in Chromium
 ```
 
 The application is available at `http://localhost:4200/`. Angular proxies
