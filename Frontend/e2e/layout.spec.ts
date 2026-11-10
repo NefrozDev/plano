@@ -37,7 +37,9 @@ test.describe('every screen keeps its text whole with WCAG text spacing (1.4.12)
             );
             // Visually hidden text and names cut with an ellipsis on purpose are not clipped text.
             const meant =
-              element.clientWidth <= 1 || style.textOverflow === 'ellipsis';
+              element.clientWidth <= 1 ||
+              style.clip === 'rect(0px, 0px, 0px, 0px)' ||
+              style.textOverflow === 'ellipsis';
             return (
               hides &&
               !meant &&
@@ -46,10 +48,24 @@ test.describe('every screen keeps its text whole with WCAG text spacing (1.4.12)
                 element.scrollWidth > element.clientWidth + 1)
             );
           })
-          .map(
-            (element) =>
-              `${element.getAttribute('class')}: ${(element.textContent ?? '').trim().slice(0, 40)}`,
-          ),
+          .map((element) => {
+            // What sticks out of it, so a failure names the element to fix.
+            const box = element.getBoundingClientRect();
+            const out = [...element.querySelectorAll<HTMLElement>('*')]
+              .filter((child) => {
+                const inner = child.getBoundingClientRect();
+                return (
+                  inner.width > 0 &&
+                  (inner.right > box.right + 1 || inner.bottom > box.bottom + 1)
+                );
+              })
+              .slice(0, 3)
+              .map(
+                (child) =>
+                  `${child.tagName.toLowerCase()}.${child.getAttribute('class')}`,
+              );
+            return `${element.getAttribute('class')}: ${(element.textContent ?? '').trim().slice(0, 40)} (${out.join(', ')})`;
+          }),
       );
       expect(clipped).toEqual([]);
       const widths = await page.evaluate(() => ({
