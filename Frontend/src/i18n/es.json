@@ -279,5 +279,86 @@
       "failed": "No se pudo guardar. Inténtalo de nuevo.",
       "accept": "Acepto y continúo"
     }
+  },
+  "groups": {
+    "backHome": "Volver al inicio",
+    "loading": "Cargando tus grupos…",
+    "loadingOne": "Cargando el grupo…",
+    "tagline": "Un espacio para avanzar juntos",
+    "mine": "Mis grupos",
+    "setUp": "Configura tu grupo",
+    "members": {
+      "one": "{{count}} miembro",
+      "other": "{{count}} miembros"
+    },
+    "people": {
+      "one": "{{count}} persona en este grupo",
+      "other": "{{count}} personas en este grupo"
+    },
+    "owner": "Propietario",
+    "member": "Miembro",
+    "group": "Grupo",
+    "membersHeading": "Miembros",
+    "create": {
+      "heading": "Crear un grupo",
+      "intro": "Crea tu espacio compartido e invita a tus allegados.",
+      "name": "Nombre del grupo",
+      "placeholder": "P. ej., Los Exploradores",
+      "busy": "Creando…",
+      "submit": "Crear el grupo"
+    },
+    "nameError": "Escribe un nombre de entre 2 y 80 caracteres.",
+    "join": {
+      "heading": "Unirse a un grupo",
+      "intro": "Acepta una invitación con el código que has recibido.",
+      "code": "Código de invitación",
+      "codeError": "El código debe tener exactamente 8 caracteres.",
+      "busy": "Uniéndote…",
+      "submit": "Unirse al grupo",
+      "open": "Introducir un código"
+    },
+    "later": "Lo haré más tarde",
+    "backToGroups": "Volver a mis grupos",
+    "rename": "Cambiar el nombre del grupo",
+    "delete": "Eliminar el grupo",
+    "leave": "Salir del grupo",
+    "invite": {
+      "heading": "Invitar a allegados",
+      "intro": "Comparte este código para que puedan unirse al grupo.",
+      "copied": "¡Copiado!",
+      "copy": "Copiar",
+      "rotating": "Generando…",
+      "rotate": "Generar un código nuevo"
+    },
+    "makeOwner": "Hacer propietario",
+    "remove": "Quitar",
+    "renameHint": "Todos los miembros ven este nombre.",
+    "newName": "Nuevo nombre del grupo",
+    "save": "Guardar",
+    "deleteWarning": "«{{name}}» se eliminará para todos sus miembros. Esta acción no se puede deshacer.",
+    "leaveWarning": "Perderás el acceso a lo que se comparte con este grupo.",
+    "deleting": "Eliminando…",
+    "deleteShort": "Eliminar",
+    "leaving": "Saliendo…",
+    "leaveShort": "Salir",
+    "seeGroups": "Ver mis grupos",
+    "failed": "No se pudo completar. Inténtalo de nuevo.",
+    "toast": {
+      "renamed": "Nombre cambiado.",
+      "code": "Código de invitación: {{code}}",
+      "rotated": "Código nuevo generado.",
+      "transferred": "Propiedad transferida.",
+      "removed": "Miembro quitado del grupo."
+    },
+    "confirm": {
+      "rotateHeading": "¿Generar un código nuevo?",
+      "rotateMessage": "El código anterior ya no permitirá unirse al grupo.",
+      "rotate": "Generar",
+      "transferHeading": "¿Transferir la propiedad?",
+      "transferMessage": "{{name}} pasará a ser propietario del grupo.",
+      "transfer": "Transferir",
+      "removeHeading": "¿Quitar a este miembro?",
+      "removeMessage": "{{name}} ya no tendrá acceso al grupo."
+    }
   }
 }

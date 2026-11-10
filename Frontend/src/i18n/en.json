@@ -279,5 +279,86 @@
       "failed": "Saving failed. Please try again.",
       "accept": "I accept and continue"
     }
+  },
+  "groups": {
+    "backHome": "Back to home",
+    "loading": "Loading your groups…",
+    "loadingOne": "Loading the group…",
+    "tagline": "A space to move forward together",
+    "mine": "My groups",
+    "setUp": "Set up your group",
+    "members": {
+      "one": "{{count}} member",
+      "other": "{{count}} members"
+    },
+    "people": {
+      "one": "{{count}} person in this group",
+      "other": "{{count}} people in this group"
+    },
+    "owner": "Owner",
+    "member": "Member",
+    "group": "Group",
+    "membersHeading": "Members",
+    "create": {
+      "heading": "Create a group",
+      "intro": "Create your shared space and invite the people close to you.",
+      "name": "Group name",
+      "placeholder": "E.g. The Explorers",
+      "busy": "Creating…",
+      "submit": "Create the group"
+    },
+    "nameError": "Enter a name between 2 and 80 characters.",
+    "join": {
+      "heading": "Join a group",
+      "intro": "Accept an invitation with the code you received.",
+      "code": "Invite code",
+      "codeError": "The code must be exactly 8 characters long.",
+      "busy": "Joining…",
+      "submit": "Join the group",
+      "open": "Enter a code"
+    },
+    "later": "I’ll do it later",
+    "backToGroups": "Back to my groups",
+    "rename": "Rename the group",
+    "delete": "Delete the group",
+    "leave": "Leave the group",
+    "invite": {
+      "heading": "Invite people",
+      "intro": "Share this code so they can join the group.",
+      "copied": "Copied!",
+      "copy": "Copy",
+      "rotating": "Generating…",
+      "rotate": "Generate a new code"
+    },
+    "makeOwner": "Make owner",
+    "remove": "Remove",
+    "renameHint": "Every member can see this name.",
+    "newName": "New group name",
+    "save": "Save",
+    "deleteWarning": "“{{name}}” will be deleted for all its members. This can’t be undone.",
+    "leaveWarning": "You’ll lose access to what is shared with this group.",
+    "deleting": "Deleting…",
+    "deleteShort": "Delete",
+    "leaving": "Leaving…",
+    "leaveShort": "Leave",
+    "seeGroups": "See my groups",
+    "failed": "That didn’t work. Please try again.",
+    "toast": {
+      "renamed": "Name changed.",
+      "code": "Invite code: {{code}}",
+      "rotated": "New code generated.",
+      "transferred": "Ownership transferred.",
+      "removed": "Member removed from the group."
+    },
+    "confirm": {
+      "rotateHeading": "Generate a new code?",
+      "rotateMessage": "The old code will no longer let anyone join the group.",
+      "rotate": "Generate",
+      "transferHeading": "Transfer ownership?",
+      "transferMessage": "{{name}} will become the group’s owner.",
+      "transfer": "Transfer",
+      "removeHeading": "Remove this member?",
+      "removeMessage": "{{name}} will no longer have access to the group."
+    }
   }
 }

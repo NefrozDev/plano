@@ -13,8 +13,10 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Observable, finalize } from 'rxjs';
 import { httpErrorMessage } from '../../../core/http/http-error-message';
+import { CountPipe, t } from '../../../core/i18n/translate';
 import { GroupDetails } from '../../../core/groups/group.models';
 import { GroupsService } from '../../../core/groups/groups.service';
 import { AuthShellComponent } from '../../auth/auth-shell/auth-shell.component';
@@ -27,7 +29,7 @@ type SetupMode = 'choice' | 'create' | 'join';
  */
 @Component({
   selector: 'app-groups-overview',
-  imports: [AuthShellComponent, ReactiveFormsModule, RouterLink],
+  imports: [AuthShellComponent, CountPipe, ReactiveFormsModule, RouterLink, TranslocoPipe],
   templateUrl: './groups-overview.component.html',
   styleUrls: ['../groups.scss', './groups-overview.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -138,7 +140,7 @@ export class GroupsOverviewComponent implements OnInit {
   private errorMessage(error: unknown): string {
     return httpErrorMessage(error, {
       useServerCode: true,
-      fallback: 'L’action a échoué. Veuillez réessayer.',
+      fallback: t('groups.failed'),
     });
   }
 

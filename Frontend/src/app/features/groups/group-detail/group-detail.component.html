@@ -1,9 +1,9 @@
-<app-auth-shell [compact]="true" backLabel="Retour à mes groupes" (back)="back()">
+<app-auth-shell [compact]="true" [backLabel]="'groups.backToGroups' | transloco" (back)="back()">
   <section class="groups-page" aria-labelledby="groups-title">
     @if (loading()) {
       <div class="loading-card" role="status">
         <span class="button-spinner" aria-hidden="true"></span>
-        Chargement du groupe…
+        {{ 'groups.loadingOne' | transloco }}
       </div>
     } @else if (group(); as currentGroup) {
         <header class="group-card group-heading">
@@ -17,19 +17,17 @@
             </svg>
           </span>
           <div>
-            <p>Groupe</p>
+            <p>{{ 'groups.group' | transloco }}</p>
             <h2 id="groups-title">{{ currentGroup.name }}</h2>
-            <span class="role-pill">{{
-              isOwner() ? "Propriétaire" : "Membre"
-            }}</span>
+            <span class="role-pill">{{ (isOwner() ? "groups.owner" : "groups.member") | transloco }}</span>
           </div>
           <div class="group-tools">
             @if (isOwner()) {
               <button
                 class="icon-bubble"
                 type="button"
-                aria-label="Renommer le groupe"
-                title="Renommer le groupe"
+                [attr.aria-label]="'groups.rename' | transloco"
+                [title]="'groups.rename' | transloco"
                 [disabled]="!!busyAction()"
                 (click)="openDialog('rename')"
               >
@@ -41,8 +39,8 @@
               <button
                 class="icon-bubble icon-bubble--danger"
                 type="button"
-                aria-label="Supprimer le groupe"
-                title="Supprimer le groupe"
+                [attr.aria-label]="'groups.delete' | transloco"
+                [title]="'groups.delete' | transloco"
                 [disabled]="!!busyAction()"
                 (click)="openDialog('danger')"
               >
@@ -54,8 +52,8 @@
               <button
                 class="icon-bubble icon-bubble--danger"
                 type="button"
-                aria-label="Quitter le groupe"
-                title="Quitter le groupe"
+                [attr.aria-label]="'groups.leave' | transloco"
+                [title]="'groups.leave' | transloco"
                 [disabled]="!!busyAction()"
                 (click)="openDialog('danger')"
               >
@@ -77,15 +75,13 @@
               >↗</span
             >
             <div>
-              <h3>Inviter des proches</h3>
-              <p>
-                Partagez ce code pour leur permettre de rejoindre le groupe.
-              </p>
+              <h3>{{ 'groups.invite.heading' | transloco }}</h3>
+              <p>{{ 'groups.invite.intro' | transloco }}</p>
             </div>
           </div>
           <button class="invite-code" type="button" (click)="copyInviteCode()">
             <span>{{ currentGroup.inviteCode }}</span>
-            <strong>{{ linkCopied() ? "Copié !" : "Copier" }}</strong>
+            <strong>{{ (linkCopied() ? "groups.invite.copied" : "groups.invite.copy") | transloco }}</strong>
           </button>
           @if (isOwner()) {
             <button
@@ -94,11 +90,7 @@
               [disabled]="busyAction() === 'rotate'"
               (click)="rotateInviteCode()"
             >
-              {{
-                busyAction() === "rotate"
-                  ? "Génération…"
-                  : "Générer un nouveau code"
-              }}
+              {{ (busyAction() === "rotate" ? "groups.invite.rotating" : "groups.invite.rotate") | transloco }}
             </button>
           }
         </article>
@@ -107,13 +99,8 @@
           <div class="card-title">
             <span class="card-icon card-icon--mint" aria-hidden="true">●</span>
             <div>
-              <h3>Membres</h3>
-              <p>
-                {{ currentGroup.members.length }} personne{{
-                  currentGroup.members.length > 1 ? "s" : ""
-                }}
-                dans ce groupe
-              </p>
+              <h3>{{ 'groups.membersHeading' | transloco }}</h3>
+              <p>{{ 'groups.people' | count: currentGroup.members.length }}</p>
             </div>
           </div>
           <div class="member-list">
@@ -124,9 +111,7 @@
                   <strong>{{ memberName(member) }}</strong>
                   <small>{{ member.email }}</small>
                 </div>
-                <span class="member-role">{{
-                  member.role === "owner" ? "Propriétaire" : "Membre"
-                }}</span>
+                <span class="member-role">{{ (member.role === "owner" ? "groups.owner" : "groups.member") | transloco }}</span>
                 @if (isOwner() && member.id !== currentUserId()) {
                   <div class="member-actions">
                     <button
@@ -134,7 +119,7 @@
                       [disabled]="!!busyAction()"
                       (click)="transferOwnership(member)"
                     >
-                      Nommer propriétaire
+                      {{ 'groups.makeOwner' | transloco }}
                     </button>
                     <button
                       class="danger-text"
@@ -142,7 +127,7 @@
                       [disabled]="!!busyAction()"
                       (click)="removeMember(member)"
                     >
-                      Retirer
+                      {{ 'groups.remove' | transloco }}
                     </button>
                   </div>
                 }
@@ -153,7 +138,7 @@
 
         @if (isOwner()) {
           <app-modal-dialog
-            heading="Renommer le groupe"
+            [heading]="'groups.rename' | transloco"
             [open]="dialog() === 'rename'"
             (closed)="closeDialog()"
           >
@@ -161,7 +146,7 @@
               <path d="M4 20h4L19 9l-4-4L4 16Z" />
               <path d="m13.5 6.5 4 4" />
             </svg>
-            <p class="dialog-text">Ce nom est visible par tous les membres.</p>
+            <p class="dialog-text">{{ 'groups.renameHint' | transloco }}</p>
             @if (submissionError()) {
               <p class="form-error" role="alert">{{ submissionError() }}</p>
             }
@@ -172,7 +157,7 @@
                 type="text"
                 maxlength="80"
                 formControlName="name"
-                aria-label="Nouveau nom du groupe"
+                [attr.aria-label]="'groups.newName' | transloco"
               />
               <div class="dialog-actions">
                 <button
@@ -180,14 +165,14 @@
                   type="button"
                   (click)="closeDialog()"
                 >
-                  Annuler
+                  {{ 'common.cancel' | transloco }}
                 </button>
                 <button
                   class="primary-button"
                   type="submit"
                   [disabled]="!!busyAction() || renameForm.invalid"
                 >
-                  {{ busyAction() === "rename" ? "…" : "Enregistrer" }}
+                  {{ busyAction() === "rename" ? "…" : ('groups.save' | transloco) }}
                 </button>
               </div>
             </form>
@@ -196,7 +181,7 @@
 
         <app-modal-dialog
           tone="danger"
-          [heading]="isOwner() ? 'Supprimer le groupe' : 'Quitter le groupe'"
+          [heading]="(isOwner() ? 'groups.delete' : 'groups.leave') | transloco"
           [open]="dialog() === 'danger'"
           (closed)="closeDialog()"
         >
@@ -209,10 +194,9 @@
           </svg>
           <p class="dialog-text">
             @if (isOwner()) {
-              « {{ currentGroup.name }} » sera supprimé pour tous ses membres.
-              Cette action ne peut pas être annulée.
+              {{ 'groups.deleteWarning' | transloco: { name: currentGroup.name } }}
             } @else {
-              Vous perdrez l’accès aux contenus partagés avec ce groupe.
+              {{ 'groups.leaveWarning' | transloco }}
             }
           </p>
           @if (submissionError()) {
@@ -224,7 +208,7 @@
               type="button"
               (click)="closeDialog()"
             >
-              Annuler
+              {{ 'common.cancel' | transloco }}
             </button>
             @if (isOwner()) {
               <button
@@ -233,7 +217,7 @@
                 [disabled]="!!busyAction()"
                 (click)="deleteGroup()"
               >
-                {{ busyAction() === "delete" ? "Suppression…" : "Supprimer" }}
+                {{ (busyAction() === "delete" ? "groups.deleting" : "groups.deleteShort") | transloco }}
               </button>
             } @else {
               <button
@@ -242,17 +226,17 @@
                 [disabled]="!!busyAction()"
                 (click)="leaveGroup()"
               >
-                {{ busyAction() === "leave" ? "Départ…" : "Quitter" }}
+                {{ (busyAction() === "leave" ? "groups.leaving" : "groups.leaveShort") | transloco }}
               </button>
             }
           </div>
         </app-modal-dialog>
     } @else {
-      <h2 id="groups-title" class="visually-hidden">Groupe</h2>
+      <h2 id="groups-title" class="visually-hidden">{{ 'groups.group' | transloco }}</h2>
       @if (submissionError()) {
         <p class="form-error" role="alert">{{ submissionError() }}</p>
       }
-      <a class="back-button" routerLink="/groups">Voir mes groupes</a>
+      <a class="back-button" routerLink="/groups">{{ 'groups.seeGroups' | transloco }}</a>
     }
   </section>
 

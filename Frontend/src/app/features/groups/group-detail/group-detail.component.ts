@@ -14,10 +14,12 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Observable, finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ClipboardService } from '../../../core/browser/clipboard.service';
 import { httpErrorMessage } from '../../../core/http/http-error-message';
+import { CountPipe, t } from '../../../core/i18n/translate';
 import { GroupDetails, GroupMember } from '../../../core/groups/group.models';
 import { GroupsService } from '../../../core/groups/groups.service';
 import { ConfirmService } from '../../../shared/ui/confirm.service';
@@ -32,6 +34,8 @@ type GroupDialog = 'rename' | 'danger';
 @Component({
   selector: 'app-group-detail',
   imports: [
+    CountPipe,
+    TranslocoPipe,
     UserAvatarComponent,
     AuthShellComponent,
     ModalDialogComponent,
@@ -119,7 +123,7 @@ export class GroupDetailComponent implements OnInit {
       'rename',
       this.groups.update(this.groupId, name),
       (group) => this.setGroup(group),
-      'Nom modifié.',
+      t('groups.toast.renamed'),
     );
   }
 
@@ -127,7 +131,7 @@ export class GroupDetailComponent implements OnInit {
     const code = this.group()?.inviteCode;
     if (!code) return;
     if (!(await this.clipboard.copy(code))) {
-      this.actionMessage.set(`Code d’invitation : ${code}`);
+      this.actionMessage.set(t('groups.toast.code', { code }));
       return;
     }
     this.linkCopied.set(true);
@@ -137,39 +141,39 @@ export class GroupDetailComponent implements OnInit {
 
   async rotateInviteCode(): Promise<void> {
     const confirmed = await this.confirm.ask({
-      heading: 'Générer un nouveau code ?',
-      message: 'L’ancien code ne permettra plus de rejoindre le groupe.',
-      confirmLabel: 'Générer',
+      heading: t('groups.confirm.rotateHeading'),
+      message: t('groups.confirm.rotateMessage'),
+      confirmLabel: t('groups.confirm.rotate'),
     });
     if (!confirmed) return;
     this.runAction(
       'rotate',
       this.groups.rotateInviteCode(this.groupId),
       (group) => this.setGroup(group),
-      'Nouveau code généré.',
+      t('groups.toast.rotated'),
     );
   }
 
   async transferOwnership(member: GroupMember): Promise<void> {
     const confirmed = await this.confirm.ask({
-      heading: 'Transférer la propriété ?',
-      message: `${this.memberName(member)} deviendra propriétaire du groupe.`,
-      confirmLabel: 'Transférer',
+      heading: t('groups.confirm.transferHeading'),
+      message: t('groups.confirm.transferMessage', { name: this.memberName(member) }),
+      confirmLabel: t('groups.confirm.transfer'),
     });
     if (!confirmed) return;
     this.runAction(
       `transfer-${member.id}`,
       this.groups.transferOwnership(this.groupId, member.id),
       (group) => this.setGroup(group),
-      'Propriété transférée.',
+      t('groups.toast.transferred'),
     );
   }
 
   async removeMember(member: GroupMember): Promise<void> {
     const confirmed = await this.confirm.ask({
-      heading: 'Retirer ce membre ?',
-      message: `${this.memberName(member)} n’aura plus accès au groupe.`,
-      confirmLabel: 'Retirer',
+      heading: t('groups.confirm.removeHeading'),
+      message: t('groups.confirm.removeMessage', { name: this.memberName(member) }),
+      confirmLabel: t('groups.remove'),
       tone: 'danger',
     });
     if (!confirmed) return;
@@ -180,7 +184,7 @@ export class GroupDetailComponent implements OnInit {
         this.group.update((group) =>
           group ? { ...group, members: group.members.filter(({ id }) => id !== member.id) } : null,
         ),
-      'Membre retiré du groupe.',
+      t('groups.toast.removed'),
     );
   }
 
@@ -227,7 +231,7 @@ export class GroupDetailComponent implements OnInit {
   private errorMessage(error: unknown): string {
     return httpErrorMessage(error, {
       useServerCode: true,
-      fallback: 'L’action a échoué. Veuillez réessayer.',
+      fallback: t('groups.failed'),
     });
   }
 

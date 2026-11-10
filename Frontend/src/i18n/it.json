@@ -279,5 +279,86 @@
       "failed": "Salvataggio non riuscito. Riprova.",
       "accept": "Accetto e continuo"
     }
+  },
+  "groups": {
+    "backHome": "Torna alla home",
+    "loading": "Caricamento dei tuoi gruppi…",
+    "loadingOne": "Caricamento del gruppo…",
+    "tagline": "Uno spazio per andare avanti insieme",
+    "mine": "I miei gruppi",
+    "setUp": "Configura il tuo gruppo",
+    "members": {
+      "one": "{{count}} membro",
+      "other": "{{count}} membri"
+    },
+    "people": {
+      "one": "{{count}} persona in questo gruppo",
+      "other": "{{count}} persone in questo gruppo"
+    },
+    "owner": "Proprietario",
+    "member": "Membro",
+    "group": "Gruppo",
+    "membersHeading": "Membri",
+    "create": {
+      "heading": "Crea un gruppo",
+      "intro": "Crea il tuo spazio condiviso e invita le persone a te vicine.",
+      "name": "Nome del gruppo",
+      "placeholder": "Es. Gli Esploratori",
+      "busy": "Creazione…",
+      "submit": "Crea il gruppo"
+    },
+    "nameError": "Inserisci un nome tra 2 e 80 caratteri.",
+    "join": {
+      "heading": "Unisciti a un gruppo",
+      "intro": "Accetta un invito con il codice ricevuto.",
+      "code": "Codice d’invito",
+      "codeError": "Il codice deve contenere esattamente 8 caratteri.",
+      "busy": "Accesso…",
+      "submit": "Unisciti al gruppo",
+      "open": "Inserisci un codice"
+    },
+    "later": "Lo farò più tardi",
+    "backToGroups": "Torna ai miei gruppi",
+    "rename": "Rinomina il gruppo",
+    "delete": "Elimina il gruppo",
+    "leave": "Lascia il gruppo",
+    "invite": {
+      "heading": "Invita le persone a te vicine",
+      "intro": "Condividi questo codice per permettere loro di unirsi al gruppo.",
+      "copied": "Copiato!",
+      "copy": "Copia",
+      "rotating": "Generazione…",
+      "rotate": "Genera un nuovo codice"
+    },
+    "makeOwner": "Nomina proprietario",
+    "remove": "Rimuovi",
+    "renameHint": "Tutti i membri vedono questo nome.",
+    "newName": "Nuovo nome del gruppo",
+    "save": "Salva",
+    "deleteWarning": "«{{name}}» sarà eliminato per tutti i suoi membri. Questa azione non può essere annullata.",
+    "leaveWarning": "Perderai l’accesso ai contenuti condivisi con questo gruppo.",
+    "deleting": "Eliminazione…",
+    "deleteShort": "Elimina",
+    "leaving": "Uscita…",
+    "leaveShort": "Esci",
+    "seeGroups": "Vedi i miei gruppi",
+    "failed": "Operazione non riuscita. Riprova.",
+    "toast": {
+      "renamed": "Nome modificato.",
+      "code": "Codice d’invito: {{code}}",
+      "rotated": "Nuovo codice generato.",
+      "transferred": "Proprietà trasferita.",
+      "removed": "Membro rimosso dal gruppo."
+    },
+    "confirm": {
+      "rotateHeading": "Generare un nuovo codice?",
+      "rotateMessage": "Il vecchio codice non permetterà più di unirsi al gruppo.",
+      "rotate": "Genera",
+      "transferHeading": "Trasferire la proprietà?",
+      "transferMessage": "{{name}} diventerà proprietario del gruppo.",
+      "transfer": "Trasferisci",
+      "removeHeading": "Rimuovere questo membro?",
+      "removeMessage": "{{name}} non avrà più accesso al gruppo."
+    }
   }
 }

@@ -279,5 +279,86 @@
       "failed": "Speichern ist fehlgeschlagen. Bitte versuche es erneut.",
       "accept": "Ich stimme zu und mache weiter"
     }
+  },
+  "groups": {
+    "backHome": "Zurück zur Startseite",
+    "loading": "Deine Gruppen werden geladen…",
+    "loadingOne": "Die Gruppe wird geladen…",
+    "tagline": "Ein Ort, um gemeinsam voranzukommen",
+    "mine": "Meine Gruppen",
+    "setUp": "Richte deine Gruppe ein",
+    "members": {
+      "one": "{{count}} Mitglied",
+      "other": "{{count}} Mitglieder"
+    },
+    "people": {
+      "one": "{{count}} Person in dieser Gruppe",
+      "other": "{{count}} Personen in dieser Gruppe"
+    },
+    "owner": "Eigentümer",
+    "member": "Mitglied",
+    "group": "Gruppe",
+    "membersHeading": "Mitglieder",
+    "create": {
+      "heading": "Gruppe erstellen",
+      "intro": "Erstelle deinen gemeinsamen Bereich und lade deine Liebsten ein.",
+      "name": "Name der Gruppe",
+      "placeholder": "z. B. Die Entdecker",
+      "busy": "Wird erstellt…",
+      "submit": "Gruppe erstellen"
+    },
+    "nameError": "Gib einen Namen mit 2 bis 80 Zeichen ein.",
+    "join": {
+      "heading": "Einer Gruppe beitreten",
+      "intro": "Nimm eine Einladung mit dem erhaltenen Code an.",
+      "code": "Einladungscode",
+      "codeError": "Der Code muss genau 8 Zeichen lang sein.",
+      "busy": "Beitritt…",
+      "submit": "Der Gruppe beitreten",
+      "open": "Code eingeben"
+    },
+    "later": "Ich mache das später",
+    "backToGroups": "Zurück zu meinen Gruppen",
+    "rename": "Gruppe umbenennen",
+    "delete": "Gruppe löschen",
+    "leave": "Gruppe verlassen",
+    "invite": {
+      "heading": "Liebste einladen",
+      "intro": "Teile diesen Code, damit sie der Gruppe beitreten können.",
+      "copied": "Kopiert!",
+      "copy": "Kopieren",
+      "rotating": "Wird erzeugt…",
+      "rotate": "Neuen Code erzeugen"
+    },
+    "makeOwner": "Zum Eigentümer machen",
+    "remove": "Entfernen",
+    "renameHint": "Alle Mitglieder sehen diesen Namen.",
+    "newName": "Neuer Name der Gruppe",
+    "save": "Speichern",
+    "deleteWarning": "„{{name}}“ wird für alle Mitglieder gelöscht. Das kann nicht rückgängig gemacht werden.",
+    "leaveWarning": "Du verlierst den Zugriff auf alles, was mit dieser Gruppe geteilt wird.",
+    "deleting": "Wird gelöscht…",
+    "deleteShort": "Löschen",
+    "leaving": "Wird verlassen…",
+    "leaveShort": "Verlassen",
+    "seeGroups": "Meine Gruppen ansehen",
+    "failed": "Das hat nicht geklappt. Bitte versuche es erneut.",
+    "toast": {
+      "renamed": "Name geändert.",
+      "code": "Einladungscode: {{code}}",
+      "rotated": "Neuer Code erzeugt.",
+      "transferred": "Eigentum übertragen.",
+      "removed": "Mitglied aus der Gruppe entfernt."
+    },
+    "confirm": {
+      "rotateHeading": "Neuen Code erzeugen?",
+      "rotateMessage": "Mit dem alten Code kann niemand mehr der Gruppe beitreten.",
+      "rotate": "Erzeugen",
+      "transferHeading": "Eigentum übertragen?",
+      "transferMessage": "{{name}} wird Eigentümer der Gruppe.",
+      "transfer": "Übertragen",
+      "removeHeading": "Dieses Mitglied entfernen?",
+      "removeMessage": "{{name}} hat dann keinen Zugriff mehr auf die Gruppe."
+    }
   }
 }

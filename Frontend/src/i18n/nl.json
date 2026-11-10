@@ -279,5 +279,86 @@
       "failed": "Opslaan is mislukt. Probeer het opnieuw.",
       "accept": "Ik ga akkoord en ga verder"
     }
+  },
+  "groups": {
+    "backHome": "Terug naar start",
+    "loading": "Je groepen worden geladen…",
+    "loadingOne": "De groep wordt geladen…",
+    "tagline": "Een ruimte om samen vooruit te gaan",
+    "mine": "Mijn groepen",
+    "setUp": "Stel je groep in",
+    "members": {
+      "one": "{{count}} lid",
+      "other": "{{count}} leden"
+    },
+    "people": {
+      "one": "{{count}} persoon in deze groep",
+      "other": "{{count}} personen in deze groep"
+    },
+    "owner": "Eigenaar",
+    "member": "Lid",
+    "group": "Groep",
+    "membersHeading": "Leden",
+    "create": {
+      "heading": "Een groep maken",
+      "intro": "Maak je gedeelde ruimte en nodig je naasten uit.",
+      "name": "Naam van de groep",
+      "placeholder": "Bv. De Ontdekkers",
+      "busy": "Bezig met maken…",
+      "submit": "Groep maken"
+    },
+    "nameError": "Vul een naam in van 2 tot 80 tekens.",
+    "join": {
+      "heading": "Lid worden van een groep",
+      "intro": "Aanvaard een uitnodiging met de code die je kreeg.",
+      "code": "Uitnodigingscode",
+      "codeError": "De code moet precies 8 tekens bevatten.",
+      "busy": "Bezig…",
+      "submit": "Lid worden",
+      "open": "Een code invoeren"
+    },
+    "later": "Ik doe het later",
+    "backToGroups": "Terug naar mijn groepen",
+    "rename": "Groep hernoemen",
+    "delete": "Groep verwijderen",
+    "leave": "Groep verlaten",
+    "invite": {
+      "heading": "Naasten uitnodigen",
+      "intro": "Deel deze code zodat ze lid kunnen worden van de groep.",
+      "copied": "Gekopieerd!",
+      "copy": "Kopiëren",
+      "rotating": "Bezig met genereren…",
+      "rotate": "Nieuwe code genereren"
+    },
+    "makeOwner": "Eigenaar maken",
+    "remove": "Verwijderen",
+    "renameHint": "Alle leden zien deze naam.",
+    "newName": "Nieuwe naam van de groep",
+    "save": "Opslaan",
+    "deleteWarning": "“{{name}}” wordt voor alle leden verwijderd. Dit kan niet ongedaan worden gemaakt.",
+    "leaveWarning": "Je verliest de toegang tot wat met deze groep gedeeld is.",
+    "deleting": "Bezig met verwijderen…",
+    "deleteShort": "Verwijderen",
+    "leaving": "Bezig met verlaten…",
+    "leaveShort": "Verlaten",
+    "seeGroups": "Mijn groepen bekijken",
+    "failed": "Dat is mislukt. Probeer het opnieuw.",
+    "toast": {
+      "renamed": "Naam gewijzigd.",
+      "code": "Uitnodigingscode: {{code}}",
+      "rotated": "Nieuwe code gegenereerd.",
+      "transferred": "Eigenaarschap overgedragen.",
+      "removed": "Lid uit de groep verwijderd."
+    },
+    "confirm": {
+      "rotateHeading": "Nieuwe code genereren?",
+      "rotateMessage": "Met de oude code kan niemand meer lid worden van de groep.",
+      "rotate": "Genereren",
+      "transferHeading": "Eigenaarschap overdragen?",
+      "transferMessage": "{{name}} wordt eigenaar van de groep.",
+      "transfer": "Overdragen",
+      "removeHeading": "Dit lid verwijderen?",
+      "removeMessage": "{{name}} heeft dan geen toegang meer tot de groep."
+    }
   }
 }

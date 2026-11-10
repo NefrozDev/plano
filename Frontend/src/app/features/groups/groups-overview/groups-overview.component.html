@@ -1,18 +1,18 @@
 <app-auth-shell
   [compact]="true"
-  [backLabel]="groups().length ? 'Retour à l’accueil' : ''"
+  [backLabel]="groups().length ? ('groups.backHome' | transloco) : ''"
   (back)="skip()"
 >
   <section class="groups-page" aria-labelledby="groups-title">
     @if (loading()) {
       <div class="loading-card" role="status">
         <span class="button-spinner" aria-hidden="true"></span>
-        Chargement de vos groupes…
+        {{ 'groups.loading' | transloco }}
       </div>
     } @else {
       <header class="setup-heading">
-        <p>Un espace pour avancer ensemble</p>
-        <h2 id="groups-title">{{ groups().length ? 'Mes groupes' : 'Configurez votre groupe' }}</h2>
+        <p>{{ 'groups.tagline' | transloco }}</p>
+        <h2 id="groups-title">{{ (groups().length ? 'groups.mine' : 'groups.setUp') | transloco }}</h2>
       </header>
 
       @if (submissionError()) {
@@ -20,7 +20,7 @@
       }
 
       @if (groups().length) {
-        <nav class="group-list" aria-label="Mes groupes">
+        <nav class="group-list" [attr.aria-label]="'groups.mine' | transloco">
           @for (group of groups(); track group.id) {
             <a class="group-card group-link" [routerLink]="['/groups', group.id]">
               <span class="group-emblem group-emblem--small" aria-hidden="true">
@@ -32,9 +32,9 @@
               </span>
               <span class="group-link__copy">
                 <strong>{{ group.name }}</strong>
-                <small>{{ group.members.length }} membre{{ group.members.length > 1 ? 's' : '' }}</small>
+                <small>{{ 'groups.members' | count: group.members.length }}</small>
               </span>
-              <span class="role-pill">{{ group.role === 'owner' ? 'Propriétaire' : 'Membre' }}</span>
+              <span class="role-pill">{{ (group.role === 'owner' ? 'groups.owner' : 'groups.member') | transloco }}</span>
             </a>
           }
         </nav>
@@ -53,8 +53,8 @@
               </svg>
             </span>
             <div>
-              <h3>Créer un groupe</h3>
-              <p>Créez votre espace partagé et invitez vos proches.</p>
+              <h3>{{ 'groups.create.heading' | transloco }}</h3>
+              <p>{{ 'groups.create.intro' | transloco }}</p>
             </div>
           </div>
           @if (mode() === "create") {
@@ -64,22 +64,20 @@
               (ngSubmit)="submit()"
               novalidate
             >
-              <label for="group-name">Nom du groupe</label>
+              <label for="group-name">{{ 'groups.create.name' | transloco }}</label>
               <input
                 id="group-name"
                 class="form-control"
                 type="text"
                 maxlength="80"
-                placeholder="Ex. Les Explorateurs"
+                [placeholder]="'groups.create.placeholder' | transloco"
                 formControlName="name"
               />
               @if (
                 form.controls.name.invalid &&
                 (form.controls.name.touched || submitted())
               ) {
-                <p class="field-error">
-                  Saisissez un nom entre 2 et 80 caractères.
-                </p>
+                <p class="field-error">{{ 'groups.nameError' | transloco }}</p>
               }
               <div class="form-actions">
                 <button
@@ -87,16 +85,14 @@
                   type="button"
                   (click)="closeCreateForm()"
                 >
-                  Annuler
+                  {{ 'common.cancel' | transloco }}
                 </button>
                 <button
                   class="primary-button"
                   type="submit"
                   [disabled]="!!busyAction()"
                 >
-                  {{
-                    busyAction() === "create" ? "Création…" : "Créer le groupe"
-                  }}
+                  {{ (busyAction() === "create" ? "groups.create.busy" : "groups.create.submit") | transloco }}
                 </button>
               </div>
             </form>
@@ -106,7 +102,7 @@
               type="button"
               (click)="openCreateForm()"
             >
-              Créer un groupe
+              {{ 'groups.create.heading' | transloco }}
             </button>
           }
         </article>
@@ -123,8 +119,8 @@
               </svg>
             </span>
             <div>
-              <h3>Rejoindre un groupe</h3>
-              <p>Acceptez une invitation avec le code reçu.</p>
+              <h3>{{ 'groups.join.heading' | transloco }}</h3>
+              <p>{{ 'groups.join.intro' | transloco }}</p>
             </div>
           </div>
           @if (mode() === "join") {
@@ -134,7 +130,7 @@
               (ngSubmit)="join()"
               novalidate
             >
-              <label for="invite-code">Code d’invitation</label>
+              <label for="invite-code">{{ 'groups.join.code' | transloco }}</label>
               <input
                 id="invite-code"
                 class="form-control code-input"
@@ -148,9 +144,7 @@
                 joinForm.controls.inviteCode.invalid &&
                 (joinForm.controls.inviteCode.touched || joinSubmitted())
               ) {
-                <p class="field-error">
-                  Le code doit contenir exactement 8 caractères.
-                </p>
+                <p class="field-error">{{ 'groups.join.codeError' | transloco }}</p>
               }
               <div class="form-actions">
                 <button
@@ -158,18 +152,14 @@
                   type="button"
                   (click)="closeJoinForm()"
                 >
-                  Annuler
+                  {{ 'common.cancel' | transloco }}
                 </button>
                 <button
                   class="primary-button"
                   type="submit"
                   [disabled]="!!busyAction()"
                 >
-                  {{
-                    busyAction() === "join"
-                      ? "Connexion…"
-                      : "Rejoindre le groupe"
-                  }}
+                  {{ (busyAction() === "join" ? "groups.join.busy" : "groups.join.submit") | transloco }}
                 </button>
               </div>
             </form>
@@ -179,14 +169,14 @@
               type="button"
               (click)="showJoinInfo()"
             >
-              Saisir un code
+              {{ 'groups.join.open' | transloco }}
             </button>
           }
         </article>
 
       @if (!groups().length) {
         <button class="back-button" type="button" (click)="skip()">
-          Je le ferai plus tard
+          {{ 'groups.later' | transloco }}
         </button>
       }
     }
