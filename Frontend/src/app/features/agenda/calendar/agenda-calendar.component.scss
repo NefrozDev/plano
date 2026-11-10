@@ -1,6 +1,6 @@
 :host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
-.agenda-header { display: grid; grid-template-columns: auto 1fr auto; gap: .6rem; align-items: center; padding: calc(1.8rem + env(safe-area-inset-top)) 1.1rem .4rem; }
-.agenda-header h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.04em; }
+.agenda-header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .6rem; align-items: center; padding: calc(1.8rem + env(safe-area-inset-top)) 1.1rem .4rem; }
+.agenda-header h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.04em; hyphens: auto; overflow-wrap: anywhere; }
 .menu-anchor { position: relative; }
 .header-actions { display: flex; gap: .1rem; }
 .icon-button { position: relative; display: grid; width: 2.35rem; height: 2.35rem; padding: .4rem; place-items: center; border: 0; background: transparent; color: #20263a; cursor: pointer; }
