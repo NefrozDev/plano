@@ -20,14 +20,14 @@ export default defineConfig({
     timezoneId: 'Europe/Brussels',
     trace: 'retain-on-failure',
   },
-  // Keyboard on a computer; reflow and text spacing at phone width; axe on both.
+  // Keyboard on a computer; reflow, text spacing and the other languages at phone width; axe on both.
   projects: [
     {
       name: 'desktop',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /(axe|keyboard)\.spec\.ts/,
     },
-    { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /(axe|layout)\.spec\.ts/ },
+    { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /(axe|layout|languages)\.spec\.ts/ },
   ],
   webServer: {
     command: `node e2e/static-server.mjs ${PORT}`,

@@ -7,6 +7,7 @@ import {
   type Friend,
   type FriendRequests,
   type HomeList,
+  type Locale,
   type NotificationsResponse,
 } from '@plano/common';
 import type { AuthUser } from '../../src/app/core/auth/auth.models';
@@ -32,18 +33,20 @@ export interface MockOptions {
   termsPending?: boolean;
   /** A new account: no list, objective, event, group or friend. */
   empty?: boolean;
+  /** The account's language; French by default. */
+  locale?: Locale;
 }
 
 /** "Today" of the seed data, which the tests' clock is set to. */
 export const TODAY = new Date('2026-10-15T10:30:00');
 
-const user = (termsAccepted: boolean): AuthUser => ({
+const user = (termsAccepted: boolean, locale: Locale = 'fr'): AuthUser => ({
   id: 'user-ada',
   firstName: 'Ada',
   lastName: 'Lovelace',
   username: 'ada',
   email: 'ada@example.com',
-  locale: 'fr',
+  locale,
   avatarVersion: null,
   termsAccepted,
 });
@@ -188,15 +191,15 @@ export async function mockApi(
     if (path === '/auth/session') {
       return options.signedOut
         ? json({ statusCode: 401 }, 401)
-        : json(user(!options.termsPending));
+        : json(user(!options.termsPending, options.locale));
     }
     // 204 tells EventSource to stop, rather than reconnect over and over.
     if (path === '/live/stream') return route.fulfill({ status: 204 });
     if (method !== 'GET')
-      return json(path.startsWith('/users/me') ? user(true) : {});
+      return json(path.startsWith('/users/me') ? user(true, options.locale) : {});
 
     const routes: Record<string, unknown> = {
-      '/users/me': user(true),
+      '/users/me': user(true, options.locale),
       '/settings/agenda': DEFAULT_AGENDA_USER_SETTINGS,
       '/settings/objectives': DEFAULT_OBJECTIVE_USER_SETTINGS,
       '/settings/lists': listSettings(),
