@@ -73,21 +73,27 @@ describe('GroupsOverviewComponent', () => {
     expect(links.map((link) => link.querySelector('.role-pill')?.textContent)).toEqual(['Propriétaire', 'Membre']);
     expect(element.querySelectorAll('.setup-card').length).toBe(2);
     // With groups, the way out is the back bubble, not the onboarding skip.
-    expect(element.querySelector('.back-bubble')?.getAttribute('aria-label')).toBe('Retour à l’accueil');
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const bubble = element.querySelector('.back-bubble') as HTMLButtonElement;
+    expect(bubble.getAttribute('aria-label')).toBe('Retour à l’onglet Social');
     expect(element.querySelector('.back-button')).toBeNull();
+
+    bubble.click();
+    // Back to where the groups are listed.
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/social'], { queryParams: { tab: 'groups' } });
   });
 
   it('works as the onboarding step without any group', () => {
     render([]);
-    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     expect(element.querySelector('h2')?.textContent).toBe('Configurez votre groupe');
     expect(element.querySelector('.group-list')).toBeNull();
-    expect(element.querySelector('.back-bubble')).toBeNull();
+    // Reached from the Social tab: there is always a way back to it.
+    expect(element.querySelector('.back-bubble')?.getAttribute('aria-label')).toBe('Retour à l’onglet Social');
 
     (element.querySelector('.back-button') as HTMLButtonElement).click();
-    expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/social'], { queryParams: { tab: 'groups' } });
   });
 
   it('trims the name, creates another group and opens it', () => {

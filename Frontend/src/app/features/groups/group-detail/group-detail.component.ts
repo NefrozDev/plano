@@ -109,8 +109,9 @@ export class GroupDetailComponent implements OnInit {
     this.submissionError.set('');
   }
 
+  /** Back to the user's groups, in the Social tab. */
   back(): void {
-    void this.router.navigateByUrl('/groups');
+    void this.router.navigate(['/social'], { queryParams: { tab: 'groups' } });
   }
 
   rename(): void {

@@ -5,6 +5,7 @@
     "agenda": "Agenda",
     "lists": "Liste",
     "objectives": "Objectifs",
+    "social": "Social",
     "withNews": "{{label}}, {{count}} nouveauté(s)"
   },
   "settings": {
@@ -33,10 +34,6 @@
     "language": {
       "heading": "Langue",
       "failed": "La langue est appliquée sur cet appareil, mais n’a pas pu être enregistrée sur votre compte."
-    },
-    "groups": {
-      "heading": "Groupes",
-      "link": "Gérer mes groupes"
     },
     "legal": {
       "heading": "Informations légales",
@@ -91,6 +88,17 @@
       "agendaAcceptedMany": "{{count}} participants de plus à « {{title}} », le dernier : {{name}}.",
       "agendaDeclined": "{{name}} a refusé « {{title}} ».",
       "agendaDeclinedMany": "{{count}} refus pour « {{title}} », le dernier de {{name}}."
+    }
+  },
+  "social": {
+    "sections": "Amis et groupes",
+    "friends": "Amis",
+    "groups": {
+      "heading": "Groupes",
+      "none": "Vous ne faites partie d’aucun groupe pour l’instant.",
+      "manage": "Créer ou rejoindre un groupe",
+      "failed": "Vos groupes n’ont pas pu être chargés.",
+      "retry": "Réessayer"
     }
   },
   "friends": {
@@ -240,6 +248,7 @@
     "lists": "Listes",
     "list": "Détail de la liste",
     "settings": "Paramètres",
+    "social": "Social",
     "agenda": "Agenda",
     "newEvent": "Nouvel événement",
     "editEvent": "Modifier l’événement",
@@ -282,7 +291,7 @@
     }
   },
   "groups": {
-    "backHome": "Retour à l’accueil",
+    "backToSocial": "Retour à l’onglet Social",
     "loading": "Chargement de vos groupes…",
     "loadingOne": "Chargement du groupe…",
     "tagline": "Un espace pour avancer ensemble",

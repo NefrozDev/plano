@@ -1,0 +1,38 @@
+<header class="social-header">
+  <h1>{{ 'titles.social' | transloco }}</h1>
+</header>
+
+<nav class="social-tabs" [attr.aria-label]="'social.sections' | transloco">
+  @for (item of tabs; track item.value) {
+    <a
+      routerLink="/social"
+      [queryParams]="item.params"
+      [class.active]="tab() === item.value"
+      [attr.aria-current]="tab() === item.value ? 'page' : null"
+      [attr.aria-label]="
+        item.value === 'friends' && friendNews()
+          ? ('nav.withNews' | transloco: { label: (item.label | transloco), count: friendNews() })
+          : null
+      "
+    >
+      {{ item.label | transloco }}
+      @if (item.value === 'friends' && friendNews()) {
+        <i class="badge" aria-hidden="true">{{ friendNews() }}</i>
+      }
+    </a>
+  }
+</nav>
+
+<div class="social-content">
+  @if (tab() === 'groups') {
+    <section aria-labelledby="social-groups-heading">
+      <app-social-groups />
+    </section>
+  } @else {
+    <section aria-labelledby="friends-heading">
+      <app-friends-panel />
+    </section>
+  }
+</div>
+
+<app-bottom-nav active="social" />

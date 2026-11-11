@@ -5,6 +5,7 @@
     "agenda": "Agenda",
     "lists": "Lijsten",
     "objectives": "Doelen",
+    "social": "Sociaal",
     "withNews": "{{label}}, {{count}} nieuw"
   },
   "settings": {
@@ -33,10 +34,6 @@
     "language": {
       "heading": "Taal",
       "failed": "De taal geldt op dit apparaat, maar kon niet in je account worden opgeslagen."
-    },
-    "groups": {
-      "heading": "Groepen",
-      "link": "Mijn groepen beheren"
     },
     "legal": {
       "heading": "Juridisch",
@@ -91,6 +88,17 @@
       "agendaAcceptedMany": "{{count}} mensen komen naar “{{title}}”, als laatste {{name}}.",
       "agendaDeclined": "{{name}} heeft “{{title}}” afgeslagen.",
       "agendaDeclinedMany": "{{count}} mensen hebben “{{title}}” afgeslagen, als laatste {{name}}."
+    }
+  },
+  "social": {
+    "sections": "Vrienden en groepen",
+    "friends": "Vrienden",
+    "groups": {
+      "heading": "Groepen",
+      "none": "Je zit nog in geen enkele groep.",
+      "manage": "Een groep maken of eraan deelnemen",
+      "failed": "Je groepen konden niet worden geladen.",
+      "retry": "Opnieuw proberen"
     }
   },
   "friends": {
@@ -240,6 +248,7 @@
     "lists": "Lijsten",
     "list": "Lijst",
     "settings": "Instellingen",
+    "social": "Sociaal",
     "agenda": "Agenda",
     "newEvent": "Nieuwe afspraak",
     "editEvent": "Afspraak bewerken",
@@ -282,7 +291,7 @@
     }
   },
   "groups": {
-    "backHome": "Terug naar start",
+    "backToSocial": "Terug naar Sociaal",
     "loading": "Je groepen worden geladen…",
     "loadingOne": "De groep wordt geladen…",
     "tagline": "Een ruimte om samen vooruit te gaan",

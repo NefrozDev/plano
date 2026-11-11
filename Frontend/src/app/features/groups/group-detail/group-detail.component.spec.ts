@@ -111,14 +111,14 @@ describe('GroupDetailComponent', () => {
   });
 
   it('goes back to the groups and maps offline failures', () => {
-    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     groups.get.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
     component.loadGroup();
     expect(component.submissionError()).toContain('Impossible de joindre');
     expect(component.group()).toBeNull();
     component.back();
     expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith('/groups');
+    expect(navigate).toHaveBeenCalledWith(['/social'], { queryParams: { tab: 'groups' } });
   });
 
   it('explains when the group is not one of the user’s', () => {
@@ -130,7 +130,7 @@ describe('GroupDetailComponent', () => {
     const element = fixture.nativeElement as HTMLElement;
 
     expect(element.querySelector('.form-error')?.textContent).toContain('Ce groupe est introuvable.');
-    expect(element.querySelector('a.back-button')?.getAttribute('href')).toBe('/groups');
+    expect(element.querySelector('a.back-button')?.getAttribute('href')).toBe('/social?tab=groups');
     expect(element.querySelector('.group-tools')).toBeNull();
   });
   describe('owner actions', () => {
@@ -223,13 +223,13 @@ describe('GroupDetailComponent', () => {
     });
 
     it('leaves or deletes the group, then returns to the groups', () => {
-      const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+      const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
       component.leaveGroup();
       expect(groups.leave).toHaveBeenCalledTimes(1);
       expect(groups.leave).toHaveBeenCalledWith('group-1');
       expect(groups.delete).not.toHaveBeenCalled();
       expect(navigate).toHaveBeenCalledTimes(1);
-      expect(navigate).toHaveBeenLastCalledWith('/groups');
+      expect(navigate).toHaveBeenLastCalledWith(['/social'], { queryParams: { tab: 'groups' } });
 
       component.openDialog('danger');
       component.deleteGroup();
@@ -240,11 +240,11 @@ describe('GroupDetailComponent', () => {
       expect(confirm).not.toHaveBeenCalled();
       expect(component.dialog()).toBeNull();
       expect(navigate).toHaveBeenCalledTimes(2);
-      expect(navigate).toHaveBeenLastCalledWith('/groups');
+      expect(navigate).toHaveBeenLastCalledWith(['/social'], { queryParams: { tab: 'groups' } });
     });
 
     it('uses a generic message for unexpected failures', () => {
-      const navigate = vi.spyOn(router, 'navigateByUrl');
+      const navigate = vi.spyOn(router, 'navigate');
       groups.delete.mockReturnValue(throwError(() => new Error('boom')));
       component.deleteGroup();
       expect(navigate).not.toHaveBeenCalled();
@@ -347,7 +347,7 @@ describe('GroupDetailComponent', () => {
   });
 
   it('goes back to the groups from the back bubble', () => {
-    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(GroupDetailComponent);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
@@ -357,7 +357,7 @@ describe('GroupDetailComponent', () => {
 
     back.click();
     expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith('/groups');
+    expect(navigate).toHaveBeenCalledWith(['/social'], { queryParams: { tab: 'groups' } });
   });
   describe('management modals', () => {
     function renderGroup(role: 'owner' | 'member') {
@@ -459,7 +459,7 @@ describe('GroupDetailComponent', () => {
     });
 
     it('lets a member leave through the danger modal', () => {
-      const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+      const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
       const { fixture, element } = renderGroup('member');
       component = fixture.componentInstance;
       (element.querySelector('.group-tools button') as HTMLButtonElement).click();
@@ -473,7 +473,7 @@ describe('GroupDetailComponent', () => {
       expect(groups.leave).toHaveBeenCalledTimes(1);
       expect(groups.leave).toHaveBeenCalledWith('group-1');
       expect(groups.delete).not.toHaveBeenCalled();
-      expect(navigate).toHaveBeenCalledWith('/groups');
+      expect(navigate).toHaveBeenCalledWith(['/social'], { queryParams: { tab: 'groups' } });
     });
 
     it('closes the modal from its cancel button', () => {

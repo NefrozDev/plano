@@ -247,7 +247,7 @@ describe('NotificationsStore', () => {
       http.expectOne({ method: 'POST', url: '/api/v1/notifications/f/read' }).flush(null);
       expect(store.unread().friends).toBe(0);
       expect(store.items()[0].read).toBe(true);
-      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/settings'], { fragment: 'friends' });
+      expect(navigate).toHaveBeenCalledExactlyOnceWith(['/social']);
 
       // Already read: no request, just the way there.
       await store.open(store.items()[0]);
@@ -259,10 +259,8 @@ describe('NotificationsStore', () => {
   it('leads each area to its place', () => {
     expect(notificationLink(notification({ area: 'lists', targetId: 'l' }))).toEqual({ commands: ['/lists', 'l'] });
     expect(notificationLink(notification({ area: 'objectives', targetId: 'o' }))).toEqual({ commands: ['/objectives', 'o'] });
-    expect(notificationLink(notification({ area: 'friends', targetId: 'u' }))).toEqual({
-      commands: ['/settings'],
-      fragment: 'friends',
-    });
+    // Friend news are read in the Social tab.
+    expect(notificationLink(notification({ area: 'friends', targetId: 'u' }))).toEqual({ commands: ['/social'] });
     expect(notificationLink(notification({ area: 'agenda', targetId: 'e' }))).toEqual({ commands: ['/agenda/events', 'e'] });
   });
 

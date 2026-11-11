@@ -9,7 +9,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { ProfileService } from '../../core/users/profile.service';
 import { AVATAR_RESIZER, type AvatarResizer, MAX_SOURCE_BYTES, UnreadableImageError } from '../../core/users/resize-avatar';
-import { emptyNotifications, providePlanoTesting, settle } from '../../testing/plano-testing';
+import { providePlanoTesting, settle } from '../../testing/plano-testing';
 import { SettingsComponent } from './settings.component';
 import { SYNAPSE_ACCOUNT_URL } from '../../core/auth/synapse-account';
 import { BROWSER_LOCATION } from '../../core/browser/browser-location';
@@ -94,11 +94,6 @@ describe('SettingsComponent', () => {
     component = fixture.componentInstance;
     element = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
-    // The friends panel loads its lists (covered by its own spec), and the
-    // signed-in user's notifications load with the app.
-    http.expectOne('/api/v1/friends').flush([]);
-    http.expectOne('/api/v1/friends/requests').flush({ incoming: [], outgoing: [] });
-    http.expectOne('/api/v1/notifications').flush(emptyNotifications());
     await render();
   });
 
@@ -110,18 +105,6 @@ describe('SettingsComponent', () => {
 
   describe('reached from several screens', () => {
     const back = (): HTMLElement => element.querySelector('app-page-header .nav-link') as HTMLElement;
-
-    /** A second settings screen, as opened by a link; its panel asks for friends again. */
-    async function open(): Promise<HTMLElement> {
-      const opened = TestBed.createComponent(SettingsComponent);
-      opened.detectChanges();
-      for (const request of http.match((req) => req.url.startsWith('/api/v1/friends'))) {
-        request.flush(request.request.url.endsWith('/requests') ? { incoming: [], outgoing: [] } : []);
-      }
-      await settle();
-      opened.detectChanges();
-      return opened.nativeElement as HTMLElement;
-    }
 
     it('goes home when the app was opened on it', () => {
       expect(back().tagName).toBe('A');
@@ -144,28 +127,9 @@ describe('SettingsComponent', () => {
       expect(navigate).not.toHaveBeenCalled();
     });
 
-    it('opens on the friends panel when a bell asks for it', async () => {
-      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
-      await TestBed.inject(Router).navigateByUrl('/#friends');
-
-      const opened = await open();
-
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView.mock.contexts[0]).toBe(opened.querySelector('#friends'));
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-      expect(opened.querySelector('#friends #friends-heading')).not.toBeNull();
-    });
-
-    it('stays at the top otherwise', async () => {
-      const scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
-
-      await open();
-
-      expect(scrollIntoView).not.toHaveBeenCalled();
-    });
   });
 
-  it('shows the profile, every language under its own name, and the groups and terms links', () => {
+  it('shows the profile, every language under its own name, and the terms link', () => {
     expect(element.querySelector('h1')?.textContent).toBe('Paramètres');
     expect(element.querySelector('.identity')?.textContent).toContain('Ada Lovelace');
     expect(element.querySelector('.identity')?.textContent).toContain('@ada');
@@ -185,9 +149,12 @@ describe('SettingsComponent', () => {
     expect(languages[0].querySelector('input')?.checked).toBe(true);
     const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('.row-link'));
     expect(links.map((link) => [link.getAttribute('href'), link.textContent?.replace('›', '').trim()])).toEqual([
-      ['/groups', expect.any(String)],
       ['/terms', 'Conditions d’utilisation et confidentialité'],
     ]);
+    // Friends and groups moved to the Social tab: nothing of them here, and no request for them.
+    expect(element.querySelector('app-friends-panel')).toBeNull();
+    expect(element.querySelector('a[href="/groups"]')).toBeNull();
+    http.expectNone((request) => request.url.startsWith('/api/v1/friends') || request.url.startsWith('/api/v1/groups'));
     expect(element.querySelector('#legal-heading')?.textContent).toBe('Informations légales');
   });
 

@@ -13,7 +13,7 @@ import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
 /** Waits for a pause in typing before asking the API. */
 const SEARCH_DEBOUNCE_MS = 300;
 
-/** Settings section: friend requests, username search and the friends list. */
+/** Friends section of the Social tab: requests, username search and the friends list. */
 @Component({
   selector: 'app-friends-panel',
   imports: [SearchFieldComponent, TranslocoPipe, UserAvatarComponent],

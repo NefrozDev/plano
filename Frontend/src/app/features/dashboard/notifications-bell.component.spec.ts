@@ -104,7 +104,7 @@ describe('NotificationsBellComponent', () => {
     fixture.detectChanges();
 
     http.expectOne({ method: 'POST', url: '/api/v1/notifications/n-1/read' }).flush(null);
-    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/lists', 'list-1'], {});
+    expect(navigate).toHaveBeenCalledExactlyOnceWith(['/lists', 'list-1']);
     expect(element.querySelector('.panel')).toBeNull();
     expect(bell().querySelector('.badge')).toBeNull();
   });

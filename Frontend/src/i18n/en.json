@@ -5,6 +5,7 @@
     "agenda": "Calendar",
     "lists": "Lists",
     "objectives": "Goals",
+    "social": "Social",
     "withNews": "{{label}}, {{count}} new"
   },
   "settings": {
@@ -33,10 +34,6 @@
     "language": {
       "heading": "Language",
       "failed": "The language applies on this device, but couldn’t be saved to your account."
-    },
-    "groups": {
-      "heading": "Groups",
-      "link": "Manage my groups"
     },
     "legal": {
       "heading": "Legal",
@@ -91,6 +88,17 @@
       "agendaAcceptedMany": "{{count}} people accepted “{{title}}”, the last was {{name}}.",
       "agendaDeclined": "{{name}} declined “{{title}}”.",
       "agendaDeclinedMany": "{{count}} people declined “{{title}}”, the last was {{name}}."
+    }
+  },
+  "social": {
+    "sections": "Friends and groups",
+    "friends": "Friends",
+    "groups": {
+      "heading": "Groups",
+      "none": "You’re not in any group yet.",
+      "manage": "Create or join a group",
+      "failed": "Your groups couldn’t be loaded.",
+      "retry": "Try again"
     }
   },
   "friends": {
@@ -240,6 +248,7 @@
     "lists": "Lists",
     "list": "List",
     "settings": "Settings",
+    "social": "Social",
     "agenda": "Calendar",
     "newEvent": "New event",
     "editEvent": "Edit event",
@@ -282,7 +291,7 @@
     }
   },
   "groups": {
-    "backHome": "Back to home",
+    "backToSocial": "Back to Social",
     "loading": "Loading your groups…",
     "loadingOne": "Loading the group…",
     "tagline": "A space to move forward together",

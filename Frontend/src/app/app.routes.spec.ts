@@ -58,9 +58,11 @@ describe('app routes', () => {
     const shell = routes.find((route) => route.component === MobileShellLayoutComponent);
 
     expect(shell?.canActivate).toEqual([authenticatedGuard]);
-    expect(shell?.children?.map((child) => child.path)).toEqual(['', 'lists', 'lists/:listId', 'settings']);
+    expect(shell?.children?.map((child) => child.path)).toEqual(['', 'lists', 'lists/:listId', 'social', 'settings']);
     // A top-level route would win over the shell child and drop the frame on desktop.
-    expect(routes.some((route) => route.path === 'settings')).toBe(false);
+    for (const path of ['settings', 'social']) {
+      expect(routes.some((route) => route.path === path), path).toBe(false);
+    }
   });
 
   it('keeps the catch-all redirect last so the shell does not swallow feature routes', () => {

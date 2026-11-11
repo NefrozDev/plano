@@ -5,6 +5,7 @@
     "agenda": "Kalender",
     "lists": "Listen",
     "objectives": "Ziele",
+    "social": "Soziales",
     "withNews": "{{label}}, {{count}} neu"
   },
   "settings": {
@@ -33,10 +34,6 @@
     "language": {
       "heading": "Sprache",
       "failed": "Die Sprache gilt auf diesem Gerät, konnte aber nicht in deinem Konto gespeichert werden."
-    },
-    "groups": {
-      "heading": "Gruppen",
-      "link": "Meine Gruppen verwalten"
     },
     "legal": {
       "heading": "Rechtliches",
@@ -91,6 +88,17 @@
       "agendaAcceptedMany": "{{count}} Personen nehmen an „{{title}}“ teil, zuletzt {{name}}.",
       "agendaDeclined": "{{name}} hat „{{title}}“ abgesagt.",
       "agendaDeclinedMany": "{{count}} Personen haben „{{title}}“ abgesagt, zuletzt {{name}}."
+    }
+  },
+  "social": {
+    "sections": "Freunde und Gruppen",
+    "friends": "Freunde",
+    "groups": {
+      "heading": "Gruppen",
+      "none": "Du bist noch in keiner Gruppe.",
+      "manage": "Gruppe erstellen oder beitreten",
+      "failed": "Deine Gruppen konnten nicht geladen werden.",
+      "retry": "Erneut versuchen"
     }
   },
   "friends": {
@@ -240,6 +248,7 @@
     "lists": "Listen",
     "list": "Liste",
     "settings": "Einstellungen",
+    "social": "Soziales",
     "agenda": "Kalender",
     "newEvent": "Neuer Termin",
     "editEvent": "Termin bearbeiten",
@@ -282,7 +291,7 @@
     }
   },
   "groups": {
-    "backHome": "Zurück zur Startseite",
+    "backToSocial": "Zurück zu Soziales",
     "loading": "Deine Gruppen werden geladen…",
     "loadingOne": "Die Gruppe wird geladen…",
     "tagline": "Ein Ort, um gemeinsam voranzukommen",

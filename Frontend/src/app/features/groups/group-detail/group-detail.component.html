@@ -236,7 +236,7 @@
       @if (submissionError()) {
         <p class="form-error" role="alert">{{ submissionError() }}</p>
       }
-      <a class="back-button" routerLink="/groups">{{ 'groups.seeGroups' | transloco }}</a>
+      <a class="back-button" routerLink="/social" [queryParams]="{ tab: 'groups' }">{{ 'groups.seeGroups' | transloco }}</a>
     }
   </section>
 

@@ -49,13 +49,15 @@ describe('BottomNavComponent', () => {
   it('counts each section’s unread notifications on its tab, and says so to screen readers', async () => {
     await receive({ friends: 4, lists: 2, objectives: 3, agenda: 1 });
 
-    // Friend news have no tab: they are in the home page bell.
+    // Friend news are counted on the Social tab.
     expect(badges()).toEqual([
       ['/', null],
       ['/agenda', '1'],
       ['/lists', '2'],
       ['/objectives', '3'],
+      ['/social', '4'],
     ]);
+    expect(tab('/social').getAttribute('aria-label')).toBe('Social, 4 nouveauté(s)');
     expect(tab('/lists').getAttribute('aria-label')).toBe('Liste, 2 nouveauté(s)');
     expect(tab('/objectives').getAttribute('aria-label')).toBe('Objectifs, 3 nouveauté(s)');
     expect(tab('/').getAttribute('aria-label')).toBeNull();

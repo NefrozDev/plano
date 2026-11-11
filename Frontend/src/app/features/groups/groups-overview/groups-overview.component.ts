@@ -100,8 +100,9 @@ export class GroupsOverviewComponent implements OnInit {
     this.submissionError.set('');
   }
 
+  /** Back to where groups are listed: the Social tab. */
   skip(): void {
-    void this.router.navigateByUrl('/');
+    void this.router.navigate(['/social'], { queryParams: { tab: 'groups' } });
   }
 
   submit(): void {

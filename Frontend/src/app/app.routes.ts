@@ -102,6 +102,14 @@ export const routes: Routes = [
         title: 'titles.list',
       },
       {
+        path: 'social',
+        loadComponent: () =>
+          import('./features/social/social.component').then(
+            (component) => component.SocialComponent,
+          ),
+        title: 'titles.social',
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings.component').then(

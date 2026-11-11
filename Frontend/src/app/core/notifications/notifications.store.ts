@@ -18,15 +18,15 @@ import { LiveUpdatesService } from '../live/live-updates.service';
 
 const NO_UNREAD: Readonly<Record<NotificationArea, number>> = { friends: 0, lists: 0, objectives: 0, agenda: 0 };
 
-/** Where a notification leads: the list, the objective, the event, or the friends panel. */
-export function notificationLink(notification: NotificationEntry): { commands: string[]; fragment?: string } {
+/** Where a notification leads: the list, the objective, the event, or the friends of the Social tab. */
+export function notificationLink(notification: NotificationEntry): { commands: string[] } {
   switch (notification.area) {
     case 'lists':
       return { commands: ['/lists', notification.targetId] };
     case 'objectives':
       return { commands: ['/objectives', notification.targetId] };
     case 'friends':
-      return { commands: ['/settings'], fragment: 'friends' };
+      return { commands: ['/social'] };
     case 'agenda':
       return { commands: ['/agenda/events', notification.targetId] };
   }
@@ -150,8 +150,7 @@ export class NotificationsStore {
       }));
       void firstValueFrom(this.http.post<void>(`${this.url}/${notification.id}/read`, {})).catch(() => this.load());
     }
-    const { commands, fragment } = notificationLink(notification);
-    await this.router.navigate(commands, fragment ? { fragment } : {});
+    await this.router.navigate(notificationLink(notification).commands);
   }
 }
 

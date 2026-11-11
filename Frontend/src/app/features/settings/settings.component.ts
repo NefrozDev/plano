@@ -2,12 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  ElementRef,
-  afterNextRender,
   inject,
   signal,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { SYNAPSE_ACCOUNT_URL } from '../../core/auth/synapse-account';
 import { BROWSER_LOCATION } from '../../core/browser/browser-location';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -21,7 +19,6 @@ import { ModalDialogComponent } from '../../shared/ui/modal-dialog.component';
 import { PageHeaderComponent } from '../../shared/ui/page-header.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
 import { AvatarCropperComponent } from './avatar-cropper.component';
-import { FriendsPanelComponent } from './friends-panel.component';
 
 /** Each language under its own name, so anyone finds theirs whatever is shown. */
 export const LANGUAGE_NAMES: Record<Locale, string> = {
@@ -33,12 +30,11 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
   it: 'Italiano',
 };
 
-/** `/settings`, opened from the profile picture: photo, language, friends, groups and sign-out. */
+/** `/settings`, opened from the profile picture: photo, language, legal texts and sign-out. Friends and groups are the Social tab. */
 @Component({
   selector: 'app-settings',
   imports: [
     AvatarCropperComponent,
-    FriendsPanelComponent,
     ModalDialogComponent,
     PageHeaderComponent,
     RouterLink,
@@ -71,11 +67,6 @@ export class SettingsComponent {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.closeCropper());
-    // The notification bells of other screens lead to the friends panel, where their requests are.
-    if (inject(ActivatedRoute).snapshot.fragment === 'friends') {
-      const host: HTMLElement = inject(ElementRef).nativeElement;
-      afterNextRender(() => host.querySelector('#friends')?.scrollIntoView({ block: 'start' }));
-    }
   }
 
   /** Opens the cropper on the chosen picture; the upload waits for its area. */

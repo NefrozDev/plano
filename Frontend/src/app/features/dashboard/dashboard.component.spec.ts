@@ -69,7 +69,7 @@ describe('DashboardComponent', () => {
     expect(element.textContent).toContain('Mes objectifs');
     expect(
       Array.from(element.querySelectorAll('app-bottom-nav a')).map((link) => link.getAttribute('href')),
-    ).toEqual(['/', '/agenda', '/lists', '/objectives']);
+    ).toEqual(['/', '/agenda', '/lists', '/objectives', '/social']);
     expect(element.querySelector('app-bottom-nav a.active')?.textContent).toContain('Accueil');
   });
 
