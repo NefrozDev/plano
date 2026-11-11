@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /** Every automated WCAG rule up to 2.2, levels A and AA. */
 export const WCAG_AA = [
@@ -12,23 +12,22 @@ export const WCAG_AA = [
 ];
 
 /**
- * Fails with one readable line per violation and element: the rule, its WCAG criteria and
- * where it is, so a report says what to fix without opening the trace.
+ * Lists the violations, one readable line per violation and element: the rule, its WCAG
+ * criteria and where it is, so a failing test says what to fix without opening the trace.
  */
-export async function expectNoAxeViolations(
+export async function axeViolations(
   page: Page,
   disabledRules: string[] = [],
-): Promise<void> {
+): Promise<string[]> {
   const { violations } = await new AxeBuilder({ page })
     .withTags(WCAG_AA)
     .disableRules(disabledRules)
     .analyze();
-  const lines = violations.flatMap((violation) =>
+  return violations.flatMap((violation) =>
     violation.nodes.map(
       (node) =>
         `${violation.id} (${violation.tags.filter((tag) => /^wcag\d/.test(tag)).join(', ')}): ` +
         `${node.target.join(' ')} — ${node.failureSummary?.split('\n').slice(1).join(' ').trim()}`,
     ),
   );
-  expect(lines).toEqual([]);
 }
