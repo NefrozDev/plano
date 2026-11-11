@@ -463,6 +463,37 @@ describe('ListsComponent', () => {
     });
   });
 
+  it('uncovers the delete button on the right of a card, in both views, as the card slides left', () => {
+    // These global rules are scoped to the app-lists tag, which the test root lacks.
+    const scope = document.body.appendChild(document.createElement('app-lists'));
+    scope.appendChild(element);
+    try {
+      const placement = () => {
+        const item = element.querySelector('.list-item[data-list-id="courses"]') as HTMLElement;
+        const card = item.querySelector('.list-card')!.getBoundingClientRect();
+        const button = item.querySelector('.delete-list')!.getBoundingClientRect();
+        return {
+          right: Math.round(button.right - card.right),
+          top: Math.round(button.top - card.top),
+          bottom: Math.round(button.bottom - card.bottom),
+          narrow: button.width < card.width / 2,
+        };
+      };
+      const besideTheCard = { right: 0, top: 0, bottom: 0, narrow: true };
+      expect(placement()).toEqual(besideTheCard);
+
+      (element.querySelector('.menu-button') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      http.expectOne('/api/v1/settings/lists').flush(listSettings({ defaultView: 'grid' }));
+      fixture.detectChanges();
+
+      expect(element.querySelector('.lists-content')?.classList).toContain('grid-view');
+      expect(placement()).toEqual(besideTheCard);
+    } finally {
+      scope.remove();
+    }
+  });
+
   it('creates a list and opens it in its editor', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
