@@ -1,9 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import type { HomeList } from '@plano/common';
-import { signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { AuthUser } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { APP_CLOCK } from '../../core/time/dates';
@@ -112,15 +112,36 @@ describe('DashboardComponent', () => {
         'Lait',
         'Œufs',
       ]);
-      expect(sections[0].querySelector('.section-heading a')?.textContent).toContain('7 à faire');
-      expect(sections[0].querySelector('.section-heading a')?.getAttribute('href')).toBe('/lists/courses');
+      expect(sections[0].querySelector('.section-heading > a')?.textContent).toContain('7 à faire');
+      expect(sections[0].querySelector('.section-heading > a')?.getAttribute('href')).toBe('/lists/courses');
+      // The name opens the list too.
+      expect(sections.map((section) => section.querySelector('h2 a')?.getAttribute('href'))).toEqual(['/lists/courses', '/lists/maison']);
       // 7 unchecked, 2 shown: the rest is one tap away.
       expect(sections[0].querySelector('.card-link')?.textContent).toContain('+ 5 de plus');
-      expect(sections[1].querySelector('.section-heading a')?.textContent).toContain('voir la liste');
+      expect(sections[1].querySelector('.section-heading > a')?.textContent).toContain('voir la liste');
       expect(sections[1].querySelector('.card-link')?.textContent).toContain('Tout est fait');
       expect(element.querySelector('.home-hint')).toBeNull();
       // Lists come before the objectives.
       expect(element.querySelector('.dashboard-section:last-of-type h2')?.textContent).toBe('Mes objectifs');
+    });
+
+    it('opens the list when its name is clicked', async () => {
+      @Component({ template: '' })
+      class ListPageStub {}
+      const router = TestBed.inject(Router);
+      router.resetConfig([{ path: 'lists/:id', component: ListPageStub }]);
+      const fixture = TestBed.createComponent(DashboardComponent);
+      flushHome([homeList(), homeList({ id: 'maison', name: 'Maison' })]);
+      await settle();
+      fixture.detectChanges();
+      const names = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('.home-list h2 a');
+
+      names[1].click();
+      await fixture.whenStable();
+
+      expect(router.url).toBe('/lists/maison');
+      // The name is the heading's whole text, so the section keeps it as its label.
+      expect(names[1].closest('h2')?.textContent).toBe('Maison');
     });
 
     it('ticks an item once, then shows the refreshed list', async () => {

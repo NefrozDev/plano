@@ -42,7 +42,7 @@
   @for (home of homeLists(); track home.id) {
     <section class="dashboard-section home-list" [attr.aria-labelledby]="'home-list-' + home.id" [style.--list-color]="home.color">
       <div class="section-heading">
-        <h2 [id]="'home-list-' + home.id">{{ home.name }}</h2>
+        <h2 [id]="'home-list-' + home.id"><a class="list-name" [routerLink]="['/lists', home.id]">{{ home.name }}</a></h2>
         <a [routerLink]="['/lists', home.id]">{{ home.remaining ? ('dashboard.toDo' | count: home.remaining) : ('dashboard.seeList' | transloco) }} →</a>
       </div>
       <div class="list-card">

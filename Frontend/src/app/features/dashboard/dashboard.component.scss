@@ -166,6 +166,18 @@ app-notifications-bell {
   gap: 0.45rem;
   align-items: center;
 }
+.section-heading .list-name {
+  display: inline-flex;
+  min-height: 1.5rem;
+  align-items: center;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+}
+.section-heading .list-name:hover {
+  text-decoration: underline;
+}
 .home-list h2::before {
   width: 0.55rem;
   height: 0.55rem;
