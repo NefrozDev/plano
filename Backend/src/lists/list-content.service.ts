@@ -67,15 +67,16 @@ export class ListContentService {
     });
   }
 
-  async renameSection(
+  /** Renames or recolours a section: only the fields sent change. */
+  async updateSection(
     listId: string,
     sectionId: string,
     userId: string,
-    { name }: UpdateSectionDto,
+    details: UpdateSectionDto,
   ): Promise<void> {
     await this.inTransaction(listId, userId, async (manager) => {
       const section = await this.requireSection(manager, listId, sectionId);
-      section.name = name;
+      Object.assign(section, sentFields(details));
       await manager.save(section);
     });
   }

@@ -32,10 +32,15 @@ export class CreateSectionDto implements CreateSectionRequest {
 }
 
 export class UpdateSectionDto implements UpdateSectionRequest {
+  @IsOptionalButNotNull()
   @IsString()
   @Transform(trimString)
   @Length(1, 80)
-  name!: string;
+  name?: string;
+
+  @IsOptionalButNotNull()
+  @Matches(HEX_COLOR)
+  color?: string;
 }
 
 export class CreateEntryDto implements CreateEntryRequest {

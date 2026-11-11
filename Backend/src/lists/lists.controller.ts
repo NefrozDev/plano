@@ -149,13 +149,13 @@ export class ListsController {
 
   @Patch(':listId/sections/:sectionId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  renameSection(
+  updateSection(
     @CurrentUser('id') userId: string,
     @ListId() listId: string,
     @Param('sectionId', ParseUUIDPipe) sectionId: string,
     @Body() details: UpdateSectionDto,
   ): Promise<void> {
-    return this.content.renameSection(listId, sectionId, userId, details);
+    return this.content.updateSection(listId, sectionId, userId, details);
   }
 
   @Delete(':listId/sections/:sectionId')

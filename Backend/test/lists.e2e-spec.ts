@@ -261,15 +261,30 @@ describe('Lists API (e2e)', () => {
       .set('Cookie', ada.cookie)
       .send({ name: '   ' })
       .expect(400);
-    await http()
-      .patch(fresh)
-      .set('Cookie', ada.cookie)
-      .send({ name: '  Produits frais  ', color: '#000000' })
-      .expect(400);
+    // Not a colour, a null, or a field sections do not have.
+    for (const body of [
+      { name: '  Produits frais  ', color: 'red' },
+      { color: null },
+      { name: null },
+      { name: 'Produits frais', position: 3 },
+    ]) {
+      const refused = await http()
+        .patch(fresh)
+        .set('Cookie', ada.cookie)
+        .send(body)
+        .expect(400);
+      expect(refused.body).toMatchObject({ statusCode: 400 });
+    }
     await http()
       .patch(fresh)
       .set('Cookie', ada.cookie)
       .send({ name: '  Produits frais  ' })
+      .expect(204);
+    // The colour alone: the name stays.
+    await http()
+      .patch(fresh)
+      .set('Cookie', ada.cookie)
+      .send({ color: '#3264ed' })
       .expect(204);
     const sectionId = (url: string) => url.split('/').pop() as string;
     await http()
@@ -288,8 +303,14 @@ describe('Lists API (e2e)', () => {
       .expect(200)
       .expect((response) => {
         expect(
-          (response.body as ListDetail).sections.map(({ name }) => name),
-        ).toEqual(['Épicerie', 'Produits frais']);
+          (response.body as ListDetail).sections.map(({ name, color }) => [
+            name,
+            color,
+          ]),
+        ).toEqual([
+          ['Épicerie', '#23c666'],
+          ['Produits frais', '#3264ed'],
+        ]);
       });
 
     await http().delete(pantry).set('Cookie', ada.cookie).expect(204);

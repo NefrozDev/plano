@@ -68,7 +68,7 @@ describe('ListContentService', () => {
   it('renames a section without touching its entries', async () => {
     await add('Lait');
 
-    await bed.content.renameSection(list.id, sectionId, bed.ada, {
+    await bed.content.updateSection(list.id, sectionId, bed.ada, {
       name: 'Produits frais',
     });
 
@@ -76,6 +76,35 @@ describe('ListContentService', () => {
     expect(section.name).toBe('Produits frais');
     expect(section.color).toBe('#23c666');
     expect(await names()).toEqual(['Lait']);
+  });
+
+  it('recolours a section without touching its name or entries, and both at once', async () => {
+    await add('Lait');
+    const section = async () =>
+      (await bed.lists.findOne(list.id, bed.ada)).sections[0];
+
+    await bed.content.updateSection(list.id, sectionId, bed.ada, {
+      color: '#3264ed',
+    });
+
+    expect(await section()).toMatchObject({ name: 'Frais', color: '#3264ed' });
+    expect(await names()).toEqual(['Lait']);
+
+    await bed.content.updateSection(list.id, sectionId, bed.ada, {
+      name: 'Surgelés',
+      color: '#d85a9a',
+    });
+    expect(await section()).toMatchObject({
+      name: 'Surgelés',
+      color: '#d85a9a',
+    });
+
+    // Nothing sent, nothing changed.
+    await bed.content.updateSection(list.id, sectionId, bed.ada, {});
+    expect(await section()).toMatchObject({
+      name: 'Surgelés',
+      color: '#d85a9a',
+    });
   });
 
   it('removes a section with its entries and keeps new sections last', async () => {
@@ -107,7 +136,7 @@ describe('ListContentService', () => {
       color: '#3264ed',
     });
     await expect(
-      bed.content.renameSection(otherList.id, sectionId, bed.ada, {
+      bed.content.updateSection(otherList.id, sectionId, bed.ada, {
         name: 'Ailleurs',
       }),
     ).rejects.toThrow(NotFoundException);
@@ -120,7 +149,7 @@ describe('ListContentService', () => {
       role: 'viewer',
     });
     await expect(
-      bed.content.renameSection(list.id, sectionId, bed.bob, { name: 'Pris' }),
+      bed.content.updateSection(list.id, sectionId, bed.bob, { name: 'Pris' }),
     ).rejects.toThrow(ForbiddenException);
     await expect(
       bed.content.removeSection(list.id, sectionId, bed.bob),

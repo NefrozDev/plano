@@ -191,8 +191,10 @@ export interface CreateSectionRequest {
   color: string;
 }
 
+/** Only the fields sent change. */
 export interface UpdateSectionRequest {
-  name: string;
+  name?: string;
+  color?: string;
 }
 
 export interface CreateEntryRequest {
