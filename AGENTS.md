@@ -97,6 +97,8 @@ Keep these root commands working when package scripts change.
 
 - List icons: `ListIcon` (Common) names them, `LIST_ICON_SHAPES` draws them and `LIST_ICON_GROUPS` orders the picker (`features/lists/ui`); the API accepts the keys of its own `Record<ListIcon, true>`. A new icon needs all three, at most 16 characters. Always draw one with `app-list-icon` (sized by `--list-icon-size`), never a copied svg.
 
+- Enter saves a text field everywhere. Put the fields of a screen or panel in a `<form>` whose save button is `type="submit"` (other buttons `type="button"`); a field saved on `change` outside a form takes `appCommitOnEnter` (`shared/ui`), which leaves it so `change` fires once. In a `textarea`, Enter writes a new line, except where a one-line name is typed (list entries).
+
 - What can be deleted from a list swipes left (`SwipeToDelete`, `shared/ui`): touch, mouse, touchpad and the Delete key; the owner gets a confirmation, anyone else a toast saying why. On a card that is a link (`ObjectiveSwipeCardComponent`), stop the click ending a swipe in the capture phase, as `RouterLink` listens on the link itself, and prevent `dragstart`, or the link's native drag cancels a mouse swipe.
 
 ## Fresh NestJS scaffold checklist
