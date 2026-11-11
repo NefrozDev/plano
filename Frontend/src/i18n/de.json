@@ -757,7 +757,7 @@
     },
     "section": {
       "delete": "Abschnitt {{name}} löschen",
-      "rename": "Abschnitt {{name}} umbenennen",
+      "edit": "Abschnitt {{name}} bearbeiten",
       "collapse": "Abschnitt {{name}} einklappen"
     },
     "sectionCreator": {

@@ -757,7 +757,7 @@
     },
     "section": {
       "delete": "Elimina la sezione {{name}}",
-      "rename": "Rinomina la sezione {{name}}",
+      "edit": "Modifica la sezione {{name}}",
       "collapse": "Comprimi la sezione {{name}}"
     },
     "sectionCreator": {

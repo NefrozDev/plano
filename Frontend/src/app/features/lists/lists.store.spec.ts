@@ -103,13 +103,24 @@ describe('ListsStore', () => {
     http.expectOne('/api/v1/lists/reminders').flush([]);
     await loading;
 
-    const renaming = store.renameSection('fresh', 'Frais');
+    const colour = store.detail()?.sections[0].color;
+    const renaming = store.updateSection('fresh', { name: 'Frais' });
     const rename = http.expectOne('/api/v1/lists/list-1/sections/fresh');
     expect(rename.request.method).toBe('PATCH');
     expect(rename.request.body).toEqual({ name: 'Frais' });
     rename.flush(null);
     expect(await renaming).toBe(true);
-    expect(store.detail()?.sections[0].name).toBe('Frais');
+    expect(store.detail()?.sections[0]).toEqual(expect.objectContaining({ name: 'Frais', color: colour }));
+    http.expectNone('/api/v1/lists/reminders');
+
+    // The colour alone: the name and the entries stay.
+    const entries = store.detail()?.sections[0].entries;
+    const recolouring = store.updateSection('fresh', { color: '#e65591' });
+    const recolour = http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1/sections/fresh' });
+    expect(recolour.request.body).toEqual({ color: '#e65591' });
+    recolour.flush(null);
+    expect(await recolouring).toBe(true);
+    expect(store.detail()?.sections[0]).toEqual(expect.objectContaining({ name: 'Frais', color: '#e65591', entries }));
     http.expectNone('/api/v1/lists/reminders');
 
     const removing = store.removeSection('fresh');
@@ -127,9 +138,11 @@ describe('ListsStore', () => {
         .expectOne({ method, url: '/api/v1/lists/list-1/sections/fresh' })
         .flush({ errorCode: 'lists.viewOnly' }, { status: 403, statusText: 'Forbidden' });
 
-    const renaming = store.renameSection('fresh', 'Frais');
+    const colour = store.detail()?.sections[0].color;
+    const renaming = store.updateSection('fresh', { name: 'Frais', color: '#e65591' });
     refuse('PATCH');
     expect(await renaming).toBe(false);
+    expect(store.detail()?.sections[0].color).toBe(colour);
     const removing = store.removeSection('fresh');
     refuse('DELETE');
     expect(await removing).toBe(false);

@@ -757,7 +757,7 @@
     },
     "section": {
       "delete": "De sectie {{name}} verwijderen",
-      "rename": "De sectie {{name}} hernoemen",
+      "edit": "De sectie {{name}} bewerken",
       "collapse": "De sectie {{name}} inklappen"
     },
     "sectionCreator": {

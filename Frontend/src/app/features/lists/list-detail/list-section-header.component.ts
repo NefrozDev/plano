@@ -1,18 +1,21 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { AutoGrowDirective } from '../../../shared/ui/auto-grow.directive';
 import { AutofocusDirective } from '../../../shared/ui/autofocus.directive';
 import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
+import { LIST_COLOR_CHOICES } from './list-options';
 
 /**
- * Title of an open section. Editors tap the name to rename it, fold the section
- * with the chevron and swipe left to delete it; viewers tap the name to fold it.
+ * Title of an open section. Editors tap the name to edit it (its name, on as
+ * many lines as it needs, and its colour), fold the section with the chevron
+ * and swipe left to delete it; viewers tap the name to fold it.
  */
 @Component({
   selector: 'app-list-section-header',
-  imports: [AutofocusDirective, TranslocoPipe],
+  imports: [AutoGrowDirective, AutofocusDirective, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="header-shell" [class.revealed]="swipe.offset() < 0">
+    <div class="header-shell" [class.revealed]="swipe.offset() < 0" [class.editing]="editing()">
       @if (editable()) {
         <button
           class="delete-section"
@@ -36,20 +39,40 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
         (wheel)="wheelSwipe($event)"
       >
         @if (editing()) {
-          <input
-            appAutofocus
-            class="name-input"
-            type="text"
-            maxlength="80"
-            [attr.aria-label]="'lists.sectionCreator.name' | transloco"
-            [value]="draft()"
-            (input)="draft.set($any($event.target).value)"
-            (keydown.enter)="$event.preventDefault(); commit()"
-            (keydown.escape)="cancel()"
-            (blur)="commit()"
-          />
+          <!-- Left as a whole: moving from the name to a colour keeps it open. -->
+          <div class="editor" (focusout)="leave($event)">
+            <!-- Wraps like the title it edits; Enter saves, there are no line breaks. -->
+            <textarea
+              appAutofocus
+              appAutoGrow
+              class="name-input"
+              rows="1"
+              maxlength="80"
+              [attr.aria-label]="'lists.sectionCreator.name' | transloco"
+              [value]="draft()"
+              (input)="draft.set($any($event.target).value)"
+              (keydown.enter)="$event.preventDefault(); commit()"
+              (keydown.escape)="cancel()"
+            ></textarea>
+            <div class="colors" role="group" [attr.aria-label]="'lists.editor.color' | transloco">
+              @for (choice of colorChoices; track choice) {
+                <!-- Keeps the focus in the name: a tap on a colour must not close the editor before its click. -->
+                <button
+                  class="color"
+                  type="button"
+                  [class.selected]="color() === choice"
+                  [style.background]="choice"
+                  [attr.aria-label]="'lists.editor.pickColor' | transloco: { color: choice }"
+                  [attr.aria-pressed]="color() === choice"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="recoloured.emit(choice)"
+                  (keydown.escape)="cancel()"
+                ><span aria-hidden="true">✓</span></button>
+              }
+            </div>
+          </div>
         } @else if (editable()) {
-          <button class="section-title" type="button" [attr.aria-label]="'lists.section.rename' | transloco: { name: name() }">{{ name() }}</button>
+          <button class="section-title" type="button" [attr.aria-label]="'lists.section.edit' | transloco: { name: name() }">{{ name() }}</button>
           <button class="collapse" type="button" [attr.aria-expanded]="true" [attr.aria-label]="'lists.section.collapse' | transloco: { name: name() }">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
           </button>
@@ -76,19 +99,33 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
     svg { width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
     .section-title { flex: 1; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--color-text); cursor: pointer; font-size: .88rem; font-weight: 700; overflow-wrap: anywhere; text-align: left; }
     .collapse { display: grid; width: 2rem; height: 2rem; flex: none; padding: .35rem; place-items: center; border: 0; border-radius: .5rem; background: transparent; color: var(--color-text-muted); cursor: pointer; }
-    .name-input { flex: 1; min-width: 0; min-height: 2rem; padding: 0 .45rem; border: 1px solid var(--color-primary); border-radius: .45rem; background: white; color: var(--color-text); font: inherit; font-size: .88rem; font-weight: 700; }
+    /* The focus ring of the fields sits outside the box of the shell. */
+    .header-shell.editing { overflow: visible; }
+    .editor { display: grid; flex: 1; min-width: 0; gap: .55rem; }
+    /* Like the title, so the text wraps where the title will. */
+    .name-input { display: block; width: 100%; min-height: 2rem; box-sizing: border-box; padding: .32rem .45rem; overflow: hidden; border: 1px solid var(--color-primary); border-radius: .45rem; background: white; color: var(--color-text); font: inherit; font-size: .88rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; resize: none; }
+    .colors { display: flex; flex-wrap: wrap; gap: .6rem; padding: 0 .2rem .2rem; }
+    .color { display: grid; width: 1.8rem; height: 1.8rem; padding: 0; place-items: center; border: 2px solid white; border-radius: 50%; color: white; cursor: pointer; font-size: .8rem; }
+    .color span { visibility: hidden; }
+    .color.selected { box-shadow: 0 0 0 .15rem #586174; }
+    .color.selected span { visibility: visible; }
   `,
 })
 export class ListSectionHeaderComponent {
   readonly name = input.required<string>();
+  /** The colour of the section, to mark it among the choices. */
+  readonly color = input('');
   /** Owner and editors; viewers only fold the section. */
   readonly editable = input(false);
 
   readonly renamed = output<string>();
+  /** A colour was picked: saved at once, the editor stays open. */
+  readonly recoloured = output<string>();
   readonly collapse = output<void>();
   readonly remove = output<void>();
   readonly dragStart = output<void>();
 
+  readonly colorChoices = LIST_COLOR_CHOICES;
   readonly editing = signal(false);
   readonly draft = signal('');
   readonly swipe = new SwipeToDelete(() => this.remove.emit());
@@ -127,11 +164,18 @@ export class ListSectionHeaderComponent {
     this.editing.set(true);
   }
 
-  /** Enter and blur both land here: the second call finds editing already over. */
+  /** The focus left the editor (not just the name for a colour): save. */
+  leave(event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null;
+    if (!(event.currentTarget as HTMLElement).contains(next)) this.commit();
+  }
+
+  /** Enter and leaving both land here: the second call finds editing already over. */
   commit(): void {
     if (!this.editing()) return;
     this.editing.set(false);
-    const name = this.draft().trim();
+    // A pasted line break becomes a space: a title is one line of text.
+    const name = this.draft().replace(/\s+/g, ' ').trim();
     if (name && name !== this.name()) this.renamed.emit(name);
   }
 

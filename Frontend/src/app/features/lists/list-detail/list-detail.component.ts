@@ -280,7 +280,11 @@ export class ListDetailComponent {
   }
 
   renameSection(sectionId: string, name: string): void {
-    void this.store.renameSection(sectionId, name);
+    void this.store.updateSection(sectionId, { name });
+  }
+
+  recolourSection(sectionId: string, color: string): void {
+    void this.store.updateSection(sectionId, { color });
   }
 
   /** Always confirmed, whatever the settings: every entry of the section goes with it. */

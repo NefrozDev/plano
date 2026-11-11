@@ -117,8 +117,10 @@
           >
             <app-list-section-header
               [name]="view.section.name"
+              [color]="view.section.color"
               [editable]="canEdit()"
               (renamed)="renameSection(view.section.id, $event)"
+              (recoloured)="recolourSection(view.section.id, $event)"
               (collapse)="toggleSection(view.section.id)"
               (remove)="requestDeleteSection(view.section)"
               (dragStart)="startSectionDrag(view.section.id)"

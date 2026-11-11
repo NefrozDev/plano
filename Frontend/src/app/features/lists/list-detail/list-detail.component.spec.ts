@@ -164,12 +164,12 @@ describe('ListDetailComponent', () => {
 
   describe('section titles', () => {
     const title = () => element.querySelector('.entry-section .section-title') as HTMLButtonElement;
-    const nameInput = () => element.querySelector('.name-input') as HTMLInputElement | null;
+    const nameInput = () => element.querySelector('.name-input') as HTMLTextAreaElement | null;
     const type = async (value: string, key: 'Enter' | 'Escape') => {
       const input = nameInput()!;
       input.value = value;
       input.dispatchEvent(new Event('input'));
-      input.dispatchEvent(new KeyboardEvent('keydown', { key }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
       await render();
     };
 
@@ -208,9 +208,44 @@ describe('ListDetailComponent', () => {
       capture.mockRestore();
     });
 
+    it('gives the section another colour from its title, at once, and keeps the name open', async () => {
+      await create();
+      const section = () => element.querySelector('.entry-section') as HTMLElement;
+      const colours = () => Array.from(element.querySelectorAll<HTMLButtonElement>('.entry-section .color'));
+      title().click();
+      await render();
+      expect(colours().map((colour) => colour.getAttribute('aria-pressed'))).not.toContain('true');
+
+      colours()[3].click();
+      const request = http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1/sections/fresh' });
+      expect(request.request.body).toEqual({ color: '#e65591' });
+      request.flush(null);
+      await render();
+
+      expect(section().style.getPropertyValue('--section-color')).toBe('#e65591');
+      expect(colours().map((colour) => colour.getAttribute('aria-pressed'))).toEqual(['false', 'false', 'false', 'true', 'false']);
+      // Still editing: the name can be changed in the same go.
+      expect(nameInput()?.value).toBe('Produits frais');
+      await type('Frais', 'Enter');
+      const rename = http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1/sections/fresh' });
+      expect(rename.request.body).toEqual({ name: 'Frais' });
+      rename.flush(null);
+    });
+
+    it('offers viewers neither the name nor the colours', async () => {
+      await create({ detail: listDetail({ role: 'viewer', ownership: 'shared' }) });
+
+      title().click();
+      await render();
+
+      expect(nameInput()).toBeNull();
+      expect(element.querySelector('.entry-section .color')).toBeNull();
+      http.expectNone({ method: 'PATCH' });
+    });
+
     it('sends nothing when the name is cancelled, blank or unchanged', async () => {
       await create();
-      const rename = vi.spyOn(store, 'renameSection');
+      const rename = vi.spyOn(store, 'updateSection');
 
       for (const [value, key] of [['Autre', 'Escape'], ['   ', 'Enter'], ['Produits frais', 'Enter']] as const) {
         title().click();
@@ -218,7 +253,7 @@ describe('ListDetailComponent', () => {
         await type(value, key);
         expect(nameInput()).toBeNull();
       }
-      nameInput()?.dispatchEvent(new Event('blur'));
+      nameInput()?.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
 
       expect(rename).not.toHaveBeenCalled();
       expect(title().textContent?.trim()).toBe('Produits frais');

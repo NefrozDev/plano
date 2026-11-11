@@ -62,7 +62,7 @@ export class ListsApiService {
     return this.http.put<void>(`${this.lists}/${listId}/sections/order`, { sectionIds });
   }
 
-  renameSection(listId: string, sectionId: string, details: UpdateSectionRequest): Observable<void> {
+  updateSection(listId: string, sectionId: string, details: UpdateSectionRequest): Observable<void> {
     return this.http.patch<void>(`${this.lists}/${listId}/sections/${sectionId}`, details);
   }
 

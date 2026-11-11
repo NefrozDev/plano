@@ -73,6 +73,14 @@ export const screens: Screen[] = [
       await expect(page.getByRole('textbox', { name: 'Nom de la liste' })).toBeFocused();
     },
   },
+  {
+    name: 'list, editing a section',
+    url: '/lists/list-1',
+    act: async (page) => {
+      await page.getByRole('button', { name: /^Modifier la section/ }).first().click();
+      await expect(page.getByRole('textbox', { name: 'Nom de la section' })).toBeFocused();
+    },
+  },
   { name: 'list not found', url: '/lists/nope' },
   { name: 'settings', url: '/settings' },
   { name: 'social', url: '/social' },

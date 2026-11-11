@@ -14,6 +14,7 @@ import type {
   UpdateEntryRequest,
   UpdateListRequest,
   UpdateListSettingsRequest,
+  UpdateSectionRequest,
 } from '@plano/common';
 import { Observable, firstValueFrom } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -133,10 +134,11 @@ export class ListsStore {
     );
   }
 
-  renameSection(sectionId: string, name: string): Promise<boolean> {
+  /** Renames or recolours a section: only the fields given change. */
+  updateSection(sectionId: string, changes: UpdateSectionRequest): Promise<boolean> {
     return this.runOnDetail(
-      (id) => this.api.renameSection(id, sectionId, { name }),
-      (_, detail) => this.mapSection(detail, sectionId, (section) => ({ ...section, name })),
+      (id) => this.api.updateSection(id, sectionId, changes),
+      (_, detail) => this.mapSection(detail, sectionId, (section) => ({ ...section, ...changes })),
     );
   }
 
