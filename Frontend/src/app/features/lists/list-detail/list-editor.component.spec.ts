@@ -1,4 +1,6 @@
+import { onTestFinished } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { userEvent } from 'vitest/browser';
 import { listDetail } from '../testing/lists-fixtures';
 import { ListEditorComponent, ListEdits } from './list-editor.component';
 
@@ -84,6 +86,27 @@ describe('ListEditorComponent', () => {
     editor.submit();
 
     expect(saved[0].removeChecked).toBe(true);
+  });
+
+  it('saves when Enter is pressed in the name, but not in the description', async () => {
+    // In the document, so real key presses reach the fields.
+    const element = fixture.nativeElement as HTMLElement;
+    document.body.append(element);
+    onTestFinished(() => element.remove());
+    const description = element.querySelector('textarea') as HTMLTextAreaElement;
+    const name = element.querySelector('input[type="text"]') as HTMLInputElement;
+
+    name.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(saved).toEqual([
+      { name: 'Courses', icon: 'cart', color: '#2ecb70', description: 'Pour samedi', removeChecked: false },
+    ]);
+
+    description.focus();
+    await userEvent.keyboard('{Enter}');
+    // Enter goes on writing the description: a new line, no second save.
+    expect(editor.draftDescription()).toContain('\n');
+    expect(saved.length).toBe(1);
   });
 
   it('keeps the current name when the draft is blank', () => {

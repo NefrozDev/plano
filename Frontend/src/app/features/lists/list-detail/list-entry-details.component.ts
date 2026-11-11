@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListEntry, ListMember, UpdateEntryRequest } from '@plano/common';
 import { formatLocale } from '../../../core/i18n/translate';
+import { CommitOnEnterDirective } from '../../../shared/ui/commit-on-enter.directive';
 
 /**
  * Full-screen editor of one entry. Text fields are saved when they lose focus
@@ -9,7 +10,7 @@ import { formatLocale } from '../../../core/i18n/translate';
  */
 @Component({
   selector: 'app-list-entry-details',
-  imports: [TranslocoPipe],
+  imports: [TranslocoPipe, CommitOnEnterDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="entry-details" aria-labelledby="entry-details-title">
@@ -31,6 +32,7 @@ import { formatLocale } from '../../../core/i18n/translate';
             (click)="entryChange.emit({ done: !entry().done })"
           ><i aria-hidden="true"></i></button>
           <input
+            appCommitOnEnter
             [attr.aria-label]="'lists.entry.name' | transloco"
             maxlength="200"
             [value]="entry().name"

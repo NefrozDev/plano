@@ -1,5 +1,7 @@
+import { onTestFinished } from 'vitest';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { userEvent } from 'vitest/browser';
 import type { MockInstance } from 'vitest';
 import type { ObjectiveDetail } from '@plano/common';
 import { ConfirmService } from '../../../../shared/ui/confirm.service';
@@ -611,6 +613,21 @@ describe('ObjectiveSummaryComponent', () => {
       plan.value = '4 sorties par semaine';
       plan.dispatchEvent(new Event('change'));
       expect(await answer('')).toEqual({ plan: '4 sorties par semaine' });
+    });
+
+    it('saves the plan when Enter is pressed in it', async () => {
+      // In the document, so the field can hold the focus that Enter takes away.
+      document.body.append(element);
+      onTestFinished(() => element.remove());
+      await show(objectiveDetail());
+      component.toggleRow('plan');
+      fixture.detectChanges();
+      const plan = element.querySelector('input.editor') as HTMLInputElement;
+      await userEvent.fill(plan, 'Le matin');
+      await userEvent.keyboard('{Enter}');
+
+      expect(document.activeElement).not.toBe(plan);
+      expect(await answer('')).toEqual({ plan: 'Le matin' });
     });
 
     it('closes an open row', async () => {

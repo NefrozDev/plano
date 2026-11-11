@@ -191,6 +191,7 @@
           @if (openRow() === 'plan') {
             <input
               class="editor"
+              appCommitOnEnter
               maxlength="120"
               [attr.aria-label]="'objectives.summary.plan' | transloco"
               [placeholder]="'objectives.summary.planPlaceholder' | transloco"

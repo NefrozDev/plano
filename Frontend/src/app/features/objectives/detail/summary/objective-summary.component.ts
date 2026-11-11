@@ -14,6 +14,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { t, tCount } from '../../../../core/i18n/translate';
 import { toPerson } from '../../../../core/people/people';
 import { AvatarStackComponent } from '../../../../shared/ui/avatar-stack.component';
+import { CommitOnEnterDirective } from '../../../../shared/ui/commit-on-enter.directive';
 import { SwitchRowComponent } from '../../../../shared/ui/switch-row.component';
 import { ToastComponent } from '../../../../shared/ui/toast.component';
 import type {
@@ -62,6 +63,7 @@ interface StatTile {
 @Component({
   selector: 'app-objective-summary',
   imports: [
+    CommitOnEnterDirective,
     RouterLink,
     TranslocoPipe,
     AvatarStackComponent,

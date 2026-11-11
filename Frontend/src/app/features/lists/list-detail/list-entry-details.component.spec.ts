@@ -1,5 +1,7 @@
+import { onTestFinished } from 'vitest';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { userEvent } from 'vitest/browser';
 import type { UpdateEntryRequest } from '@plano/common';
 import { MEMBER_ID, entry, listDetail } from '../testing/lists-fixtures';
 import { ListEntryDetailsComponent } from './list-entry-details.component';
@@ -41,6 +43,18 @@ describe('ListEntryDetailsComponent', () => {
     reminder.dispatchEvent(new Event('change'));
 
     expect(changes).toEqual([{ name: 'Lait entier' }, { assignedTo: null }, { reminder: null }]);
+  });
+
+  it('saves the name when Enter is pressed in it, once', async () => {
+    // In the document, so the field can hold the focus that Enter takes away.
+    document.body.append(element);
+    onTestFinished(() => element.remove());
+    const name = field<HTMLInputElement>('.entry-name-editor input');
+    await userEvent.fill(name, 'Lait entier');
+    await userEvent.keyboard('{Enter}');
+
+    expect(document.activeElement).not.toBe(name);
+    expect(changes).toEqual([{ name: 'Lait entier' }]);
   });
 
   it('restores the name instead of saving a blank one', () => {
