@@ -19,6 +19,7 @@ import {
   eventReminderLabel,
   timeRangeLabel,
 } from '../agenda.utils';
+import { AgendaParticipantsPickerComponent } from '../event-form/agenda-participants-picker.component';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -32,7 +33,14 @@ const STATUS_LABELS: Readonly<Record<AgendaAttendeeStatus, string>> = {
 /** Screen 4. `?date=` selects which occurrence of a recurring event is shown. */
 @Component({
   selector: 'app-agenda-event-detail',
-  imports: [RouterLink, TranslocoPipe, PageHeaderComponent, ModalDialogComponent, UserAvatarComponent],
+  imports: [
+    RouterLink,
+    TranslocoPipe,
+    PageHeaderComponent,
+    ModalDialogComponent,
+    UserAvatarComponent,
+    AgendaParticipantsPickerComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-event-detail.component.html',
   styleUrl: './agenda-event-detail.component.scss',
@@ -47,6 +55,8 @@ export class AgendaEventDetailComponent {
   readonly id = computed(() => this.params().get('id') ?? '');
   readonly event = computed(() => this.store.event(this.id()));
   readonly deleteOpen = signal(false);
+  /** The organiser picks whom to invite, without going through the edit form. */
+  readonly pickerOpen = signal(false);
   /** An answer or a deletion is on its way. */
   readonly busy = signal(false);
   /** Looked for beyond the agenda (a declined invitation): only then is it missing. */
@@ -115,6 +125,14 @@ export class AgendaEventDetailComponent {
   async respond(status: 'accepted' | 'declined'): Promise<void> {
     this.busy.set(true);
     await this.store.respond(this.id(), status);
+    this.busy.set(false);
+  }
+
+  /** Saved at once: new guests are invited (and told), those taken off lose the event. */
+  async share(participantIds: string[]): Promise<void> {
+    this.pickerOpen.set(false);
+    this.busy.set(true);
+    await this.store.setParticipants(this.id(), participantIds);
     this.busy.set(false);
   }
 

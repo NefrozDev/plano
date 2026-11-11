@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import type { AgendaEventView } from '@plano/common';
 import { NotificationsStore } from '../../../core/notifications/notifications.store';
+import { CONTACTS } from '../../../testing/contacts';
 import { agendaView, loadAgendaEvents, providePlanoTesting, seedAgendaEvents, settle } from '../../../testing/plano-testing';
 import { AGENDA_ROUTES } from '../agenda.routes';
 import { AgendaStore } from '../agenda.store';
@@ -120,6 +121,77 @@ describe('AgendaEventDetailComponent', () => {
       expect(element().textContent).toContain('Réserver le parking.');
     });
 
+    describe('sharing', () => {
+      const shareButton = () => element().querySelector('app-page-header .share') as HTMLButtonElement | null;
+      const picker = () => element().querySelector('app-agenda-participants-picker') as HTMLElement | null;
+
+      async function openPicker(): Promise<HTMLElement> {
+        await open('/agenda/events/sport');
+        shareButton()!.click();
+        harness.detectChanges();
+        http.expectOne('/api/v1/contacts').flush(CONTACTS);
+        await settle();
+        harness.detectChanges();
+        return picker()!;
+      }
+
+      it('invites contacts from the event, saved at once with the rest of the event as it is', async () => {
+        const before = store.event('sport')!;
+        const list = await openPicker();
+        expect(shareButton()!.getAttribute('aria-label')).toBe('Partager l’événement');
+        const update = vi.spyOn(store, 'update');
+
+        list.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')[0].click();
+        (list.querySelector('.confirm') as HTMLButtonElement).click();
+        harness.detectChanges();
+
+        expect(picker()).toBeNull();
+        const request = http.expectOne(`${EVENTS_URL}/sport`);
+        expect(request.request.method).toBe('PUT');
+        const body = request.request.body as Record<string, unknown>;
+        expect(body['participantIds']).toEqual([...before.participantIds, 'user-bob']);
+        // The event's own fields, unchanged, and nothing of the view the API would refuse.
+        expect(body).toMatchObject({ title: before.title, start: before.start, end: before.end, notes: before.notes });
+        for (const extra of ['id', 'owner', 'mine', 'status', 'attendees']) expect(body).not.toHaveProperty(extra);
+        expect(update).toHaveBeenCalledTimes(1);
+        request.flush({
+          ...before,
+          participantIds: [...before.participantIds, 'user-bob'],
+          attendees: [...before.attendees, { id: 'user-bob', name: 'Bob Test', avatarVersion: null, status: 'pending' }],
+        });
+        await settle();
+        harness.detectChanges();
+
+        expect(people()).toContain('Bob Test · En attente');
+      });
+
+      it('sends nothing when the picker is closed without confirming', async () => {
+        const list = await openPicker();
+        // Modal: what it covers is out of reach of the keyboard.
+        const covered = () => ['app-page-header', '.content'].map((selector) => (element().querySelector(selector) as HTMLElement).inert);
+        expect(covered()).toEqual([true, true]);
+
+        (list.querySelector('header button') as HTMLButtonElement).click();
+        harness.detectChanges();
+
+        expect(picker()).toBeNull();
+        expect(covered()).toEqual([false, false]);
+        http.expectNone(`${EVENTS_URL}/sport`);
+      });
+
+      it('shows why the invitation did not go through', async () => {
+        const list = await openPicker();
+        (list.querySelector('.confirm') as HTMLButtonElement).click();
+        http
+          .expectOne(`${EVENTS_URL}/sport`)
+          .flush({ errorCode: 'agenda.guestsMustBeContacts' }, { status: 400, statusText: 'Bad Request' });
+        await settle();
+        harness.detectChanges();
+
+        expect(element().querySelector('[role="alert"]')?.textContent).toBe('Seuls vos contacts peuvent être invités.');
+      });
+    });
+
     it('confirms deletion in a modal, deletes it for everyone and returns to that day', async () => {
       await open('/agenda/events/sport?date=2026-10-22');
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -223,6 +295,10 @@ describe('AgendaEventDetailComponent', () => {
         'Accepter',
       ]);
       expect(element().querySelector('.content .actions')).toBeNull();
+      // Only the organiser invites.
+      expect(element().querySelector('app-page-header .share')).toBeNull();
+      expect(await store.setParticipants('reunion-bob', ['user-bob'])).toBeNull();
+      http.expectNone(`${EVENTS_URL}/reunion-bob`);
       // Their own calendar and reminder come with their answer.
       expect(rows()).toEqual(['Récurrence Jamais']);
       expect(people()).toEqual(['Bob Test · Organisateur', 'Vous · En attente']);

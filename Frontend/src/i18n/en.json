@@ -537,6 +537,7 @@
     },
     "detail": {
       "heading": "Event details",
+      "share": "Share the event",
       "organisedBy": "Organized by {{name}}",
       "joinCall": "Join the video call",
       "invites": "{{name}} is inviting you to this event.",

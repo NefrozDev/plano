@@ -82,6 +82,15 @@ export const screens: Screen[] = [
   { name: 'agenda of a new account', url: '/agenda', mock: { empty: true } },
   { name: 'new event', url: '/agenda/new' },
   { name: 'event', url: '/agenda/events/rendez-vous-projet' },
+  {
+    name: 'event, sharing it',
+    url: '/agenda/events/rendez-vous-projet',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Partager l’événement' }).click();
+      await expect(page.getByRole('dialog', { name: 'Participants' })).toBeVisible();
+      await expect(page.getByRole('checkbox').first()).toBeVisible();
+    },
+  },
   { name: 'edit event', url: '/agenda/events/rendez-vous-projet/edit' },
   {
     name: 'edit event, picking participants',

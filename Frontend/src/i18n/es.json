@@ -537,6 +537,7 @@
     },
     "detail": {
       "heading": "Detalle del evento",
+      "share": "Compartir el evento",
       "organisedBy": "Organizado por {{name}}",
       "joinCall": "Unirse a la videollamada",
       "invites": "{{name}} te invita a este evento.",

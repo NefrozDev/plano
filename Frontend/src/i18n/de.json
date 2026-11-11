@@ -537,6 +537,7 @@
     },
     "detail": {
       "heading": "Termindetails",
+      "share": "Termin teilen",
       "organisedBy": "Organisiert von {{name}}",
       "joinCall": "An der Videokonferenz teilnehmen",
       "invites": "{{name}} lädt dich zu diesem Termin ein.",

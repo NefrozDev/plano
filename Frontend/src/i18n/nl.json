@@ -537,6 +537,7 @@
     },
     "detail": {
       "heading": "Details van de afspraak",
+      "share": "De afspraak delen",
       "organisedBy": "Georganiseerd door {{name}}",
       "joinCall": "Deelnemen aan de videovergadering",
       "invites": "{{name}} nodigt je uit voor deze afspraak.",

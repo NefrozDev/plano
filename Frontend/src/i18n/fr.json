@@ -537,6 +537,7 @@
     },
     "detail": {
       "heading": "Détail de l’événement",
+      "share": "Partager l’événement",
       "organisedBy": "Organisé par {{name}}",
       "joinCall": "Rejoindre la visioconférence",
       "invites": "{{name}} vous invite à cet événement.",

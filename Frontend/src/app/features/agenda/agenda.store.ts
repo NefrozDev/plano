@@ -283,6 +283,19 @@ export class AgendaStore {
     return this.save(this.api.update(id, this.normalized(draft)));
   }
 
+  /** Organiser only: invites these guests and drops the others, the rest of the event as it is. */
+  setParticipants(id: string, participantIds: string[]): Promise<AgendaEventView | null> {
+    const event = this.event(id);
+    if (!event?.mine) return Promise.resolve(null);
+    // Only the event's own fields: the API refuses the view's extras (owner, attendees…).
+    const { title, calendarId, allDay, start, end, location, description, recurrence, reminderMinutes } = event;
+    const { color, conferenceUrl, attachments, notes, availability, visibility } = event;
+    return this.update(id, {
+      title, calendarId, allDay, start, end, location, description, participantIds, recurrence,
+      reminderMinutes, color, conferenceUrl, attachments, notes, availability, visibility,
+    });
+  }
+
   /** Deletes the event for everyone on it and, for recurring ones, the whole series. */
   async remove(id: string): Promise<boolean> {
     try {
