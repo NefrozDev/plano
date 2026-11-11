@@ -1,4 +1,6 @@
+<!-- The participants picker is modal: what it covers takes no focus. -->
 <app-page-header
+  [inert]="pickerOpen()"
   [heading]="(editingId ? 'titles.editEvent' : 'titles.newEvent') | transloco"
   [backLink]="cancelLink()"
   [backQueryParams]="cancelParams"
@@ -15,7 +17,7 @@
 @if (missing) {
   <p class="missing">{{ 'apiErrors.agenda.eventNotFound' | transloco }}</p>
 } @else {
-  <form id="event-form" class="body" [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <form id="event-form" class="body" [formGroup]="form" (ngSubmit)="save()" novalidate [inert]="pickerOpen()">
     @if (store.error()) {
       <p class="field-error" role="alert">{{ store.error() }}</p>
     }

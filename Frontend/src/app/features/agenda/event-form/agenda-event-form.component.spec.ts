@@ -324,6 +324,9 @@ describe('AgendaEventFormComponent', () => {
       await settle();
       harness.detectChanges();
       const picker = element().querySelector('app-agenda-participants-picker') as HTMLElement;
+      const covered = () => ['app-page-header', 'form'].map((selector) => (element().querySelector(selector) as HTMLElement).inert);
+      // Modal: what it covers is out of reach of the keyboard.
+      expect(covered()).toEqual([true, true]);
       expect(Array.from(picker.querySelectorAll('h3')).map((title) => title.textContent)).toEqual([
         'Amis', 'Famille proche', 'Travail',
       ]);
@@ -333,6 +336,7 @@ describe('AgendaEventFormComponent', () => {
       harness.detectChanges();
 
       expect(form().participantIds()).toEqual(['user-bob']);
+      expect(covered()).toEqual([false, false]);
       expect(element().querySelector('.participants-row .avatar')?.textContent?.trim()).toBe('BT');
       expect(element().querySelector('.hint')?.textContent).toContain('invitation à accepter');
 

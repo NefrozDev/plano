@@ -83,6 +83,15 @@ export const screens: Screen[] = [
   { name: 'new event', url: '/agenda/new' },
   { name: 'event', url: '/agenda/events/rendez-vous-projet' },
   { name: 'edit event', url: '/agenda/events/rendez-vous-projet/edit' },
+  {
+    name: 'edit event, picking participants',
+    url: '/agenda/events/rendez-vous-projet/edit',
+    act: async (page) => {
+      await page.getByRole('button', { name: /^Participants/ }).click();
+      await expect(page.getByRole('dialog', { name: 'Participants' })).toBeVisible();
+      await expect(page.getByRole('checkbox').first()).toBeVisible();
+    },
+  },
   { name: 'agenda filters', url: '/agenda/filters' },
   { name: 'agenda search', url: '/agenda/search' },
   { name: 'agenda settings', url: '/agenda/settings' },
