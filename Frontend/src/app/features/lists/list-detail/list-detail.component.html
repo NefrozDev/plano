@@ -2,7 +2,27 @@
   <a class="icon-button" routerLink="/lists" [attr.aria-label]="'lists.backToLists' | transloco">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
   </a>
-  <h1 class="list-title">{{ list()?.name ?? ('lists.list' | transloco) }}</h1>
+  <h1 class="list-title">
+    @if (renamingTitle()) {
+      <input
+        appAutofocus
+        class="title-input"
+        type="text"
+        maxlength="80"
+        [attr.aria-label]="'lists.editor.name' | transloco"
+        [value]="titleDraft()"
+        (focus)="$any($event.target).select()"
+        (input)="titleDraft.set($any($event.target).value)"
+        (keydown.enter)="$event.preventDefault(); commitTitle()"
+        (keydown.escape)="renamingTitle.set(false)"
+        (blur)="commitTitle()"
+      />
+    } @else if (isOwner()) {
+      <button class="title-button" type="button" [attr.aria-label]="'lists.renameList' | transloco: { name: list()!.name }" (click)="startRenaming()">{{ list()!.name }}</button>
+    } @else {
+      {{ list()?.name ?? ('lists.list' | transloco) }}
+    }
+  </h1>
   @if (list()) {
     <div class="header-actions">
       <button class="icon-button" type="button" [attr.aria-label]="'lists.share' | transloco" (click)="sharingOpen.set(true)">

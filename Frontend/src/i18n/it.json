@@ -652,6 +652,7 @@
     "pin": "Mostra nella home",
     "unpin": "Togli dalla home",
     "moreOptions": "Altre opzioni",
+    "renameList": "Rinomina la lista {{name}}",
     "edit": "Modifica la lista",
     "members": "Membri della lista",
     "addMember": "Aggiungi un membro",

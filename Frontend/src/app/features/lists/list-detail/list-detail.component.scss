@@ -4,6 +4,10 @@
 .icon-button svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .more-button svg { fill: currentColor; stroke: none; }
 .list-title { justify-self: start; margin: 0; padding: .35rem; color: var(--color-text); font-size: 1.45rem; font-weight: 750; letter-spacing: -.04em; }
+.list-title:has(.title-button, .title-input) { justify-self: stretch; min-width: 0; padding: 0; }
+.title-button { max-width: 100%; min-height: 2.35rem; padding: .35rem; overflow-wrap: anywhere; border: 0; border-radius: .45rem; background: transparent; color: inherit; cursor: text; font: inherit; letter-spacing: inherit; text-align: left; }
+.title-button:hover { background: #f0f2f7; }
+.title-input { box-sizing: border-box; width: 100%; min-height: 2.35rem; padding: .3rem .35rem; border: 2px solid var(--color-primary); border-radius: .45rem; background: white; color: inherit; font: inherit; letter-spacing: inherit; }
 .header-actions { display: flex; gap: .15rem; }
 .members { display: flex; align-items: center; padding: .35rem 1.55rem 1rem; }
 .members app-avatar-stack { --avatar-size: 1.85rem; }

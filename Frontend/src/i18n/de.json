@@ -652,6 +652,7 @@
     "pin": "Auf der Startseite zeigen",
     "unpin": "Von der Startseite nehmen",
     "moreOptions": "Weitere Optionen",
+    "renameList": "Liste {{name}} umbenennen",
     "edit": "Liste bearbeiten",
     "members": "Mitglieder der Liste",
     "addMember": "Mitglied hinzufügen",

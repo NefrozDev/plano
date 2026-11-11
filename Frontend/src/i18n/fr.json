@@ -652,6 +652,7 @@
     "pin": "Afficher sur l’accueil",
     "unpin": "Retirer de l’accueil",
     "moreOptions": "Plus d’options",
+    "renameList": "Renommer la liste {{name}}",
     "edit": "Modifier la liste",
     "members": "Membres de la liste",
     "addMember": "Ajouter un membre",

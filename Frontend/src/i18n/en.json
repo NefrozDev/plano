@@ -652,6 +652,7 @@
     "pin": "Show on home",
     "unpin": "Remove from home",
     "moreOptions": "More options",
+    "renameList": "Rename the list {{name}}",
     "edit": "Edit the list",
     "members": "List members",
     "addMember": "Add a member",

@@ -65,6 +65,14 @@ export const screens: Screen[] = [
   { name: 'lists', url: '/lists' },
   { name: 'lists of a new account', url: '/lists', mock: { empty: true } },
   { name: 'list', url: '/lists/list-1' },
+  {
+    name: 'list, renaming it from its title',
+    url: '/lists/list-1',
+    act: async (page) => {
+      await page.getByRole('button', { name: /^Renommer la liste/ }).click();
+      await expect(page.getByRole('textbox', { name: 'Nom de la liste' })).toBeFocused();
+    },
+  },
   { name: 'list not found', url: '/lists/nope' },
   { name: 'settings', url: '/settings' },
   { name: 'groups', url: '/groups' },

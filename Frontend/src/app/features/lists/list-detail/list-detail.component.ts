@@ -81,6 +81,8 @@ export class ListDetailComponent {
   readonly notFound = signal(false);
   readonly canEdit = computed(() => !!this.list() && this.list()?.role !== 'viewer');
   readonly isOwner = computed(() => this.list()?.role === 'owner');
+  readonly renamingTitle = signal(false);
+  readonly titleDraft = signal('');
   /**
    * The header's list actions: a single one gets its own button, several go
    * behind the "more options" menu (only owners also edit the list). New
@@ -202,6 +204,22 @@ export class ListDetailComponent {
 
   toggleListMenu(): void {
     this.listMenuOpen.update((open) => !open);
+  }
+
+  /** The owner renames the list from its title, without the settings panel. */
+  startRenaming(): void {
+    const list = this.list();
+    if (!list || !this.isOwner()) return;
+    this.titleDraft.set(list.name);
+    this.renamingTitle.set(true);
+  }
+
+  /** Enter and blur both land here: the second call finds renaming already over. */
+  commitTitle(): void {
+    if (!this.renamingTitle()) return;
+    this.renamingTitle.set(false);
+    const name = this.titleDraft().trim();
+    if (name && name !== this.list()?.name) void this.store.updateList({ name });
   }
 
   openListEditor(): void {

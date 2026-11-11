@@ -652,6 +652,7 @@
     "pin": "Op de startpagina tonen",
     "unpin": "Van de startpagina halen",
     "moreOptions": "Meer opties",
+    "renameList": "De lijst {{name}} hernoemen",
     "edit": "De lijst bewerken",
     "members": "Leden van de lijst",
     "addMember": "Een lid toevoegen",

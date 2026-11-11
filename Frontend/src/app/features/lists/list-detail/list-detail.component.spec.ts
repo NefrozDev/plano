@@ -1,3 +1,4 @@
+import { onTestFinished } from 'vitest';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
@@ -571,6 +572,92 @@ describe('ListDetailComponent', () => {
   });
 
   describe('owner actions', () => {
+    describe('renaming from the title', () => {
+      const titleButton = () => element.querySelector('.list-title button') as HTMLButtonElement | null;
+      const titleInput = () => element.querySelector('.list-title input') as HTMLInputElement | null;
+
+      async function startRenaming(): Promise<HTMLInputElement> {
+        // In the document, so the field can take the focus.
+        document.body.append(element);
+        onTestFinished(() => element.remove());
+        titleButton()!.click();
+        await render();
+        return titleInput()!;
+      }
+
+      it('turns the title into a field holding the name, focused and selected', async () => {
+        await create();
+        expect(titleButton()?.getAttribute('aria-label')).toBe('Renommer la liste Courses');
+
+        const input = await startRenaming();
+
+        expect(input.value).toBe('Courses');
+        expect(document.activeElement).toBe(input);
+        expect([input.selectionStart, input.selectionEnd]).toEqual([0, 'Courses'.length]);
+        // Still the page heading, and nothing opened the settings panel.
+        expect(input.closest('h1')).not.toBeNull();
+        expect(element.querySelector('app-list-editor')).toBeNull();
+      });
+
+      it('saves the trimmed name on Enter, once, and shows it', async () => {
+        await create();
+        const input = await startRenaming();
+        input.value = '  Courses du samedi ';
+        input.dispatchEvent(new Event('input'));
+
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+        await render();
+        const save = http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1' });
+        expect(save.request.body).toEqual({ name: 'Courses du samedi' });
+        save.flush(listDetail({ name: 'Courses du samedi' }));
+        await render();
+
+        // Removing the field blurred it: no second request.
+        http.expectNone({ method: 'PATCH' });
+        expect(titleInput()).toBeNull();
+        expect(titleButton()?.textContent).toBe('Courses du samedi');
+      });
+
+      it('saves when the field is left', async () => {
+        await create();
+        const input = await startRenaming();
+        input.value = 'Marché';
+        input.dispatchEvent(new Event('input'));
+
+        input.blur();
+        await render();
+
+        const save = http.expectOne({ method: 'PATCH', url: '/api/v1/lists/list-1' });
+        expect(save.request.body).toEqual({ name: 'Marché' });
+        save.flush(listDetail({ name: 'Marché' }));
+      });
+
+      it('sends nothing on Escape, for a blank name or an unchanged one', async () => {
+        await create();
+        for (const [value, key] of [['Marché', 'Escape'], ['   ', 'Enter'], [' Courses ', 'Enter']]) {
+          const input = await startRenaming();
+          input.value = value;
+          input.dispatchEvent(new Event('input'));
+          input.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+          await render();
+          expect(titleInput()).toBeNull();
+        }
+
+        http.expectNone({ method: 'PATCH' });
+        expect(titleButton()?.textContent).toBe('Courses');
+      });
+
+      it('leaves the title as plain text for editors and viewers', async () => {
+        await create({ detail: listDetail({ role: 'editor', ownership: 'shared' }) });
+
+        expect(titleButton()).toBeNull();
+        expect(element.querySelector('.list-title')?.textContent?.trim()).toBe('Courses');
+        component.startRenaming();
+        await render();
+        expect(titleInput()).toBeNull();
+      });
+    });
+
     it('opens the editor of a freshly created list', async () => {
       await create({ query: { edit: '1' } });
 
