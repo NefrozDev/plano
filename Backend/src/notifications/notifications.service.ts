@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type {
+  MarkAllNotificationsReadRequest,
   MarkNotificationsReadRequest,
   NotificationArea,
   NotificationEntry,
@@ -7,7 +8,7 @@ import type {
   NotificationsResponse,
 } from '@plano/common';
 import { randomUUID } from 'node:crypto';
-import { DataSource, In, IsNull, LessThan } from 'typeorm';
+import { DataSource, In, IsNull, LessThan, LessThanOrEqual } from 'typeorm';
 import { DatabaseWriteLockService } from '../database/database-write-lock.service';
 import { displayName } from '../lists/list.mapper';
 import { LiveEventsService } from '../live/live-events.service';
@@ -180,6 +181,25 @@ export class NotificationsService {
     const { affected } = await this.dataSource.manager.update(
       Notification,
       { userId, area, readAt: IsNull(), ...(targetId && { targetId }) },
+      { readAt: new Date() },
+    );
+    if (affected)
+      this.live.publish([userId], { type: 'notifications.changed' });
+  }
+
+  /** The bell was closed: what it showed is read, what came in after is not. */
+  async markAllRead(
+    userId: string,
+    { areas, until }: MarkAllNotificationsReadRequest,
+  ): Promise<void> {
+    const { affected } = await this.dataSource.manager.update(
+      Notification,
+      {
+        userId,
+        area: In(areas),
+        readAt: IsNull(),
+        updatedAt: LessThanOrEqual(new Date(until)),
+      },
       { readAt: new Date() },
     );
     if (affected)

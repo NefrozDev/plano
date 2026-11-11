@@ -182,6 +182,90 @@ describe('NotificationsService', () => {
       expect(publish).toHaveBeenCalledTimes(2);
     });
 
+    describe('once the bell is closed', () => {
+      beforeEach(() => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-11-11T09:00:00Z'));
+      });
+      afterEach(() => vi.useRealTimers());
+
+      const unreadOf = async (userId: string) =>
+        (await bed.notifications.list(userId)).unread;
+
+      it('reads what it showed in its areas, not what came in after, and tells the user’s other devices', async () => {
+        await bed.notifications.notify([bed.bob, bed.cyd], news('list-1'));
+        await bed.notifications.notify([bed.bob], {
+          area: 'objectives',
+          kind: 'objective.comment',
+          targetId: 'objective-1',
+          title: 'Courir',
+          actorId: bed.ada,
+        });
+        await bed.notifications.notify([bed.bob], news('list-2'));
+        const until = (await items(bed.bob))[0].updatedAt;
+        // While the bell was open: list-2 got news again, list-3 is new.
+        vi.setSystemTime(new Date('2026-11-11T09:01:00Z'));
+        await bed.notifications.notify([bed.bob], news('list-2'));
+        vi.setSystemTime(new Date('2026-11-11T09:02:00Z'));
+        await bed.notifications.notify([bed.bob], news('list-3'));
+        publish.mockClear();
+
+        await bed.notifications.markAllRead(bed.bob, {
+          areas: ['lists'],
+          until,
+        });
+
+        expect(
+          (await items(bed.bob)).map(({ targetId, read }) => [targetId, read]),
+        ).toEqual([
+          ['list-3', false],
+          ['list-2', false],
+          ['objective-1', false],
+          ['list-1', true],
+        ]);
+        expect(await unreadOf(bed.bob)).toMatchObject({
+          lists: 2,
+          objectives: 1,
+        });
+        // Another person's bell is theirs.
+        expect((await unreadOf(bed.cyd)).lists).toBe(1);
+        expect(publish).toHaveBeenCalledExactlyOnceWith([bed.bob], {
+          type: 'notifications.changed',
+        });
+      });
+
+      it('reads every unread one of those areas, past the page the bell shows', async () => {
+        for (let i = 0; i <= NOTIFICATION_PAGE; i++) {
+          await bed.notifications.notify([bed.bob], news(`list-${i}`));
+        }
+        const until = (await items(bed.bob))[0].updatedAt;
+
+        await bed.notifications.markAllRead(bed.bob, {
+          areas: ['lists', 'objectives'],
+          until,
+        });
+
+        expect((await unreadOf(bed.bob)).lists).toBe(0);
+      });
+
+      it('tells nobody when nothing was left to read', async () => {
+        await bed.notifications.notify([bed.bob], news('list-1'));
+        const until = (await items(bed.bob))[0].updatedAt;
+        await bed.notifications.markAllRead(bed.bob, {
+          areas: ['lists'],
+          until,
+        });
+        publish.mockClear();
+
+        await bed.notifications.markAllRead(bed.bob, {
+          areas: ['lists'],
+          until,
+        });
+
+        expect(publish).not.toHaveBeenCalled();
+      });
+    });
+
     it('marks one as read, only for its owner', async () => {
       await bed.notifications.notify([bed.bob, bed.cyd], news('list-1'));
       const [mine] = await items(bed.bob);

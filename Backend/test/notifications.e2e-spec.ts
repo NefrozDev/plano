@@ -45,6 +45,22 @@ describe('Notifications (e2e)', () => {
         .expect(400);
       expect(refused.body).toMatchObject({ statusCode: 400 });
     }
+    for (const body of [
+      {},
+      { areas: [], until: '2026-11-11T09:00:00.000Z' },
+      { areas: ['mail'], until: '2026-11-11T09:00:00.000Z' },
+      { areas: ['lists', 'lists'], until: '2026-11-11T09:00:00.000Z' },
+      { areas: ['lists'] },
+      { areas: ['lists'], until: 'yesterday' },
+      { areas: 'lists', until: '2026-11-11T09:00:00.000Z' },
+    ]) {
+      const refused = await http()
+        .post('/api/v1/notifications/read-all')
+        .set('Cookie', ada.cookie)
+        .send(body)
+        .expect(400);
+      expect(refused.body).toMatchObject({ statusCode: 400 });
+    }
     const unknown = await http()
       .post('/api/v1/notifications/not-a-uuid/read')
       .set('Cookie', ada.cookie)
@@ -114,5 +130,38 @@ describe('Notifications (e2e)', () => {
       .expect(204);
 
     expect((await bell(bob)).items).toEqual([{ ...notification, read: true }]);
+  });
+
+  it('reads what the bell showed once it is closed, only for its owner', async () => {
+    await http()
+      .post('/api/v1/friends/requests')
+      .set('Cookie', ada.cookie)
+      .send({ userId: bob.user.id })
+      .expect(201);
+    const [notification] = (await bell(bob)).items;
+    const body = { areas: ['friends'], until: notification.updatedAt };
+
+    const anonymous = await http()
+      .post('/api/v1/notifications/read-all')
+      .send(body)
+      .expect(401);
+    expect(anonymous.body).toMatchObject({ statusCode: 401 });
+    // Ada's own bell holds nothing of Bob's.
+    await http()
+      .post('/api/v1/notifications/read-all')
+      .set('Cookie', ada.cookie)
+      .send(body)
+      .expect(204);
+    expect((await bell(bob)).unread.friends).toBe(1);
+
+    await http()
+      .post('/api/v1/notifications/read-all')
+      .set('Cookie', bob.cookie)
+      .send(body)
+      .expect(204);
+
+    const after = await bell(bob);
+    expect(after.unread.friends).toBe(0);
+    expect(after.items).toEqual([{ ...notification, read: true }]);
   });
 });

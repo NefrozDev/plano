@@ -64,3 +64,12 @@ export interface MarkNotificationsReadRequest {
   area: NotificationArea;
   targetId?: string;
 }
+
+/**
+ * What the bell showed, once closed: everything unread in these areas up to
+ * `until` (the newest `updatedAt` it showed), not what came in after.
+ */
+export interface MarkAllNotificationsReadRequest {
+  areas: NotificationArea[];
+  until: string;
+}

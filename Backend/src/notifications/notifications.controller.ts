@@ -13,7 +13,10 @@ import type { NotificationsResponse } from '@plano/common';
 import { AllowedOriginGuard } from '../auth/allowed-origin.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
-import { MarkNotificationsReadDto } from './notifications.dto';
+import {
+  MarkAllNotificationsReadDto,
+  MarkNotificationsReadDto,
+} from './notifications.dto';
 import { NotificationsService } from './notifications.service';
 
 @Controller('notifications')
@@ -34,6 +37,16 @@ export class NotificationsController {
     @Body() details: MarkNotificationsReadDto,
   ): Promise<void> {
     return this.notifications.markRead(userId, details);
+  }
+
+  /** What the bell showed, once closed without opening any of it. */
+  @Post('read-all')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  markAllRead(
+    @CurrentUser('id') userId: string,
+    @Body() details: MarkAllNotificationsReadDto,
+  ): Promise<void> {
+    return this.notifications.markAllRead(userId, details);
   }
 
   @Post(':notificationId/read')
