@@ -62,6 +62,7 @@
     "allDone": "Alles gedaan ✓",
     "more": "+ nog {{count}}",
     "listsHint": "Toon je lijsten hier via hun menu “Op de startpagina tonen”.",
+    "agenda": "Mijn agenda",
     "goals": "Mijn doelen",
     "goalsHint": "Toon je doelen hier vanaf hun pagina."
   },

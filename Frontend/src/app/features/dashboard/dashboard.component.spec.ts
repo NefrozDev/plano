@@ -83,6 +83,30 @@ describe('DashboardComponent', () => {
       ['12', '13', '14', '15', '16', '17', '18'],
     );
     expect(week.querySelector('.week-day.selected')?.textContent).toContain('jeu');
+    expect(week.querySelector('[aria-current="date"]')).toBe(week.querySelector('.week-day.selected'));
+    expect(week.querySelectorAll('[aria-current]')).toHaveLength(1);
+    // Titled like the other home sections.
+    const section = week.closest('section')!;
+    expect(section.querySelector('h2')?.textContent).toBe('Mon agenda');
+    expect(section.getAttribute('aria-labelledby')).toBe(section.querySelector('h2')?.id);
+  });
+
+  it('opens a day of the week in the agenda', async () => {
+    @Component({ template: '' })
+    class AgendaStub {}
+    const router = TestBed.inject(Router);
+    router.resetConfig([{ path: 'agenda', component: AgendaStub }]);
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const days = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('.week-day');
+
+    expect(Array.from(days).map((day) => day.getAttribute('href'))).toEqual(
+      ['12', '13', '14', '15', '16', '17', '18'].map((day) => `/agenda?view=day&date=2026-10-${day}`),
+    );
+    days[5].click();
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/agenda?view=day&date=2026-10-17');
   });
 
   it('falls back to the username and anonymous display value', () => {
@@ -247,8 +271,11 @@ describe('DashboardComponent', () => {
 
     expect(element.querySelector('.agenda-card')).toBeNull();
     expect(element.textContent).not.toContain('Rien de prévu');
-    // No pinned list yet: the objectives are the only section.
-    expect(element.querySelectorAll('.dashboard-section')).toHaveLength(1);
+    // No pinned list yet: only the agenda and the objectives.
+    expect(Array.from(element.querySelectorAll('.dashboard-section h2')).map((h2) => h2.textContent)).toEqual([
+      'Mon agenda',
+      'Mes objectifs',
+    ]);
     // Thursday 15 October has agenda items, list reminders included.
     const dot = element.querySelector('.week-day.selected i');
     // An image named in the page's language, not a bare <i> with a label (WCAG 4.1.2).
@@ -269,7 +296,7 @@ describe('DashboardComponent', () => {
 
     expect(new Set(cards).size).toBe(1);
     expect(cards[0]).not.toBe('0px');
-    expect(headings.length).toBe(2);
+    expect(headings.length).toBe(3);
     expect(new Set(headings).size).toBe(1);
   });
 

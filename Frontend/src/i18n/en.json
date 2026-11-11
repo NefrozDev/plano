@@ -62,6 +62,7 @@
     "allDone": "All done ✓",
     "more": "+ {{count}} more",
     "listsHint": "Show your lists here from their “Show on home” menu.",
+    "agenda": "My calendar",
     "goals": "My goals",
     "goalsHint": "Show your goals here from their page."
   },

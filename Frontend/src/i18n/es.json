@@ -62,6 +62,7 @@
     "allDone": "Todo hecho ✓",
     "more": "+ {{count}} más",
     "listsHint": "Muestra tus listas aquí desde su menú «Mostrar en el inicio».",
+    "agenda": "Mi agenda",
     "goals": "Mis objetivos",
     "goalsHint": "Muestra tus objetivos aquí desde su página."
   },

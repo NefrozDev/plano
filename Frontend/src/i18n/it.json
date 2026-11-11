@@ -62,6 +62,7 @@
     "allDone": "Tutto fatto ✓",
     "more": "+ altri {{count}}",
     "listsHint": "Mostra qui le tue liste dal loro menu «Mostra nella home».",
+    "agenda": "La mia agenda",
     "goals": "I miei obiettivi",
     "goalsHint": "Mostra qui i tuoi obiettivi dalla loro pagina."
   },

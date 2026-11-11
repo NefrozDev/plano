@@ -27,16 +27,27 @@
     <p>{{ 'dashboard.today' | transloco }}</p>
   </section>
 
-  <section class="week-card" [attr.aria-label]="weekLabel()">
-    @for (day of weekDays(); track day.date) {
-      <div class="week-day" [class.selected]="day.selected">
-        <span>{{ day.label }}</span
-        ><strong>{{ day.day }}</strong>
-        @if (day.hasEvent) {
-          <i role="img" [attr.aria-label]="'dashboard.eventPlanned' | transloco"></i>
-        }
-      </div>
-    }
+  <section class="dashboard-section agenda-section" aria-labelledby="agenda-title">
+    <div class="section-heading">
+      <h2 id="agenda-title">{{ 'dashboard.agenda' | transloco }}</h2>
+    </div>
+    <div class="week-card" role="group" [attr.aria-label]="weekLabel()">
+      @for (day of weekDays(); track day.date) {
+        <a
+          class="week-day"
+          routerLink="/agenda"
+          [queryParams]="{ view: 'day', date: day.date }"
+          [class.selected]="day.selected"
+          [attr.aria-current]="day.selected ? 'date' : null"
+        >
+          <span>{{ day.label }}</span
+          ><strong>{{ day.day }}</strong>
+          @if (day.hasEvent) {
+            <i role="img" [attr.aria-label]="'dashboard.eventPlanned' | transloco"></i>
+          }
+        </a>
+      }
+    </div>
   </section>
 
   @for (home of homeLists(); track home.id) {
