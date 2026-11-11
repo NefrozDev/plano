@@ -175,6 +175,69 @@ describe('NotificationsStore', () => {
       expect(store.unread().lists).toBe(2);
     });
 
+    describe('all that the bell showed', () => {
+      const shown = [
+        notification({ id: 'new', targetId: 'list-2', updatedAt: '2026-10-15T09:00:00.000Z' }),
+        notification({ id: 'o', area: 'objectives', kind: 'objective.comment', targetId: 'obj-1' }),
+        notification({ id: 'f', area: 'friends', kind: 'friend.requested', targetId: 'user-2', updatedAt: '2026-10-14T08:00:00.000Z' }),
+        notification({ id: 'old', read: true }),
+      ];
+
+      it('reads them at once, up to the newest shown, then tells the API', async () => {
+        // 60 unread lists: more than the bell shows, all of them read.
+        await signIn(response(shown, { lists: 60, objectives: 1, friends: 1 }));
+
+        const reading = store.markAllRead();
+
+        expect(store.items().every(({ read }) => read)).toBe(true);
+        expect(store.total()).toBe(0);
+        const request = http.expectOne({ method: 'POST', url: '/api/v1/notifications/read-all' });
+        expect(request.request.body).toEqual({
+          areas: ['friends', 'lists', 'objectives', 'agenda'],
+          until: '2026-10-15T09:00:00.000Z',
+        });
+        request.flush(null);
+        await reading;
+        expect(store.total()).toBe(0);
+      });
+
+      it('leaves the areas turned off alone', async () => {
+        await signIn(response(shown, { lists: 1, objectives: 1, friends: 1 }));
+        TestBed.inject(ObjectivesStore).updateSettings({ notifications: false });
+
+        void store.markAllRead();
+
+        const request = http.expectOne('/api/v1/notifications/read-all');
+        expect(request.request.body).toEqual({ areas: ['friends', 'lists', 'agenda'], until: '2026-10-15T09:00:00.000Z' });
+        request.flush(null);
+        TestBed.inject(ObjectivesStore).updateSettings({ notifications: true });
+        expect(store.unread()).toEqual({ friends: 0, lists: 0, objectives: 1, agenda: 0 });
+        expect(store.hasUnread('objectives', 'obj-1')).toBe(true);
+      });
+
+      it('asks nothing when everything is read already', async () => {
+        await signIn(response([notification({ read: true })]));
+
+        await store.markAllRead();
+
+        http.expectNone('/api/v1/notifications/read-all');
+        expect(store.items()[0].read).toBe(true);
+      });
+
+      it('reloads the truth when saving fails', async () => {
+        await signIn(response(shown, { lists: 1, objectives: 1, friends: 1 }));
+
+        const reading = store.markAllRead();
+        http.expectOne('/api/v1/notifications/read-all').flush(null, { status: 500, statusText: 'Error' });
+        await settle();
+        http.expectOne('/api/v1/notifications').flush(response(shown, { lists: 1, objectives: 1, friends: 1 }));
+        await reading;
+
+        expect(store.total()).toBe(3);
+        expect(store.items()[0].read).toBe(false);
+      });
+    });
+
     it('opens one from the bell: read, then off to where it happened', async () => {
       await signIn(response([notification({ id: 'f', area: 'friends', kind: 'friend.requested', targetId: 'user-2' })], { friends: 1 }));
       const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);

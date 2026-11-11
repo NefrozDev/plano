@@ -3,6 +3,7 @@ import { DOCUMENT, DestroyRef, Injectable, computed, effect, inject, signal, unt
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import type {
+  MarkAllNotificationsReadRequest,
   MarkNotificationsReadRequest,
   NotificationArea,
   NotificationEntry,
@@ -113,6 +114,28 @@ export class NotificationsStore {
     const body: MarkNotificationsReadRequest = targetId ? { area, targetId } : { area };
     try {
       await firstValueFrom(this.http.post<void>(`${this.url}/read`, body));
+    } catch {
+      await this.load();
+    }
+  }
+
+  /**
+   * The bell was closed without opening any: everything unread in the areas it
+   * shows is read, up to the newest one it showed; what came in since stays.
+   */
+  async markAllRead(): Promise<void> {
+    const shown = this.items();
+    if (!this.total() || !shown.length) return;
+    const until = shown.reduce((latest, { updatedAt }) => (updatedAt > latest ? updatedAt : latest), shown[0].updatedAt);
+    const areas = (Object.keys(NO_UNREAD) as NotificationArea[]).filter((area) => !this.hidden().has(area));
+    const reads = (item: NotificationEntry) => areas.includes(item.area) && item.updatedAt <= until;
+    this.response.update(({ items, unread }) => ({
+      items: items.map((item) => (!item.read && reads(item) ? { ...item, read: true } : item)),
+      unread: { ...unread, ...Object.fromEntries(areas.map((area) => [area, 0])) },
+    }));
+    const body: MarkAllNotificationsReadRequest = { areas, until };
+    try {
+      await firstValueFrom(this.http.post<void>(`${this.url}/read-all`, body));
     } catch {
       await this.load();
     }

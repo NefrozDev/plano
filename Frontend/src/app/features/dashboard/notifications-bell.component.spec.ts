@@ -109,6 +109,61 @@ describe('NotificationsBellComponent', () => {
     expect(bell().querySelector('.badge')).toBeNull();
   });
 
+  describe('closed without opening one', () => {
+    const unread = [notification({ id: 'n-1' }), notification({ id: 'n-2', targetId: 'list-2' })];
+    const readAll = () => http.expectOne({ method: 'POST', url: '/api/v1/notifications/read-all' });
+
+    for (const [how, close] of [
+      ['by the bell', () => bell().click()],
+      ['by a click elsewhere', () => document.body.click()],
+      ['by Escape', () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))],
+    ] as const) {
+      it(`marks everything it showed read, ${how}`, async () => {
+        await receive(unread, { lists: 2 });
+        open();
+
+        close();
+        fixture.detectChanges();
+
+        const request = readAll();
+        expect(request.request.body).toEqual({ areas: ['friends', 'lists', 'objectives', 'agenda'], until: unread[0].updatedAt });
+        request.flush(null);
+        expect(element.querySelector('.panel')).toBeNull();
+        expect(bell().querySelector('.badge')).toBeNull();
+        expect(navigate).not.toHaveBeenCalled();
+      });
+    }
+
+    it('marks only the tapped one when one is opened', async () => {
+      await receive(unread, { lists: 2 });
+      open();
+
+      rows()[1].click();
+      fixture.detectChanges();
+      document.body.click();
+      fixture.detectChanges();
+
+      http.expectOne({ method: 'POST', url: '/api/v1/notifications/n-2/read' }).flush(null);
+      http.expectNone('/api/v1/notifications/read-all');
+      expect(bell().querySelector('.badge')?.textContent).toBe('1');
+    });
+
+    it('sends nothing when the bell was not open, or had nothing unread', async () => {
+      await receive(unread, { lists: 2 });
+      document.body.click();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      http.expectNone('/api/v1/notifications/read-all');
+
+      await receive([notification({ read: true })]);
+      open();
+      bell().click();
+      fixture.detectChanges();
+
+      http.expectNone('/api/v1/notifications/read-all');
+      expect(element.querySelector('.panel')).toBeNull();
+    });
+  });
+
   it('closes on a click elsewhere or Escape, not on a click inside', () => {
     open();
     (element.querySelector('.panel') as HTMLElement).click();

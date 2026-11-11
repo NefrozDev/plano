@@ -29,7 +29,8 @@ const MINUTE = 60_000;
 
 /**
  * The home page bell: every notification, newest first. Tapping one marks it
- * read and opens where it happened; the counts on the tabs follow.
+ * read and opens where it happened; closing it without tapping any marks all
+ * it showed read. The counts on the tabs follow.
  */
 @Component({
   selector: 'app-notifications-bell',
@@ -37,7 +38,7 @@ const MINUTE = 60_000;
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:click)': 'closeOutside($event)',
-    '(document:keydown.escape)': 'open.set(false)',
+    '(document:keydown.escape)': 'close()',
   },
   template: `
     <button
@@ -48,7 +49,7 @@ const MINUTE = 60_000;
       [attr.aria-label]="
         store.total() ? ('notifications.bell.withNews' | transloco: { count: store.total() }) : ('notifications.bell.label' | transloco)
       "
-      (click)="open.set(!open())"
+      (click)="open() ? close() : open.set(true)"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17h12l-1.5-2.5V10a4.5 4.5 0 0 0-9 0v4.5L6 17Z" /><path d="M10 20h4" /></svg>
       @if (store.total()) {
@@ -131,8 +132,15 @@ export class NotificationsBellComponent {
     void this.store.open(notification);
   }
 
+  /** Closed by the bell, Escape or a tap elsewhere: what it showed has been seen. */
+  close(): void {
+    if (!this.open()) return;
+    this.open.set(false);
+    void this.store.markAllRead();
+  }
+
   closeOutside(event: Event): void {
-    if (this.open() && !this.host.contains(event.target as Node)) this.open.set(false);
+    if (!this.host.contains(event.target as Node)) this.close();
   }
 
   private messageOf(notification: NotificationEntry): string {
