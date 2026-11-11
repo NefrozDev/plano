@@ -193,7 +193,9 @@ describe('NotificationsService', () => {
         (await bed.notifications.list(userId)).unread;
 
       it('reads what it showed in its areas, not what came in after, and tells the user’s other devices', async () => {
+        // Each at its own time: the bell sorts by date, then by (random) id.
         await bed.notifications.notify([bed.bob, bed.cyd], news('list-1'));
+        vi.setSystemTime(new Date('2026-11-11T09:00:10Z'));
         await bed.notifications.notify([bed.bob], {
           area: 'objectives',
           kind: 'objective.comment',
@@ -201,6 +203,7 @@ describe('NotificationsService', () => {
           title: 'Courir',
           actorId: bed.ada,
         });
+        vi.setSystemTime(new Date('2026-11-11T09:00:20Z'));
         await bed.notifications.notify([bed.bob], news('list-2'));
         const until = (await items(bed.bob))[0].updatedAt;
         // While the bell was open: list-2 got news again, list-3 is new.
