@@ -88,6 +88,7 @@ describe('Notifications (e2e)', () => {
         area: 'friends',
         kind: 'friend.requested',
         targetId: ada.user.id,
+        itemIds: [],
         title: '',
         actor: { id: ada.user.id, name: 'Ada Doe', avatarVersion: null },
         count: 1,

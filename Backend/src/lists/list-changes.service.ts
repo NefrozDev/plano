@@ -86,13 +86,18 @@ export class ListChangesService {
   }
 
   /** Everyone else on the list hears that items were added, once while unread. */
-  async entriesAdded(list: List, actorId: string): Promise<void> {
+  async entriesAdded(
+    list: List,
+    actorId: string,
+    entryId: string,
+  ): Promise<void> {
     try {
       await this.notifications.notify(await this.audience(list.id), {
         area: 'lists',
         kind: 'list.entries',
         targetId: list.id,
         title: list.name,
+        itemId: entryId,
         actorId,
       });
     } catch (error) {

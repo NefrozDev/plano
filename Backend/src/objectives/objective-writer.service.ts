@@ -60,7 +60,7 @@ export class ObjectiveWriterService {
     userId: string,
     permission: ObjectivePermission,
     operation: (access: ObjectiveAccess, manager: EntityManager) => Promise<T>,
-    options: { news?: ObjectiveNewsKind } = {},
+    options: { news?: ObjectiveNewsKind; itemId?: string } = {},
   ): Promise<T> {
     const { result, before, completed } = await this.inTransaction(
       async (manager) => {
@@ -84,6 +84,7 @@ export class ObjectiveWriterService {
       objectiveId,
       actorId: userId,
       news: options.news,
+      itemId: options.itemId,
       completed,
     });
     return result;

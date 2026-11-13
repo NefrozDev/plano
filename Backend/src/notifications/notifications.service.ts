@@ -23,12 +23,16 @@ export const NOTIFICATION_PAGE = 50;
 export const READ_RETENTION_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const TITLE_LENGTH = 120;
+/** A notification remembers this many of the latest items it is about. */
+export const NOTIFICATION_ITEM_LIMIT = 50;
 
 export interface NewNotification {
   area: NotificationArea;
   kind: NotificationKind;
   targetId: string;
   title?: string;
+  /** What inside the target is new: an added entry, a comment. */
+  itemId?: string;
   /** Who did it: they are never notified of their own action. */
   actorId: string | null;
 }
@@ -75,6 +79,7 @@ export class NotificationsService {
           });
           for (const notification of unread) {
             notification.count += 1;
+            notification.itemIds = withItem(notification.itemIds, news.itemId);
             notification.actorId = news.actorId;
             notification.title = title;
             notification.updatedAt = now;
@@ -89,6 +94,7 @@ export class NotificationsService {
               area: news.area,
               kind: news.kind,
               targetId: news.targetId,
+              itemIds: withItem([], news.itemId),
               title,
               actorId: news.actorId,
               count: 1,
@@ -229,6 +235,7 @@ function toEntry(notification: Notification): NotificationEntry {
     area: notification.area,
     kind: notification.kind,
     targetId: notification.targetId,
+    itemIds: notification.itemIds,
     title: notification.title,
     actor: notification.actor
       ? {
@@ -241,4 +248,10 @@ function toEntry(notification: Notification): NotificationEntry {
     updatedAt: notification.updatedAt.toISOString(),
     read: notification.readAt !== null,
   };
+}
+
+/** The latest items only: older ones are long scrolled past. */
+function withItem(itemIds: readonly string[], itemId?: string): string[] {
+  if (!itemId || itemIds.includes(itemId)) return [...itemIds];
+  return [...itemIds, itemId].slice(-NOTIFICATION_ITEM_LIMIT);
 }

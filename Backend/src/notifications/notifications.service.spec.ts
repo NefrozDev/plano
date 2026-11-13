@@ -10,6 +10,7 @@ import {
 } from '../objectives/testing/objectives-test-bed';
 import { Notification } from './notification.entity';
 import {
+  NOTIFICATION_ITEM_LIMIT,
   NOTIFICATION_PAGE,
   READ_RETENTION_DAYS,
 } from './notifications.service';
@@ -103,19 +104,73 @@ describe('NotificationsService', () => {
       ]);
     });
 
+    it('remembers the items each time points at, once each, oldest first', async () => {
+      await bed.notifications.notify([bed.bob], {
+        ...news('list-1'),
+        itemId: 'entry-1',
+      });
+      await bed.notifications.notify([bed.bob], {
+        ...news('list-1'),
+        itemId: 'entry-2',
+      });
+      await bed.notifications.notify([bed.bob], {
+        ...news('list-1'),
+        itemId: 'entry-1',
+      });
+      await bed.notifications.notify([bed.bob], news('list-2'));
+
+      expect(
+        (await items(bed.bob)).map(({ targetId, itemIds, count }) => ({
+          targetId,
+          itemIds,
+          count,
+        })),
+      ).toEqual([
+        { targetId: 'list-2', itemIds: [], count: 1 },
+        { targetId: 'list-1', itemIds: ['entry-1', 'entry-2'], count: 3 },
+      ]);
+    });
+
+    it(`keeps only the latest ${NOTIFICATION_ITEM_LIMIT} items`, async () => {
+      for (let index = 0; index <= NOTIFICATION_ITEM_LIMIT; index++) {
+        await bed.notifications.notify([bed.bob], {
+          ...news('list-1'),
+          itemId: `entry-${index}`,
+        });
+      }
+
+      const [notification] = await items(bed.bob);
+      expect(notification.count).toBe(NOTIFICATION_ITEM_LIMIT + 1);
+      expect(notification.itemIds).toHaveLength(NOTIFICATION_ITEM_LIMIT);
+      expect(notification.itemIds[0]).toBe('entry-1');
+      expect(notification.itemIds.at(-1)).toBe(
+        `entry-${NOTIFICATION_ITEM_LIMIT}`,
+      );
+    });
+
     it('starts a new one once the previous was read', async () => {
-      await bed.notifications.notify([bed.bob], news('list-1'));
+      await bed.notifications.notify([bed.bob], {
+        ...news('list-1'),
+        itemId: 'entry-1',
+      });
       await bed.notifications.markRead(bed.bob, {
         area: 'lists',
         targetId: 'list-1',
       });
-      await bed.notifications.notify([bed.bob], news('list-1'));
+      await bed.notifications.notify([bed.bob], {
+        ...news('list-1'),
+        itemId: 'entry-2',
+      });
 
       expect(
-        (await items(bed.bob)).map(({ read, count }) => ({ read, count })),
+        (await items(bed.bob)).map(({ read, count, itemIds }) => ({
+          read,
+          count,
+          itemIds,
+        })),
       ).toEqual([
-        { read: false, count: 1 },
-        { read: true, count: 1 },
+        { read: false, count: 1, itemIds: ['entry-2'] },
+        { read: true, count: 1, itemIds: ['entry-1'] },
       ]);
     });
 
@@ -358,10 +413,10 @@ describe('NotificationsService', () => {
         color: '#3264ed',
       });
 
-      await bed.content.addEntry(list.id, section.id, bed.bob, {
+      const milk = await bed.content.addEntry(list.id, section.id, bed.bob, {
         name: 'Lait',
       });
-      await bed.content.addEntry(list.id, section.id, bed.bob, {
+      const butter = await bed.content.addEntry(list.id, section.id, bed.bob, {
         name: 'Beurre',
       });
 
@@ -375,6 +430,8 @@ describe('NotificationsService', () => {
           read: false,
         },
       ]);
+      // So the list can point at them.
+      expect((await items(bed.ada))[0].itemIds).toEqual([milk.id, butter.id]);
       // The one who added them hears nothing new.
       expect((await items(bed.bob)).map(({ kind }) => kind)).toEqual([
         'list.invited',
@@ -450,6 +507,33 @@ describe('NotificationsService', () => {
           read: false,
         },
       ]);
+    });
+
+    it('points at the comment left, and at nothing for other news', async () => {
+      const objective = await create();
+      await share(objective.id, bed.bob, 'viewer');
+
+      const comment = await bed.activity.addComment(objective.id, bed.bob, {
+        body: 'Bravo',
+      });
+
+      expect(
+        (await items(bed.ada)).map(({ kind, targetId, itemIds }) => ({
+          kind,
+          targetId,
+          itemIds,
+        })),
+      ).toEqual([
+        {
+          kind: 'objective.comment',
+          targetId: objective.id,
+          itemIds: [comment.id],
+        },
+      ]);
+      expect((await items(bed.bob))[0]).toMatchObject({
+        kind: 'objective.invited',
+        itemIds: [],
+      });
     });
 
     it('leaks nothing above a shared branch: no notification about what the invitee cannot open', async () => {

@@ -150,7 +150,7 @@ export class ListContentService {
         return this.toResponse(manager, entry.id);
       },
     );
-    if (addedTo) await this.changes.entriesAdded(addedTo, userId);
+    if (addedTo) await this.changes.entriesAdded(addedTo, userId, entry.id);
     return entry;
   }
 

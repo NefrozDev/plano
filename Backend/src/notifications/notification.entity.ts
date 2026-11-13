@@ -39,6 +39,10 @@ export class Notification {
   @Column({ type: 'varchar', length: 36 })
   targetId!: string;
 
+  /** The entries or comments inside the target that are new, oldest first. */
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  itemIds!: string[];
+
   @Column({ type: 'varchar', length: 120, default: '' })
   title!: string;
 

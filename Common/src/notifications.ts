@@ -41,6 +41,12 @@ export interface NotificationEntry {
    * Only ever an id the user could open when it was sent.
    */
   targetId: string;
+  /**
+   * What inside the target is new, so the screen can point at it: the entries
+   * added to a list, the comments left on an objective. Empty when the target
+   * itself is the news. The latest 50 only.
+   */
+  itemIds: string[];
   /** The list or objective's name when it was sent; empty for friend news. */
   title: string;
   /** Null for an account since deleted. */

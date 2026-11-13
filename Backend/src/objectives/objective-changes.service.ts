@@ -17,6 +17,8 @@ export interface ObjectiveChange {
   actorId: string;
   /** What the others should hear about, beyond the screens reloading. */
   news?: ObjectiveNewsKind;
+  /** What inside the objective the news is about: a comment. */
+  itemId?: string;
   /** Objectives this change completed. */
   completed?: readonly Objective[];
 }
@@ -159,7 +161,7 @@ export class ObjectiveChangesService {
   }
 
   private async tellNews(
-    { objectiveId, actorId, news, completed = [] }: ObjectiveChange,
+    { objectiveId, actorId, news, itemId, completed = [] }: ObjectiveChange,
     after: ObjectiveTree,
   ): Promise<void> {
     const node = after.node(objectiveId);
@@ -167,7 +169,11 @@ export class ObjectiveChangesService {
     if (!completed.length && !(news && node)) return;
 
     const actor = await this.nameOf(actorId);
-    const tell = async (target: Objective, kind: ObjectiveNewsKind) => {
+    const tell = async (
+      target: Objective,
+      kind: ObjectiveNewsKind,
+      item?: string,
+    ) => {
       const people = [...peopleAround(after, target.id)].filter(
         (userId) => userId !== actorId && after.roleOf(target.id, userId),
       );
@@ -184,11 +190,12 @@ export class ObjectiveChangesService {
         kind: `objective.${kind}`,
         targetId: target.id,
         title: target.title,
+        itemId: item,
         actorId: actorId || null,
       });
     };
     // Completing it says more than contributing to it.
-    if (news && node && !completedHere) await tell(node, news);
+    if (news && node && !completedHere) await tell(node, news, itemId);
     for (const target of completed) await tell(target, 'completed');
   }
 

@@ -93,7 +93,7 @@ export class ObjectiveActivityService {
           body,
         });
       },
-      { news: 'comment' },
+      { news: 'comment', itemId: commentId },
     );
     return this.toComment(
       await this.dataSource.manager.findOneOrFail(ObjectiveComment, {
