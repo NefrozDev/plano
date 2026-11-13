@@ -11,6 +11,9 @@
           <p class="meta">
             <b>{{ comment.author?.name ?? ('objectives.deletedAccount' | transloco) }}</b>
             <small>{{ when(comment.createdAt) }}</small>
+            @if (news().has(comment.id)) {
+              <app-news-dot />
+            }
             @if (canRemove(comment)) {
               <button type="button" [attr.aria-label]="'objectives.activity.deleteComment' | transloco" (click)="remove(comment.id)">×</button>
             }

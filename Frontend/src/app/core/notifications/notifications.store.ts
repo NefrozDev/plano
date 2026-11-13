@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { DOCUMENT, DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { DOCUMENT, DestroyRef, Injectable, Signal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import type {
@@ -33,6 +33,23 @@ export function notificationLink(notification: NotificationEntry): { commands: s
 }
 
 /**
+ * What a notification points at inside the place it opens: the entries added,
+ * the comment left, the guest who answered, the person who asked to be a friend.
+ */
+export function notificationNewsIds(notification: NotificationEntry): readonly string[] {
+  switch (notification.kind) {
+    case 'friend.requested':
+    case 'friend.accepted':
+      return [notification.targetId];
+    case 'agenda.accepted':
+    case 'agenda.declined':
+      return notification.actor ? [notification.actor.id] : [];
+    default:
+      return notification.itemIds;
+  }
+}
+
+/**
  * The signed-in user's notifications, kept by the API: the home page bell lists
  * them, each tab counts its area's unread ones. Opening the place one is about
  * marks it read. Reloaded on every `notifications.changed` live event, and when
@@ -62,6 +79,11 @@ export class NotificationsStore {
     return counts;
   });
   readonly total = computed(() => Object.values(this.unread()).reduce((sum, count) => sum + count, 0));
+
+  /** Lists, objectives, events or people with unread news, for the screens that list them. */
+  readonly unreadTargets = computed((): ReadonlySet<string> => {
+    return new Set(this.items().filter(({ read }) => !read).map(({ targetId }) => targetId));
+  });
 
   /** Only a different account reloads: a profile or language change keeps what is shown. */
   private readonly userId = computed(() => this.auth.user()?.id ?? null);
@@ -98,6 +120,13 @@ export class NotificationsStore {
   hasUnread(area: NotificationArea, targetId?: string): boolean {
     if (!targetId) return this.response().unread[area] > 0;
     return this.response().items.some((item) => !item.read && item.area === area && item.targetId === targetId);
+  }
+
+  /** The unread notifications about this place (a whole area without `targetId`). */
+  unreadAbout(area: NotificationArea, targetId?: string): NotificationEntry[] {
+    return this.response().items.filter(
+      (item) => !item.read && item.area === area && (!targetId || item.targetId === targetId),
+    );
   }
 
   /** The user opened the place: what is about it is read, shown at once, saved behind. */
@@ -158,12 +187,30 @@ export class NotificationsStore {
  * Call from a screen's constructor: while it is open, what is about its place
  * is read, including what arrives meanwhile. `targetId` is the list or
  * objective shown; a whole area without it.
+ *
+ * Returns what those notifications pointed at (`notificationNewsIds`): the
+ * screen marks them as new until it closes or shows another place, although
+ * they were read as soon as it opened.
  */
-export function readNotificationsWhileOpen(area: NotificationArea, targetId?: () => string): void {
+export function readNotificationsWhileOpen(area: NotificationArea, targetId?: () => string): Signal<ReadonlySet<string>> {
   const store = inject(NotificationsStore);
+  const news = signal<ReadonlySet<string>>(new Set());
+  let shown: string | undefined;
   effect(() => {
     const id = targetId?.();
     if (targetId && !id) return;
-    if (store.hasUnread(area, id)) untracked(() => void store.markRead(area, id));
+    const unread = store.unreadAbout(area, id);
+    untracked(() => {
+      const fresh = unread.flatMap(notificationNewsIds);
+      if (id !== shown) {
+        shown = id;
+        news.set(new Set(fresh));
+      } else if (fresh.length) {
+        news.update((ids) => new Set([...ids, ...fresh]));
+      }
+      // The counts cover more than the loaded page: a whole area may be unread beyond it.
+      if (unread.length || store.hasUnread(area, id)) void store.markRead(area, id);
+    });
   });
+  return news.asReadonly();
 }

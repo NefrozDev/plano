@@ -80,6 +80,29 @@ describe('ListDetailComponent', () => {
     expect(notifications.unread().lists).toBe(1);
   });
 
+  it('marks the entries others added with the yellow dot, and keeps it once read', async () => {
+    await create();
+    const notifications = TestBed.inject(NotificationsStore);
+    const loading = notifications.load();
+    http.expectOne('/api/v1/notifications').flush({
+      items: [
+        notification({ id: 'here', targetId: 'list-1', itemIds: ['milk'] }),
+        // Another list's entries are not marked here.
+        notification({ id: 'there', targetId: 'list-2', itemIds: ['bread'] }),
+      ],
+      unread: { ...emptyNotifications().unread, lists: 2 },
+    });
+    await loading;
+    fixture.detectChanges();
+    http.expectOne({ method: 'POST', url: '/api/v1/notifications/read' }).flush(null);
+    await render();
+
+    const marked = [...element.querySelectorAll('app-list-entry-row')].filter((row) => row.querySelector('app-news-dot'));
+    expect(marked.map((row) => row.querySelector('.entry-name')?.textContent?.trim())).toEqual(['Lait']);
+    expect(marked[0].querySelector('app-news-dot [role="img"]')?.getAttribute('aria-label')).toBe('Nouveau');
+    expect(notifications.hasUnread('lists', 'list-1')).toBe(false);
+  });
+
   it('renders the list from the API with its progress', async () => {
     await create();
 

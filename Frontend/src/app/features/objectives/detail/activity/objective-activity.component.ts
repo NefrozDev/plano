@@ -9,12 +9,13 @@ import { activityLabel } from '../../objective.utils';
 import { ObjectivesApiService } from '../../objectives-api.service';
 import { ObjectivesStore } from '../../objectives.store';
 import { ObjectiveContext } from '../objective-context';
+import { NewsDotComponent } from '../../../../shared/ui/news-dot.component';
 
 
 /** What people say about an objective, and what happened on it. */
 @Component({
   selector: 'app-objective-activity',
-  imports: [TranslocoPipe],
+  imports: [NewsDotComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objective-activity.component.html',
   styleUrl: './objective-activity.component.scss',
@@ -23,7 +24,10 @@ export class ObjectiveActivityComponent {
   private readonly api = inject(ObjectivesApiService);
   private readonly store = inject(ObjectivesStore);
 
-  readonly objective = inject(ObjectiveContext).objective;
+  private readonly context = inject(ObjectiveContext);
+  readonly objective = this.context.objective;
+  /** Comments left since the user last looked, marked while the objective is open. */
+  readonly news = computed(() => this.context.news());
   readonly comments = signal<readonly ObjectiveCommentEntry[]>([]);
   readonly history = signal<readonly ObjectiveActivityEntry[]>([]);
   readonly error = signal('');

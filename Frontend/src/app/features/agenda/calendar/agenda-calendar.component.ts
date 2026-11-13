@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { NotificationsStore } from '../../../core/notifications/notifications.store';
+import { NewsDotComponent } from '../../../shared/ui/news-dot.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -37,6 +39,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
     AgendaDayViewComponent,
     AgendaWeekViewComponent,
     AgendaMonthViewComponent,
+    NewsDotComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-calendar.component.html',
@@ -46,6 +49,8 @@ export class AgendaCalendarComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly store = inject(AgendaStore);
+  /** Events with unread news: an invitation, a guest's answer. Read once the event is opened. */
+  readonly news = inject(NotificationsStore).unreadTargets;
 
   constructor() {
     // The routes load the events; notifications are read on the event they are about.

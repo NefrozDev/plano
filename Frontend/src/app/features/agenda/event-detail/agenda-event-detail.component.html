@@ -81,6 +81,9 @@
               <app-user-avatar [user]="entry.person" [size]="28" />
               <span>{{ entry.person.name }}</span>
               <small>{{ entry.status | transloco }}</small>
+              @if (news().has(entry.person.id)) {
+                <app-news-dot />
+              }
             </li>
           }
         </ul>

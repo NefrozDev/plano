@@ -22,6 +22,7 @@ import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { ObjectiveRemovalService } from '../objective-removal.service';
 import { ObjectiveCelebrationComponent } from './objective-celebration.component';
 import { ObjectiveContext } from './objective-context';
+import { NewsDotComponent } from '../../../shared/ui/news-dot.component';
 import { readNotificationsWhileOpen } from '../../../core/notifications/notifications.store';
 
 interface DetailTab {
@@ -34,6 +35,7 @@ interface DetailTab {
 @Component({
   selector: 'app-objective-detail-layout',
   imports: [
+    NewsDotComponent,
     TranslocoPipe,
     RouterOutlet,
     RouterLink,
@@ -56,6 +58,8 @@ export class ObjectiveDetailLayoutComponent {
   readonly store = inject(ObjectivesStore);
 
   readonly objective = this.context.objective;
+  /** Points at the activity tab when others commented since the user last looked. */
+  readonly hasNewComments = computed(() => this.context.news().size > 0);
   /** Opening is over: no objective from here on means it is not available. */
   readonly loaded = signal(false);
   readonly menuOpen = signal(false);
@@ -105,7 +109,7 @@ export class ObjectiveDetailLayoutComponent {
   }
 
   constructor() {
-    readNotificationsWhileOpen('objectives', this.context.id);
+    this.context.news = readNotificationsWhileOpen('objectives', this.context.id);
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const id = params.get('id') ?? '';
       this.context.id.set(id);

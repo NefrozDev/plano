@@ -128,6 +128,9 @@
       <span class="list-icon" aria-hidden="true">
         <app-list-icon [icon]="card.list.icon" />
       </span>
+      @if (news().has(card.list.id)) {
+        <app-news-dot class="card-news" />
+      }
       <span class="list-copy">
         <strong>{{ card.list.name }}</strong>
         <span class="list-sharing">

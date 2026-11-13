@@ -4,7 +4,9 @@ import type { ListMember } from '@plano/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LIST_ICON_SHAPES } from './ui/list-icons';
 import { Router } from '@angular/router';
-import { providePlanoTesting, settle } from '../../testing/plano-testing';
+import { emptyNotifications, providePlanoTesting, settle } from '../../testing/plano-testing';
+import { NotificationsStore } from '../../core/notifications/notifications.store';
+import { notification } from '../../testing/notifications-fixtures';
 import { ListsComponent, caption } from './lists.component';
 import { WHEEL_SWIPE_END_MS } from '../../shared/ui/swipe-to-delete';
 import { ListsStore } from './lists.store';
@@ -73,6 +75,31 @@ describe('ListsComponent', () => {
     // Notifications live in the home page bell and on the tabs, not here.
     expect(element.querySelector('.notifications-link')).toBeNull();
     expect(element.querySelector('[aria-label^="Notifications"]')).toBeNull();
+  });
+
+  it('puts the yellow dot on the lists with unread news, until they are read', async () => {
+    const notifications = TestBed.inject(NotificationsStore);
+    const loading = notifications.load();
+    http.expectOne('/api/v1/notifications').flush({
+      items: [
+        notification({ id: 'a', targetId: 'cadeaux', kind: 'list.invited', itemIds: [] }),
+        notification({ id: 'b', targetId: 'maison', read: true }),
+      ],
+      unread: { ...emptyNotifications().unread, lists: 1 },
+    });
+    await loading;
+    fixture.detectChanges();
+    const marked = () =>
+      [...element.querySelectorAll('.list-item')].filter((item) => item.querySelector('.list-card app-news-dot')).map((item) => item.getAttribute('data-list-id'));
+
+    expect(marked()).toEqual(['cadeaux']);
+    // In the card's name for screen readers.
+    expect(element.querySelector('[data-list-id="cadeaux"] .list-card [role="img"]')?.getAttribute('aria-label')).toBe('Nouveau');
+
+    void notifications.markRead('lists', 'cadeaux');
+    http.expectOne('/api/v1/notifications/read').flush(null);
+    fixture.detectChanges();
+    expect(marked()).toEqual([]);
   });
 
   it('names a few people a list is shared with, and counts the rest', () => {

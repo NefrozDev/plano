@@ -64,6 +64,7 @@
     "goalsHint": "Toon je doelen hier vanaf hun pagina."
   },
   "notifications": {
+    "newHere": "Nieuw",
     "friendRequested": "{{name}} heeft je een vriendschapsverzoek gestuurd.",
     "friendAccepted": "{{name}} heeft je vriendschapsverzoek geaccepteerd.",
     "objectiveInvited": "{{name}} heeft je uitgenodigd voor “{{title}}”.",

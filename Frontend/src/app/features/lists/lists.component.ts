@@ -16,6 +16,8 @@ import { LIST_COLOR_CHOICES } from './list-detail/list-options';
 import { ListIconComponent } from './ui/list-icon.component';
 import { SwipeToDelete } from '../../shared/ui/swipe-to-delete';
 import { ListsStore } from './lists.store';
+import { NotificationsStore } from '../../core/notifications/notifications.store';
+import { NewsDotComponent } from '../../shared/ui/news-dot.component';
 
 type ListFilter = 'all' | 'mine' | 'shared' | 'archived';
 type BooleanSetting = 'showCounts' | 'showCompleted' | 'completedLast' | 'archiveCompleted' | 'confirmDelete';
@@ -67,6 +69,7 @@ function sharingPeople(list: ListSummary): Person[] {
     AutofocusDirective,
     AvatarStackComponent,
     BottomNavComponent,
+    NewsDotComponent,
     SwitchRowComponent,
     ToastComponent,
   ],
@@ -81,6 +84,8 @@ function sharingPeople(list: ListSummary): Person[] {
 })
 export class ListsComponent {
   readonly listsStore = inject(ListsStore);
+  /** Lists with unread news (shared, items added): read once opened. */
+  readonly news = inject(NotificationsStore).unreadTargets;
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
   private readonly confirm = inject(ConfirmService);

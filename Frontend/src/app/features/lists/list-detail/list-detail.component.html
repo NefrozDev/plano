@@ -131,6 +131,7 @@
                 [sectionId]="view.section.id"
                 [readonly]="!canEdit()"
                 [dragging]="dragged()?.entryId === entry.id"
+                [isNew]="news().has(entry.id)"
                 (toggled)="toggleEntry(view.section.id, entry)"
                 (open)="openEntry(view.section.id, entry.id)"
                 (remove)="requestDeleteEntry(entry)"

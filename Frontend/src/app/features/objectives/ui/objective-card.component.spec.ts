@@ -1,4 +1,6 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NotificationsStore } from '../../../core/notifications/notifications.store';
 import { provideRouter } from '@angular/router';
 import { objectiveSummary } from '../testing/objectives-fixtures';
 import { ObjectiveCardComponent, ObjectiveCardView } from './objective-card.component';
@@ -7,6 +9,7 @@ describe('ObjectiveCardComponent', () => {
   let fixture: ComponentFixture<ObjectiveCardComponent>;
   let element: HTMLElement;
   const withBar = objectiveSummary({ percent: 38 });
+  const unreadTargets = signal<ReadonlySet<string>>(new Set());
 
   function render(card: Partial<ObjectiveCardView>, tile: boolean): void {
     fixture.componentRef.setInput('card', {
@@ -24,15 +27,30 @@ describe('ObjectiveCardComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [ObjectiveCardComponent],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: NotificationsStore, useValue: { unreadTargets } }],
     });
     fixture = TestBed.createComponent(ObjectiveCardComponent);
     element = fixture.nativeElement as HTMLElement;
+    unreadTargets.set(new Set());
   });
 
   it('links to the objective', () => {
     render({}, false);
     expect(element.querySelector('a')?.getAttribute('href')).toBe('/objectives/obj-1');
+  });
+
+  it('carries the yellow dot while news about this objective is unread, in its link', () => {
+    render({}, false);
+    expect(element.querySelector('app-news-dot')).toBeNull();
+
+    unreadTargets.set(new Set(['obj-2', 'obj-1']));
+    fixture.detectChanges();
+    expect(element.querySelector('a app-news-dot [role="img"]')?.getAttribute('aria-label')).toBe('Nouveau');
+
+    // News about another objective only.
+    unreadTargets.set(new Set(['obj-2']));
+    fixture.detectChanges();
+    expect(element.querySelector('app-news-dot')).toBeNull();
   });
 
   it('keeps the thin bar and the trailing value in list mode', () => {

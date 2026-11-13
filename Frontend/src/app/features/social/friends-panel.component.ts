@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, Signal, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import type { Friend, FriendRequests, PublicUser, UserSearchResult } from '@plano/common';
@@ -7,6 +7,7 @@ import { FriendNotificationsService } from '../../core/friends/friend-notificati
 import { readNotificationsWhileOpen } from '../../core/notifications/notifications.store';
 import { FriendsService, MIN_SEARCH_LENGTH } from '../../core/friends/friends.service';
 import { ConfirmService } from '../../shared/ui/confirm.service';
+import { NewsDotComponent } from '../../shared/ui/news-dot.component';
 import { SearchFieldComponent } from '../../shared/ui/search-field.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
 
@@ -16,7 +17,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 /** Friends section of the Social tab: requests, username search and the friends list. */
 @Component({
   selector: 'app-friends-panel',
-  imports: [SearchFieldComponent, TranslocoPipe, UserAvatarComponent],
+  imports: [NewsDotComponent, SearchFieldComponent, TranslocoPipe, UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './friends-panel.component.html',
   styleUrl: './friends-panel.component.scss',
@@ -37,11 +38,13 @@ export class FriendsPanelComponent implements OnInit {
   readonly busy = signal('');
   /** Translation key of the last error, empty when none. */
   readonly error = signal('');
+  /** People whose request or acceptance the user had not seen yet, marked while the panel is open. */
+  readonly news: Signal<ReadonlySet<string>>;
 
   constructor() {
     // Someone answered or asked while the panel is open: show it. Its notifications are read here.
     this.notifications.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => void this.reload());
-    readNotificationsWhileOpen('friends');
+    this.news = readNotificationsWhileOpen('friends');
     toObservable(this.query)
       .pipe(
         map((query) => query.trim()),

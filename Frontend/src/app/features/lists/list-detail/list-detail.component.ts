@@ -1,5 +1,5 @@
 
-import { ChangeDetectionStrategy, Component, computed, inject, signal, DOCUMENT } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Signal, computed, inject, signal, DOCUMENT } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListEntry, ListSection, UpdateEntryRequest } from '@plano/common';
@@ -72,6 +72,8 @@ export class ListDetailComponent {
   private readonly confirm = inject(ConfirmService);
   readonly store = inject(ListsStore);
   private readonly listId: string;
+  /** Entries others added since the user last looked, marked until they leave. */
+  readonly news: Signal<ReadonlySet<string>>;
 
   /** The open list, once loaded (never a previously opened one). */
   readonly list = computed(() => {
@@ -141,7 +143,7 @@ export class ListDetailComponent {
   constructor() {
     const route = inject(ActivatedRoute).snapshot;
     this.listId = route.paramMap.get('listId') ?? '';
-    readNotificationsWhileOpen('lists', () => this.listId);
+    this.news = readNotificationsWhileOpen('lists', () => this.listId);
     const openEditor = route.queryParamMap.has('edit');
     void this.store.open(this.listId).then((found) => {
       this.notFound.set(!found);

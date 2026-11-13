@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ObjectiveSummary } from '@plano/common';
 import type { TimelapseView } from '../objective.utils';
+import { NotificationsStore } from '../../../core/notifications/notifications.store';
+import { NewsDotComponent } from '../../../shared/ui/news-dot.component';
 import { ObjectiveIconComponent } from './objective-icon.component';
 import { TimelapseBarComponent } from './timelapse-bar.component';
 
@@ -19,7 +21,7 @@ export interface ObjectiveCardView {
 
 @Component({
   selector: 'app-objective-card',
-  imports: [RouterLink, TranslocoPipe, ObjectiveIconComponent, TimelapseBarComponent],
+  imports: [RouterLink, TranslocoPipe, NewsDotComponent, ObjectiveIconComponent, TimelapseBarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.tile]': 'tile()' },
   template: `
@@ -29,6 +31,9 @@ export interface ObjectiveCardView {
       [routerLink]="['/objectives', card().objective.id]"
       [style.--tint]="card().tint"
     >
+      @if (isNew()) {
+        <app-news-dot class="card-news" />
+      }
       <app-objective-icon
         [category]="card().objective.category"
         [color]="card().tint"
@@ -71,7 +76,8 @@ export interface ObjectiveCardView {
   `,
   styles: `
     :host { display: block; min-width: 0; }
-    .card { --fill: var(--tint); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .8rem; align-items: center; padding: .85rem .9rem; border: 1px solid #edf0f5; border-radius: .9rem; background: white; box-shadow: 0 .2rem .6rem rgb(31 41 55 / 6%); color: var(--color-text); text-decoration: none; }
+    .card-news { position: absolute; top: .45rem; right: .5rem; }
+    .card { --fill: var(--tint); position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .8rem; align-items: center; padding: .85rem .9rem; border: 1px solid #edf0f5; border-radius: .9rem; background: white; box-shadow: 0 .2rem .6rem rgb(31 41 55 / 6%); color: var(--color-text); text-decoration: none; }
     .card.completed { --fill: #22a95a; border-color: #d5f3e1; background: #f3fcf6; }
     .copy { display: grid; gap: .3rem; min-width: 0; }
     strong { overflow: hidden; font-size: .88rem; text-overflow: ellipsis; white-space: nowrap; }
@@ -104,4 +110,7 @@ export interface ObjectiveCardView {
 export class ObjectiveCardComponent {
   readonly card = input.required<ObjectiveCardView>();
   readonly tile = input(false);
+  private readonly news = inject(NotificationsStore).unreadTargets;
+  /** Unread news about this objective itself: a contribution, a completion, an invitation, a comment. */
+  readonly isNew = computed(() => this.news().has(this.card().objective.id));
 }

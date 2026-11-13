@@ -64,6 +64,7 @@
     "goalsHint": "Affichez vos objectifs ici depuis leur page."
   },
   "notifications": {
+    "newHere": "Nouveau",
     "friendRequested": "{{name}} vous a envoyé une demande d’ami.",
     "friendAccepted": "{{name}} a accepté votre demande d’ami.",
     "objectiveInvited": "{{name}} vous a invité(e) à « {{title}} ».",

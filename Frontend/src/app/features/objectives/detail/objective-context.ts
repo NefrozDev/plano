@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { ObjectivesStore } from '../objectives.store';
 
 /**
@@ -10,6 +10,8 @@ export class ObjectiveContext {
   private readonly store = inject(ObjectivesStore);
 
   readonly id = signal('');
+  /** The comments others left since the user last looked, set by the layout (`readNotificationsWhileOpen`). */
+  news: Signal<ReadonlySet<string>> = signal(new Set<string>());
   /** The open objective, once the store holds this one. */
   readonly objective = computed(() => {
     const detail = this.store.detail();

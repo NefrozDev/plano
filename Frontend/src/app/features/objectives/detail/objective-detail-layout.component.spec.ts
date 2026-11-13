@@ -98,6 +98,27 @@ describe('ObjectiveDetailLayoutComponent', () => {
     expect(TestBed.inject(NotificationsStore).hasUnread('objectives', 'obj-2')).toBe(true);
   });
 
+  it('puts the yellow dot on the activity tab while new comments are shown, and only then', async () => {
+    await visit('/objectives/obj-1');
+    http.expectOne('/api/v1/notifications').flush({
+      items: [
+        notification({ id: 'comment', area: 'objectives', kind: 'objective.comment', targetId: 'obj-1', itemIds: ['c-1'] }),
+        notification({ id: 'done', area: 'objectives', kind: 'objective.completed', targetId: 'obj-1', itemIds: [] }),
+      ],
+      unread: { ...emptyNotifications().unread, objectives: 2 },
+    });
+    await settleObjectives();
+    harness.detectChanges();
+    http.expectOne({ method: 'POST', url: '/api/v1/notifications/read' }).flush(null);
+    await settleObjectives();
+    harness.detectChanges();
+
+    const marked = Array.from(element().querySelectorAll('.tabs a'))
+      .filter((tab) => tab.querySelector('app-news-dot'))
+      .map((tab) => tab.textContent?.trim());
+    expect(marked).toEqual(['Activité']);
+  });
+
   it('shows the header title on other tabs and adapts tabs to the completion mode', async () => {
     await visit('/objectives/obj-1/stats');
     expect(element().querySelector('h1')?.classList).not.toContain('visually-hidden');

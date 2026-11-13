@@ -1,5 +1,5 @@
 import { HttpTestingController } from '@angular/common/http/testing';
-import { Component, signal } from '@angular/core';
+import { Component, Signal, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import type { NotificationEntry, NotificationsResponse } from '@plano/common';
@@ -9,7 +9,7 @@ import { FakeEventSource } from '../../testing/fake-event-source';
 import { emptyNotifications, providePlanoTesting, settle } from '../../testing/plano-testing';
 import { AuthUser } from '../auth/auth.models';
 import { AuthService } from '../auth/auth.service';
-import { NotificationsStore, notificationLink, readNotificationsWhileOpen } from './notifications.store';
+import { NotificationsStore, notificationLink, notificationNewsIds, readNotificationsWhileOpen } from './notifications.store';
 
 const user: AuthUser = {
   id: 'user-1',
@@ -264,14 +264,103 @@ describe('NotificationsStore', () => {
     expect(notificationLink(notification({ area: 'agenda', targetId: 'e' }))).toEqual({ commands: ['/agenda/events', 'e'] });
   });
 
+  it('points at the item inside the place: what was added, the person, the guest who answered', () => {
+    expect(notificationNewsIds(notification({ kind: 'list.entries', itemIds: ['e-1', 'e-2'] }))).toEqual(['e-1', 'e-2']);
+    expect(notificationNewsIds(notification({ area: 'objectives', kind: 'objective.comment', itemIds: ['c-1'] }))).toEqual(['c-1']);
+    expect(notificationNewsIds(notification({ area: 'friends', kind: 'friend.requested', targetId: 'user-2', itemIds: [] }))).toEqual(['user-2']);
+    expect(notificationNewsIds(notification({ area: 'friends', kind: 'friend.accepted', targetId: 'user-2', itemIds: [] }))).toEqual(['user-2']);
+    expect(notificationNewsIds(notification({ area: 'agenda', kind: 'agenda.declined', targetId: 'event-1', itemIds: [] }))).toEqual(['user-2']);
+    // A deleted guest cannot be pointed at.
+    expect(notificationNewsIds(notification({ area: 'agenda', kind: 'agenda.accepted', actor: null, itemIds: [] }))).toEqual([]);
+    // The invitation is about the event itself, which the screens mark as a whole.
+    expect(notificationNewsIds(notification({ area: 'agenda', kind: 'agenda.invited', itemIds: [] }))).toEqual([]);
+  });
+
+  it('names the places with unread news, so lists of them can mark each', async () => {
+    await signIn(
+      response(
+        [
+          notification({ id: 'a', targetId: 'list-1' }),
+          notification({ id: 'b', targetId: 'list-2', read: true }),
+          notification({ id: 'c', area: 'agenda', kind: 'agenda.invited', targetId: 'event-1' }),
+        ],
+        { lists: 1, agenda: 1 },
+      ),
+    );
+
+    expect([...store.unreadTargets()]).toEqual(['list-1', 'event-1']);
+
+    void store.markRead('lists', 'list-1');
+    expect([...store.unreadTargets()]).toEqual(['event-1']);
+    http.expectOne('/api/v1/notifications/read').flush(null);
+  });
+
   describe('while a screen is open', () => {
     @Component({ template: '' })
     class ListScreen {
       readonly listId = signal('');
+      readonly news: Signal<ReadonlySet<string>>;
       constructor() {
-        readNotificationsWhileOpen('lists', this.listId);
+        this.news = readNotificationsWhileOpen('lists', this.listId);
       }
     }
+
+    it('keeps pointing at what was new after reading it, adds what arrives, and starts over on another place', async () => {
+      const stream = await signIn(
+        response(
+          [
+            notification({ id: 'a', targetId: 'list-1', itemIds: ['e-1', 'e-2'] }),
+            notification({ id: 'b', targetId: 'list-2', itemIds: ['e-9'] }),
+          ],
+          { lists: 2 },
+        ),
+      );
+      const screen = TestBed.createComponent(ListScreen);
+      const news = () => [...screen.componentInstance.news()];
+      screen.detectChanges();
+      expect(news()).toEqual([]);
+
+      screen.componentInstance.listId.set('list-1');
+      screen.detectChanges();
+      http.expectOne('/api/v1/notifications/read').flush(null);
+      await settle();
+      screen.detectChanges();
+      // Read on the server and in the counts, still marked on the screen.
+      expect(store.hasUnread('lists', 'list-1')).toBe(false);
+      expect(news()).toEqual(['e-1', 'e-2']);
+
+      stream.emit({ type: 'notifications.changed' });
+      http.expectOne('/api/v1/notifications').flush(
+        response(
+          [
+            notification({ id: 'c', targetId: 'list-1', itemIds: ['e-3'] }),
+            notification({ id: 'a', targetId: 'list-1', itemIds: ['e-1', 'e-2'], read: true }),
+            notification({ id: 'b', targetId: 'list-2', itemIds: ['e-9'] }),
+          ],
+          { lists: 2 },
+        ),
+      );
+      await settle();
+      screen.detectChanges();
+      http.expectOne('/api/v1/notifications/read').flush(null);
+      expect(news()).toEqual(['e-1', 'e-2', 'e-3']);
+
+      // Another list of the same screen: only its own news, none of the previous one.
+      screen.componentInstance.listId.set('list-2');
+      screen.detectChanges();
+      expect(http.expectOne('/api/v1/notifications/read').request.body).toEqual({ area: 'lists', targetId: 'list-2' });
+      expect(news()).toEqual(['e-9']);
+    });
+
+    it('points at nothing when nothing was unread there, and reads nothing', async () => {
+      await signIn(response([notification({ id: 'a', targetId: 'list-1', read: true })]));
+      const screen = TestBed.createComponent(ListScreen);
+      screen.componentInstance.listId.set('list-1');
+      screen.detectChanges();
+
+      expect([...screen.componentInstance.news()]).toEqual([]);
+      http.expectNone('/api/v1/notifications/read');
+    });
 
     it('reads what is about its place, and what arrives meanwhile, never another place', async () => {
       const stream = await signIn(response([notification({ id: 'a', targetId: 'list-1' })], { lists: 1 }));

@@ -1,4 +1,5 @@
 import { HttpTestingController } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { ObjectiveActivityEntry, ObjectiveCommentEntry, ObjectiveDetail } from '@plano/common';
 import {
@@ -9,6 +10,7 @@ import {
   settleObjectives,
 } from '../../objectives.testing';
 import { ME, OTHER, objectiveDetail } from '../../testing/objectives-fixtures';
+import { ObjectiveContext } from '../objective-context';
 import { ObjectiveActivityComponent } from './objective-activity.component';
 
 const comment = (changes: Partial<ObjectiveCommentEntry> = {}): ObjectiveCommentEntry => ({
@@ -71,6 +73,19 @@ describe('ObjectiveActivityComponent', () => {
   });
 
   afterEach(() => http.verify());
+
+  it('puts the yellow dot on the comments others left since the user last looked', async () => {
+    TestBed.inject(ObjectiveContext).news = signal(new Set(['c2']));
+    await setUp([
+      comment(),
+      comment({ id: 'c2', body: 'Bravo', author: { id: OTHER, name: 'Bob Martin', avatarVersion: null } }),
+    ]);
+
+    const marked = Array.from(element.querySelectorAll('.comments li'))
+      .filter((item) => item.querySelector('.meta app-news-dot'))
+      .map((item) => item.querySelector('.body')?.textContent);
+    expect(marked).toEqual(['Bravo']);
+  });
 
   it('says when there is nothing yet', async () => {
     await setUp();

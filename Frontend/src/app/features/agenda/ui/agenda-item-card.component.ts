@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { AgendaContact } from '@plano/common';
+import { NotificationsStore } from '../../../core/notifications/notifications.store';
 import { AvatarStackComponent } from '../../../shared/ui/avatar-stack.component';
+import { NewsDotComponent } from '../../../shared/ui/news-dot.component';
 import { AgendaStore } from '../agenda.store';
 import { AgendaItem, timeRangeLabel } from '../agenda.utils';
 
@@ -11,7 +13,7 @@ const MAX_AVATARS = 2;
 /** One agenda entry (event occurrence or dated task) as a tinted, clickable card. */
 @Component({
   selector: 'app-agenda-item-card',
-  imports: [RouterLink, TranslocoPipe, AvatarStackComponent],
+  imports: [RouterLink, TranslocoPipe, AvatarStackComponent, NewsDotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a
@@ -31,6 +33,9 @@ const MAX_AVATARS = 2;
         </strong>
         <small>{{ caption() }}</small>
       </span>
+      @if (isNew()) {
+        <app-news-dot />
+      }
       <app-avatar-stack [people]="people()" [max]="maxAvatars" [label]="'agenda.with' | transloco: { names: peopleNames() }" />
     </a>
   `,
@@ -52,6 +57,12 @@ export class AgendaItemCardComponent {
 
   readonly item = input.required<AgendaItem>();
   readonly maxAvatars = MAX_AVATARS;
+  private readonly news = inject(NotificationsStore).unreadTargets;
+  /** An invitation or answer about this event is unread. */
+  readonly isNew = computed(() => {
+    const eventId = this.item().eventId;
+    return !!eventId && this.news().has(eventId);
+  });
   readonly people = computed(() =>
     this.item()
       .participantIds.map((id) => this.store.contact(id))

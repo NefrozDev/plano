@@ -5,7 +5,8 @@ import type { Friend, FriendRequests, NotificationsResponse, PublicUser, UserSea
 import { FriendNotificationsService } from '../../core/friends/friend-notifications.service';
 import { NotificationsStore } from '../../core/notifications/notifications.store';
 import { ConfirmService } from '../../shared/ui/confirm.service';
-import { providePlanoTesting, settle } from '../../testing/plano-testing';
+import { emptyNotifications, providePlanoTesting, settle } from '../../testing/plano-testing';
+import { notification } from '../../testing/notifications-fixtures';
 import { FriendsPanelComponent } from './friends-panel.component';
 
 const person = (id: string, firstName: string): PublicUser => ({
@@ -105,6 +106,29 @@ describe('FriendsPanelComponent', () => {
       await again;
       fixture.detectChanges();
       http.expectOne({ method: 'POST', url: '/api/v1/notifications/read' }).flush(null);
+      expect(store.unread().friends).toBe(0);
+    });
+
+    it('puts the yellow dot on who asked or accepted, and keeps it once read', async () => {
+      const store = TestBed.inject(NotificationsStore);
+      const loading = store.load();
+      http.expectOne('/api/v1/notifications').flush({
+        items: [
+          notification({ id: 'a', area: 'friends', kind: 'friend.requested', targetId: cyd.id, itemIds: [], title: '' }),
+          notification({ id: 'b', area: 'friends', kind: 'friend.accepted', targetId: bob.id, itemIds: [], title: '' }),
+        ],
+        unread: { ...emptyNotifications().unread, friends: 2 },
+      });
+      await loading;
+      fixture.detectChanges();
+      http.expectOne({ method: 'POST', url: '/api/v1/notifications/read' }).flush(null);
+      await render();
+
+      const marked = Array.from(element.querySelectorAll('.person'))
+        .filter((row) => row.querySelector('.face app-news-dot'))
+        .map((row) => row.querySelector('.identity strong')?.textContent);
+      // Dan's request was sent by the user: nothing new about him.
+      expect(marked).toEqual(['Cyd Test', 'Bob Test']);
       expect(store.unread().friends).toBe(0);
     });
 

@@ -13,6 +13,7 @@ import {
   provideSignedIn,
   settleObjectives,
 } from '../../objectives.testing';
+import { emptyNotifications } from '../../../../testing/plano-testing';
 import {
   habitDetail,
   metricDetail,
@@ -60,7 +61,11 @@ describe('ObjectiveSummaryComponent', () => {
     fixture.detectChanges();
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // Signed in, the sub-objective cards' notifications load: not what these specs are about.
+    for (const request of http.match('/api/v1/notifications')) request.flush(emptyNotifications());
+    http.verify();
+  });
 
   it('renders nothing until the objective is there', () => {
     expect(element.querySelector('.hero')).toBeNull();

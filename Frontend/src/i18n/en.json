@@ -64,6 +64,7 @@
     "goalsHint": "Show your goals here from their page."
   },
   "notifications": {
+    "newHere": "New",
     "friendRequested": "{{name}} sent you a friend request.",
     "friendAccepted": "{{name}} accepted your friend request.",
     "objectiveInvited": "{{name}} invited you to “{{title}}”.",

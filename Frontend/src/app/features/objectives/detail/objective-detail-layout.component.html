@@ -58,7 +58,12 @@
           routerLinkActive="active"
           ariaCurrentWhenActive="page"
           [routerLinkActiveOptions]="{ exact: true }"
-        >{{ tab.label | transloco }}</a>
+        >
+          {{ tab.label | transloco }}
+          @if (tab.path === 'activity' && hasNewComments()) {
+            <app-news-dot />
+          }
+        </a>
       }
     </nav>
   }

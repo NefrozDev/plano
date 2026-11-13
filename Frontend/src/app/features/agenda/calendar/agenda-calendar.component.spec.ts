@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { flushListReminders, loadAgendaEvents, providePlanoTesting } from '../../../testing/plano-testing';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { NotificationsStore } from '../../../core/notifications/notifications.store';
+import { notification } from '../../../testing/notifications-fixtures';
+import { emptyNotifications, flushListReminders, loadAgendaEvents, providePlanoTesting } from '../../../testing/plano-testing';
 import { AGENDA_ROUTES } from '../agenda.routes';
 import { AgendaStore } from '../agenda.store';
 import { AgendaCalendarComponent } from './agenda-calendar.component';
@@ -78,6 +81,33 @@ describe('AgendaCalendarComponent', () => {
     // The agenda tab draws a calendar icon instead of a text glyph.
     expect(element().querySelector('app-bottom-nav .active svg path')?.getAttribute('d')).toContain('M4 10h16');
     expect(element().querySelector('app-bottom-nav .active span')).toBeNull();
+  });
+
+  it('puts the yellow dot on the events with unread news, not on the others', async () => {
+    await harness.navigateByUrl('/agenda');
+    flushListReminders();
+    await settle();
+    // Once the app has started: signed out, the store first clears what it holds.
+    const notifications = TestBed.inject(NotificationsStore);
+    const loading = notifications.load();
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/v1/notifications')
+      .flush({
+        items: [
+          notification({ area: 'agenda', kind: 'agenda.declined', targetId: 'sport', itemIds: [] }),
+          notification({ id: 'n-2', area: 'agenda', kind: 'agenda.accepted', targetId: 'rendez-vous-projet', itemIds: [], read: true }),
+        ],
+        unread: { ...emptyNotifications().unread, agenda: 1 },
+      });
+    await loading;
+    await settle();
+
+    const marked = Array.from(element().querySelectorAll('app-agenda-item-card'))
+      .filter((card) => card.querySelector('app-news-dot'))
+      .map((card) => card.querySelector('strong')?.textContent?.trim());
+    expect(marked).toEqual(['Sport']);
+    // Inside the card's link, so screen readers hear it with the event.
+    expect(element().querySelector('app-agenda-item-card a app-news-dot [role="img"]')?.getAttribute('aria-label')).toBe('Nouveau');
   });
 
   it('moves between days and back to today, keeping it in the URL', async () => {

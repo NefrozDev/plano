@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListEntry } from '@plano/common';
+import { NewsDotComponent } from '../../../shared/ui/news-dot.component';
 import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
 
 /**
@@ -9,7 +10,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
  */
 @Component({
   selector: 'app-list-entry-row',
-  imports: [TranslocoPipe],
+  imports: [NewsDotComponent, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="entry-shell" [class.revealed]="offset() < 0">
@@ -49,7 +50,12 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
           (click)="$event.stopPropagation(); toggled.emit()"
         ><i aria-hidden="true"></i></button>
         <!-- Its click bubbles to the row, which opens the entry (or swallows it after a swipe). -->
-        <button class="entry-name" type="button">{{ entry().name }}</button>
+        <button class="entry-name" type="button">
+          {{ entry().name }}
+          @if (isNew()) {
+            <app-news-dot />
+          }
+        </button>
         @if (!readonly()) {
           <button
             class="drag-handle"
@@ -77,6 +83,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
     .entry.done .entry-toggle i { border-color: #3264ed; background: #3264ed; }
     .entry.done .entry-toggle i::after { width: .55rem; height: .3rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.1rem) rotate(-45deg); }
     .entry.highlighted .entry-toggle i { border-color: #ff9d72; }
+    .entry-name app-news-dot { margin-left: .35rem; }
     .entry-name { min-height: 2.6rem; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 550; text-align: left; }
     .entry.done .entry-name { color: #737b89; text-decoration: line-through; }
   `,
@@ -85,6 +92,8 @@ export class ListEntryRowComponent {
   readonly entry = input.required<ListEntry>();
   readonly sectionId = input.required<string>();
   readonly dragging = input(false);
+  /** Someone else added it since the user last looked: a notification points at it. */
+  readonly isNew = input(false);
   /** Viewers can open the entry but not change, delete or move it. */
   readonly readonly = input(false);
 

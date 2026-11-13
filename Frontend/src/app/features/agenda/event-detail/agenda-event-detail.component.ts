@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Signal, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -8,6 +8,7 @@ import { readNotificationsWhileOpen } from '../../../core/notifications/notifica
 import { toPerson } from '../../../core/people/people';
 import { formatLongDay, parseIsoDate } from '../../../core/time/dates';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog.component';
+import { NewsDotComponent } from '../../../shared/ui/news-dot.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
 import { AgendaStore } from '../agenda.store';
@@ -40,12 +41,15 @@ const STATUS_LABELS: Readonly<Record<AgendaAttendeeStatus, string>> = {
     ModalDialogComponent,
     UserAvatarComponent,
     AgendaParticipantsPickerComponent,
+    NewsDotComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agenda-event-detail.component.html',
   styleUrl: './agenda-event-detail.component.scss',
 })
 export class AgendaEventDetailComponent {
+  /** Guests whose answer the organiser had not seen yet, marked while the event is open. */
+  readonly news: Signal<ReadonlySet<string>>;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly store = inject(AgendaStore);
@@ -111,7 +115,7 @@ export class AgendaEventDetailComponent {
 
   constructor() {
     this.store.error.set('');
-    readNotificationsWhileOpen('agenda', () => (this.event() ? this.id() : ''));
+    this.news = readNotificationsWhileOpen('agenda', () => (this.event() ? this.id() : ''));
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const id = params.get('id') ?? '';
       this.searched.set(false);

@@ -158,13 +158,44 @@ const objectives = [
   objectiveSummary({ id: 'obj-2', title: 'Méditer chaque jour' }),
 ];
 
+/** One unread news per area, each pointing at something shown, so every screen draws its yellow dot. */
 const notifications = (empty: boolean): NotificationsResponse => ({
-  items: empty ? [] : [notification()],
+  items: empty
+    ? []
+    : [
+        notification({ itemIds: ['milk'] }),
+        notification({
+          id: 'n-friend',
+          area: 'friends',
+          kind: 'friend.requested',
+          targetId: 'user-eve',
+          itemIds: [],
+          title: '',
+          actor: { id: 'user-eve', name: 'Eve Durand', avatarVersion: null },
+        }),
+        notification({
+          id: 'n-objective',
+          area: 'objectives',
+          kind: 'objective.comment',
+          targetId: 'obj-1',
+          itemIds: [],
+          title: 'Courir',
+        }),
+        notification({
+          id: 'n-agenda',
+          area: 'agenda',
+          kind: 'agenda.accepted',
+          targetId: 'rendez-vous-projet',
+          itemIds: [],
+          title: 'Rendez-vous projet',
+          actor: { id: 'camille', name: 'Camille', avatarVersion: null },
+        }),
+      ],
   unread: {
     friends: empty ? 0 : 1,
     lists: empty ? 0 : 1,
-    objectives: 0,
-    agenda: 0,
+    objectives: empty ? 0 : 1,
+    agenda: empty ? 0 : 1,
   },
 });
 

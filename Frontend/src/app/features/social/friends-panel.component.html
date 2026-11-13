@@ -9,7 +9,12 @@
   <ul class="people">
     @for (request of requests().incoming; track request.id) {
       <li class="person">
-        <app-user-avatar [user]="request.user" [size]="36" />
+        <span class="face">
+          <app-user-avatar [user]="request.user" [size]="36" />
+          @if (news().has(request.user.id)) {
+            <app-news-dot />
+          }
+        </span>
         <span class="identity"><strong>{{ name(request.user) }}</strong><small>{{ '@' + request.user.username }}</small></span>
         <span class="actions">
           <button class="action primary" type="button" [disabled]="!!busy()" (click)="accept(request.user)">
@@ -84,7 +89,12 @@
 <ul class="people">
   @for (friend of friends(); track friend.id) {
     <li class="person">
-      <app-user-avatar [user]="friend" [size]="36" />
+      <span class="face">
+        <app-user-avatar [user]="friend" [size]="36" />
+        @if (news().has(friend.id)) {
+          <app-news-dot />
+        }
+      </span>
       <span class="identity"><strong>{{ name(friend) }}</strong><small>{{ '@' + friend.username }}</small></span>
       <span class="actions">
         <button class="action danger" type="button" [disabled]="!!busy()" (click)="remove(friend)">

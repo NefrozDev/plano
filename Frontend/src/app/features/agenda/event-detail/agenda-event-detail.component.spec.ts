@@ -5,7 +5,8 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import type { AgendaEventView } from '@plano/common';
 import { NotificationsStore } from '../../../core/notifications/notifications.store';
 import { CONTACTS } from '../../../testing/contacts';
-import { agendaView, loadAgendaEvents, providePlanoTesting, seedAgendaEvents, settle } from '../../../testing/plano-testing';
+import { notification } from '../../../testing/notifications-fixtures';
+import { agendaView, emptyNotifications, loadAgendaEvents, providePlanoTesting, seedAgendaEvents, settle } from '../../../testing/plano-testing';
 import { AGENDA_ROUTES } from '../agenda.routes';
 import { AgendaStore } from '../agenda.store';
 
@@ -94,6 +95,36 @@ describe('AgendaEventDetailComponent', () => {
 
       expect(markRead).toHaveBeenCalledTimes(1);
       expect(markRead).toHaveBeenCalledWith('agenda', 'sport');
+    });
+
+    it('puts the yellow dot on the guest whose answer is new, and keeps it once read', async () => {
+      await open('/agenda/events/rendez-vous-projet?date=2026-10-15');
+      // Once the app has started: signed out, the store first clears what it holds.
+      const notifications = TestBed.inject(NotificationsStore);
+      const loading = notifications.load();
+      http.expectOne('/api/v1/notifications').flush({
+        items: [
+          notification({
+            area: 'agenda',
+            kind: 'agenda.accepted',
+            targetId: 'rendez-vous-projet',
+            itemIds: [],
+            actor: { id: 'camille', name: 'Camille', avatarVersion: null },
+          }),
+        ],
+        unread: { ...emptyNotifications().unread, agenda: 1 },
+      });
+      await loading;
+      harness.detectChanges();
+      http.expectOne('/api/v1/notifications/read').flush(null);
+      await settle();
+      harness.detectChanges();
+
+      const marked = Array.from(element().querySelectorAll('.people li'))
+        .filter((row) => row.querySelector('app-news-dot'))
+        .map((row) => row.querySelector('span')?.textContent?.trim());
+      expect(marked).toEqual(['Camille']);
+      expect(notifications.hasUnread('agenda', 'rendez-vous-projet')).toBe(false);
     });
 
     it('shows the requested occurrence of a recurring event', async () => {

@@ -66,6 +66,9 @@
               <strong>{{ invitation.event.title }}</strong>
               <small>{{ invitation.organiser.name }} · {{ invitation.caption }}</small>
             </span>
+            @if (news().has(invitation.event.id)) {
+              <app-news-dot />
+            }
             <em>{{ 'agenda.calendar.answer' | transloco }}</em>
           </a>
         </li>
