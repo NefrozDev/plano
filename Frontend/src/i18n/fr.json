@@ -3,7 +3,7 @@
     "label": "Navigation principale",
     "home": "Accueil",
     "agenda": "Agenda",
-    "lists": "Liste",
+    "lists": "Listes",
     "objectives": "Objectifs",
     "social": "Social",
     "withNews": "{{label}}, {{count}} nouveauté(s)"
