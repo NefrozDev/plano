@@ -58,7 +58,7 @@ describe('BottomNavComponent', () => {
       ['/social', '4'],
     ]);
     expect(tab('/social').getAttribute('aria-label')).toBe('Social, 4 nouveauté(s)');
-    expect(tab('/lists').getAttribute('aria-label')).toBe('Liste, 2 nouveauté(s)');
+    expect(tab('/lists').getAttribute('aria-label')).toBe('Listes, 2 nouveauté(s)');
     expect(tab('/objectives').getAttribute('aria-label')).toBe('Objectifs, 3 nouveauté(s)');
     expect(tab('/').getAttribute('aria-label')).toBeNull();
   });
