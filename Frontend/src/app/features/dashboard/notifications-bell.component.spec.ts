@@ -117,6 +117,7 @@ describe('NotificationsBellComponent', () => {
       ['by the bell', () => bell().click()],
       ['by a click elsewhere', () => document.body.click()],
       ['by Escape', () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))],
+      ['by moving the focus out of it', () => leaveTo(document.body.appendChild(document.createElement('button')))],
     ] as const) {
       it(`marks everything it showed read, ${how}`, async () => {
         await receive(unread, { lists: 2 });
@@ -162,6 +163,23 @@ describe('NotificationsBellComponent', () => {
       http.expectNone('/api/v1/notifications/read-all');
       expect(element.querySelector('.panel')).toBeNull();
     });
+  });
+
+  /** What the browser sends when focus moves from inside the bell to `next`. */
+  function leaveTo(next: HTMLElement | null): void {
+    (element.querySelector('.panel button') ?? bell()).dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: next }));
+  }
+
+  it('stays open while the focus moves inside it, or leaves the window', async () => {
+    await receive([notification({ id: 'n-1' })], { lists: 1 });
+    open();
+
+    leaveTo(bell());
+    leaveTo(null);
+    fixture.detectChanges();
+
+    expect(element.querySelector('.panel')).not.toBeNull();
+    http.expectNone('/api/v1/notifications/read-all');
   });
 
   it('closes on a click elsewhere or Escape, not on a click inside', () => {

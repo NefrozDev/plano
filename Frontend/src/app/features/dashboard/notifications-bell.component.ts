@@ -39,6 +39,7 @@ const MINUTE = 60_000;
   host: {
     '(document:click)': 'closeOutside($event)',
     '(document:keydown.escape)': 'close()',
+    '(focusout)': 'closeOnFocusLeaving($event)',
   },
   template: `
     <button
@@ -137,6 +138,12 @@ export class NotificationsBellComponent {
     if (!this.open()) return;
     this.open.set(false);
     void this.store.markAllRead();
+  }
+
+  /** Tabbing past the last notification: the panel would cover what gets the focus next. */
+  closeOnFocusLeaving(event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null;
+    if (next && !this.host.contains(next)) this.close();
   }
 
   closeOutside(event: Event): void {
