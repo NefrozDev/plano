@@ -20,6 +20,7 @@ import {
   SIGN_IN_COOKIE_MINUTES,
   SIGN_IN_COOKIE_NAME,
   SIGN_IN_THROTTLE,
+  SILENT_SIGN_IN_TRIED,
 } from './auth.constants';
 import { AuthService } from './auth.service';
 import type { AuthenticatedRequest, AuthUser } from './auth.types';
@@ -30,6 +31,13 @@ import { SessionSettingsService } from './session-settings.service';
 
 interface PendingSignIn extends SignInChecks {
   returnTo: string;
+  /** Tried on arrival, with no page shown (`prompt=none`). */
+  silent: boolean;
+}
+
+/** The sign-in page, after a silent sign-in found no identity session. */
+function signInPage(returnTo: string): string {
+  return `/login?signIn=none&returnUrl=${encodeURIComponent(returnTo)}`;
 }
 
 /** A path of this site to come back to, never another site (open redirect). */
@@ -55,6 +63,7 @@ function readPendingSignIn(value: string | undefined): PendingSignIn | null {
           nonce: parsed.nonce,
           codeVerifier: parsed.codeVerifier,
           returnTo: safeReturnPath(parsed.returnTo),
+          silent: parsed.silent === true,
         }
       : null;
   } catch {
@@ -86,23 +95,44 @@ export class AuthController {
     };
   }
 
-  /** Sends the browser to the identity service, then back to `returnTo`. */
+  /**
+   * Sends the browser to the identity service, then back to `returnTo`.
+   * `silent=1`, on arrival: signed in at once when the identity session
+   * exists, back to the sign-in page otherwise, never in a loop.
+   */
   @Get('login')
   @Throttle(SIGN_IN_THROTTLE)
   async login(
     @Query('returnTo') returnTo: string | undefined,
     @Query('lang') lang: string | undefined,
+    @Query('silent') silentParam: string | undefined,
+    @Req() request: AuthenticatedRequest,
     @Res() response: Response,
   ): Promise<void> {
+    const silent = silentParam === '1';
+    const returnPath = safeReturnPath(returnTo);
+    if (
+      silent &&
+      request.cookies[SIGN_IN_COOKIE_NAME] === SILENT_SIGN_IN_TRIED
+    ) {
+      response.redirect(303, signInPage(returnPath));
+      return;
+    }
     const checks = this.identity.newChecks();
-    const pending: PendingSignIn = {
-      ...checks,
-      returnTo: safeReturnPath(returnTo),
-    };
-    const url = await this.identity.authorizationUrl(
-      checks,
-      typeof lang === 'string' && /^[a-z]{2}$/.test(lang) ? lang : undefined,
-    );
+    const pending: PendingSignIn = { ...checks, returnTo: returnPath, silent };
+    let url: string;
+    try {
+      url = await this.identity.authorizationUrl(
+        checks,
+        typeof lang === 'string' && /^[a-z]{2}$/.test(lang) ? lang : undefined,
+        silent,
+      );
+    } catch (error) {
+      // Nobody asked to sign in yet: show the page rather than an error.
+      if (!silent) throw error;
+      response.redirect(303, signInPage(returnPath));
+      return;
+    }
     response.cookie(SIGN_IN_COOKIE_NAME, JSON.stringify(pending), {
       ...this.signInCookie,
       maxAge: SIGN_IN_COOKIE_MINUTES * 60 * 1000,
@@ -113,7 +143,8 @@ export class AuthController {
   /**
    * Back from the identity service. Without this browser's pending sign-in,
    * or when the person went back without signing in, the sign-in page says
-   * so; otherwise Plano's session opens.
+   * so; a silent sign-in without identity session shows the page as is;
+   * otherwise Plano's session opens.
    */
   @Get('callback')
   async callback(
@@ -122,6 +153,15 @@ export class AuthController {
     @Res() response: Response,
   ): Promise<void> {
     const pending = readPendingSignIn(request.cookies[SIGN_IN_COOKIE_NAME]);
+    if (pending?.silent && typeof query['code'] !== 'string') {
+      // Replaces the pending sign-in, so arriving again does not loop.
+      response.cookie(SIGN_IN_COOKIE_NAME, SILENT_SIGN_IN_TRIED, {
+        ...this.signInCookie,
+        maxAge: SIGN_IN_COOKIE_MINUTES * 60 * 1000,
+      });
+      response.redirect(303, signInPage(pending.returnTo));
+      return;
+    }
     response.clearCookie(SIGN_IN_COOKIE_NAME, this.signInCookie);
     if (!pending || typeof query['code'] !== 'string') {
       response.redirect(303, '/login?signIn=cancelled');

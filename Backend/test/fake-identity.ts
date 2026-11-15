@@ -25,6 +25,8 @@ const LOGOUT_EVENT = 'http://schemas.openid.net/event/backchannel-logout';
  */
 export class FakeIdentity extends OidcClientService {
   claims: IdentityClaims | null = null;
+  /** True to make the identity service unreachable. */
+  down = false;
   readonly signIns: { query: Record<string, string>; checks: SignInChecks }[] =
     [];
 
@@ -50,10 +52,15 @@ export class FakeIdentity extends OidcClientService {
   override authorizationUrl(
     checks: SignInChecks,
     locale?: string,
+    silent = false,
   ): Promise<string> {
+    if (this.down) {
+      return Promise.reject(new Error('identity service unreachable'));
+    }
     const url = new URL(`${TEST_ISSUER}/auth`);
     url.searchParams.set('state', checks.state);
     if (locale) url.searchParams.set('ui_locales', locale);
+    if (silent) url.searchParams.set('prompt', 'none');
     return Promise.resolve(url.href);
   }
 

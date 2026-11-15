@@ -153,6 +153,122 @@ describe('Signing in with the Synapse account (e2e)', () => {
     ).toBe(false);
   });
 
+  describe('silent sign-in on arrival', () => {
+    async function startSilent(returnTo: string, cookie?: string) {
+      const call = http()
+        .get('/api/v1/auth/login')
+        .query({ returnTo, lang: 'en', silent: '1' });
+      if (cookie) void call.set('Cookie', cookie);
+      return call.expect(303);
+    }
+
+    function signInCookie(headers: Record<string, unknown>) {
+      return readSetCookie(headers).find((line) =>
+        line.startsWith('plano_sign_in='),
+      );
+    }
+
+    it('signs in at once when the Synapse session is open', async () => {
+      identity.claims = {
+        sub: randomUUID(),
+        username: 'ada',
+        firstName: 'Ada',
+        lastName: 'L',
+        email: 'ada@example.com',
+        locale: null,
+        sid: 'sid-1',
+      };
+      const start = await startSilent('/lists');
+      const location = new URL(start.headers.location);
+      const cookie = cookiePair(signInCookie(start.headers)!);
+
+      const back = await http()
+        .get('/api/v1/auth/callback')
+        .query({ code: 'good', state: location.searchParams.get('state')! })
+        .set('Cookie', cookie)
+        .expect(303);
+
+      expect(location.searchParams.get('prompt')).toBe('none');
+      expect(back.headers.location).toBe('/lists');
+      expect(
+        readSetCookie(back.headers).some((line) =>
+          line.startsWith('plano_session='),
+        ),
+      ).toBe(true);
+      expect(identity.signIns).toHaveLength(1);
+    });
+
+    it('shows the sign-in page without a session, and does not ask again for 10 minutes', async () => {
+      const start = await startSilent('/lists?tab=mine');
+      const state = new URL(start.headers.location).searchParams.get('state')!;
+
+      const back = await http()
+        .get('/api/v1/auth/callback')
+        .query({ error: 'login_required', state })
+        .set('Cookie', cookiePair(signInCookie(start.headers)!))
+        .expect(303);
+
+      expect(back.headers.location).toBe(
+        '/login?signIn=none&returnUrl=%2Flists%3Ftab%3Dmine',
+      );
+      const tried = signInCookie(back.headers)!;
+      expect(tried).toMatch(/^plano_sign_in=silent-tried;/);
+      expect(tried).toMatch(/Max-Age=600/);
+      expect(tried).toMatch(/HttpOnly/i);
+      expect(
+        readSetCookie(back.headers).some((line) =>
+          line.startsWith('plano_session='),
+        ),
+      ).toBe(false);
+      expect(identity.signIns).toHaveLength(0);
+
+      // Arriving again goes straight to the page, without the identity service.
+      const again = await startSilent('/lists', cookiePair(tried));
+      expect(again.headers.location).toBe(
+        '/login?signIn=none&returnUrl=%2Flists',
+      );
+      expect(again.headers['set-cookie']).toBeUndefined();
+
+      // The button still goes to the identity service, with its pages.
+      const button = await http()
+        .get('/api/v1/auth/login')
+        .query({ returnTo: '/lists' })
+        .set('Cookie', cookiePair(tried))
+        .expect(303);
+      const buttonLocation = new URL(button.headers.location);
+      expect(buttonLocation.origin + buttonLocation.pathname).toBe(
+        `${TEST_ISSUER}/auth`,
+      );
+      expect(buttonLocation.searchParams.has('prompt')).toBe(false);
+    });
+
+    it('never sends a silent sign-in back to another site', async () => {
+      const start = await startSilent('//evil.example');
+      const state = new URL(start.headers.location).searchParams.get('state')!;
+
+      const back = await http()
+        .get('/api/v1/auth/callback')
+        .query({ error: 'login_required', state })
+        .set('Cookie', cookiePair(signInCookie(start.headers)!))
+        .expect(303);
+
+      expect(back.headers.location).toBe('/login?signIn=none&returnUrl=%2F');
+    });
+
+    it('shows the sign-in page when the identity service is down, but reports it to the button', async () => {
+      identity.down = true;
+
+      const silent = await startSilent('/lists');
+      const button = await http().get('/api/v1/auth/login').expect(500);
+
+      expect(silent.headers.location).toBe(
+        '/login?signIn=none&returnUrl=%2Flists',
+      );
+      expect(silent.headers['set-cookie']).toBeUndefined();
+      expect(button.body).toEqual(expect.objectContaining({ statusCode: 500 }));
+    });
+  });
+
   it('reports a failed exchange without opening a session', async () => {
     const { cookie, state } = await startSignIn();
 

@@ -79,10 +79,15 @@ export class OidcClientService {
     };
   }
 
-  /** Where to send the browser to sign in, in `locale` when given. */
+  /**
+   * Where to send the browser to sign in, in `locale` when given. A `silent`
+   * sign-in (`prompt=none`) shows no page: the identity service comes straight
+   * back, with a code when its session exists, with `login_required` otherwise.
+   */
   async authorizationUrl(
     checks: SignInChecks,
     locale?: string,
+    silent = false,
   ): Promise<string> {
     const config = await this.configuration();
     const url = oidc.buildAuthorizationUrl(config, {
@@ -95,6 +100,7 @@ export class OidcClientService {
       ),
       code_challenge_method: 'S256',
       ...(locale ? { ui_locales: locale } : {}),
+      ...(silent ? { prompt: 'none' } : {}),
     });
     return url.href;
   }
