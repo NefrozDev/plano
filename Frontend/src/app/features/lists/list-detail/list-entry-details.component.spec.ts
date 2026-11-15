@@ -32,7 +32,7 @@ describe('ListEntryDetailsComponent', () => {
   });
 
   it('emits each change when a field is committed, mapping empty values to null', () => {
-    const name = field<HTMLInputElement>('.entry-name-editor input');
+    const name = field<HTMLTextAreaElement>('.entry-name-editor textarea');
     name.value = '  Lait entier ';
     name.dispatchEvent(new Event('change'));
     const assignee = field<HTMLSelectElement>('select');
@@ -49,7 +49,7 @@ describe('ListEntryDetailsComponent', () => {
     // In the document, so the field can hold the focus that Enter takes away.
     document.body.append(element);
     onTestFinished(() => element.remove());
-    const name = field<HTMLInputElement>('.entry-name-editor input');
+    const name = field<HTMLTextAreaElement>('.entry-name-editor textarea');
     await userEvent.fill(name, 'Lait entier');
     await userEvent.keyboard('{Enter}');
 
@@ -57,8 +57,27 @@ describe('ListEntryDetailsComponent', () => {
     expect(changes).toEqual([{ name: 'Lait entier' }]);
   });
 
+  it('wraps a long name onto new lines instead of scrolling it sideways', () => {
+    const name = field<HTMLTextAreaElement>('.entry-name-editor textarea');
+    const oneLine = name.getBoundingClientRect().height;
+    name.value = 'Lait entier bio demi-écrémé de la ferme du coin, en bouteille de verre consignée';
+    name.dispatchEvent(new Event('input'));
+
+    expect(name.getBoundingClientRect().height).toBeGreaterThan(oneLine);
+    expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth);
+    expect(changes).toEqual([]);
+  });
+
+  it('saves a pasted name with line breaks as one line', () => {
+    const name = field<HTMLTextAreaElement>('.entry-name-editor textarea');
+    name.value = 'Lait\n  entier\n';
+    name.dispatchEvent(new Event('change'));
+
+    expect(changes).toEqual([{ name: 'Lait entier' }]);
+  });
+
   it('restores the name instead of saving a blank one', () => {
-    const name = field<HTMLInputElement>('.entry-name-editor input');
+    const name = field<HTMLTextAreaElement>('.entry-name-editor textarea');
     name.value = '   ';
     name.dispatchEvent(new Event('change'));
 

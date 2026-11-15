@@ -5,11 +5,11 @@ import { Directive, ElementRef, inject } from '@angular/core';
  * fires `change` once, as blurring does, and closes the on-screen keyboard. `<input appCommitOnEnter (change)="…" />`
  */
 @Directive({
-  selector: 'input[appCommitOnEnter]',
+  selector: 'input[appCommitOnEnter], textarea[appCommitOnEnter]',
   host: { '(keydown.enter)': 'commit($event)' },
 })
 export class CommitOnEnterDirective {
-  private readonly element = inject<ElementRef<HTMLInputElement>>(ElementRef);
+  private readonly element = inject<ElementRef<HTMLInputElement | HTMLTextAreaElement>>(ElementRef);
 
   commit(event: Event): void {
     // Enter also confirms a word being composed (IME, dictation): that is not a commit.

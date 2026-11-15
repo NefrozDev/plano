@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { ListEntry, ListMember, UpdateEntryRequest } from '@plano/common';
 import { formatLocale } from '../../../core/i18n/translate';
+import { AutoGrowDirective } from '../../../shared/ui/auto-grow.directive';
 import { CommitOnEnterDirective } from '../../../shared/ui/commit-on-enter.directive';
 
 /**
@@ -10,7 +11,7 @@ import { CommitOnEnterDirective } from '../../../shared/ui/commit-on-enter.direc
  */
 @Component({
   selector: 'app-list-entry-details',
-  imports: [TranslocoPipe, CommitOnEnterDirective],
+  imports: [TranslocoPipe, AutoGrowDirective, CommitOnEnterDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="entry-details" aria-labelledby="entry-details-title">
@@ -31,14 +32,17 @@ import { CommitOnEnterDirective } from '../../../shared/ui/commit-on-enter.direc
             [disabled]="readonly()"
             (click)="entryChange.emit({ done: !entry().done })"
           ><i aria-hidden="true"></i></button>
-          <input
+          <!-- Wraps a long name instead of scrolling it sideways; Enter still saves it, as one line. -->
+          <textarea
+            appAutoGrow
             appCommitOnEnter
+            rows="1"
             [attr.aria-label]="'lists.entry.name' | transloco"
             maxlength="200"
             [value]="entry().name"
             [disabled]="readonly()"
             (change)="rename($any($event.target))"
-          />
+          ></textarea>
         </div>
 
         <section class="detail-fields">
@@ -106,8 +110,9 @@ export class ListEntryDetailsComponent {
   );
 
   /** A blank name is refused: the field goes back to the saved one. */
-  rename(field: HTMLInputElement): void {
-    const name = field.value.trim();
+  rename(field: HTMLTextAreaElement): void {
+    // A pasted name may hold line breaks: an entry's name is one line.
+    const name = field.value.replace(/\s*\n\s*/g, ' ').trim();
     if (name) {
       this.entryChange.emit({ name });
     } else {

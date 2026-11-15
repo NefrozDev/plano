@@ -359,7 +359,7 @@ describe('ListDetailComponent', () => {
     try {
       (element.querySelector('.entry-name') as HTMLButtonElement).click();
       await render();
-      const input = element.querySelector('.entry-name-editor input') as HTMLInputElement;
+      const input = element.querySelector('.entry-name-editor textarea') as HTMLTextAreaElement;
       const look = () => {
         const style = getComputedStyle(input);
         return { border: style.borderTopColor, background: style.backgroundColor, ring: style.boxShadow };
