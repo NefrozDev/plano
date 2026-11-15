@@ -1,5 +1,5 @@
 :host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
-.lists-header { display: grid; grid-template-columns: auto 1fr auto; gap: .7rem; align-items: center; padding: calc(1.8rem + env(safe-area-inset-top)) 1.25rem .75rem; }
+.lists-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .7rem; align-items: center; padding: calc(1.8rem + env(safe-area-inset-top)) 1.25rem .75rem; }
 .lists-header h1 { margin: 0; font-size: 1.55rem; letter-spacing: -.04em; }
 .header-actions { position: relative; display: flex; gap: .25rem; align-items: center; }
 .icon-button { position: relative; display: grid; width: 2.35rem; height: 2.35rem; padding: .4rem; place-items: center; border: 0; background: transparent; color: #20263a; cursor: pointer; }

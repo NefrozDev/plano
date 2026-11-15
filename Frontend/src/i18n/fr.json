@@ -267,6 +267,7 @@
     "objective": "Objectif"
   },
   "common": {
+    "view": "Affichage",
     "cancel": "Annuler",
     "confirm": "Confirmer",
     "tapToClose": "Toucher pour fermer"

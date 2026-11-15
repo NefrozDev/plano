@@ -123,18 +123,23 @@ describe('ObjectivesOverviewComponent', () => {
     expect(element.querySelector('.filter-note')).toBeNull();
   });
 
-  it('switches between list and grid from the header and remembers the choice', () => {
-    const toggle = element.querySelector('.overview-header > button.icon-button') as HTMLButtonElement;
-    expect(toggle.getAttribute('aria-pressed')).toBe('false');
-    expect(toggle.getAttribute('aria-label')).toBe('Afficher les objectifs en grille');
+  it('switches between list and grid from the right of the header and remembers the choice', () => {
+    const header = element.querySelector('.overview-header') as HTMLElement;
+    const rows = header.querySelector('.header-actions app-view-switch .rows') as HTMLButtonElement;
+    const grid = header.querySelector('.header-actions app-view-switch .grid') as HTMLButtonElement;
+    expect(header.firstElementChild?.tagName).toBe('H1');
+    expect(rows.getAttribute('aria-label')).toBe('Afficher les objectifs en liste');
+    expect(grid.getAttribute('aria-label')).toBe('Afficher les objectifs en grille');
+    expect(rows.getAttribute('aria-pressed')).toBe('true');
 
-    toggle.click();
+    grid.click();
     fixture.detectChanges();
     expect(store.settings().defaultView).toBe('grid');
     expect(element.querySelector('.content')?.classList).toContain('grid-view');
-    expect(toggle.getAttribute('aria-label')).toBe('Afficher les objectifs en liste');
+    expect(grid.getAttribute('aria-pressed')).toBe('true');
+    expect(rows.getAttribute('aria-pressed')).toBe('false');
 
-    toggle.click();
+    rows.click();
     fixture.detectChanges();
     expect(store.settings().defaultView).toBe('list');
   });

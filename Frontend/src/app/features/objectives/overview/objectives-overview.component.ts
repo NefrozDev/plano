@@ -4,6 +4,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { CountPipe } from '../../../core/i18n/translate';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { ToastComponent } from '../../../shared/ui/toast.component';
+import { ViewSwitchComponent } from '../../../shared/ui/view-switch.component';
 import type { ObjectiveSummary } from '@plano/common';
 import { dueCaption, objectiveTint, progressText, sharingLabel, timelapseView } from '../objective.utils';
 import { ObjectiveTab, ObjectivesStore } from '../objectives.store';
@@ -13,7 +14,7 @@ import { ObjectiveSwipeCardComponent } from '../ui/objective-swipe-card.componen
 
 @Component({
   selector: 'app-objectives-overview',
-  imports: [TranslocoPipe, CountPipe, RouterLink, ObjectiveSwipeCardComponent, BottomNavComponent, ToastComponent],
+  imports: [TranslocoPipe, ViewSwitchComponent, CountPipe, RouterLink, ObjectiveSwipeCardComponent, BottomNavComponent, ToastComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './objectives-overview.component.html',
   styleUrl: './objectives-overview.component.scss',
@@ -68,8 +69,8 @@ export class ObjectivesOverviewComponent {
   }
 
   /** Same behaviour as the Lists header: the choice is saved as the default view. */
-  toggleView(): void {
-    this.store.updateSettings({ defaultView: this.gridView() ? 'list' : 'grid' });
+  setView(grid: boolean): void {
+    this.store.updateSettings({ defaultView: grid ? 'grid' : 'list' });
   }
 
   moveWithKeyboard(id: string, event: KeyboardEvent): void {

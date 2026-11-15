@@ -267,6 +267,7 @@
     "objective": "Goal"
   },
   "common": {
+    "view": "View",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "tapToClose": "Tap to close"

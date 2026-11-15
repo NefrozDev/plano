@@ -267,6 +267,7 @@
     "objective": "Doel"
   },
   "common": {
+    "view": "Weergave",
     "cancel": "Annuleren",
     "confirm": "Bevestigen",
     "tapToClose": "Tik om te sluiten"

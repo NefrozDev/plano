@@ -12,6 +12,7 @@ import { ConfirmService } from '../../shared/ui/confirm.service';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { SwitchRowComponent } from '../../shared/ui/switch-row.component';
 import { ToastComponent } from '../../shared/ui/toast.component';
+import { ViewSwitchComponent } from '../../shared/ui/view-switch.component';
 import { LIST_COLOR_CHOICES } from './list-detail/list-options';
 import { ListIconComponent } from './ui/list-icon.component';
 import { SwipeToDelete } from '../../shared/ui/swipe-to-delete';
@@ -64,6 +65,7 @@ function sharingPeople(list: ListSummary): Person[] {
   selector: 'app-lists',
   imports: [
     TranslocoPipe,
+    ViewSwitchComponent,
     ListIconComponent,
     NgTemplateOutlet,
     AutofocusDirective,
@@ -149,10 +151,6 @@ export class ListsComponent {
 
   selectFilter(filter: ListFilter): void {
     this.activeFilter.set(filter);
-  }
-
-  toggleView(): void {
-    this.setDefaultView(this.gridView() ? 'list' : 'grid');
   }
 
   toggleMenu(): void {

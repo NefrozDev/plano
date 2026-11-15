@@ -267,6 +267,7 @@
     "objective": "Ziel"
   },
   "common": {
+    "view": "Ansicht",
     "cancel": "Abbrechen",
     "confirm": "Bestätigen",
     "tapToClose": "Zum Schließen tippen"
