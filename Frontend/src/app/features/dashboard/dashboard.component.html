@@ -50,36 +50,51 @@
     </div>
   </section>
 
-  @for (home of homeLists(); track home.id) {
-    <section class="dashboard-section home-list" [attr.aria-labelledby]="'home-list-' + home.id" [style.--list-color]="home.color">
-      <div class="section-heading">
-        <h2 [id]="'home-list-' + home.id"><a class="list-name" [routerLink]="['/lists', home.id]">{{ home.name }}</a></h2>
-        <a [routerLink]="['/lists', home.id]">{{ home.remaining ? ('dashboard.toDo' | count: home.remaining) : ('dashboard.seeList' | transloco) }} →</a>
-      </div>
-      <div class="list-card">
-        @for (entry of home.entries; track entry.id) {
-          <label
-            ><input
-              type="checkbox"
-              [disabled]="home.role === 'viewer' || checking() !== ''"
-              [checked]="checking() === entry.id"
-              (change)="check(home.id, entry.id)"
-            />
-            <span>{{ entry.name }}</span></label
-          >
-        } @empty {
-          <a class="card-link" [routerLink]="['/lists', home.id]">{{ 'dashboard.allDone' | transloco }}</a>
+  <section class="dashboard-section lists-section" aria-labelledby="lists-title">
+    <div class="section-heading">
+      <h2 id="lists-title">{{ 'dashboard.lists' | transloco }}</h2>
+    </div>
+    @for (home of homeCards(); track home.id) {
+      <!-- The card of the Lists tab, then the items to do, ticked like inside the list. -->
+      <article class="home-list" [attr.aria-labelledby]="'home-list-' + home.id" [style.--list-color]="home.color" [style.--list-surface]="home.surface">
+        <a class="list-head" [routerLink]="['/lists', home.id]">
+          <span class="list-icon" aria-hidden="true"><app-list-icon [icon]="home.icon" /></span>
+          <span class="list-copy">
+            <h3 [id]="'home-list-' + home.id">{{ home.name }}</h3>
+            <small>{{ home.remaining ? ('dashboard.toDo' | count: home.remaining) : ('dashboard.allDone' | transloco) }}</small>
+          </span>
+          @if (home.total !== null) {
+            <span class="list-progress">
+              <b>{{ home.completed }} / {{ home.total }}</b>
+              <i><em [style.width.%]="home.progress"></em></i>
+            </span>
+          }
+        </a>
+        @if (home.entries.length) {
+          <div class="entries">
+            @for (entry of home.entries; track entry.id) {
+              <label
+                ><input
+                  type="checkbox"
+                  [disabled]="home.role === 'viewer' || checking() !== ''"
+                  [checked]="checking() === entry.id"
+                  (change)="check(home.id, entry.id)"
+                />
+                <span>{{ entry.name }}</span></label
+              >
+            }
+            @if (home.remaining > home.entries.length) {
+              <a class="card-link" [routerLink]="['/lists', home.id]">{{ 'dashboard.more' | transloco: { count: home.remaining - home.entries.length } }}</a>
+            }
+          </div>
         }
-        @if (home.remaining > home.entries.length) {
-          <a class="card-link" [routerLink]="['/lists', home.id]">{{ 'dashboard.more' | transloco: { count: home.remaining - home.entries.length } }}</a>
-        }
-      </div>
-    </section>
-  } @empty {
-    @if (homeLists()) {
-      <a class="home-hint" routerLink="/lists">{{ 'dashboard.listsHint' | transloco }}</a>
+      </article>
+    } @empty {
+      @if (homeLists()) {
+        <a class="home-hint" routerLink="/lists">{{ 'dashboard.listsHint' | transloco }}</a>
+      }
     }
-  }
+  </section>
 
   <section
     class="dashboard-section goals-section"

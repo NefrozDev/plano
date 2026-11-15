@@ -60,6 +60,7 @@
     "more": "+ {{count}} de plus",
     "listsHint": "Affichez vos listes ici depuis leur menu « Afficher sur l’accueil ».",
     "agenda": "Mon agenda",
+    "lists": "Mes listes",
     "goals": "Mes objectifs",
     "goalsHint": "Affichez vos objectifs ici depuis leur page."
   },

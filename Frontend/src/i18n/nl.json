@@ -60,6 +60,7 @@
     "more": "+ nog {{count}}",
     "listsHint": "Toon je lijsten hier via hun menu “Op de startpagina tonen”.",
     "agenda": "Mijn agenda",
+    "lists": "Mijn lijsten",
     "goals": "Mijn doelen",
     "goalsHint": "Toon je doelen hier vanaf hun pagina."
   },

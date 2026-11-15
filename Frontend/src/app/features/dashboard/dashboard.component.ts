@@ -11,6 +11,7 @@ import { ObjectivesStore } from '../objectives/objectives.store';
 import { AgendaStore } from '../agenda/agenda.store';
 import { ListsStore } from '../lists/lists.store';
 import { ObjectiveIconComponent } from '../objectives/ui/objective-icon.component';
+import { ListIconComponent } from '../lists/ui/list-icon.component';
 import { NotificationsBellComponent } from './notifications-bell.component';
 
 @Component({
@@ -22,6 +23,7 @@ import { NotificationsBellComponent } from './notifications-bell.component';
     BottomNavComponent,
     NotificationsBellComponent,
     ObjectiveIconComponent,
+    ListIconComponent,
     UserAvatarComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -55,6 +57,23 @@ export class DashboardComponent {
   });
   /** Lists the user pinned to their home page, in their order; null while loading. */
   readonly homeLists = this.listsStore.home;
+  /**
+   * The pinned lists drawn like the Lists tab: its tint and, once the overview
+   * has loaded, its count and progress bar (the home endpoint only knows what is left).
+   */
+  readonly homeCards = computed(() => {
+    const summaries = new Map(this.listsStore.lists().map((list) => [list.id, list]));
+    return (this.homeLists() ?? []).map((home) => {
+      const summary = summaries.get(home.id);
+      return {
+        ...home,
+        surface: `color-mix(in srgb, ${home.color} 9%, white)`,
+        completed: summary?.completed ?? 0,
+        total: summary?.total ?? null,
+        progress: summary?.total ? (summary.completed / summary.total) * 100 : 0,
+      };
+    });
+  });
   /** The item being ticked, so a double tap sends one request. */
   readonly checking = signal('');
   /** Objectives the user pinned to their home page, in their order; null while loading. */
@@ -78,6 +97,8 @@ export class DashboardComponent {
     // The week strip's event dots include list reminders served by the API.
     void this.agendaStore.load();
     void this.listsStore.loadHome();
+    // For the pinned lists' counts, as on the Lists tab.
+    void this.listsStore.loadLists();
     void this.objectivesStore.loadHome();
   }
 

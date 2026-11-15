@@ -9,6 +9,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { APP_CLOCK } from '../../core/time/dates';
 import { AgendaStore } from '../agenda/agenda.store';
 import { TEST_TODAY, flushAgendaEvents, flushListReminders, provideSeedData, settle } from '../../testing/plano-testing';
+import { listSummary } from '../lists/testing/lists-fixtures';
 import { objectiveSummary } from '../objectives/testing/objectives-fixtures';
 import { DashboardComponent } from './dashboard.component';
 
@@ -125,37 +126,48 @@ describe('DashboardComponent', () => {
   });
 
   describe('pinned lists', () => {
-    it('shows the pinned lists in order, with their first unchecked items and links', async () => {
+    it('shows the pinned lists in order under « Mes listes », as cards of the Lists tab with their items', async () => {
       const fixture = TestBed.createComponent(DashboardComponent);
       flushHome([
         homeList(),
         homeList({ id: 'maison', name: 'Maison', color: '#3264ed', remaining: 0, entries: [] }),
       ]);
+      http.expectOne('/api/v1/lists').flush([listSummary({ id: 'courses', name: 'Courses', completed: 1, total: 4 })]);
       await settle();
       fixture.detectChanges();
       const element = fixture.nativeElement as HTMLElement;
-      const sections = Array.from(element.querySelectorAll<HTMLElement>('.home-list'));
+      const listsSection = element.querySelector('.lists-section') as HTMLElement;
+      const sections = Array.from(listsSection.querySelectorAll<HTMLElement>('.home-list'));
 
-      expect(sections.map((section) => section.querySelector('h2')?.textContent)).toEqual(['Courses', 'Maison']);
+      expect(listsSection.querySelector('h2')?.textContent).toBe('Mes listes');
+      expect(listsSection.getAttribute('aria-labelledby')).toBe(listsSection.querySelector('h2')?.id);
+      // Each list is a heading under « Mes listes », naming its card.
+      expect(sections.map((section) => section.querySelector('h3')?.textContent)).toEqual(['Courses', 'Maison']);
+      expect(sections[0].getAttribute('aria-labelledby')).toBe(sections[0].querySelector('h3')?.id);
       expect(sections[0].style.getPropertyValue('--list-color')).toBe('#2ecb70');
+      expect(sections[0].style.getPropertyValue('--list-surface')).toContain('#2ecb70');
+      expect(sections[0].querySelector('app-list-icon')).not.toBeNull();
+      // The card opens the list, like on the Lists tab.
+      expect(sections.map((section) => section.querySelector('.list-head')?.getAttribute('href'))).toEqual(['/lists/courses', '/lists/maison']);
+      expect(sections[0].querySelector('.list-copy small')?.textContent).toContain('7 à faire');
+      expect(sections[0].querySelector('.list-progress b')?.textContent).toBe('1 / 4');
+      expect((sections[0].querySelector('.list-progress em') as HTMLElement).style.width).toBe('25%');
       expect(Array.from(sections[0].querySelectorAll('label')).map((label) => label.textContent?.trim())).toEqual([
         'Lait',
         'Œufs',
       ]);
-      expect(sections[0].querySelector('.section-heading > a')?.textContent).toContain('7 à faire');
-      expect(sections[0].querySelector('.section-heading > a')?.getAttribute('href')).toBe('/lists/courses');
-      // The name opens the list too.
-      expect(sections.map((section) => section.querySelector('h2 a')?.getAttribute('href'))).toEqual(['/lists/courses', '/lists/maison']);
       // 7 unchecked, 2 shown: the rest is one tap away.
       expect(sections[0].querySelector('.card-link')?.textContent).toContain('+ 5 de plus');
-      expect(sections[1].querySelector('.section-heading > a')?.textContent).toContain('voir la liste');
-      expect(sections[1].querySelector('.card-link')?.textContent).toContain('Tout est fait');
+      // Nothing left to do: the card says so, with no empty item area; no count without its summary.
+      expect(sections[1].querySelector('.list-copy small')?.textContent).toContain('Tout est fait');
+      expect(sections[1].querySelector('.entries')).toBeNull();
+      expect(sections[1].querySelector('.list-progress')).toBeNull();
       expect(element.querySelector('.home-hint')).toBeNull();
       // Lists come before the objectives.
       expect(element.querySelector('.dashboard-section:last-of-type h2')?.textContent).toBe('Mes objectifs');
     });
 
-    it('opens the list when its name is clicked', async () => {
+    it('opens the list when its card is clicked', async () => {
       @Component({ template: '' })
       class ListPageStub {}
       const router = TestBed.inject(Router);
@@ -164,14 +176,12 @@ describe('DashboardComponent', () => {
       flushHome([homeList(), homeList({ id: 'maison', name: 'Maison' })]);
       await settle();
       fixture.detectChanges();
-      const names = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('.home-list h2 a');
+      const cards = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('.home-list .list-head');
 
-      names[1].click();
+      cards[1].click();
       await fixture.whenStable();
 
       expect(router.url).toBe('/lists/maison');
-      // The name is the heading's whole text, so the section keeps it as its label.
-      expect(names[1].closest('h2')?.textContent).toBe('Maison');
     });
 
     it('ticks an item once, then shows the refreshed list', async () => {
@@ -277,9 +287,10 @@ describe('DashboardComponent', () => {
 
     expect(element.querySelector('.agenda-card')).toBeNull();
     expect(element.textContent).not.toContain('Rien de prévu');
-    // No pinned list yet: only the agenda and the objectives.
+    // No pinned list yet: « Mes listes » only explains how to pin one.
     expect(Array.from(element.querySelectorAll('.dashboard-section h2')).map((h2) => h2.textContent)).toEqual([
       'Mon agenda',
+      'Mes listes',
       'Mes objectifs',
     ]);
     // Thursday 15 October has agenda items, list reminders included.
@@ -296,12 +307,11 @@ describe('DashboardComponent', () => {
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const style = (selector: string) => getComputedStyle(element.querySelector(selector) as HTMLElement);
-    const cards = ['.list-card', '.goals-card'].map((selector) => style(selector).padding);
+    const cards = ['.home-list .list-head', '.goals-card'].map((selector) => style(selector).paddingTop);
     const headings = Array.from(element.querySelectorAll<HTMLElement>('.dashboard-section .section-heading'))
       .map((heading) => getComputedStyle(heading).marginBottom);
 
-    expect(new Set(cards).size).toBe(1);
-    expect(cards[0]).not.toBe('0px');
+    expect(cards.every((padding) => padding !== '0px')).toBe(true);
     expect(headings.length).toBe(3);
     expect(new Set(headings).size).toBe(1);
   });

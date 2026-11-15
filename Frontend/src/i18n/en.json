@@ -60,6 +60,7 @@
     "more": "+ {{count}} more",
     "listsHint": "Show your lists here from their “Show on home” menu.",
     "agenda": "My calendar",
+    "lists": "My lists",
     "goals": "My goals",
     "goalsHint": "Show your goals here from their page."
   },
