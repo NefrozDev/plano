@@ -147,6 +147,12 @@ export class ListDetailComponent {
     const openEditor = route.queryParamMap.has('edit');
     void this.store.open(this.listId).then((found) => {
       this.notFound.set(!found);
+      // Sections with everything checked open folded, as they fold when their last item is checked.
+      this.collapsedSections.set(
+        (this.list()?.sections ?? [])
+          .filter(({ entries }) => entries.length && entries.every(({ done }) => done))
+          .map(({ id }) => id),
+      );
       // A list created from the overview opens straight in its editor.
       if (found && openEditor && this.isOwner()) this.listEditorOpen.set(true);
     });

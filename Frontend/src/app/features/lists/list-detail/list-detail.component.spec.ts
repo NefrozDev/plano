@@ -189,6 +189,41 @@ describe('ListDetailComponent', () => {
     expect(component.collapsedSections()).not.toContain(section.id);
   });
 
+  it('opens with the sections where everything is checked folded, and only those', async () => {
+    const base = listDetail();
+    await create({
+      detail: listDetail({
+        sections: [
+          base.sections[0],
+          { ...base.sections[1], entries: base.sections[1].entries.map((item) => ({ ...item, done: true })) },
+          { id: 'empty', name: 'Vide', color: '#3264ed', entries: [] },
+        ],
+      }),
+    });
+
+    expect(component.sectionViews().map(({ section, collapsed }) => [section.id, collapsed])).toEqual([
+      ['fresh', false],
+      ['grocery', true],
+      // Nothing to check yet: open, ready for a first item.
+      ['empty', false],
+    ]);
+    expect(element.querySelectorAll('.section-summary').length).toBe(1);
+    expect(element.querySelector('.section-summary')?.textContent).toContain('Épicerie');
+  });
+
+  it('opens a completed section folded, and the chevron still unfolds it', async () => {
+    const base = listDetail();
+    await create({
+      detail: listDetail({ sections: [{ ...base.sections[1], entries: base.sections[1].entries.map((item) => ({ ...item, done: true })) }] }),
+    });
+
+    (element.querySelector('.section-summary') as HTMLButtonElement).click();
+    await render();
+
+    expect(component.sectionViews()[0].collapsed).toBe(false);
+    expect(element.querySelectorAll('.entry').length).toBe(2);
+  });
+
   it('collapses only the section whose chevron is clicked, and reopens it', async () => {
     await create();
 
