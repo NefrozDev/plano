@@ -41,6 +41,15 @@ describe('BottomNavComponent', () => {
     expect(element.querySelectorAll('a[aria-current]')).toHaveLength(1);
   });
 
+  it('draws every tab icon with one stroke, none from a font glyph', () => {
+    const links = Array.from(element.querySelectorAll('a'));
+    const icons = links.map((link) => link.querySelector('svg path'));
+
+    expect(icons.every((path) => path?.getAttribute('d'))).toBe(true);
+    expect(new Set(icons.map((path) => getComputedStyle(path!).strokeWidth)).size).toBe(1);
+    expect(element.querySelector('a span')).toBeNull();
+  });
+
   it('shows no badge without notifications', () => {
     expect(element.querySelector('.badge')).toBeNull();
     expect(element.querySelectorAll('a[aria-label]')).toHaveLength(0);
