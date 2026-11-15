@@ -222,6 +222,7 @@
       "ownSessionsOnly": "Vous ne pouvez retirer que vos propres séances.",
       "futureDay": "Un jour à venir ne peut pas être coché.",
       "paused": "Cet objectif est en pause.",
+      "completedByChildren": "Cet objectif se termine avec ses sous-objectifs.",
       "numericNeedsTarget": "Un objectif chiffré a besoin d’une cible et d’une unité.",
       "habitNeedsDays": "Une habitude a besoin d’un nombre de jours à réussir.",
       "dueBeforeStart": "L’échéance ne peut pas précéder la date de début.",

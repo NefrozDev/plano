@@ -14,8 +14,9 @@ import type { ObjectiveTree } from './objective-tree';
 
 /**
  * Reaching 100 % completes an objective and undoing progress reopens it, so the
- * status never contradicts the data. Objectives without a bar are completed by
- * hand, and paused ones keep their status until resumed.
+ * status never contradicts the data. An objective without a bar is done once
+ * all its sub-objectives are, and only a leaf one is completed by hand. Paused
+ * ones keep their status until resumed.
  */
 export function settleStatuses(
   tree: ObjectiveTree,
@@ -23,9 +24,15 @@ export function settleStatuses(
   now = new Date(),
 ): Objective[] {
   const changed: Objective[] = [];
-  for (const node of tree.nodes) {
-    const progress = tree.exactProgress(node.id);
-    if (progress === null || node.status === 'paused') continue;
+  // Deepest first: a parent is judged on its children's settled statuses, and
+  // the tree caches progress, so no parent may be computed before its children.
+  const deepestFirst = [...tree.nodes].sort(
+    (first, second) => tree.levelOf(second.id) - tree.levelOf(first.id),
+  );
+  for (const node of deepestFirst) {
+    if (node.status === 'paused') continue;
+    const progress = childrenDone(tree, node) ?? tree.exactProgress(node.id);
+    if (progress === null) continue;
     if (progress >= 100 && node.status !== 'completed') {
       node.status = 'completed';
       node.completedAt = now;
@@ -39,6 +46,22 @@ export function settleStatuses(
     }
   }
   return changed;
+}
+
+/** 100 or 0 for an objective without a bar that has sub-objectives; null otherwise. */
+function childrenDone(tree: ObjectiveTree, node: Objective): number | null {
+  if (node.completion !== 'none') return null;
+  const children = tree.childrenOf(node.id).filter(({ archived }) => !archived);
+  if (!children.length) return null;
+  return children.every(({ status }) => status === 'completed') ? 100 : 0;
+}
+
+/** True when the objective's status follows its sub-objectives, not a click. */
+export function completedThroughChildren(
+  tree: ObjectiveTree,
+  node: Objective,
+): boolean {
+  return childrenDone(tree, node) !== null;
 }
 
 /** Every change to an objective tree goes through here, one at a time. */

@@ -180,8 +180,9 @@ describe('ObjectivesService', () => {
     it('reopens finished objectives without a bar above a new sub-objective', async () => {
       const top = await create({ title: 'A' });
       const middle = await create({ title: 'B', parentId: top.id });
+      // Finishing its only sub-objective finishes the top one too.
       await bed.tracking.setCompleted(middle.id, bed.ada, { completed: true });
-      await bed.tracking.setCompleted(top.id, bed.ada, { completed: true });
+      expect((await row(top.id)).status).toBe('completed');
 
       await create({ title: 'C', parentId: middle.id });
 

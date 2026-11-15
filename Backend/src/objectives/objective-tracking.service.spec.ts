@@ -333,6 +333,41 @@ describe('ObjectiveTrackingService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('refuses it on a parent, which its sub-objectives decide, and changes nothing', async () => {
+      const parent = await create({ title: 'Parent' });
+      await create({ title: 'Enfant', parentId: parent.id });
+
+      const refusal = bed.tracking.setCompleted(parent.id, bed.ada, {
+        completed: true,
+      });
+
+      await expect(refusal).rejects.toThrow(BadRequestException);
+      await expect(refusal).rejects.toMatchObject({
+        response: { errorCode: 'objectives.completedByChildren' },
+      });
+      expect(await bed.objectives.findOne(parent.id, bed.ada)).toMatchObject({
+        status: 'active',
+        completedAt: null,
+      });
+      expect(
+        (await bed.activity.history(parent.id, bed.ada)).map(
+          ({ kind }) => kind,
+        ),
+      ).not.toContain('completed');
+    });
+
+    it('still lets a parent whose sub-objectives are all archived be completed by hand', async () => {
+      const parent = await create({ title: 'Parent' });
+      const child = await create({ title: 'Enfant', parentId: parent.id });
+      await bed.objectives.update(child.id, bed.ada, { archived: true });
+
+      const completed = await bed.tracking.setCompleted(parent.id, bed.ada, {
+        completed: true,
+      });
+
+      expect(completed.status).toBe('completed');
+    });
+
     it('refuses it while paused', async () => {
       const objective = await create();
       await bed.objectives.update(objective.id, bed.ada, { paused: true });
@@ -378,6 +413,78 @@ describe('ObjectiveTrackingService', () => {
           status: 'active',
         });
       }
+    });
+
+    it('completes parents without a bar once their last sub-objective is, tells the others, and reopens them', async () => {
+      const top = await create({ title: 'Haut' });
+      await bed.members.add(top.id, bed.ada, {
+        userId: bed.bob,
+        role: 'viewer',
+      });
+      const middle = await create({ title: 'Milieu', parentId: top.id });
+      const first = await create({ title: 'Un', parentId: middle.id });
+      const second = await create({ title: 'Deux', parentId: middle.id });
+
+      await bed.tracking.setCompleted(first.id, bed.ada, { completed: true });
+      expect((await bed.objectives.findOne(middle.id, bed.ada)).status).toBe(
+        'active',
+      );
+
+      await bed.tracking.setCompleted(second.id, bed.ada, { completed: true });
+      for (const id of [middle.id, top.id]) {
+        const detail = await bed.objectives.findOne(id, bed.ada);
+        expect(detail).toMatchObject({ status: 'completed' });
+        expect(detail.completedBy?.name).toBe('Ada Test');
+        expect(
+          (await bed.activity.history(id, bed.ada)).filter(
+            (entry) => entry.objectiveId === id && entry.kind === 'completed',
+          ),
+        ).toHaveLength(1);
+      }
+      await vi.waitFor(async () =>
+        expect(
+          (await bed.notifications.list(bed.bob)).items.filter(
+            ({ kind }) => kind === 'objective.completed',
+          ).length,
+        ).toBeGreaterThan(0),
+      );
+
+      await bed.tracking.setCompleted(first.id, bed.ada, { completed: false });
+      for (const id of [middle.id, top.id]) {
+        expect(await bed.objectives.findOne(id, bed.ada)).toMatchObject({
+          status: 'active',
+          completedAt: null,
+        });
+        expect(
+          (await bed.activity.history(id, bed.ada)).map(({ kind }) => kind),
+        ).toContain('reopened');
+      }
+    });
+
+    it('keeps a parent without a bar open while a sub-objective is paused', async () => {
+      const parent = await create({ title: 'Parent' });
+      const done = await create({ title: 'Un', parentId: parent.id });
+      const paused = await create({ title: 'Deux', parentId: parent.id });
+      await bed.objectives.update(paused.id, bed.ada, { paused: true });
+
+      await bed.tracking.setCompleted(done.id, bed.ada, { completed: true });
+
+      expect((await bed.objectives.findOne(parent.id, bed.ada)).status).toBe(
+        'active',
+      );
+    });
+
+    it('ignores archived sub-objectives when completing a parent without a bar', async () => {
+      const parent = await create({ title: 'Parent' });
+      const done = await create({ title: 'Un', parentId: parent.id });
+      const archived = await create({ title: 'Deux', parentId: parent.id });
+      await bed.objectives.update(archived.id, bed.ada, { archived: true });
+
+      await bed.tracking.setCompleted(done.id, bed.ada, { completed: true });
+
+      expect((await bed.objectives.findOne(parent.id, bed.ada)).status).toBe(
+        'completed',
+      );
     });
 
     it('leaves a paused parent paused', async () => {

@@ -222,6 +222,7 @@
       "ownSessionsOnly": "Puoi rimuovere solo le tue sessioni.",
       "futureDay": "Non si può spuntare un giorno che deve ancora venire.",
       "paused": "Questo obiettivo è in pausa.",
+      "completedByChildren": "Questo obiettivo si completa quando lo sono i suoi sotto-obiettivi.",
       "numericNeedsTarget": "Un obiettivo numerico ha bisogno di un traguardo e di un’unità.",
       "habitNeedsDays": "Un’abitudine ha bisogno di un numero di giorni da completare.",
       "dueBeforeStart": "La scadenza non può precedere la data d’inizio.",

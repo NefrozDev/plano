@@ -222,6 +222,7 @@
       "ownSessionsOnly": "Du kannst nur deine eigenen Einheiten entfernen.",
       "futureDay": "Ein kommender Tag kann nicht abgehakt werden.",
       "paused": "Dieses Ziel ist pausiert.",
+      "completedByChildren": "Dieses Ziel ist erreicht, sobald seine Unterziele erreicht sind.",
       "numericNeedsTarget": "Ein Zahlenziel braucht einen Zielwert und eine Einheit.",
       "habitNeedsDays": "Eine Gewohnheit braucht eine Anzahl erfolgreicher Tage.",
       "dueBeforeStart": "Das Fälligkeitsdatum darf nicht vor dem Startdatum liegen.",

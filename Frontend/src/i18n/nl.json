@@ -222,6 +222,7 @@
       "ownSessionsOnly": "Je kunt alleen je eigen sessies verwijderen.",
       "futureDay": "Een dag die nog moet komen, kan niet worden afgevinkt.",
       "paused": "Dit doel is gepauzeerd.",
+      "completedByChildren": "Dit doel is klaar zodra zijn subdoelen klaar zijn.",
       "numericNeedsTarget": "Een doel in cijfers heeft een streefwaarde en een eenheid nodig.",
       "habitNeedsDays": "Een gewoonte heeft een aantal geslaagde dagen nodig.",
       "dueBeforeStart": "De einddatum kan niet voor de begindatum liggen.",

@@ -222,6 +222,7 @@
       "ownSessionsOnly": "You can only remove your own sessions.",
       "futureDay": "A day still to come can’t be checked.",
       "paused": "This goal is paused.",
+      "completedByChildren": "This goal is done once its sub-goals are.",
       "numericNeedsTarget": "A numeric goal needs a target and a unit.",
       "habitNeedsDays": "A habit needs a number of days to succeed.",
       "dueBeforeStart": "The due date can’t be before the start date.",

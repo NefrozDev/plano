@@ -63,6 +63,7 @@ export const API_ERROR_CODES = [
   'objectives.ownSessionsOnly',
   'objectives.futureDay',
   'objectives.paused',
+  'objectives.completedByChildren',
   'objectives.numericNeedsTarget',
   'objectives.habitNeedsDays',
   'objectives.dueBeforeStart',

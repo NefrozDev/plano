@@ -16,7 +16,10 @@ import { ObjectiveSession } from './entities/objective-session.entity';
 import { Objective } from './entities/objective.entity';
 import { recordActivity } from './objective-activity.record';
 import { ObjectiveViewService } from './objective-view.service';
-import { ObjectiveWriterService } from './objective-writer.service';
+import {
+  completedThroughChildren,
+  ObjectiveWriterService,
+} from './objective-writer.service';
 import { ObjectiveAccessService } from './objective-access.service';
 import { errorCode } from '../errors/error-code';
 
@@ -212,8 +215,14 @@ export class ObjectiveTrackingService {
       id,
       userId,
       'contribute',
-      async ({ node }, manager) => {
+      async ({ tree, node }, manager) => {
         requireMode(node, 'none');
+        if (completedThroughChildren(tree, node)) {
+          throw new BadRequestException(
+            'This goal is done once its sub-goals are.',
+            errorCode('objectives.completedByChildren'),
+          );
+        }
         if (node.status === 'paused') {
           throw new BadRequestException(
             'This goal is paused.',

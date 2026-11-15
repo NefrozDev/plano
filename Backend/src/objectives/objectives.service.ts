@@ -22,11 +22,7 @@ import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { ObjectiveRecurrenceService } from './objective-recurrence.service';
-import {
-  MAX_OBJECTIVE_LEVELS,
-  MAX_TREE_NODES,
-  type ObjectiveTree,
-} from './objective-tree';
+import { MAX_OBJECTIVE_LEVELS, MAX_TREE_NODES } from './objective-tree';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
 import { errorCode } from '../errors/error-code';
@@ -164,7 +160,6 @@ export class ObjectivesService {
       applySettings(node, sentFields(settings));
       await manager.save(node);
       await recordActivity(manager, node.id, userId, 'created');
-      if (placement) await this.reopenAncestors(placement, userId, manager);
 
       await manager.save(
         (children ?? []).map((title, position) =>
@@ -282,59 +277,14 @@ export class ObjectivesService {
     return this.findOne(id, userId);
   }
 
-  /** Everything below goes with it, through the foreign key cascade. */
-  async remove(id: string, userId: string): Promise<void> {
-    await this.writer.change(
-      id,
-      userId,
-      'own',
-      async ({ tree, node }, manager) => {
-        await manager.delete(Objective, { id: node.id });
-        await this.completeAncestorsLeftDone(tree, node, userId, manager);
-      },
-    );
-  }
-
   /**
-   * Deleting the last open sub-objective leaves nothing to do: objectives
-   * without a bar are completed, all the way up while that holds. Those with
-   * a bar follow their progress in `settle()`.
+   * Everything below goes with it, through the foreign key cascade; a parent
+   * left with only finished sub-objectives is completed by `settle()`.
    */
-  private async completeAncestorsLeftDone(
-    tree: ObjectiveTree,
-    removed: Objective,
-    userId: string,
-    manager: EntityManager,
-  ): Promise<void> {
-    const done = new Set<string>();
-    const completed: Objective[] = [];
-    for (const ancestor of tree.ancestorsOf(removed.id).reverse()) {
-      const remaining = tree
-        .childrenOf(ancestor.id)
-        .filter((child) => child.id !== removed.id && !child.archived);
-      const allDone =
-        remaining.length > 0 &&
-        remaining.every(
-          (child) => child.status === 'completed' || done.has(child.id),
-        );
-      if (
-        !allDone ||
-        ancestor.completion !== 'none' ||
-        ancestor.status !== 'active'
-      ) {
-        break;
-      }
-      ancestor.status = 'completed';
-      ancestor.completedAt = new Date();
-      ancestor.completedByUserId = userId;
-      done.add(ancestor.id);
-      completed.push(ancestor);
-    }
-    if (!completed.length) return;
-    await manager.save(completed);
-    for (const ancestor of completed) {
-      await recordActivity(manager, ancestor.id, userId, 'completed');
-    }
+  async remove(id: string, userId: string): Promise<void> {
+    await this.writer.change(id, userId, 'own', async ({ node }, manager) => {
+      await manager.delete(Objective, { id: node.id });
+    });
   }
 
   /** Takes every sub-objective of the objective exactly once, in the new order. */
@@ -385,7 +335,7 @@ export class ObjectivesService {
     userId: string,
     extraNodes: number,
     manager: EntityManager,
-  ): Promise<{ rootId: string; position: number; ancestors: Objective[] }> {
+  ): Promise<{ rootId: string; position: number }> {
     const { tree, node } = await this.access.require(
       parentId,
       userId,
@@ -409,33 +359,6 @@ export class ObjectivesService {
     return {
       rootId: tree.root.id,
       position: Math.max(-1, ...siblings.map(({ position }) => position)) + 1,
-      ancestors: tree.pathTo(node.id),
     };
-  }
-
-  /**
-   * Something new to do under a finished objective means it is not finished
-   * any more. Objectives with a bar follow their progress in `settle()`; this
-   * reopens the ones without a bar, completed by hand, all the way up.
-   */
-  private async reopenAncestors(
-    { ancestors }: { ancestors: Objective[] },
-    userId: string,
-    manager: EntityManager,
-  ): Promise<void> {
-    const reopened = ancestors.filter(
-      (ancestor) =>
-        ancestor.status === 'completed' && ancestor.completion === 'none',
-    );
-    for (const ancestor of reopened) {
-      ancestor.status = 'active';
-      ancestor.completedAt = null;
-      ancestor.completedByUserId = null;
-    }
-    if (!reopened.length) return;
-    await manager.save(reopened);
-    for (const ancestor of reopened) {
-      await recordActivity(manager, ancestor.id, userId, 'reopened');
-    }
   }
 }
