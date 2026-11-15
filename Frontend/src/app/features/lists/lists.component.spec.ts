@@ -311,6 +311,29 @@ describe('ListsComponent', () => {
     });
   });
 
+  it('lets a press on a grip reach the grip, not the card under it, in both views', () => {
+    // These global rules are scoped to the app-lists tag, which the test root lacks.
+    const scope = document.body.appendChild(document.createElement('app-lists'));
+    scope.appendChild(element);
+    try {
+      const gripOnTop = () => {
+        const grip = element.querySelector('.list-item .drag-handle') as HTMLElement;
+        const { left, top, width, height } = grip.getBoundingClientRect();
+        return document.elementFromPoint(left + width / 2, top + height / 2) === grip;
+      };
+      expect(gripOnTop()).toBe(true);
+
+      (element.querySelector('app-view-switch .grid') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      http.expectOne('/api/v1/settings/lists').flush(listSettings({ defaultView: 'grid' }));
+      fixture.detectChanges();
+
+      expect(gripOnTop()).toBe(true);
+    } finally {
+      scope.remove();
+    }
+  });
+
   it('switches to the grid layout from the right of the header and saves it as the default view', () => {
     const header = element.querySelector('.lists-header') as HTMLElement;
     expect(header.firstElementChild?.tagName).toBe('H1');

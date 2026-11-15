@@ -374,7 +374,8 @@ app-lists .lists-search input { width: 100%; min-width: 0; height: 2.5rem; borde
 app-lists .list-item { position: relative; }
 app-lists .list-item.dragging .list-card { opacity: .65; box-shadow: 0 .6rem 1.4rem rgb(31 41 55 / 16%); }
 app-lists .lists-content:not(.grid-view) .list-card { padding-right: 2.6rem; }
-app-lists .drag-handle { position: absolute; top: 50%; right: .35rem; display: grid; width: 2rem; height: 2.6rem; place-items: center; padding: 0; border: 0; border-radius: .5rem; background: transparent; color: #9aa3b5; cursor: grab; font-size: 1.05rem; transform: translateY(-50%); touch-action: none; user-select: none; }
+/* Above the card (z-index 1, for its swipe), or the card takes the press and nothing drags. */
+app-lists .drag-handle { position: absolute; z-index: 2; top: 50%; right: .35rem; display: grid; width: 2rem; height: 2.6rem; place-items: center; padding: 0; border: 0; border-radius: .5rem; background: transparent; color: #9aa3b5; cursor: grab; font-size: 1.05rem; transform: translateY(-50%); touch-action: none; user-select: none; }
 app-lists .drag-handle:hover { background: rgb(255 255 255 / 70%); color: #4b5468; }
 app-lists .drag-handle:active { cursor: grabbing; }
 app-lists .drag-handle:focus-visible { outline: 3px solid var(--color-focus); }
@@ -382,6 +383,7 @@ app-lists .grid-view .drag-handle { top: .35rem; transform: none; }
 app-lists .list-card { position: relative; z-index: 1; touch-action: pan-y; transition: transform 180ms ease; }
 app-lists .delete-list { position: absolute; top: 0; right: 0; bottom: 0; display: grid; width: 4.5rem; place-items: center; border: 0; border-radius: .9rem; background: #d92d20; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
 app-lists .list-item.revealed .delete-list { opacity: 1; pointer-events: auto; }
+app-lists .list-item.revealed .drag-handle { visibility: hidden; }
 app-lists .delete-list svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 app-lists .list-sharing { display: flex; min-width: 0; gap: .4rem; align-items: center; }
 app-lists .list-sharing app-avatar-stack { --avatar-size: 1.3rem; }
@@ -594,9 +596,9 @@ app-list-detail .details-toggle i {
 app-list-detail .details-toggle.done i { border-color: #2EC76F; background: #2EC76F; }
 app-list-detail .details-toggle.done i::after { width: .5rem; height: .28rem; border-bottom: 2px solid white; border-left: 2px solid white; content: ''; transform: translateY(-.08rem) rotate(-45deg); }
 /* Reads as a title at rest, and clearly as a text field while it is being edited. */
-app-list-detail .entry-name-editor input { width: 100%; min-height: 2.5rem; padding: .35rem .6rem; border: 1px solid transparent; border-radius: .6rem; outline: 0; background: transparent; color: var(--color-text); font: inherit; font-size: 1rem; font-weight: 750; transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease; }
-app-list-detail .entry-name-editor input:enabled:hover { border-color: #E2E7EF; }
-app-list-detail .entry-name-editor input:focus { border-color: var(--color-primary); background: #F6F9FF; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent); }
+app-list-detail .entry-name-editor textarea { display: block; width: 100%; overflow: hidden; resize: none; line-height: 1.35; min-height: 2.5rem; padding: .35rem .6rem; border: 1px solid transparent; border-radius: .6rem; outline: 0; background: transparent; color: var(--color-text); font: inherit; font-size: 1rem; font-weight: 750; transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease; }
+app-list-detail .entry-name-editor textarea:enabled:hover { border-color: #E2E7EF; }
+app-list-detail .entry-name-editor textarea:focus { border-color: var(--color-primary); background: #F6F9FF; box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent); }
 app-list-detail .detail-fields { margin-top: .75rem; background: white; }
 
 app-list-detail .detail-field {
