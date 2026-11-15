@@ -66,6 +66,12 @@ describe('DashboardComponent', () => {
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('h1')?.textContent).toContain('Bonjour Ada');
+    // In the top bar, right after the logo and before the bell and profile.
+    const welcome = element.querySelector('.topbar .welcome');
+    expect(welcome?.previousElementSibling?.classList).toContain('brand-mark');
+    expect(welcome?.nextElementSibling?.classList).toContain('topbar-actions');
+    expect(welcome?.querySelector('p')?.textContent?.trim()).toBe('Voici votre journée');
+    expect(element.querySelectorAll('h1').length).toBe(1);
     expect(element.textContent).toContain('Mes objectifs');
     expect(
       Array.from(element.querySelectorAll('app-bottom-nav a')).map((link) => link.getAttribute('href')),

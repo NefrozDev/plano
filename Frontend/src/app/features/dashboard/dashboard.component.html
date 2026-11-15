@@ -10,6 +10,11 @@
       <circle cx="50" cy="12" r="3.2" fill="#fff" />
     </svg>
   </a>
+  <!-- Beside the logo: the day's content starts right under the top bar. -->
+  <div class="welcome">
+    <h1>{{ 'dashboard.greeting' | transloco: { name: displayName() } }}</h1>
+    <p>{{ 'dashboard.today' | transloco }}</p>
+  </div>
   @if (user(); as currentUser) {
     <div class="topbar-actions">
       <app-notifications-bell />
@@ -22,11 +27,6 @@
   }
 </header>
 <div class="screen-content">
-  <section class="welcome" aria-labelledby="welcome-title">
-    <h1 id="welcome-title">{{ 'dashboard.greeting' | transloco: { name: displayName() } }}</h1>
-    <p>{{ 'dashboard.today' | transloco }}</p>
-  </section>
-
   <section class="dashboard-section agenda-section" aria-labelledby="agenda-title">
     <div class="section-heading">
       <h2 id="agenda-title">{{ 'dashboard.agenda' | transloco }}</h2>
