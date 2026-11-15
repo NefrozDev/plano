@@ -113,9 +113,10 @@
           <section
             class="entry-section"
             [style.--section-color]="view.section.color"
-            [style.--section-progress]="view.progress + '%'"
           >
+            <!-- --section-progress does not inherit (it animates): set where it is drawn. -->
             <app-list-section-header
+              [style.--section-progress]="view.progress + '%'"
               [name]="view.section.name"
               [color]="view.section.color"
               [editable]="canEdit()"

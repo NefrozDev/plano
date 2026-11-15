@@ -55,7 +55,7 @@
   initial-value: 0%;
 }
 
-app-list-detail .entry-section,
+app-list-detail .entry-section > app-list-section-header,
 app-list-detail .section-summary {
   transition: --section-progress 0.4s ease;
 }

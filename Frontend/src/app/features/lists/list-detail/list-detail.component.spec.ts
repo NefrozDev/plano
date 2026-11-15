@@ -109,8 +109,24 @@ describe('ListDetailComponent', () => {
     expect(element.querySelector('.list-title')?.textContent).toContain('Courses');
     expect(element.querySelectorAll('.entry').length).toBe(6);
     expect(element.querySelector('.overall-progress strong')?.textContent).toBe('2 / 6');
-    const firstSection = element.querySelector('.entry-section') as HTMLElement;
-    expect(firstSection.style.getPropertyValue('--section-progress')).toBe('25%');
+    const firstHeader = element.querySelector('.entry-section app-list-section-header') as HTMLElement;
+    expect(firstHeader.style.getPropertyValue('--section-progress')).toBe('25%');
+  });
+
+  it('underlines an open section title with its progress, without filling the section', async () => {
+    await create();
+
+    const section = element.querySelector('.entry-section') as HTMLElement;
+    const header = section.querySelector('app-list-section-header') as HTMLElement;
+    // The line grows to its width: read it at the end.
+    void getComputedStyle(header).backgroundSize;
+    header.getAnimations().forEach((animation) => animation.finish());
+    const style = getComputedStyle(header);
+    // The progress line, in the section colour, over the grey track across the whole width.
+    expect(style.backgroundImage.match(/linear-gradient/g)?.length).toBe(2);
+    expect(style.backgroundSize).toMatch(/^25% \S+, 100% \S+$/);
+    expect(style.backgroundPosition).toContain('0% 100%');
+    expect(getComputedStyle(section).backgroundImage).toBe('none');
   });
 
   it('toggles an entry through the API and folds a completed section', async () => {

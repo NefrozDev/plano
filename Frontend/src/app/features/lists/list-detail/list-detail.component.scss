@@ -18,8 +18,15 @@
 .overall-progress i { display: block; height: 100%; border-radius: inherit; background: #25c567; }
 .overall-progress strong { min-width: 2.5rem; font-size: .85rem; text-align: right; }
 .detail-content { flex: 1; min-height: 0; padding: .25rem 1.45rem 6rem; overflow-y: auto; }
-.entry-section, .section-summary { background: linear-gradient(to right, color-mix(in srgb, var(--section-color) 13%, white) 0 var(--section-progress), transparent var(--section-progress) 100%); }
+/* A folded section fills from left to right; an open one underlines its title instead. */
+.section-summary { background: linear-gradient(to right, color-mix(in srgb, var(--section-color) 13%, white) 0 var(--section-progress), transparent var(--section-progress) 100%); }
 .entry-section { margin-bottom: 1rem; padding: .45rem .65rem .65rem; border-radius: .65rem; }
+.entry-section > app-list-section-header {
+  margin-bottom: .55rem;
+  background:
+    linear-gradient(var(--section-color), var(--section-color)) left bottom / var(--section-progress) .2rem no-repeat,
+    linear-gradient(#e3e7ef, #e3e7ef) left bottom / 100% .2rem no-repeat;
+}
 .section-block { position: relative; transition: transform 120ms ease; }
 .section-block.dragging { z-index: 1; opacity: .72; transform: scale(.98); }
 .section-handle { position: absolute; top: 50%; right: .3rem; transform: translateY(-50%); }
