@@ -13,7 +13,8 @@ export interface Screen {
 
 // Every screen, in each of its states that shows something different.
 export const screens: Screen[] = [
-  { name: 'sign-in', url: '/login', mock: { signedOut: true } },
+  // A bare /login leaves at once for the silent sign-in: this is the page it comes back to.
+  { name: 'sign-in', url: '/login?signIn=none', mock: { signedOut: true } },
   {
     name: 'sign-in cancelled',
     url: '/login?signIn=cancelled',

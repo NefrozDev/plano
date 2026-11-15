@@ -21,9 +21,14 @@ export class AuthService {
   readonly user = this.userState.asReadonly();
   readonly status = this.statusState.asReadonly();
 
-  /** Where the browser goes to sign in, coming back to `returnUrl`. */
-  signInUrl(returnUrl: string, language: string): string {
+  /**
+   * Where the browser goes to sign in, coming back to `returnUrl`. `silent`
+   * shows no page: signed in at once with an open Synapse session, back on
+   * the sign-in page with `signIn=none` otherwise.
+   */
+  signInUrl(returnUrl: string, language: string, silent = false): string {
     const params = new URLSearchParams({ returnTo: returnUrl, lang: language });
+    if (silent) params.set('silent', '1');
     return `${this.apiUrl}/login?${params.toString()}`;
   }
 

@@ -41,6 +41,14 @@ describe('AuthService', () => {
     http.expectNone(() => true);
   });
 
+  it('asks for a silent sign-in only when told to', () => {
+    expect(service.signInUrl('/', 'fr', true)).toBe(
+      '/api/v1/auth/login?returnTo=%2F&lang=fr&silent=1',
+    );
+    expect(service.signInUrl('/', 'fr', false)).not.toContain('silent');
+    http.expectNone(() => true);
+  });
+
   it('deduplicates concurrent session restoration and reuses its result', () => {
     const restored: Array<AuthUser | null> = [];
 

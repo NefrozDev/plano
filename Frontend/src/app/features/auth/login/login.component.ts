@@ -13,6 +13,9 @@ function safeReturnUrl(value: string | undefined): string {
 /**
  * Plano signs in with the Synapse account, shared by every Synapse
  * Engineering app: the button opens its pages, which come back here signed in.
+ * Arriving here, the page first tries a silent sign-in, which signs in at once
+ * when the account is already open in another Synapse app; it comes back with
+ * `signIn` set, so the page then waits for the button instead of looping.
  */
 @Component({
   selector: 'app-login',
@@ -32,6 +35,10 @@ export class LoginComponent {
   /** ?signIn=cancelled|failed: how the last sign-in came back, as a translation key. */
   readonly notice = signal(this.explain(this.query.get('signIn')));
 
+  constructor() {
+    if (!this.query.has('signIn')) this.go(true);
+  }
+
   private explain(signIn: string | null): string {
     switch (signIn) {
       case 'cancelled':
@@ -44,9 +51,17 @@ export class LoginComponent {
   }
 
   start(): void {
+    this.go(false);
+  }
+
+  private go(silent: boolean): void {
     this.leaving.set(true);
     this.location.assign(
-      this.auth.signInUrl(safeReturnUrl(this.query.get('returnUrl') ?? undefined), this.transloco.getActiveLang()),
+      this.auth.signInUrl(
+        safeReturnUrl(this.query.get('returnUrl') ?? undefined),
+        this.transloco.getActiveLang(),
+        silent,
+      ),
     );
   }
 }
