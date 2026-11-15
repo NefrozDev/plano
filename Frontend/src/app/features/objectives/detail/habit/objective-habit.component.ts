@@ -50,16 +50,12 @@ export class ObjectiveHabitComponent {
     const monthStart = toIsoDate(new Date(year, month, 1));
     const monthEnd = toIsoDate(new Date(year, month + 1, 0));
     const successes = [...this.checkIns()].filter((date) => date >= monthStart && date <= monthEnd).length;
-    // Only days the habit could actually be tracked count towards the rate.
+    // Only days the habit could actually be tracked so far: "3 of 15", not "3 of 31".
     const startDate = objective?.startDate ?? monthStart;
     const from = startDate > monthStart ? startDate : monthStart;
     const to = this.today < monthEnd ? this.today : monthEnd;
     const trackedDays = Math.max(0, daysBetween(from, to) + 1);
-    return {
-      successes,
-      rate: trackedDays ? Math.min(100, Math.round((successes / trackedDays) * 100)) : 0,
-      bestStreak: longestStreak([...this.checkIns()]),
-    };
+    return { successes, trackedDays, bestStreak: longestStreak([...this.checkIns()]) };
   });
 
   /**

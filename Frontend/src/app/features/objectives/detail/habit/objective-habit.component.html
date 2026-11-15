@@ -43,8 +43,9 @@
         <div><strong>{{ period.reachedCount }} / {{ period.pastCount }}</strong><span>{{ period.reached | transloco }}</span></div>
         <div><strong>{{ stats().successes }}</strong><span>{{ 'objectives.habit.successes' | transloco }}</span></div>
       } @else {
-        <div><strong>{{ stats().successes }}</strong><span>{{ 'objectives.habit.successes' | transloco }}</span></div>
-        <div><strong>{{ 'objectives.percent' | transloco: { percent: stats().rate } }}</strong><span>{{ 'objectives.habit.rate' | transloco }}</span></div>
+        <!-- The same days as the bar, then this month's: a percentage of each read as two contradicting rates. -->
+        <div><strong>{{ objective.amount?.current ?? 0 }} / {{ objective.amount?.target ?? objective.habitTargetDays ?? 0 }}</strong><span>{{ 'objectives.habit.towardGoal' | transloco }}</span></div>
+        <div><strong>{{ stats().successes }} / {{ stats().trackedDays }}</strong><span>{{ 'objectives.habit.thisMonth' | transloco }}</span></div>
         <div><strong>{{ stats().bestStreak }}</strong><span>{{ 'objectives.habit.bestStreak' | transloco }}</span></div>
       }
     </section>

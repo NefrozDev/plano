@@ -38,10 +38,10 @@ describe('ObjectiveHabitComponent', () => {
   describe('for an ongoing habit', () => {
     beforeEach(() => setUp());
 
-    it('computes this month’s successes, rate and best streak', () => {
+    it('computes this month’s successes out of the days tracked so far, and the best streak', () => {
       expect(element.querySelector('.month-nav span')?.textContent).toBe('Octobre 2026');
       // Started on the 1st: 15 days could be tracked so far, 3 were.
-      expect(component.stats()).toEqual({ successes: 3, rate: 20, bestStreak: 2 });
+      expect(component.stats()).toEqual({ successes: 3, trackedDays: 15, bestStreak: 2 });
       expect(element.querySelectorAll('.day.checked').length).toBe(3);
     });
 
@@ -79,7 +79,7 @@ describe('ObjectiveHabitComponent', () => {
 
       expect(element.querySelector('.month-nav span')?.textContent).toBe('Septembre 2026');
       // Before the habit started: nothing can be tracked.
-      expect(component.stats()).toEqual(expect.objectContaining({ successes: 0, rate: 0 }));
+      expect(component.stats()).toEqual(expect.objectContaining({ successes: 0, trackedDays: 0 }));
     });
 
     it('edits the signed-in person’s reminder', async () => {
@@ -136,11 +136,16 @@ describe('ObjectiveHabitComponent', () => {
     });
   });
 
-  it('keeps the daily rate for a habit that does not start again', async () => {
-    await setUp();
+  it('shows the days towards the goal, as the bar does, beside this month’s days', async () => {
+    await setUp(habitDetail({ amount: { current: 12, target: 30, unit: 'jours' } }));
 
     expect(component.period()).toBeNull();
-    expect(element.querySelector('.stats')?.textContent).toContain('Taux de réussite');
+    const tiles = Array.from(element.querySelectorAll('.stats > div'), (tile) =>
+      Array.from(tile.children, (part) => part.textContent?.trim()).join(' '),
+    );
+    // 12 days in all, as the bar says; 3 of the 15 days of October so far.
+    expect(tiles).toEqual(['12 / 30 Vers l’objectif', '3 / 15 Jours réussis ce mois-ci', '2 Meilleure série']);
+    expect(element.querySelector('.stats')?.textContent).not.toContain('%');
   });
 
   it('only counts the signed-in person’s days', async () => {
