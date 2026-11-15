@@ -15,6 +15,8 @@ const types = {
   ".svg": "image/svg+xml",
   ".json": "application/json",
   ".woff2": "font/woff2",
+  ".png": "image/png",
+  ".webmanifest": "application/manifest+json",
 };
 
 const index = join(root, "index.html");

@@ -53,7 +53,7 @@ describe('LiveUpdatesService', () => {
     auth.updateUser({ ...user, locale: 'de' });
     TestBed.tick();
 
-    expect(FakeEventSource.created.map(({ url }) => url)).toEqual(['/api/v1/live/stream']);
+    expect(FakeEventSource.created.map(({ url }) => url)).toEqual(['/api/v1/live/stream?ngsw-bypass']);
     const source = FakeEventSource.latest() as FakeEventSource;
     source.emit({ type: 'list.changed', listId: 'list-1' });
     source.emit({ type: 'list.removed', listId: 'list-2' });

@@ -3,6 +3,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { TitleStrategy, provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideAppUpdates } from './core/browser/app-updates';
 import { provideInputFocusZoomFix } from './core/browser/input-focus-zoom';
 import { apiCredentialsInterceptor } from './core/http/api-credentials.interceptor';
 import { provideI18n } from './core/i18n/i18n.providers';
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     { provide: TitleStrategy, useClass: TranslatedTitleStrategy },
     provideI18n(),
     provideInputFocusZoomFix(),
+    provideAppUpdates(),
     BrowserStoragePlanoDataAdapter,
     {
       provide: PLANO_DATA_ADAPTER,

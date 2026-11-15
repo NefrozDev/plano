@@ -19,13 +19,15 @@ export default defineConfig({
     locale: 'fr-BE',
     timezoneId: 'Europe/Brussels',
     trace: 'retain-on-failure',
+    // The tests mock /api in the page; a service worker would fetch around those mocks.
+    serviceWorkers: 'block',
   },
   // Keyboard on a computer; reflow, text spacing and the other languages at phone width; axe on both.
   projects: [
     {
       name: 'desktop',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: /(axe|keyboard)\.spec\.ts/,
+      testMatch: /(axe|keyboard|pwa)\.spec\.ts/,
     },
     { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /(axe|layout|languages)\.spec\.ts/ },
   ],

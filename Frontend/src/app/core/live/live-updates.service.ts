@@ -36,7 +36,8 @@ const EVENT_TYPES = Object.keys(KNOWN_EVENTS) as LiveEvent['type'][];
 @Injectable({ providedIn: 'root' })
 export class LiveUpdatesService {
   private readonly createSource = inject(EVENT_SOURCE_FACTORY);
-  private readonly url = `${inject(API_BASE_URL)}/live/stream`;
+  // ngsw-bypass: the stream never ends, so the service worker must not sit in the middle of it.
+  private readonly url = `${inject(API_BASE_URL)}/live/stream?ngsw-bypass`;
   private readonly auth = inject(AuthService);
   private readonly eventsSubject = new Subject<LiveEvent>();
   private source: EventSource | null = null;
