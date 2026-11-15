@@ -160,6 +160,7 @@ export class ObjectivesService {
       applySettings(node, sentFields(settings));
       await manager.save(node);
       await recordActivity(manager, node.id, userId, 'created');
+      if (placement) await this.reopenAncestors(placement, userId, manager);
 
       await manager.save(
         (children ?? []).map((title, position) =>
@@ -332,7 +333,7 @@ export class ObjectivesService {
     userId: string,
     extraNodes: number,
     manager: EntityManager,
-  ): Promise<{ rootId: string; position: number }> {
+  ): Promise<{ rootId: string; position: number; ancestors: Objective[] }> {
     const { tree, node } = await this.access.require(
       parentId,
       userId,
@@ -356,6 +357,33 @@ export class ObjectivesService {
     return {
       rootId: tree.root.id,
       position: Math.max(-1, ...siblings.map(({ position }) => position)) + 1,
+      ancestors: tree.pathTo(node.id),
     };
+  }
+
+  /**
+   * Something new to do under a finished objective means it is not finished
+   * any more. Objectives with a bar follow their progress in `settle()`; this
+   * reopens the ones without a bar, completed by hand, all the way up.
+   */
+  private async reopenAncestors(
+    { ancestors }: { ancestors: Objective[] },
+    userId: string,
+    manager: EntityManager,
+  ): Promise<void> {
+    const reopened = ancestors.filter(
+      (ancestor) =>
+        ancestor.status === 'completed' && ancestor.completion === 'none',
+    );
+    for (const ancestor of reopened) {
+      ancestor.status = 'active';
+      ancestor.completedAt = null;
+      ancestor.completedByUserId = null;
+    }
+    if (!reopened.length) return;
+    await manager.save(reopened);
+    for (const ancestor of reopened) {
+      await recordActivity(manager, ancestor.id, userId, 'reopened');
+    }
   }
 }

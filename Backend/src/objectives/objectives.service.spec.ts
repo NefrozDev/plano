@@ -177,6 +177,40 @@ describe('ObjectivesService', () => {
       ).toBe(2);
     });
 
+    it('reopens finished objectives without a bar above a new sub-objective', async () => {
+      const top = await create({ title: 'A' });
+      const middle = await create({ title: 'B', parentId: top.id });
+      await bed.tracking.setCompleted(middle.id, bed.ada, { completed: true });
+      await bed.tracking.setCompleted(top.id, bed.ada, { completed: true });
+
+      await create({ title: 'C', parentId: middle.id });
+
+      for (const id of [top.id, middle.id]) {
+        expect(await row(id)).toMatchObject({
+          status: 'active',
+          completedAt: null,
+          completedByUserId: null,
+        });
+        const kinds = (await bed.activity.history(id, bed.ada)).map(
+          ({ kind }) => kind,
+        );
+        expect(kinds).toContain('reopened');
+      }
+    });
+
+    it('leaves a manual bar at 100 % as it is under a new sub-objective', async () => {
+      const top = await create({ completion: 'manual' });
+      await bed.tracking.setProgress(top.id, bed.ada, { percent: 100 });
+
+      await create({ title: 'C', parentId: top.id });
+
+      expect((await row(top.id)).status).toBe('completed');
+      const kinds = (await bed.activity.history(top.id, bed.ada)).map(
+        ({ kind }) => kind,
+      );
+      expect(kinds).not.toContain('reopened');
+    });
+
     it('stops at the level limit', async () => {
       let parent = await create();
       for (let level = 2; level <= MAX_OBJECTIVE_LEVELS; level += 1) {
