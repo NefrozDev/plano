@@ -15,7 +15,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(1.35rem + env(safe-area-inset-top)) 1.25rem 0.5rem;
+  /* As far from the top as the other tabs' titles, clear of a camera cut into the screen. */
+  padding: calc(1.8rem + env(safe-area-inset-top)) 1.25rem 0.5rem;
 }
 .brand-mark {
   width: 2.6rem;
