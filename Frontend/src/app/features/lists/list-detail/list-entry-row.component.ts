@@ -85,7 +85,7 @@ import { SwipeToDelete } from '../../../shared/ui/swipe-to-delete';
     .entry.highlighted .entry-toggle i { border-color: #ff9d72; }
     .entry-name app-news-dot { margin-left: .35rem; }
     .entry-name { min-height: 2.6rem; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 550; text-align: left; }
-    .entry.done .entry-name { color: #737b89; text-decoration: line-through; }
+    .entry.done .entry-name { color: var(--color-text-muted); text-decoration: line-through; }
   `,
 })
 export class ListEntryRowComponent {
