@@ -283,6 +283,13 @@ describe('ObjectiveSummaryComponent', () => {
       await show(metricDetail());
       expect(button()).toBeNull();
     });
+
+    it('is not offered on a parent, which its sub-objectives complete', async () => {
+      await show(treeDetail({ completion: 'none' }));
+
+      expect(button()).toBeNull();
+      expect(element.querySelectorAll('.child-item button[aria-pressed]').length).toBe(2);
+    });
   });
 
   describe('sub-objectives', () => {

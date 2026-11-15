@@ -343,7 +343,7 @@ export class ObjectivesStore {
   async setChildCompleted(childId: string, completed: boolean): Promise<boolean> {
     const parentId = this.detailState()?.id;
     const done = await this.run(this.api.setCompleted(childId, completed), () => undefined);
-    if (done && parentId) await this.run(this.api.findOne(parentId), (detail) => this.detailState.set(detail));
+    if (done && parentId) await this.apply(this.api.findOne(parentId));
     return done;
   }
 

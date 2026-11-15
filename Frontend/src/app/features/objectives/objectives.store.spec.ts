@@ -556,6 +556,44 @@ describe('ObjectivesStore', () => {
         expect(store.detail()).toMatchObject({ id: 'obj-1', percent: 100 });
       });
 
+      it('celebrates the parent that ticking its last sub-objective completed', async () => {
+        await open(treeDetail());
+
+        const ticking = store.setChildCompleted('child-2', true);
+        http.expectOne('/api/v1/objectives/child-2/completed').flush(objectiveDetail({ id: 'child-2' }));
+        await settle();
+        http.expectOne('/api/v1/objectives/obj-1').flush(treeDetail({ percent: 100, status: 'completed' }));
+
+        expect(await ticking).toBe(true);
+        expect(store.celebration()).toMatchObject({ id: 'obj-1', status: 'completed' });
+      });
+
+      it('does not celebrate a parent that stays open', async () => {
+        await open(treeDetail());
+
+        const ticking = store.setChildCompleted('child-2', true);
+        http.expectOne('/api/v1/objectives/child-2/completed').flush(objectiveDetail({ id: 'child-2' }));
+        await settle();
+        http.expectOne('/api/v1/objectives/obj-1').flush(treeDetail());
+
+        await ticking;
+        expect(store.celebration()).toBeNull();
+      });
+
+      it('celebrates the parent that deleting its last open sub-objective completed', async () => {
+        await open(treeDetail());
+
+        const removing = store.remove('child-2');
+        const request = http.expectOne('/api/v1/objectives/child-2');
+        expect(request.request.method).toBe('DELETE');
+        request.flush(null);
+        await settle();
+        http.expectOne('/api/v1/objectives/obj-1').flush(treeDetail({ percent: 100, status: 'completed' }));
+
+        expect(await removing).toBe(true);
+        expect(store.celebration()).toMatchObject({ id: 'obj-1' });
+      });
+
       it('does not reload the parent when ticking fails', async () => {
         const ticking = store.setChildCompleted('child-2', true);
         http.expectOne('/api/v1/objectives/child-2/completed').flush(null, { status: 500, statusText: 'Error' });

@@ -68,7 +68,7 @@
         </label>
       }
 
-      @if (objective.completion === 'none' && canContribute() && objective.status !== 'paused') {
+      @if (objective.completion === 'none' && !objective.childCount && canContribute() && objective.status !== 'paused') {
         <button
           class="complete-button"
           type="button"
