@@ -51,6 +51,14 @@ describe('NotificationsBellComponent', () => {
     expect(element.querySelector('.panel')).toBeNull();
   });
 
+  it('draws the bell as a bare icon, without a ring around it', () => {
+    const style = getComputedStyle(bell());
+
+    expect(style.borderTopWidth).toBe('0px');
+    expect(style.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(bell().querySelector('svg')).not.toBeNull();
+  });
+
   it('says so when there is nothing yet', () => {
     open();
 

@@ -90,8 +90,9 @@ const MINUTE = 60_000;
   `,
   styles: `
     :host { position: relative; display: block; }
-    .bell { position: relative; display: grid; width: 2.8rem; height: 2.8rem; padding: .55rem; place-items: center; border: 1.5px solid #20263a; border-radius: 50%; background: rgb(255 255 255 / 70%); color: #20263a; cursor: pointer; }
-    .bell svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+    /* A bare icon, like the other header actions: no ring around it. */
+    .bell { position: relative; display: grid; width: 2.8rem; height: 2.8rem; padding: .45rem; place-items: center; border: 0; border-radius: .7rem; background: transparent; color: #20263a; cursor: pointer; }
+    .bell svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
     .badge { position: absolute; top: -.15rem; right: -.2rem; display: grid; min-width: 1.15rem; height: 1.15rem; padding: 0 .25rem; place-items: center; border: 2px solid #f6faff; border-radius: 1rem; background: var(--color-danger); color: #fff; font-size: .62rem; font-style: normal; font-weight: 750; }
     /* Aligned on the top bar's right edge, past the profile picture that follows the bell. */
     .panel { position: absolute; z-index: 30; top: calc(100% + .45rem); right: calc(-1 * var(--bell-offset, 0px)); width: min(21rem, calc(100vw - 2.5rem)); max-height: min(28rem, 65vh); overflow-y: auto; overscroll-behavior: contain; padding: .55rem; border: 1px solid #e4e8f0; border-radius: 1rem; background: white; box-shadow: 0 .65rem 1.8rem rgb(27 38 64 / 16%); }
