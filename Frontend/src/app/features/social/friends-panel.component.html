@@ -1,9 +1,5 @@
 <h2 id="friends-heading">{{ 'friends.heading' | transloco }}</h2>
 
-@if (error()) {
-  <p class="field-error" role="alert">{{ error() | transloco }}</p>
-}
-
 @if (requests().incoming.length) {
   <h3>{{ 'friends.incoming' | transloco }}</h3>
   <ul class="people">
@@ -106,3 +102,6 @@
     <li class="empty">{{ 'friends.none' | transloco }}</li>
   }
 </ul>
+
+<!-- A toast, not a line above the search: it closes by itself and moves nothing. -->
+<app-toast tone="error" [message]="error() ? (error() | transloco) : ''" (dismissed)="error.set('')" />

@@ -9,6 +9,7 @@ import { FriendsService, MIN_SEARCH_LENGTH } from '../../core/friends/friends.se
 import { ConfirmService } from '../../shared/ui/confirm.service';
 import { NewsDotComponent } from '../../shared/ui/news-dot.component';
 import { SearchFieldComponent } from '../../shared/ui/search-field.component';
+import { ToastComponent } from '../../shared/ui/toast.component';
 import { UserAvatarComponent } from '../../shared/ui/user-avatar.component';
 
 /** Waits for a pause in typing before asking the API. */
@@ -17,7 +18,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 /** Friends section of the Social tab: requests, username search and the friends list. */
 @Component({
   selector: 'app-friends-panel',
-  imports: [NewsDotComponent, SearchFieldComponent, TranslocoPipe, UserAvatarComponent],
+  imports: [NewsDotComponent, SearchFieldComponent, ToastComponent, TranslocoPipe, UserAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './friends-panel.component.html',
   styleUrl: './friends-panel.component.scss',

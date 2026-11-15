@@ -1,3 +1,5 @@
+import { By } from '@angular/platform-browser';
+import { ToastComponent } from '../../shared/ui/toast.component';
 import type { MockInstance } from 'vitest';
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -268,12 +270,31 @@ describe('FriendsPanelComponent', () => {
       fixture.detectChanges();
       expect(element.querySelector('.results .empty')?.textContent).toContain('Aucun utilisateur trouvé.');
 
+      const field = element.querySelector('app-search-field') as HTMLElement;
+      const top = field.getBoundingClientRect().top;
       await search('zzz');
       http
         .expectOne((candidate) => candidate.url === '/api/v1/friends/search')
         .flush({ message: 'Trop de requêtes' }, { status: 429, statusText: 'Too Many Requests' });
       fixture.detectChanges();
-      expect(element.querySelector('[role="alert"]')?.textContent).toContain('La recherche a échoué');
+      expect(element.querySelector('app-toast')?.textContent).toContain('La recherche a échoué');
+      // Shown in a toast over the screen: the search field has not moved.
+      expect(field.getBoundingClientRect().top).toBe(top);
+      expect(element.querySelector('.field-error')).toBeNull();
+    });
+
+    it('lets the search error go once its toast is dismissed', async () => {
+      await search('zzz');
+      http
+        .expectOne((candidate) => candidate.url === '/api/v1/friends/search')
+        .flush({ message: 'Erreur' }, { status: 500, statusText: 'Server Error' });
+      fixture.detectChanges();
+
+      fixture.debugElement.query(By.directive(ToastComponent)).componentInstance.dismissed.emit();
+      fixture.detectChanges();
+
+      expect(component.error()).toBe('');
+      expect(element.querySelector('app-toast')?.textContent?.trim()).toBe('');
     });
   });
 
@@ -289,7 +310,7 @@ describe('FriendsPanelComponent', () => {
 
     // The decline was ignored while the accept ran.
     http.expectNone('/api/v1/friends/requests/request-cyd');
-    expect(element.querySelector('[role="alert"]')?.textContent).toContain('L’action a échoué');
+    expect(element.querySelector('app-toast')?.textContent).toContain('L’action a échoué');
 
     // Unknown requests are ignored without a call.
     await component.accept(bob);
@@ -306,6 +327,6 @@ describe('FriendsPanelComponent', () => {
     http.expectOne('/api/v1/friends/requests').flush({ incoming: [], outgoing: [] });
     await render();
 
-    expect(element.querySelector('[role="alert"]')?.textContent).toContain('Impossible de charger vos amis.');
+    expect(element.querySelector('app-toast')?.textContent).toContain('Impossible de charger vos amis.');
   });
 });
