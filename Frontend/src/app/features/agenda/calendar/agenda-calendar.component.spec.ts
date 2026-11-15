@@ -133,7 +133,7 @@ describe('AgendaCalendarComponent', () => {
     const actions = element().querySelector('.agenda-header .header-actions') as HTMLElement;
     expect(element().querySelector('.agenda-header')?.firstElementChild?.tagName).toBe('H1');
     // Filter, then the switch, search and settings, as on Objectives.
-    expect(Array.from(actions.children).map((child) => child.tagName.toLowerCase())).toEqual(['a', 'app-view-switch', 'a', 'a']);
+    expect(Array.from(actions.children).map((child) => child.tagName.toLowerCase())).toEqual(['a', 'a', 'a', 'app-view-switch']);
     const options = actions.querySelectorAll<HTMLButtonElement>('app-view-switch button');
     expect(Array.from(options).map((option) => option.textContent?.trim())).toEqual(['J', 'S', 'M']);
     expect(Array.from(options).map((option) => option.getAttribute('aria-label'))).toEqual(['Jour', 'Semaine', 'Mois']);

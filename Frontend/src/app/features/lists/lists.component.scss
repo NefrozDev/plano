@@ -2,6 +2,8 @@
 .lists-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .7rem; align-items: center; padding: calc(1.8rem + env(safe-area-inset-top)) 1.25rem .75rem; }
 .lists-header h1 { margin: 0; font-size: 1.55rem; letter-spacing: -.04em; }
 .header-actions { position: relative; display: flex; gap: .25rem; align-items: center; }
+/* The same space before the switch in every tab, whatever its number of options. */
+.header-actions app-view-switch { margin-left: .5rem; }
 .icon-button { position: relative; display: grid; width: 2.35rem; height: 2.35rem; padding: .4rem; place-items: center; border: 0; background: transparent; color: #20263a; cursor: pointer; }
 .icon-button svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .icon-button .grid-icon { fill: currentColor; stroke: none; }

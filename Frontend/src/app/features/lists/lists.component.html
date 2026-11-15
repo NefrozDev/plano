@@ -1,7 +1,6 @@
 <header class="lists-header">
   <h1>{{ 'titles.lists' | transloco }}</h1>
   <div class="header-actions">
-    <app-view-switch [options]="viewOptions" [value]="gridView() ? 'grid' : 'list'" (changed)="setDefaultView($event)" />
     <button
       class="icon-button search-button"
       type="button"
@@ -38,6 +37,8 @@
         </div>
       }
     }
+    <!-- Last in every tab header, so the other controls keep one order and the switch one place. -->
+    <app-view-switch [options]="viewOptions" [value]="gridView() ? 'grid' : 'list'" (changed)="setDefaultView($event)" />
   </div>
 </header>
 

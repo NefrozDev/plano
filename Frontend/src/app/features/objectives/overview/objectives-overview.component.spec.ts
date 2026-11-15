@@ -151,7 +151,7 @@ describe('ObjectivesOverviewComponent', () => {
     expect(header.firstElementChild?.tagName).toBe('H1');
     // Filter first, then the switch, search and settings, in the order of the Lists header.
     expect(Array.from(header.querySelector('.header-actions')!.children).map((child) => child.getAttribute('aria-label') ?? child.tagName.toLowerCase()))
-      .toEqual(['Filtrer et trier les objectifs', 'app-view-switch', 'Rechercher un objectif', 'Paramètres des objectifs']);
+      .toEqual(['Filtrer et trier les objectifs', 'Rechercher un objectif', 'Paramètres des objectifs', 'app-view-switch']);
     expect(rows.getAttribute('aria-label')).toBe('Afficher les objectifs en liste');
     expect(grid.getAttribute('aria-label')).toBe('Afficher les objectifs en grille');
     expect(rows.getAttribute('aria-pressed')).toBe('true');
