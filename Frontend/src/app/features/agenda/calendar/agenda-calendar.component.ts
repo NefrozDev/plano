@@ -17,7 +17,7 @@ import {
   startOfWeek,
   toIsoDate,
 } from '../../../core/time/dates';
-import { t } from '../../../core/i18n/translate';
+import { t, tCount } from '../../../core/i18n/translate';
 import { toPerson } from '../../../core/people/people';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
@@ -51,6 +51,8 @@ export class AgendaCalendarComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly store = inject(AgendaStore);
+  /** Under the title: what today holds, whichever day is shown. */
+  readonly subtitle = computed(() => tCount('tabSubtitles.agenda', this.store.itemsOn(this.store.today()).length));
   /** Events with unread news: an invitation, a guest's answer. Read once the event is opened. */
   readonly news = inject(NotificationsStore).unreadTargets;
 

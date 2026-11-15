@@ -49,6 +49,8 @@ describe('ListsComponent', () => {
 
   it('renders the lists from the API with sharing captions and the shared navigation', () => {
     expect(element.querySelector('h1')?.textContent).toBe('Listes');
+    // Under the title: the three lists in use, not the archived one.
+    expect(element.querySelector('.lists-header .tab-title h1 + .tab-subtitle')?.textContent).toBe('3 listes');
     const captions = Array.from(element.querySelectorAll('.list-copy small')).map((caption) => caption.textContent);
     expect(captions).toEqual(['Partagée avec Bob Martin', 'Privée', 'Partagée par Cyd Martin']);
     // Avatars of whom it is shared with, or of who shared it; none for a private list.
@@ -336,7 +338,7 @@ describe('ListsComponent', () => {
 
   it('switches to the grid layout from the right of the header and saves it as the default view', () => {
     const header = element.querySelector('.lists-header') as HTMLElement;
-    expect(header.firstElementChild?.tagName).toBe('H1');
+    expect(header.firstElementChild?.firstElementChild?.tagName).toBe('H1');
     expect(header.querySelector('.header-actions')?.lastElementChild?.tagName).toBe('APP-VIEW-SWITCH');
     expect(header.querySelector('.header-actions app-view-switch .list')?.getAttribute('aria-pressed')).toBe('true');
     (header.querySelector('.header-actions app-view-switch .grid') as HTMLButtonElement).click();

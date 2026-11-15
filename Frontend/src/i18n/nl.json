@@ -240,6 +240,20 @@
       "notFound": "Dit account bestaat niet meer."
     }
   },
+  "tabSubtitles": {
+    "agenda": {
+      "one": "Vandaag: {{count}}",
+      "other": "Vandaag: {{count}}"
+    },
+    "lists": {
+      "one": "{{count}} lijst",
+      "other": "{{count}} lijsten"
+    },
+    "objectives": {
+      "one": "{{count}} doel bezig",
+      "other": "{{count}} doelen bezig"
+    }
+  },
   "titles": {
     "home": "Plano",
     "login": "Aanmelden",

@@ -70,6 +70,7 @@ describe('AgendaCalendarComponent', () => {
     expect(element().querySelector('.date-bar .title')?.textContent?.trim()).toBe('Jeudi 15 octobre');
     expect(element().querySelector('.date-bar .today')).toBeNull();
     expect(cardTitles()).toEqual(['Rendez-vous projet', 'Courses', 'Déjeuner', 'Appel avec Camille', 'Sport', 'Lait', 'Restaurant']);
+    expect(element().querySelector('.agenda-header .tab-title h1 + .tab-subtitle')?.textContent).toBe('Aujourd’hui : 7');
     const rows = Array.from(element().querySelectorAll('.timeline > div'));
     const nowIndex = rows.findIndex((row) => row.classList.contains('now'));
     expect(rows[nowIndex].textContent).toContain('10:30');
@@ -117,6 +118,8 @@ describe('AgendaCalendarComponent', () => {
 
     expect(router.url).toBe('/agenda?view=day&date=2026-10-16');
     expect(cardTitles()).toEqual(['Anniversaire de Camille']);
+    // The subtitle keeps counting today, not the day shown (list reminders are not loaded here).
+    expect(element().querySelector('.agenda-header .tab-subtitle')?.textContent).toBe('Aujourd’hui : 6');
     expect(element().querySelector('.timeline .time')?.textContent).toBe('Journée');
 
     (element().querySelector('.date-bar .today') as HTMLButtonElement).click();
@@ -131,7 +134,7 @@ describe('AgendaCalendarComponent', () => {
   it('switches views from the J / S / M switch, in the header order of the other tabs', async () => {
     await harness.navigateByUrl('/agenda');
     const actions = element().querySelector('.agenda-header .header-actions') as HTMLElement;
-    expect(element().querySelector('.agenda-header')?.firstElementChild?.tagName).toBe('H1');
+    expect(element().querySelector('.agenda-header')?.firstElementChild?.firstElementChild?.tagName).toBe('H1');
     // Filter, then the switch, search and settings, as on Objectives.
     expect(Array.from(actions.children).map((child) => child.tagName.toLowerCase())).toEqual(['a', 'a', 'a', 'app-view-switch']);
     const options = actions.querySelectorAll<HTMLButtonElement>('app-view-switch button');

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DOCUMENT, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { CountPipe } from '../../../core/i18n/translate';
+import { CountPipe, tCount } from '../../../core/i18n/translate';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { ToastComponent } from '../../../shared/ui/toast.component';
 import { ViewSwitchComponent, rowsOrGrid } from '../../../shared/ui/view-switch.component';
@@ -26,6 +26,13 @@ import { ObjectiveSwipeCardComponent } from '../ui/objective-swipe-card.componen
 })
 export class ObjectivesOverviewComponent {
   readonly store = inject(ObjectivesStore);
+  /** Under the title: objectives still to reach, whatever tab or filter is on. */
+  readonly subtitle = computed(() =>
+    tCount(
+      'tabSubtitles.objectives',
+      this.store.objectives().filter(({ archived, status }) => !archived && status !== 'completed').length,
+    ),
+  );
   /** Grips show only in the custom order, the one dragging changes. */
   readonly reorderable = computed(() => this.store.filters().sort === 'manual');
   readonly drag = new DragReorder(

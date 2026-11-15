@@ -240,6 +240,20 @@
       "notFound": "Dieses Konto gibt es nicht mehr."
     }
   },
+  "tabSubtitles": {
+    "agenda": {
+      "one": "Heute: {{count}}",
+      "other": "Heute: {{count}}"
+    },
+    "lists": {
+      "one": "{{count}} Liste",
+      "other": "{{count}} Listen"
+    },
+    "objectives": {
+      "one": "{{count}} laufendes Ziel",
+      "other": "{{count}} laufende Ziele"
+    }
+  },
   "titles": {
     "home": "Plano",
     "login": "Anmelden",

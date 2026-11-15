@@ -240,6 +240,20 @@
       "notFound": "Questo account non esiste più."
     }
   },
+  "tabSubtitles": {
+    "agenda": {
+      "one": "Oggi: {{count}}",
+      "other": "Oggi: {{count}}"
+    },
+    "lists": {
+      "one": "{{count}} lista",
+      "other": "{{count}} liste"
+    },
+    "objectives": {
+      "one": "{{count}} obiettivo in corso",
+      "other": "{{count}} obiettivi in corso"
+    }
+  },
   "titles": {
     "home": "Plano",
     "login": "Accedi",

@@ -86,6 +86,10 @@ function sharingPeople(list: ListSummary): Person[] {
 })
 export class ListsComponent {
   readonly listsStore = inject(ListsStore);
+  /** Under the title: the lists in use, archived ones left out. */
+  readonly subtitle = computed(() =>
+    tCount('tabSubtitles.lists', this.listsStore.lists().filter(({ archived }) => !archived).length),
+  );
   /** Lists with unread news (shared, items added): read once opened. */
   readonly news = inject(NotificationsStore).unreadTargets;
   private readonly router = inject(Router);

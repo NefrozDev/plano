@@ -375,6 +375,9 @@ app-lists .list-item { position: relative; }
 app-lists .list-item.dragging .list-card { opacity: .65; box-shadow: 0 .6rem 1.4rem rgb(31 41 55 / 16%); }
 app-lists .lists-content:not(.grid-view) .list-card { padding-right: 2.6rem; }
 /* Above the card (z-index 1, for its swipe), or the card takes the press and nothing drags. */
+/* Under a tab's title (Agenda, Lists, Objectives): a count, as the home page has its greeting. */
+.tab-title { min-width: 0; }
+.tab-subtitle { margin: .15rem 0 0; color: var(--color-text-muted); font-size: .78rem; font-weight: 600; }
 app-lists .drag-handle { position: absolute; z-index: 2; top: 50%; right: .35rem; display: grid; width: 2rem; height: 2.6rem; place-items: center; padding: 0; border: 0; border-radius: .5rem; background: transparent; color: #9aa3b5; cursor: grab; font-size: 1.05rem; transform: translateY(-50%); touch-action: none; user-select: none; }
 app-lists .drag-handle:hover { background: rgb(255 255 255 / 70%); color: #4b5468; }
 app-lists .drag-handle:active { cursor: grabbing; }

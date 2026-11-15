@@ -45,12 +45,23 @@ describe('ObjectivesOverviewComponent', () => {
 
   it('lists objectives in progress and the latest completed one, with the shared navigation', () => {
     expect(element.querySelector('h1')?.textContent).toBe('Objectifs');
+    // Under the title: Courir, Lire (paused) and Voyage; not the completed one nor the archived one.
+    expect(element.querySelector('.overview-header .tab-title h1 + .tab-subtitle')?.textContent).toBe('3 objectifs en cours');
     expect(element.querySelectorAll('.tabs button').length).toBe(4);
     expect(cardTitles()).toEqual(['Courir', 'Lire', 'Voyage', 'Fini']);
     expect(element.textContent).toContain('Terminé le 30 août 2026');
     expect(element.textContent).toContain('En pause');
     expect(element.querySelector('.fab')?.getAttribute('href')).toBe('/objectives/new');
     expect(element.querySelector('app-bottom-nav .active')?.textContent).toContain('Objectifs');
+  });
+
+  it('counts one objective in the singular under the title', async () => {
+    const loading = store.load();
+    await flushObjectives([OBJECTIVES[0], OBJECTIVES[3]]);
+    await loading;
+    fixture.detectChanges();
+
+    expect(element.querySelector('.tab-subtitle')?.textContent).toBe('1 objectif en cours');
   });
 
   it('shows the timelapse bar of the objectives that have one', () => {
@@ -148,7 +159,7 @@ describe('ObjectivesOverviewComponent', () => {
     const header = element.querySelector('.overview-header') as HTMLElement;
     const rows = header.querySelector('.header-actions app-view-switch .list') as HTMLButtonElement;
     const grid = header.querySelector('.header-actions app-view-switch .grid') as HTMLButtonElement;
-    expect(header.firstElementChild?.tagName).toBe('H1');
+    expect(header.firstElementChild?.firstElementChild?.tagName).toBe('H1');
     // Filter first, then the switch, search and settings, in the order of the Lists header.
     expect(Array.from(header.querySelector('.header-actions')!.children).map((child) => child.getAttribute('aria-label') ?? child.tagName.toLowerCase()))
       .toEqual(['Filtrer et trier les objectifs', 'Rechercher un objectif', 'Paramètres des objectifs', 'app-view-switch']);
