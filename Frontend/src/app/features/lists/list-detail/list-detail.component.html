@@ -119,6 +119,8 @@
               [style.--section-progress]="view.progress + '%'"
               [name]="view.section.name"
               [color]="view.section.color"
+              [completed]="view.completed"
+              [total]="view.section.entries.length"
               [editable]="canEdit()"
               (renamed)="renameSection(view.section.id, $event)"
               (recoloured)="recolourSection(view.section.id, $event)"

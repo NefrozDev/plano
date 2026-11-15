@@ -111,6 +111,8 @@ describe('ListDetailComponent', () => {
     expect(element.querySelector('.overall-progress strong')?.textContent).toBe('2 / 6');
     const firstHeader = element.querySelector('.entry-section app-list-section-header') as HTMLElement;
     expect(firstHeader.style.getPropertyValue('--section-progress')).toBe('25%');
+    // The count says it too, whatever the section colour.
+    expect(firstHeader.querySelector('.count')?.textContent?.trim()).toBe('1 / 4');
   });
 
   it('underlines an open section title with its progress, without filling the section', async () => {

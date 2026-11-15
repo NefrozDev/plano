@@ -73,6 +73,7 @@ import { LIST_COLOR_CHOICES } from './list-options';
           </div>
         } @else if (editable()) {
           <button class="section-title" type="button" [attr.aria-label]="'lists.section.edit' | transloco: { name: name() }">{{ name() }}</button>
+          <span class="count">{{ completed() }} / {{ total() }}</span>
           <button class="collapse" type="button" [attr.aria-expanded]="true" [attr.aria-label]="'lists.section.collapse' | transloco: { name: name() }">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
           </button>
@@ -85,6 +86,7 @@ import { LIST_COLOR_CHOICES } from './list-options';
           >⠿</button>
         } @else {
           <button class="section-title" type="button" [attr.aria-expanded]="true">{{ name() }}</button>
+          <span class="count">{{ completed() }} / {{ total() }}</span>
         }
       </div>
     </div>
@@ -98,6 +100,8 @@ import { LIST_COLOR_CHOICES } from './list-options';
     .header-shell.revealed .delete-section { opacity: 1; pointer-events: auto; }
     svg { width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
     .section-title { flex: 1; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--color-text); cursor: pointer; font-size: .88rem; font-weight: 700; overflow-wrap: anywhere; text-align: left; }
+    /* Like the folded summary's count: the progress line alone depends on the section's colour. */
+    .count { flex: none; color: var(--color-text-muted); font-size: .78rem; font-variant-numeric: tabular-nums; font-weight: 650; white-space: nowrap; }
     .collapse { display: grid; width: 2rem; height: 2rem; flex: none; padding: .35rem; place-items: center; border: 0; border-radius: .5rem; background: transparent; color: var(--color-text-muted); cursor: pointer; }
     /* The focus ring of the fields sits outside the box of the shell. */
     .header-shell.editing { overflow: visible; }
@@ -117,6 +121,9 @@ export class ListSectionHeaderComponent {
   readonly color = input('');
   /** Owner and editors; viewers only fold the section. */
   readonly editable = input(false);
+  /** Checked entries, shown as "1 / 4" beside the title. */
+  readonly completed = input(0);
+  readonly total = input(0);
 
   readonly renamed = output<string>();
   /** A colour was picked: saved at once, the editor stays open. */

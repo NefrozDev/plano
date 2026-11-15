@@ -37,6 +37,35 @@ describe('ListSectionHeaderComponent', () => {
     fixture.detectChanges();
   }
 
+  it.each([true, false])('shows the checked entries beside the title (editable: %s), not while renaming', (editable) => {
+    render(editable);
+    fixture.componentRef.setInput('completed', 1);
+    fixture.componentRef.setInput('total', 4);
+    fixture.detectChanges();
+
+    const count = element.querySelector('.count');
+    expect(count?.textContent?.trim()).toBe('1 / 4');
+    expect(count?.previousElementSibling?.classList).toContain('section-title');
+
+    if (editable) {
+      header.beginEditing();
+      fixture.detectChanges();
+      expect(element.querySelector('.count')).toBeNull();
+    }
+  });
+
+  it('counts nothing by default and follows the entries as they change', () => {
+    render(true);
+    expect(element.querySelector('.count')?.textContent?.trim()).toBe('0 / 0');
+
+    fixture.componentRef.setInput('completed', 4);
+    fixture.componentRef.setInput('total', 4);
+    fixture.detectChanges();
+
+    expect(element.querySelector('.count')?.textContent?.trim()).toBe('4 / 4');
+    expect(emitted).toEqual([]);
+  });
+
   it('slides with a left swipe and asks to delete past the threshold', () => {
     render(true);
     const start = pointer(200);
