@@ -110,6 +110,27 @@ describe('ObjectivesOverviewComponent', () => {
     expect(element.textContent).toContain('6,5 / 10 km');
   });
 
+  it('draws grid tiles of one size, each grip in its own free corner', () => {
+    store.updateSettings({ defaultView: 'grid' });
+    fixture.detectChanges();
+
+    const items = Array.from(element.querySelectorAll<HTMLElement>('.cards')[0].querySelectorAll('.objective-item'));
+    const cards = items.map((item) => item.querySelector('.card')!.getBoundingClientRect());
+    // "Voyage" has a timelapse bar, "Lire" a pill: still one shape, no tile floating mid-row.
+    expect(new Set(cards.map(({ height }) => Math.round(height))).size).toBe(1);
+    items.forEach((item, index) => {
+      const grip = item.querySelector('.drag-handle')!.getBoundingClientRect();
+      const meter = item.querySelector('.meter')?.getBoundingClientRect();
+      const copy = item.querySelector('.copy')!.getBoundingClientRect();
+      expect(grip.right).toBeLessThanOrEqual(cards[index].right);
+      expect(grip.bottom).toBeLessThanOrEqual(cards[index].bottom);
+      expect(grip.top).toBeGreaterThanOrEqual(copy.bottom);
+      if (meter) expect(grip.top).toBeGreaterThan(meter.bottom);
+      expect(grip.width).toBeGreaterThanOrEqual(24);
+      expect(grip.height).toBeGreaterThanOrEqual(24);
+    });
+  });
+
   it('shows active filters with a reset shortcut and an empty state', () => {
     store.filters.set({ statuses: ['paused'], categories: ['finance'], sort: 'dueDate', direction: 'asc' });
     fixture.detectChanges();

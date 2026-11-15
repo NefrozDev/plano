@@ -78,6 +78,8 @@ export interface ObjectiveCardView {
     :host { display: block; min-width: 0; }
     .card-news { position: absolute; top: .45rem; right: .5rem; }
     .card { --fill: var(--tint); position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .8rem; align-items: center; padding: .85rem .9rem; border: 1px solid #edf0f5; border-radius: .9rem; background: white; box-shadow: 0 .2rem .6rem rgb(31 41 55 / 6%); color: var(--color-text); text-decoration: none; }
+    /* As tall as a card with a bar, so cards without one keep the same shape. */
+    :host(:not(.tile)) .card { min-height: 5rem; }
     .card.completed { --fill: #22a95a; border-color: #d5f3e1; background: #f3fcf6; }
     .copy { display: grid; gap: .3rem; min-width: 0; }
     strong { overflow: hidden; font-size: .88rem; text-overflow: ellipsis; white-space: nowrap; }
@@ -88,7 +90,7 @@ export interface ObjectiveCardView {
     .progress { display: block; height: .3rem; margin-top: .15rem; overflow: hidden; border-radius: 1rem; background: color-mix(in srgb, var(--tint) 14%, #eef1f6); }
     .progress b { display: block; height: 100%; border-radius: inherit; background: var(--fill); transition: width .4s ease; }
     .value { align-self: end; color: #3c4658; font-size: .74rem; font-weight: 700; white-space: nowrap; }
-    :host(.tile) .card { grid-template-columns: auto minmax(0, 1fr); align-content: start; height: 100%; }
+    :host(.tile) .card { grid-template-columns: auto minmax(0, 1fr); align-content: start; height: 100%; padding-bottom: var(--objective-tile-end, .85rem); }
     :host(.tile) .copy { grid-column: 1 / -1; }
     :host(.tile) strong { white-space: normal; }
     /* In tiles the pill gets its own line, centred under the left-aligned caption. */

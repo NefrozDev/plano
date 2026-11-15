@@ -47,6 +47,7 @@ export const NOT_OWNER_NOTICE = 'objectives.notOwnerNotice';
     .slide { position: relative; z-index: 1; touch-action: pan-y; transition: transform 180ms ease; user-select: none; }
     .delete { position: absolute; top: 0; right: 0; bottom: 0; display: grid; width: 4.5rem; place-items: center; border: 0; border-radius: .9rem; background: #d92d20; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
     :host(.revealed) .delete { opacity: 1; pointer-events: auto; }
+    :host(.tile) .slide, :host(.tile) app-objective-card { height: 100%; }
     :host(.tile) .delete { top: auto; width: 100%; height: 3rem; }
     svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
   `,

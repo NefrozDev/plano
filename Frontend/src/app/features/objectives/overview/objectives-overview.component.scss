@@ -17,11 +17,15 @@
 .section-heading { display: flex; align-items: center; justify-content: space-between; }
 .section-heading button, .filter-note button { padding: 0; border: 0; background: transparent; color: var(--color-primary); cursor: pointer; font-size: .74rem; font-weight: 700; }
 .cards { display: grid; gap: .7rem; }
-.grid-view .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Every tile the size of the tallest, whatever it shows: no tile floats in the middle of its row. */
+.grid-view .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+.grid-view .objective-item { align-items: stretch; }
 .objective-item { position: relative; display: flex; gap: .25rem; align-items: center; }
 .objective-item > app-objective-swipe-card { flex: 1; min-width: 0; }
 .objective-item.dragging { opacity: .65; }
-.grid-view .drag-handle { position: absolute; top: .3rem; right: .3rem; height: 2rem; background: rgb(255 255 255 / 80%); }
+/* In a tile the grip takes the bottom corner, kept free for it: the top holds the icon, the bar and the news dot. */
+.grid-view .objective-item:has(.drag-handle) { --objective-tile-end: 2.4rem; }
+.grid-view .drag-handle { position: absolute; right: .3rem; bottom: .3rem; width: 2rem; height: 2rem; }
 .filter-note { display: flex; justify-content: space-between; margin: .5rem 0 0; padding: .55rem .75rem; border-radius: .6rem; background: #eef4ff; color: #3c4658; font-size: .74rem; }
 .empty-state { margin: 3rem 0; color: var(--color-text-muted); font-size: .85rem; text-align: center; }
 .fab { position: absolute; z-index: 5; right: 1.2rem; bottom: 5.4rem; display: grid; width: 3.3rem; height: 3.3rem; place-items: center; border-radius: 50%; background: var(--color-primary); box-shadow: 0 .6rem 1.2rem rgb(50 91 226 / 32%); color: white; }
