@@ -211,6 +211,55 @@ describe('ObjectivesService', () => {
       expect(kinds).not.toContain('reopened');
     });
 
+    it('completes objectives without a bar once deleting leaves only finished sub-objectives', async () => {
+      const top = await create({ title: 'A' });
+      const middle = await create({ title: 'B', parentId: top.id });
+      const done = await create({ title: 'C', parentId: middle.id });
+      const open = await create({ title: 'D', parentId: middle.id });
+      await bed.tracking.setCompleted(done.id, bed.ada, { completed: true });
+
+      await bed.objectives.remove(open.id, bed.ada);
+
+      for (const id of [middle.id, top.id]) {
+        const completed = await row(id);
+        expect(completed).toMatchObject({
+          status: 'completed',
+          completedByUserId: bed.ada,
+        });
+        expect(completed.completedAt).toBeInstanceOf(Date);
+      }
+      const kinds = (await bed.activity.history(middle.id, bed.ada)).map(
+        ({ kind }) => kind,
+      );
+      expect(kinds.filter((kind) => kind === 'completed')).toHaveLength(2);
+    });
+
+    it('completes a parent tracked by its sub-objectives once the open one is deleted', async () => {
+      const top = await create({ completion: 'children', children: ['Un'] });
+      const [done] = (await bed.objectives.findOne(top.id, bed.ada)).children;
+      const open = await create({ title: 'Deux', parentId: top.id });
+      await bed.tracking.setCompleted(done.id, bed.ada, { completed: true });
+      expect((await row(top.id)).status).toBe('active');
+
+      await bed.objectives.remove(open.id, bed.ada);
+
+      expect((await row(top.id)).status).toBe('completed');
+    });
+
+    it('leaves the parent open when something is still to do, or nothing is left', async () => {
+      const busy = await create({ title: 'A' });
+      await create({ title: 'B', parentId: busy.id });
+      const removed = await create({ title: 'C', parentId: busy.id });
+      const emptied = await create({ title: 'D' });
+      const only = await create({ title: 'E', parentId: emptied.id });
+
+      await bed.objectives.remove(removed.id, bed.ada);
+      await bed.objectives.remove(only.id, bed.ada);
+
+      expect((await row(busy.id)).status).toBe('active');
+      expect((await row(emptied.id)).status).toBe('active');
+    });
+
     it('stops at the level limit', async () => {
       let parent = await create();
       for (let level = 2; level <= MAX_OBJECTIVE_LEVELS; level += 1) {

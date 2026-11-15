@@ -22,7 +22,11 @@ import { ObjectiveChangesService } from './objective-changes.service';
 import { ObjectiveMembersService } from './objective-members.service';
 import { ObjectivePreferencesService } from './objective-preferences.service';
 import { ObjectiveRecurrenceService } from './objective-recurrence.service';
-import { MAX_OBJECTIVE_LEVELS, MAX_TREE_NODES } from './objective-tree';
+import {
+  MAX_OBJECTIVE_LEVELS,
+  MAX_TREE_NODES,
+  type ObjectiveTree,
+} from './objective-tree';
 import { ObjectiveViewService } from './objective-view.service';
 import { ObjectiveWriterService } from './objective-writer.service';
 import { errorCode } from '../errors/error-code';
@@ -280,9 +284,57 @@ export class ObjectivesService {
 
   /** Everything below goes with it, through the foreign key cascade. */
   async remove(id: string, userId: string): Promise<void> {
-    await this.writer.change(id, userId, 'own', async ({ node }, manager) => {
-      await manager.delete(Objective, { id: node.id });
-    });
+    await this.writer.change(
+      id,
+      userId,
+      'own',
+      async ({ tree, node }, manager) => {
+        await manager.delete(Objective, { id: node.id });
+        await this.completeAncestorsLeftDone(tree, node, userId, manager);
+      },
+    );
+  }
+
+  /**
+   * Deleting the last open sub-objective leaves nothing to do: objectives
+   * without a bar are completed, all the way up while that holds. Those with
+   * a bar follow their progress in `settle()`.
+   */
+  private async completeAncestorsLeftDone(
+    tree: ObjectiveTree,
+    removed: Objective,
+    userId: string,
+    manager: EntityManager,
+  ): Promise<void> {
+    const done = new Set<string>();
+    const completed: Objective[] = [];
+    for (const ancestor of tree.ancestorsOf(removed.id).reverse()) {
+      const remaining = tree
+        .childrenOf(ancestor.id)
+        .filter((child) => child.id !== removed.id && !child.archived);
+      const allDone =
+        remaining.length > 0 &&
+        remaining.every(
+          (child) => child.status === 'completed' || done.has(child.id),
+        );
+      if (
+        !allDone ||
+        ancestor.completion !== 'none' ||
+        ancestor.status !== 'active'
+      ) {
+        break;
+      }
+      ancestor.status = 'completed';
+      ancestor.completedAt = new Date();
+      ancestor.completedByUserId = userId;
+      done.add(ancestor.id);
+      completed.push(ancestor);
+    }
+    if (!completed.length) return;
+    await manager.save(completed);
+    for (const ancestor of completed) {
+      await recordActivity(manager, ancestor.id, userId, 'completed');
+    }
   }
 
   /** Takes every sub-objective of the objective exactly once, in the new order. */
