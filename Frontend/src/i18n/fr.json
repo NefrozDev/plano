@@ -465,7 +465,10 @@
     "views": {
       "day": "Jour",
       "week": "Semaine",
-      "month": "Mois"
+      "month": "Mois",
+      "dayShort": "J",
+      "weekShort": "S",
+      "monthShort": "M"
     },
     "recurrence": {
       "none": "Jamais",
@@ -524,7 +527,6 @@
       "save": "L’enregistrement a échoué. Réessayez."
     },
     "calendar": {
-      "changeView": "Changer de vue",
       "filter": "Filtrer l’agenda",
       "previous": "Période précédente",
       "next": "Période suivante",

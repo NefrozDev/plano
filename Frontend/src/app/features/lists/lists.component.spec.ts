@@ -314,7 +314,7 @@ describe('ListsComponent', () => {
   it('switches to the grid layout from the right of the header and saves it as the default view', () => {
     const header = element.querySelector('.lists-header') as HTMLElement;
     expect(header.firstElementChild?.tagName).toBe('H1');
-    expect(header.querySelector('.header-actions app-view-switch .rows')?.getAttribute('aria-pressed')).toBe('true');
+    expect(header.querySelector('.header-actions app-view-switch .list')?.getAttribute('aria-pressed')).toBe('true');
     (header.querySelector('.header-actions app-view-switch .grid') as HTMLButtonElement).click();
     fixture.detectChanges();
 

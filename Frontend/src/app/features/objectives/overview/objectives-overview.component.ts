@@ -4,7 +4,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { CountPipe } from '../../../core/i18n/translate';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { ToastComponent } from '../../../shared/ui/toast.component';
-import { ViewSwitchComponent } from '../../../shared/ui/view-switch.component';
+import { ViewSwitchComponent, rowsOrGrid } from '../../../shared/ui/view-switch.component';
 import type { ObjectiveSummary } from '@plano/common';
 import { dueCaption, objectiveTint, progressText, sharingLabel, timelapseView } from '../objective.utils';
 import { ObjectiveTab, ObjectivesStore } from '../objectives.store';
@@ -46,6 +46,7 @@ export class ObjectivesOverviewComponent {
   /** Why a card did not slide; empty when there is nothing to say. */
   readonly notice = signal('');
   readonly showAllCompleted = signal(false);
+  readonly viewOptions = rowsOrGrid('objectives.overview.asList', 'objectives.overview.asGrid');
   readonly gridView = computed(() => this.store.settings().defaultView === 'grid');
 
   private readonly cards = computed(() =>
@@ -69,8 +70,8 @@ export class ObjectivesOverviewComponent {
   }
 
   /** Same behaviour as the Lists header: the choice is saved as the default view. */
-  setView(grid: boolean): void {
-    this.store.updateSettings({ defaultView: grid ? 'grid' : 'list' });
+  setView(view: 'list' | 'grid'): void {
+    this.store.updateSettings({ defaultView: view });
   }
 
   moveWithKeyboard(id: string, event: KeyboardEvent): void {

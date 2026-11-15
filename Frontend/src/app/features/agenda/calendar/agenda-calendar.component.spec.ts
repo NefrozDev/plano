@@ -128,12 +128,17 @@ describe('AgendaCalendarComponent', () => {
     expect(router.url).toContain('date=2026-10-12');
   });
 
-  it('switches views from the menu', async () => {
+  it('switches views from the J / S / M switch, in the header order of the other tabs', async () => {
     await harness.navigateByUrl('/agenda');
-    (element().querySelector('[aria-label="Changer de vue"]') as HTMLButtonElement).click();
-    harness.detectChanges();
-    const options = element().querySelectorAll<HTMLButtonElement>('.view-menu button');
-    expect(Array.from(options).map((option) => option.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false']);
+    const actions = element().querySelector('.agenda-header .header-actions') as HTMLElement;
+    expect(element().querySelector('.agenda-header')?.firstElementChild?.tagName).toBe('H1');
+    // Filter, then the switch, search and settings, as on Objectives.
+    expect(Array.from(actions.children).map((child) => child.tagName.toLowerCase())).toEqual(['a', 'app-view-switch', 'a', 'a']);
+    const options = actions.querySelectorAll<HTMLButtonElement>('app-view-switch button');
+    expect(Array.from(options).map((option) => option.textContent?.trim())).toEqual(['J', 'S', 'M']);
+    expect(Array.from(options).map((option) => option.getAttribute('aria-label'))).toEqual(['Jour', 'Semaine', 'Mois']);
+    expect(Array.from(options).map((option) => option.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false']);
+    expect(element().querySelector('.view-menu')).toBeNull();
 
     options[1].click();
     await settle();
@@ -141,6 +146,13 @@ describe('AgendaCalendarComponent', () => {
     expect(element().querySelector('.date-bar .title')?.textContent).toContain('12 oct. – 18 oct.');
     expect(element().querySelectorAll('app-agenda-week-view .column').length).toBe(7);
     expect(element().querySelectorAll('app-agenda-week-view .block').length).toBeGreaterThan(8);
+    expect(Array.from(options).map((option) => option.getAttribute('aria-pressed'))).toEqual(['false', 'true', 'false']);
+
+    // The current view again: nothing moves.
+    const url = router.url;
+    options[1].click();
+    await settle();
+    expect(router.url).toBe(url);
   });
 
   it('pages through weeks and months', async () => {

@@ -1,28 +1,4 @@
 <header class="agenda-header">
-  <div class="menu-anchor">
-    <button
-      class="icon-button"
-      type="button"
-      [attr.aria-label]="'agenda.calendar.changeView' | transloco"
-      [attr.aria-expanded]="viewMenuOpen()"
-      (click)="viewMenuOpen.set(!viewMenuOpen())"
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-    </button>
-    @if (viewMenuOpen()) {
-      <div class="view-menu" role="menu">
-        @for (option of views; track option.value) {
-          <button
-            type="button"
-            role="menuitemradio"
-            [attr.aria-checked]="view() === option.value"
-            [class.active]="view() === option.value"
-            (click)="go({ view: option.value })"
-          >{{ option.label | transloco }}</button>
-        }
-      </div>
-    }
-  </div>
   <h1>{{ 'titles.agenda' | transloco }}</h1>
   <div class="header-actions">
     <a class="icon-button" routerLink="/agenda/filters" [attr.aria-label]="'agenda.calendar.filter' | transloco">
@@ -31,6 +7,8 @@
         <i class="badge" aria-hidden="true">{{ store.activeFilterCount() }}</i>
       }
     </a>
+    <!-- After the filter, as on Objectives: the switch, search and settings line up across tabs. -->
+    <app-view-switch [options]="views" [value]="view()" (changed)="go({ view: $event })" />
     <a class="icon-button" routerLink="/agenda/search" [attr.aria-label]="'titles.agendaSearch' | transloco">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
     </a>

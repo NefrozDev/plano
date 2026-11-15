@@ -465,7 +465,10 @@
     "views": {
       "day": "Giorno",
       "week": "Settimana",
-      "month": "Mese"
+      "month": "Mese",
+      "dayShort": "G",
+      "weekShort": "S",
+      "monthShort": "M"
     },
     "recurrence": {
       "none": "Mai",
@@ -524,7 +527,6 @@
       "save": "Salvataggio non riuscito. Riprova."
     },
     "calendar": {
-      "changeView": "Cambia vista",
       "filter": "Filtra l’agenda",
       "previous": "Periodo precedente",
       "next": "Periodo successivo",

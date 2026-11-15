@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { NotificationsStore } from '../../../core/notifications/notifications.store';
 import { NewsDotComponent } from '../../../shared/ui/news-dot.component';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -21,6 +21,7 @@ import { t } from '../../../core/i18n/translate';
 import { toPerson } from '../../../core/people/people';
 import { BottomNavComponent } from '../../../shared/ui/bottom-nav.component';
 import { UserAvatarComponent } from '../../../shared/ui/user-avatar.component';
+import { ViewSwitchComponent, type ViewOption } from '../../../shared/ui/view-switch.component';
 import { AgendaStore } from '../agenda.store';
 import { AgendaItem, coveredDates, datePart, formatTime, timePart } from '../agenda.utils';
 import { AgendaDayViewComponent, StripDay } from './agenda-day-view.component';
@@ -32,6 +33,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 @Component({
   selector: 'app-agenda-calendar',
   imports: [
+    ViewSwitchComponent,
     RouterLink,
     TranslocoPipe,
     BottomNavComponent,
@@ -61,14 +63,13 @@ export class AgendaCalendarComponent {
     initialValue: this.route.snapshot.queryParamMap,
   });
   /** `label` is a translation key. */
-  readonly views: readonly { value: AgendaView; label: string }[] = [
-    { value: 'day', label: 'agenda.views.day' },
-    { value: 'week', label: 'agenda.views.week' },
-    { value: 'month', label: 'agenda.views.month' },
+  /** Shown as their initial in the current language: J / S / M in French. */
+  readonly views: readonly ViewOption<AgendaView>[] = [
+    { value: 'day', label: 'agenda.views.day', short: 'agenda.views.dayShort' },
+    { value: 'week', label: 'agenda.views.week', short: 'agenda.views.weekShort' },
+    { value: 'month', label: 'agenda.views.month', short: 'agenda.views.monthShort' },
   ];
   readonly today = this.store.today();
-  readonly viewMenuOpen = signal(false);
-
   readonly view = computed<AgendaView>(() => {
     const view = this.params().get('view');
     return view === 'week' || view === 'month' ? view : 'day';
@@ -147,7 +148,6 @@ export class AgendaCalendarComponent {
   });
 
   go(changes: { view?: AgendaView; date?: IsoDate }): void {
-    this.viewMenuOpen.set(false);
     // replaceUrl: browsing dates should not fill the back-button history.
     void this.router.navigate([], {
       relativeTo: this.route,

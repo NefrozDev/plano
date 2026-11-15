@@ -1,12 +1,7 @@
 <header class="lists-header">
   <h1>{{ 'titles.lists' | transloco }}</h1>
   <div class="header-actions">
-    <app-view-switch
-      [grid]="gridView()"
-      rowsLabel="lists.overview.asRows"
-      gridLabel="lists.overview.asGrid"
-      (changed)="setDefaultView($event ? 'grid' : 'list')"
-    />
+    <app-view-switch [options]="viewOptions" [value]="gridView() ? 'grid' : 'list'" (changed)="setDefaultView($event)" />
     <button
       class="icon-button search-button"
       type="button"

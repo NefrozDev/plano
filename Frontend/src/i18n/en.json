@@ -465,7 +465,10 @@
     "views": {
       "day": "Day",
       "week": "Week",
-      "month": "Month"
+      "month": "Month",
+      "dayShort": "D",
+      "weekShort": "W",
+      "monthShort": "M"
     },
     "recurrence": {
       "none": "Never",
@@ -524,7 +527,6 @@
       "save": "Saving failed. Please try again."
     },
     "calendar": {
-      "changeView": "Change view",
       "filter": "Filter the calendar",
       "previous": "Previous period",
       "next": "Next period",

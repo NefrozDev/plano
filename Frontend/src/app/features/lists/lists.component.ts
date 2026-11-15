@@ -12,7 +12,7 @@ import { ConfirmService } from '../../shared/ui/confirm.service';
 import { BottomNavComponent } from '../../shared/ui/bottom-nav.component';
 import { SwitchRowComponent } from '../../shared/ui/switch-row.component';
 import { ToastComponent } from '../../shared/ui/toast.component';
-import { ViewSwitchComponent } from '../../shared/ui/view-switch.component';
+import { ViewSwitchComponent, rowsOrGrid } from '../../shared/ui/view-switch.component';
 import { LIST_COLOR_CHOICES } from './list-detail/list-options';
 import { ListIconComponent } from './ui/list-icon.component';
 import { SwipeToDelete } from '../../shared/ui/swipe-to-delete';
@@ -120,6 +120,7 @@ export class ListsComponent {
   readonly activeFilter = signal<ListFilter>('all');
   readonly searchOpen = signal(false);
   readonly query = signal('');
+  readonly viewOptions = rowsOrGrid('lists.overview.asRows', 'lists.overview.asGrid');
   readonly gridView = computed(() => this.listsStore.settings()?.defaultView === 'grid');
   readonly menuOpen = signal(false);
   readonly settingsOpen = signal(false);

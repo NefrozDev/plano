@@ -1,8 +1,9 @@
 :host { display: flex; flex: 1; min-height: 0; flex-direction: column; }
 /* The title gives way first, so the actions stay on screen with any font and spacing. */
-.overview-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; align-items: center; padding: calc(1.8rem + env(safe-area-inset-top)) 1.1rem .6rem; }
+/* Same padding and gaps as the Lists header: the shared controls line up when switching tabs. */
+.overview-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .7rem; align-items: center; padding: calc(1.8rem + env(safe-area-inset-top)) 1.25rem .6rem; }
 .overview-header h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.04em; overflow-wrap: anywhere; }
-.header-actions { position: relative; display: flex; gap: .1rem; align-items: center; }
+.header-actions { position: relative; display: flex; gap: .25rem; align-items: center; }
 .icon-button { position: relative; display: grid; width: 2.35rem; height: 2.35rem; padding: .4rem; place-items: center; border: 0; background: transparent; color: #20263a; cursor: pointer; }
 .icon-button svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .icon-button .dot { fill: currentColor; stroke: none; }

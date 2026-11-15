@@ -125,9 +125,12 @@ describe('ObjectivesOverviewComponent', () => {
 
   it('switches between list and grid from the right of the header and remembers the choice', () => {
     const header = element.querySelector('.overview-header') as HTMLElement;
-    const rows = header.querySelector('.header-actions app-view-switch .rows') as HTMLButtonElement;
+    const rows = header.querySelector('.header-actions app-view-switch .list') as HTMLButtonElement;
     const grid = header.querySelector('.header-actions app-view-switch .grid') as HTMLButtonElement;
     expect(header.firstElementChild?.tagName).toBe('H1');
+    // Filter first, then the switch, search and settings, in the order of the Lists header.
+    expect(Array.from(header.querySelector('.header-actions')!.children).map((child) => child.getAttribute('aria-label') ?? child.tagName.toLowerCase()))
+      .toEqual(['Filtrer et trier les objectifs', 'app-view-switch', 'Rechercher un objectif', 'Paramètres des objectifs']);
     expect(rows.getAttribute('aria-label')).toBe('Afficher les objectifs en liste');
     expect(grid.getAttribute('aria-label')).toBe('Afficher les objectifs en grille');
     expect(rows.getAttribute('aria-pressed')).toBe('true');

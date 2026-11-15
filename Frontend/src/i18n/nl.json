@@ -465,7 +465,10 @@
     "views": {
       "day": "Dag",
       "week": "Week",
-      "month": "Maand"
+      "month": "Maand",
+      "dayShort": "D",
+      "weekShort": "W",
+      "monthShort": "M"
     },
     "recurrence": {
       "none": "Nooit",
@@ -524,7 +527,6 @@
       "save": "Opslaan is mislukt. Probeer het opnieuw."
     },
     "calendar": {
-      "changeView": "Weergave wijzigen",
       "filter": "De agenda filteren",
       "previous": "Vorige periode",
       "next": "Volgende periode",

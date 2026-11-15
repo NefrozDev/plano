@@ -465,7 +465,10 @@
     "views": {
       "day": "Tag",
       "week": "Woche",
-      "month": "Monat"
+      "month": "Monat",
+      "dayShort": "T",
+      "weekShort": "W",
+      "monthShort": "M"
     },
     "recurrence": {
       "none": "Nie",
@@ -524,7 +527,6 @@
       "save": "Speichern ist fehlgeschlagen. Bitte versuche es erneut."
     },
     "calendar": {
-      "changeView": "Ansicht wechseln",
       "filter": "Kalender filtern",
       "previous": "Vorheriger Zeitraum",
       "next": "Nächster Zeitraum",
