@@ -111,8 +111,9 @@ export class ListEntryDetailsComponent {
 
   /** A blank name is refused: the field goes back to the saved one. */
   rename(field: HTMLTextAreaElement): void {
-    // A pasted name may hold line breaks: an entry's name is one line.
-    const name = field.value.replace(/\s*\n\s*/g, ' ').trim();
+    // A pasted name may hold line breaks: an entry's name is one line. Split and trim rather than
+    // /\s*\n\s*/, whose overlapping \s and \n backtrack quadratically on long whitespace runs.
+    const name = field.value.split('\n').map((line) => line.trim()).filter(Boolean).join(' ');
     if (name) {
       this.entryChange.emit({ name });
     } else {

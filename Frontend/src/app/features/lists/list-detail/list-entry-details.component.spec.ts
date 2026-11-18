@@ -76,6 +76,14 @@ describe('ListEntryDetailsComponent', () => {
     expect(changes).toEqual([{ name: 'Lait entier' }]);
   });
 
+  it('joins Windows line breaks and skips blank pasted lines', () => {
+    const name = field<HTMLTextAreaElement>('.entry-name-editor textarea');
+    name.value = ' Lait \r\n\r\n\t entier\r\n';
+    name.dispatchEvent(new Event('change'));
+
+    expect(changes).toEqual([{ name: 'Lait entier' }]);
+  });
+
   it('restores the name instead of saving a blank one', () => {
     const name = field<HTMLTextAreaElement>('.entry-name-editor textarea');
     name.value = '   ';
